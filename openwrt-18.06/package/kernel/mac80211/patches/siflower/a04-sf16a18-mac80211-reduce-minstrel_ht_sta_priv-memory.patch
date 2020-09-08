@@ -1,0 +1,127 @@
+diff -uprN backports-4.19.7-1.orig/local-symbols backports-4.19.7-1.new/local-symbols
+--- backports-4.19.7-1.orig/local-symbols	2019-12-05 17:54:24.458192338 +0800
++++ backports-4.19.7-1.new/local-symbols	2019-12-05 18:05:52.502221213 +0800
+@@ -75,6 +75,8 @@ MAC80211_DEBUG_COUNTERS=
+ MAC80211_STA_HASH_MAX_SIZE=
+ MAC80211_PRIV_IOCTL=
+ MAC80211_SIFLOWER_MONITOR_ENABLE=
++MAC80211_LITE_MEMORY=
++MAC80211_LITE_FLASH=
+ WLAN=
+ WIRELESS_WDS=
+ PCMCIA_RAYCS=
+diff -uprN backports-4.19.7-1.orig/net/mac80211/rc80211_minstrel.c backports-4.19.7-1.new/net/mac80211/rc80211_minstrel.c
+--- backports-4.19.7-1.orig/net/mac80211/rc80211_minstrel.c	2019-12-05 17:54:24.378192335 +0800
++++ backports-4.19.7-1.new/net/mac80211/rc80211_minstrel.c	2019-12-05 17:55:31.422195148 +0800
+@@ -178,8 +178,10 @@ minstrel_calc_rate_stats(struct minstrel
+ 						       cur_prob,
+ 						       EWMA_LEVEL);
+ 		}
++#ifdef CPTCFG_MAC80211_DEBUGFS
+ 		mrs->att_hist += mrs->attempts;
+ 		mrs->succ_hist += mrs->success;
++#endif
+ 	} else {
+ 		mrs->sample_skipped++;
+ 	}
+diff -uprN backports-4.19.7-1.orig/net/mac80211/rc80211_minstrel.h backports-4.19.7-1.new/net/mac80211/rc80211_minstrel.h
+--- backports-4.19.7-1.orig/net/mac80211/rc80211_minstrel.h	2019-12-05 17:54:24.378192335 +0800
++++ backports-4.19.7-1.new/net/mac80211/rc80211_minstrel.h	2019-12-05 17:56:20.522197209 +0800
+@@ -53,8 +53,12 @@ struct minstrel_rate_stats {
+ 	u16 attempts, last_attempts;
+ 	u16 success, last_success;
+ 
++#ifdef CPTCFG_MAC80211_DEBUGFS
+ 	/* total attempts/success counters */
+ 	u32 att_hist, succ_hist;
++#else
++	 u8 att_hist;
++#endif
+ 
+ 	/* statistis of packet delivery probability
+ 	 *  prob_ewma - exponential weighted moving average of prob
+diff -uprN backports-4.19.7-1.orig/net/mac80211/rc80211_minstrel_ht.c backports-4.19.7-1.new/net/mac80211/rc80211_minstrel_ht.c
+--- backports-4.19.7-1.orig/net/mac80211/rc80211_minstrel_ht.c	2019-12-05 17:54:24.374192335 +0800
++++ backports-4.19.7-1.new/net/mac80211/rc80211_minstrel_ht.c	2019-12-06 09:44:30.512584649 +0800
+@@ -159,46 +159,66 @@ MODULE_PARM_DESC(minstrel_vht_only,
+  */
+ const struct mcs_group minstrel_mcs_groups[] = {
+ 	MCS_GROUP(1, 0, BW_20, 5),
++#if MINSTREL_MAX_STREAMS >= 1
+ 	MCS_GROUP(2, 0, BW_20, 4),
+ 	MCS_GROUP(3, 0, BW_20, 4),
++#endif
+ 
+ 	MCS_GROUP(1, 1, BW_20, 5),
++#if MINSTREL_MAX_STREAMS >= 1
+ 	MCS_GROUP(2, 1, BW_20, 4),
+ 	MCS_GROUP(3, 1, BW_20, 4),
++#endif
+ 
+ 	MCS_GROUP(1, 0, BW_40, 4),
++#if MINSTREL_MAX_STREAMS >= 1
+ 	MCS_GROUP(2, 0, BW_40, 4),
+ 	MCS_GROUP(3, 0, BW_40, 4),
++#endif
+ 
+ 	MCS_GROUP(1, 1, BW_40, 4),
++#if MINSTREL_MAX_STREAMS >= 1
+ 	MCS_GROUP(2, 1, BW_40, 4),
+ 	MCS_GROUP(3, 1, BW_40, 4),
++#endif
+ 
+ 	CCK_GROUP(8),
+ 
+ 	VHT_GROUP(1, 0, BW_20, 5),
++#if MINSTREL_MAX_STREAMS >= 1
+ 	VHT_GROUP(2, 0, BW_20, 4),
+ 	VHT_GROUP(3, 0, BW_20, 4),
++#endif
+ 
+ 	VHT_GROUP(1, 1, BW_20, 5),
++#if MINSTREL_MAX_STREAMS >= 1
+ 	VHT_GROUP(2, 1, BW_20, 4),
+ 	VHT_GROUP(3, 1, BW_20, 4),
++#endif
+ 
+ 	VHT_GROUP(1, 0, BW_40, 4),
++#if MINSTREL_MAX_STREAMS >= 1
+ 	VHT_GROUP(2, 0, BW_40, 4),
+ 	VHT_GROUP(3, 0, BW_40, 4),
++#endif
+ 
+ 	VHT_GROUP(1, 1, BW_40, 4),
++#if MINSTREL_MAX_STREAMS >= 1
+ 	VHT_GROUP(2, 1, BW_40, 4),
+ 	VHT_GROUP(3, 1, BW_40, 4),
++#endif
+ 
+ 	VHT_GROUP(1, 0, BW_80, 4),
++#if MINSTREL_MAX_STREAMS >= 1
+ 	VHT_GROUP(2, 0, BW_80, 4),
+ 	VHT_GROUP(3, 0, BW_80, 4),
++#endif
+ 
+ 	VHT_GROUP(1, 1, BW_80, 4),
++#if MINSTREL_MAX_STREAMS >= 1
+ 	VHT_GROUP(2, 1, BW_80, 4),
+ 	VHT_GROUP(3, 1, BW_80, 4),
++#endif
+ };
+ 
+ static u8 sample_table[SAMPLE_COLUMNS][MCS_GROUP_RATES] __read_mostly;
+diff -uprN backports-4.19.7-1.orig/net/mac80211/rc80211_minstrel_ht.h backports-4.19.7-1.new/net/mac80211/rc80211_minstrel_ht.h
+--- backports-4.19.7-1.orig/net/mac80211/rc80211_minstrel_ht.h	2019-12-05 17:54:24.378192335 +0800
++++ backports-4.19.7-1.new/net/mac80211/rc80211_minstrel_ht.h	2019-12-05 18:05:22.634219959 +0800
+@@ -13,7 +13,11 @@
+  * The number of streams can be changed to 2 to reduce code
+  * size and memory footprint.
+  */
++#ifdef CPTCFG_MAC80211_LITE_MEMORY
++#define MINSTREL_MAX_STREAMS		1
++#else
+ #define MINSTREL_MAX_STREAMS		3
++#endif
+ #define MINSTREL_HT_STREAM_GROUPS	4 /* BW(=2) * SGI(=2) */
+ #define MINSTREL_VHT_STREAM_GROUPS	6 /* BW(=3) * SGI(=2) */
+ 

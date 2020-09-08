@@ -1,0 +1,224 @@
+#!/bin/sh
+# Copyright (C) 2006 OpenWrt.org
+
+. /lib/sfwifi.sh
+. /usr/share/libubox/jshn.sh
+
+usage() {
+	cat <<EOF
+Usage: $0 [reset|remove|reload|stress] [lb/hb]
+stress = sfwifi stress test.
+reset wifi firmware.
+EOF
+	exit 1
+}
+
+call_wifi_cmd(){
+	#get device from band
+	input_band=$2
+	local cfgfile=
+	device=""
+	DEVICES=
+	config_cb() {
+		local type="$1"
+		local section="$2"
+
+		# section start
+		case "$type" in
+			wifi-device)
+				append DEVICES "$section"
+				;;
+		esac
+	}
+	config_load "${cfgfile:-wireless}"
+	for device1 in $DEVICES;
+	do
+		config_get band1 "$device1" band
+		[ lb = "$input_band" ] && [ 2.4G = "$band1" ] && {
+			device=$device1
+			break
+		}
+		[ hb = "$input_band" ] && [ 5G = "$band1" ] && {
+			device=$device1
+			break
+		}
+		echo "band=$band1 device=$device1" > /dev/ttyS0
+	done
+	echo "device=$device" > /dev/ttyS0
+	/sbin/wifi $1 $device
+}
+
+firmware_remove(){
+	#stop wifi first
+	/sbin/wifi down
+	sleep 1
+	#unregister softmac if have
+	unload_smac
+    #unregister fullmac if have
+    unload_fmac
+	#unregister emb firmware
+	unload_firmware
+	#unregist rf
+	unload_rf
+	rm /tmp/run/hostapd-phy*.conf
+	rm /tmp/run/wifi-phy*.pid
+}
+
+detect_wifi(){
+	#detect wifi
+	/sbin/wifi detect > /tmp/wireless.tmp
+    [ -s /tmp/wireless.tmp ] && {
+		cat /tmp/wireless.tmp >> /etc/config/wireless
+	}
+	rm -f /tmp/wireless.tmp
+}
+
+band_reload_smac(){
+	local band="$1"
+	[ lb = "$band" ] && {
+        insmod_smac_lb
+	}
+	[ hb = "$band" ] && {
+        insmod_smac_hb
+	}
+	[ all = "$band" ] && {
+		insmod_smac
+	}
+	[ -z "$band" ] && {
+		insmod_smac
+	}
+	detect_wifi
+	#bring up wifi
+	call_wifi_cmd up $band
+}
+
+band_reload_fmac(){
+	local band="$1"
+	[ lb = "$band" ] && {
+        insmod_fmac_lb
+	}
+	[ hb = "$band" ] && {
+        insmod_fmac_hb
+	}
+	[ all = "$band" ] && {
+		insmod_fmac
+	}
+	[ -z "$band" ] && {
+		insmod_fmac
+	}
+	detect_wifi
+	#bring up wifi
+	call_wifi_cmd up $band
+}
+
+firmware_reload(){
+	#reload firmware
+	load_firmware
+	#reload rf
+	insmod_rf
+    if [ fmac = "$2" ]; then
+        band_reload_fmac $1
+	elif [ fmac = "$1" ]; then
+		band_reload_fmac
+	elif [ smac = "$1" ]; then
+		band_reload_smac
+    else
+	    band_reload_smac $1
+    fi
+}
+
+firmware_reset(){
+	firmware_remove
+	firmware_reload $1 $2
+}
+
+band_remove_smac(){
+	local band="$1"
+	call_wifi_cmd down $band
+	sleep 1
+	[ lb = "$band" ] && {
+        unload_smac_lb
+	}
+	[ hb = "$band" ] && {
+        unload_smac_hb
+	}
+	[ all = "$band" ] && {
+		unload_smac
+	}
+	[ -z "$band" ] && {
+		unload_smac
+	}
+}
+
+band_remove_fmac(){
+	local band="$1"
+	call_wifi_cmd down $band
+	sleep 1
+	[ lb = "$band" ] && {
+        unload_fmac_lb
+	}
+	[ hb = "$band" ] && {
+        unload_fmac_hb
+	}
+	[ all = "$band" ] && {
+		unload_fmac
+	}
+	[ -z "$band" ] && {
+		unload_fmac
+	}
+}
+
+sfwifi_stress_test(){
+    echo "======sfwifi stess test start=====================" > /dev/console
+    eval "touch /tmp/sfwifi.log"
+    /etc/init.d/syncservice stop
+    cycle_idx=0
+    while true
+    do
+        echo "====cycle is $cycle_idx====" > /dev/console
+        let "cycle_idx++"
+        firmware_reset
+        sleep 15
+        count=`ifconfig |awk '/(HWaddr)/{print $1}' | grep "wlan" -c`
+        time_t=0
+        until [ $count -eq 2 ]
+        do
+            let "time_t ++"
+            sleep 5
+            count=`ifconfig |awk '/(HWaddr)/{print $1}' | grep "wlan" -c`
+            echo "====cycle is $cycle_idx==wlan turn on failed check $time_t times====" > /dev/console
+            if [ $time_t -gt 30 ];then
+                echo "====cycle is $cycle_idx==wlan turn on failed check $time_t times====" >> /tmp/sfwifi.log
+                eval "dmesg >> /tmp/sfwifi.log"
+                echo "====logread====" >> /tmp/sfwifi.log
+                eval "logread >> /tmp/sfwifi.log"
+                exit -1
+            fi
+        done
+    done
+}
+
+case "$1" in
+	reset) firmware_reset $2 $3;;
+	remove) firmware_remove;;
+	reload) firmware_reload $2 $3;;
+	reload_band)
+        if [ $3 = "fmac"]; then
+            band_reload_fmac $2
+        else
+            band_reload_smac $2
+        fi
+        ;;
+	remove_band)
+        if [ $3 = "fmac" ]; then
+            band_remove_fmac $2
+        else
+            band_remove_smac $2
+        fi
+        ;;
+    test) call_wifi_cmd $2 $3;;
+    stress)
+        sfwifi_stress_test;;
+	--help|help) usage;;
+	*) firmware_reset;;
+esac

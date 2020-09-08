@@ -1,0 +1,597 @@
+/*
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/interrupt-controller/mips-gic.h>
+
+/ {
+	compatible = "siflower,sf16a18";
+	#address-cells = <1>;
+	#size-cells = <1>;
+	interrupt-parent = <&gic>;
+
+	aliases {
+		gdma = &gdma;
+		usb = &usb;
+/*		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+*/		spi0 = &spi0;
+		spi1 = &spi1;
+		uart0=&uart0;
+		uart1=&uart1;
+		/*pcm1 = &pcm1;*/
+/*		pwm0 = &pwm0;
+		pwm1 = &pwm1;
+*/		timer0 = &timer0;
+		timer1 = &timer1;
+		timer2 = &timer2;
+		timer3 = &timer3;
+	};
+
+	cpus{
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu0: cpu@0 {
+			device_type = "cpu";
+			compatible = "mti,interAptiv";
+			reg = <0>;
+			clocks = <&cpuclk 0>;
+			clock-names = "cpu";
+			clock-latency = <0>;
+			operating-points = <
+				/* kHz    uV(dummy) */
+				1200000 900000
+				1100000 900000
+				1000000 900000
+				900000 900000
+				800000 900000
+				672000 875000
+				600000 875000
+				550000 875000
+				500000 875000
+				450000 875000
+				400000 875000
+				350000 875000
+				336000 875000
+				300000 875000
+				250000 875000
+				200000 875000
+				150000 875000
+				100000 875000
+			>;
+		};
+		cpu@1 {
+			compatible = "mti,interAptiv";
+		};
+		cpu@2 {
+			compatible = "mti,interAptiv";
+		};
+		cpu@3 {
+			compatible = "mti,interAptiv";
+		};
+	};
+
+	grfcom: syscon@19e00000 {
+			compatible = "siflower,sfax8-syscon","syscon";
+			reg = <0x19e00000 0x30000>;
+		};
+
+	grfgpio: syscon@19e3f000 {
+			compatible = "siflower,sfax8-syscon","syscon";
+			reg = <0x19e3f000 0x1000>;
+		};
+
+	clocks{
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		osc: oscillator {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <12000000>;
+			clock-names = "osc_clk";
+			clock-output-names = "osc";
+		};
+
+		cpupll: pll@19e01000 {
+			compatible = "siflower,sf16a18-cpu-pll";
+			#clock-cells = <1>;
+			clocks = <&osc>;
+			clock-names = "cpu_pll";
+			clock-output-names = "cpupll";
+			max-freq = <60000000>;
+			reg = <0x19e01000 0x40>;
+		};
+
+		bus1xnclk: cfg@19e01400 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <50000000>;
+			clock-output-names = "bus1xnclk";
+		};
+
+		bus2xnclk: cfg@19e01420 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <50000000>;
+			clock-output-names = "bus2xnclk";
+		};
+
+		bus3xnclk: cfg@19e01440 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <80000000>;
+			clock-output-names = "bus3xnclk";
+		};
+
+		cpuclk: cfg@19e01500 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <40000000>;
+			clock-output-names = "cpuclk";
+		};
+
+		pbusclk: cfg@19e01520 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <50000000>;
+			clock-output-names = "pbusclk";
+		};
+
+		memphyclk: cfg@19e01540 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <140000000>;
+			clock-output-names = "memphyclk";
+		};
+
+		audioclk: cfg@19e01560 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <60000000>;
+			clock-output-names = "audioclk";
+		};
+
+		uartclk: cfg@19e01580 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <60000000>;
+			clock-output-names = "uartclk";
+		};
+
+		spdifclk: cfg@19e015a0 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <60000000>;
+			clock-output-names = "spdifclk";
+		};
+
+		sdhcclk: cfg@19e015c0 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <50000000>;
+			clock-output-names = "sdhcclk";
+		};
+
+		inandclk: cfg@19e015e0 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <50000000>;
+			clock-output-names = "inandclk";
+		};
+
+		ethrefclk: cfg@19e01600 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <25000000>;
+			clock-output-names = "ethrefclk";
+		};
+
+		ethbyprefclk: cfg@19e01620 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <125000000>;
+			clock-output-names = "ethbyprefclk";
+		};
+
+		ethtsuclk: cfg@19e01640 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <25000000>;
+			clock-output-names = "ethtsuclk";
+		};
+
+		wlan24clk: cfg@19e016c0 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <30000000>;
+			clock-output-names = "wlan24clk";
+		};
+
+		wlan5clk: cfg@19e016e0 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <30000000>;
+			clock-output-names = "wlan5clk";
+		};
+
+		usbphyclk: cfg@19e01700 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <50000000>;
+			clock-output-names = "usbphyclk";
+		};
+
+		tclk: cfg@19e01720 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <50000000>;
+			clock-output-names = "tclk";
+		};
+
+		npupeclk: cfg@19e01740 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <500000000>;
+			clock-output-names = "npupeclk";
+		};
+
+		gdu0clk: cfg@19e01760 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <198000000>;
+			clock-output-names = "gdu0clk";
+		};
+
+		gdu0eitfclk: cfg@19e01780 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <40000000>;
+			clock-output-names = "gdu0eitfclk";
+		};
+
+		tvif0clk: cfg@19e017a0 {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency  = <198000000>;
+			clock-output-names = "tvif0clk";
+		};
+
+	};
+	gic: interrupt-controller@1bdc0000 {
+		compatible = "mti,gic";
+		reg = <0x1bdc0000 0x20000>;
+		interrupt-controller;
+		#interrupt-cells = <3>;
+		mti,reserved-ipi-vectors = <0 8>;
+
+		timer {
+			compatible = "mti,gic-timer";
+			interrupts = <GIC_LOCAL 1 IRQ_TYPE_NONE>;
+			clocks = <&cpuclk 0>;
+		};
+	};
+
+	usb_phy: usb-phy {
+		compatible = "siflower,sfax8-usb-phy";
+		clocks = <&usbphyclk 0>;
+		usbgrf = <&grfcom>;
+		#phy-cells = <0>;
+		status = "disabled";
+	};
+
+		gdma: dma@11800000 {
+			compatible = "siflower,sfax8-gdma";
+			reg = <0x11800000 0x1000>;
+			interrupts = <GIC_SHARED 80 IRQ_TYPE_LEVEL_HIGH>;
+			#dma-cells = <1>;
+			#dma-channels = <7>;
+			#dma-requests = <32>;
+			status = "disabled";
+		};
+
+		usb: usb@17400000 {
+			compatible = "siflower,sfax8-usb";
+			reg = <0x17400000 0x40000>;
+			interrupts = <GIC_SHARED 128 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&usbphyclk 0>;
+			dr_mode = "otg";
+			phys = <&usb_phy>;
+			phy-names = "usb2-phy";
+			usbgrf = <&grfcom>;
+			status = "disabled";
+
+			g-use-dma;
+			g-tx-fifo-size = <0x100 0x100 0x100 0x100 0x100
+				0x300 0x300 0x300>;
+		};
+
+ethernet: ethernet@10000000 {
+		compatible = "siflower,sfax8-eth";
+		reg = <0x10000000 0x6CFFFF>;
+		clocks = <&ethbyprefclk 0>, <&ethtsuclk 0>, <&bus1xnclk 0>, <&ethrefclk 0>, <&npupeclk 0>;
+		mtd-mac-address = <&factory 0>;
+		mtd-mac-address-increment = <0>;
+/*		iram-addr = <&irams>;
+*/		interrupts = <GIC_SHARED 16 IRQ_TYPE_LEVEL_HIGH>, <GIC_SHARED 24 IRQ_TYPE_LEVEL_HIGH>;
+		status = "disabled";
+	};
+
+
+
+switch: switch@10000000 {
+		compatible = "siflower,sfax8-switch";
+		reg = <0x10000000 0x6CFFFF>;
+		interrupt-parent = <&gic>;
+		interrupts = <GIC_SHARED 25 IRQ_TYPE_LEVEL_HIGH>, <GIC_SHARED 26 IRQ_TYPE_LEVEL_HIGH>, <GIC_SHARED 27 IRQ_TYPE_LEVEL_HIGH>, <GIC_SHARED 28 IRQ_TYPE_LEVEL_HIGH>, <GIC_SHARED 29 IRQ_TYPE_LEVEL_HIGH>;
+		max-speed = <100>;
+		sfax8,port-map = "llllw";
+		status = "disabled";
+	};
+
+
+
+gmac: gmac@10800000 {
+		compatible = "siflower,sfax8-gmac";
+		reg = <0x10800000 0x200000>;
+		clocks = <&ethbyprefclk 0>, <&ethtsuclk 0>, <&bus1xnclk 0>;
+        interrupt-parent = <&gic>;
+		interrupts = <GIC_SHARED 32 IRQ_TYPE_LEVEL_HIGH>, <GIC_SHARED 34 IRQ_TYPE_LEVEL_HIGH>;
+/*		iram-addr = <&iramg>;
+*/		mtd-mac-address = <&factory 0>;
+		mtd-mac-address-increment = <1>;
+		phy = <&phy0>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+			phy0: ethernet-phy@0 {
+				reg = <0>;
+				max-speed = <1000>;
+			};
+	};
+		spi0: spi@8202000 {
+			compatible = "siflower,sfax8-spi";
+			reg = <0x8202000 0x1000>;
+			num-cs = <1>;
+			cs-gpios = <&gpio 8 0>;
+			spi-max-frequency = <33000000>;
+
+			clocks = <&pbusclk 0>;
+			sfgrf = <&grfcom>;
+
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SHARED 223 IRQ_TYPE_LEVEL_HIGH>;
+
+			use-dma;
+			dmas = <&gdma 4
+				&gdma 5>;
+			dma-names = "tx", "rx";
+
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		spi1: spi@18201000 {
+			compatible = "siflower,sfax8-spi";
+			reg = <0x18201000 0x1000>;
+			clocks = <&pbusclk 0>;
+			status = "disabled";
+
+			num-cs = <1>;
+			/*cs-gpios = <&gpio 34 0>;*/
+			spi-max-frequency = <33000000>;
+			sfgrf = <&grfcom>;
+
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SHARED 224 IRQ_TYPE_LEVEL_HIGH>;
+
+		/*	use-dma;
+			dmas = <&gdma 12
+				&gdma 13>;
+			dma-names = "tx", "rx";
+		*/
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
+		uart0: serial@18300000 {
+			compatible = "siflower,sfax8-uart";
+			reg = <0x18300000 0x1000>;
+			interrupts = <GIC_SHARED 226 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&uartclk 0>;
+			status = "disabled";
+		};
+
+		uart1: serial@18301000 {
+			compatible = "siflower,sfax8-uart";
+			reg = <0x18301000 0x1000>;
+			interrupts = <GIC_SHARED 227 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&uartclk 0>;
+			dmas = <&gdma 14
+			&gdma 15>;
+			dma-names = "tx", "rx";
+			status = "disabled";
+		};
+
+		timer0: timer@18600000 {
+			compatible = "siflower,sfax8-timer";
+			reg = <0x18600000 0x14>;
+			interrupts = <GIC_SHARED 234 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&pbusclk 0>;
+			clock-names = "timer";
+			status = "disabled";
+		};
+
+		timer1: timer@18600014 {
+			compatible = "siflower,sfax8-timer";
+			reg = <0x18600014 0x14>;
+			interrupts = <GIC_SHARED 235 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&pbusclk 0>;
+			clock-names = "timer";
+			status = "disabled";
+		};
+
+		timer2: timer@18601000 {
+			compatible = "siflower,sfax8-timer";
+			reg = <0x18601000 0x14>;
+			interrupts = <GIC_SHARED 236 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&pbusclk 0>;
+			clock-names = "timer";
+			status = "disabled";
+		};
+
+		timer3: timer@18601014 {
+			compatible = "siflower,sfax8-timer";
+			reg = <0x18601014 0x14>;
+			interrupts = <GIC_SHARED 237 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&pbusclk 0>;
+			clock-names = "timer";
+			status = "disabled";
+		};
+
+	pinctrl: pinctrl {
+		compatible = "siflower,sfax8-pinctrl";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		interrupt-parent = <&gic>;
+		ranges;
+		pad-base = <&grfgpio>;
+
+		gpio: gpio@19d00000 {
+			compatible = "siflower,sfax8-gpio";
+			reg=<0x19d00000 0x100000>;
+			interrupts = <GIC_SHARED 246 IRQ_TYPE_NONE>,
+				     <GIC_SHARED 247 IRQ_TYPE_NONE>,
+				     <GIC_SHARED 248 IRQ_TYPE_NONE>,
+				     <GIC_SHARED 249 IRQ_TYPE_NONE>;
+			clocks = <&pbusclk 0>;
+
+			gpio-controller;
+			#gpio-cells = <2>;
+
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+
+		pcfg_pull_up: pcfg-pull-up {
+			bias-pull-up;
+		};
+
+		pcfg_pull_down: pcfg-pull-down {
+			bias-pull-down;
+		};
+
+		pcfg_pull_none: pcfg-pull-none {
+			bias-disable;
+		};
+
+		pcfg_pull_pin_default: pcfg-pull-pin-default {
+			bias-pull-pin-default;
+		};
+
+
+		spi0 {
+			spi0_mosi: spi0-mosi {
+				sfax8,pins = <0 0 1 &pcfg_pull_pin_default>;
+			};
+			spi0_miso: spi0-miso {
+				sfax8,pins = <0 1 1 &pcfg_pull_pin_default>;
+			};
+			spi0_hold: spi0-hold {
+				sfax8,pins = <0 2 1 &pcfg_pull_pin_default>;
+			};
+			spi0_wp: spi0-wp {
+				sfax8,pins = <0 3 1 &pcfg_pull_pin_default>;
+			};
+			spi0_clk: spi0-clk {
+				sfax8,pins = <0 4 1 &pcfg_pull_pin_default>;
+			};
+			spi0_cs0: spi0-cs0 {
+				sfax8,pins = <0 5 1 &pcfg_pull_pin_default>;
+			};
+			spi0_cs1: spi0-cs1 {
+				sfax8,pins = <0 6 1 &pcfg_pull_pin_default>;
+			};
+		};
+
+		spi1 {
+			spi1_txd: spi1-txd {
+				sfax8,pins = <0 9 1 &pcfg_pull_pin_default>;
+			};
+			spi1_rxd: spi1-rxd {
+				sfax8,pins = <0 10 1 &pcfg_pull_pin_default>;
+			};
+			spi1_clk: spi1-clk {
+				sfax8,pins = <0 11 1 &pcfg_pull_pin_default>;
+			};
+			spi1_csn: spi1-csn {
+				sfax8,pins = <0 12 1 &pcfg_pull_pin_default>;
+			};
+		};
+
+		uart0 {
+			uart0_tx: uart0-tx {
+				sfax8,pins = <0 9 0 &pcfg_pull_pin_default>;
+			};
+
+			uart0_rx: uart0-rx {
+				sfax8,pins = <0 10 0 &pcfg_pull_pin_default>;
+			};
+		};
+
+		uart1 {
+			uart1_tx: uart1-tx {
+				sfax8,pins = <0 5 1 &pcfg_pull_pin_default>;
+			};
+
+			uart1_rx: uart1-rx {
+				sfax8,pins = <0 6 1 &pcfg_pull_pin_default>;
+			};
+		};
+
+		i2c0 {
+			i2c0_clk: i2c0-clk {
+				sfax8,pins = <0 11 0 &pcfg_pull_pin_default>;
+			};
+
+			i2c0_dat: i2c0-dat {
+				sfax8,pins = <0 12 0 &pcfg_pull_pin_default>;
+			};
+		};
+
+		i2c1 {
+			i2c1_clk: i2c1-clk {
+				sfax8,pins = <0 7 1 &pcfg_pull_pin_default>;
+			};
+
+			i2c1_dat: i2c1-dat {
+				sfax8,pins = <0 8 1 &pcfg_pull_pin_default>;
+			};
+		};
+
+		pwm0 {
+			pwm_0: pwm-0 {
+				sfax8,pins = <0 3 1 &pcfg_pull_pin_default>;
+			};
+		};
+
+		pwm1 {
+			pwm_1: pwm-1 {
+				sfax8,pins = <0 4 1 &pcfg_pull_pin_default>;
+			};
+		};
+
+	};
+};

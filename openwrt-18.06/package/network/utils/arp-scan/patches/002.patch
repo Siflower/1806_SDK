@@ -1,0 +1,14 @@
+--- a/configure.ac	2017-11-21 14:21:12.838087861 +0800
++++ b/configure.ac	2017-11-21 14:22:38.178090377 +0800
+@@ -51,11 +51,6 @@
+ dnl Just about everything will need pcap.
+ AC_SEARCH_LIBS([gethostbyname], [nsl])
+ AC_SEARCH_LIBS([socket], [socket])
+-AC_SEARCH_LIBS([pcap_open_live], [pcap], ,
+-   [
+-   AC_MSG_NOTICE([Cannot find pcap library containing pcap_open_live])
+-   AC_MSG_ERROR([Check that you have libpcap version 0.9 or later installed])
+-   ])
+
+ dnl Check that the pcap library contains pcap_sendpacket
+ dnl This was introduced in version 0.9, and our application requires it.

@@ -1,0 +1,41 @@
+config NET_VENDOR_SIFLOWER
+	tristate "vender siflower switch driver support sfax8"
+	help
+	  This driver supports the ethernet/switch inside
+
+if NET_VENDOR_SIFLOWER
+
+config  SFAX8_SWITCH
+	tristate "sfax8 switch driver"
+	help
+	  This driver supports the ethernet/switch inside
+
+config SFAX8_PTP
+	bool "PTP support"
+	depends on (SFAX8_GMAC) && (SFAX8_SWITCH)
+
+config SFAX8_SWITCH_FPGA
+	bool "Fpga version"
+	depends on (SFAX8_SWITCH)
+
+config SFAX8_SWITCH_VLAN
+	bool "vlan config enable"
+	depends on (SFAX8_SWITCH)
+
+config SFAX8_SWITCH_API
+	bool "api enable"
+	depends on (SFAX8_SWITCH)
+
+config SFAX8_SWITCH_DPS
+	bool "detect port status"
+	depends on (SFAX8_SWITCH_VLAN)
+
+config SFAX8_SWITCH_POWERSAVE
+	bool "power save enable"
+	depends on (SFAX8_SWITCH_VLAN)
+
+config SFAX8_SWITCH_AGEING
+	bool "Ageing mac address"
+	depends on (SFAX8_SWITCH)
+
+endif

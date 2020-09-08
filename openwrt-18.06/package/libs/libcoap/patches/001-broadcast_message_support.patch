@@ -1,0 +1,165 @@
+Index: libcoap-4.2.0/include/coap2/address.h
+===================================================================
+--- libcoap-4.2.0.orig/include/coap2/address.h	2019-03-02 18:58:05.000000000 +0800
++++ libcoap-4.2.0/include/coap2/address.h	2019-06-20 10:05:44.381366501 +0800
+@@ -163,6 +163,12 @@
+  * returns @c 1 if @p a is multicast, @c 0 otherwise.
+  */
+ int coap_is_mcast(const coap_address_t *a);
++
++/**
++ *Checks if given address @p a denotes a broadcast address. This function
++ * returns @c 1 if @p a is multicast, @c 0 otherwise.
++**/
++int coap_is_broadcast(const coap_address_t *a);
+ #else /* !WITH_LWIP && !WITH_CONTIKI */
+ /**
+  * Checks if given address @p a denotes a multicast address. This function
+Index: libcoap-4.2.0/include/coap2/coap_io.h
+===================================================================
+--- libcoap-4.2.0.orig/include/coap2/coap_io.h	2019-03-02 18:58:05.000000000 +0800
++++ libcoap-4.2.0/include/coap2/coap_io.h	2019-06-20 10:05:53.341366765 +0800
+@@ -64,6 +64,7 @@
+ #define COAP_SOCKET_CAN_ACCEPT   0x0400  /**< non blocking server socket can now accept without blocking */
+ #define COAP_SOCKET_CAN_CONNECT  0x0800  /**< non blocking client socket can now connect without blocking */
+ #define COAP_SOCKET_MULTICAST    0x1000  /**< socket is used for multicast communication */
++#define COAP_SOCKET_BROADCAST 	 0x2000  /**< socket is used for boardcast communication */
+ 
+ struct coap_endpoint_t *coap_malloc_endpoint( void );
+ void coap_mfree_endpoint( struct coap_endpoint_t *ep );
+Index: libcoap-4.2.0/libcoap-2.map
+===================================================================
+--- libcoap-4.2.0.orig/libcoap-2.map	2019-03-02 18:58:05.000000000 +0800
++++ libcoap-4.2.0/libcoap-2.map	2019-06-20 10:11:01.125375840 +0800
+@@ -111,7 +111,6 @@
+   coap_package_name;
+   coap_package_version;
+   coap_packet_get_memmapped;
+-  coap_packet_set_addr;
+   coap_pdu_clear;
+   coap_pdu_encode_header;
+   coap_pdu_init;
+Index: libcoap-4.2.0/libcoap-2.sym
+===================================================================
+--- libcoap-4.2.0.orig/libcoap-2.sym	2019-03-02 18:58:05.000000000 +0800
++++ libcoap-4.2.0/libcoap-2.sym	2019-06-20 10:11:08.893376069 +0800
+@@ -109,7 +109,6 @@
+ coap_package_name
+ coap_package_version
+ coap_packet_get_memmapped
+-coap_packet_set_addr
+ coap_pdu_clear
+ coap_pdu_encode_header
+ coap_pdu_init
+Index: libcoap-4.2.0/src/address.c
+===================================================================
+--- libcoap-4.2.0.orig/src/address.c	2019-03-02 18:58:05.000000000 +0800
++++ libcoap-4.2.0/src/address.c	2019-06-20 10:06:14.165367379 +0800
+@@ -56,6 +56,25 @@
+  return 0;
+ }
+ 
++static int in4_is_broadcast(uint32_t addr)
++{
++	return (addr & 0xff) == 0xff;
++}
++
++int coap_is_broadcast(const coap_address_t *a) {
++	if (!a)
++		return 0;
++	switch(a->addr.sa.sa_family) {
++	case AF_INET:
++		return in4_is_broadcast(ntohl(a->addr.sin.sin_addr.s_addr));
++	case AF_INET6:
++		//TODO
++	default:
++		;
++	}
++	return 0;
++}
++
+ int coap_is_mcast(const coap_address_t *a) {
+   if (!a)
+     return 0;
+Index: libcoap-4.2.0/src/coap_io.c
+===================================================================
+--- libcoap-4.2.0.orig/src/coap_io.c	2019-03-02 18:58:05.000000000 +0800
++++ libcoap-4.2.0/src/coap_io.c	2019-06-20 10:07:46.165370092 +0800
+@@ -536,6 +536,7 @@
+ #endif
+   coap_address_t connect_addr;
+   int is_mcast = coap_is_mcast(server);
++  int is_bcast = coap_is_broadcast(server);
+   coap_address_copy(&connect_addr, server);
+ 
+   sock->flags &= ~(COAP_SOCKET_CONNECTED | COAP_SOCKET_MULTICAST);
+@@ -575,6 +576,13 @@
+     break;
+   }
+ 
++  if( is_bcast ) {
++  	if (setsockopt(sock->fd, SOL_SOCKET, SO_BROADCAST, OPTVAL_T(&on), sizeof(on)) == COAP_SOCKET_ERROR)
++   	 coap_log(LOG_WARNING,
++             "coap_socket_connect_udp: setsockopt SO_BROADCAST: %s\n",
++              coap_socket_strerror());
++  }
++
+   if (local_if && local_if->addr.sa.sa_family) {
+     if (setsockopt(sock->fd, SOL_SOCKET, SO_REUSEADDR, OPTVAL_T(&on), sizeof(on)) == COAP_SOCKET_ERROR)
+       coap_log(LOG_WARNING,
+@@ -588,14 +597,18 @@
+   }
+ 
+   /* special treatment for sockets that are used for multicast communication */
+-  if (is_mcast) {
++  if (is_mcast || is_bcast) {
+     if (getsockname(sock->fd, &local_addr->addr.sa, &local_addr->size) == COAP_SOCKET_ERROR) {
+       coap_log(LOG_WARNING,
+               "coap_socket_connect_udp: getsockname for multicast socket: %s\n",
+               coap_socket_strerror());
+     }
++
+     coap_address_copy(remote_addr, &connect_addr);
+-    sock->flags |= COAP_SOCKET_MULTICAST;
++	if ( is_mcast )
++      sock->flags |= COAP_SOCKET_MULTICAST;
++	if ( is_bcast )
++      sock->flags |= COAP_SOCKET_BROADCAST;
+     return 1;
+   }
+ 
+@@ -914,11 +927,6 @@
+   *length = packet->length;
+ }
+ 
+-void coap_packet_set_addr(coap_packet_t *packet, const coap_address_t *src, const coap_address_t *dst) {
+-  coap_address_copy(&packet->src, src);
+-  coap_address_copy(&packet->dst, dst);
+-}
+-
+ ssize_t
+ coap_network_read(coap_socket_t *sock, coap_packet_t *packet) {
+   ssize_t len = -1;
+Index: libcoap-4.2.0/src/net.c
+===================================================================
+--- libcoap-4.2.0.orig/src/net.c	2019-03-02 18:58:05.000000000 +0800
++++ libcoap-4.2.0/src/net.c	2019-06-20 10:10:49.593375500 +0800
+@@ -1133,7 +1133,7 @@
+   coap_packet_t *packet = &s_packet;
+ #endif /* WITH_CONTIKI */
+ 
+-  assert(session->sock.flags & (COAP_SOCKET_CONNECTED | COAP_SOCKET_MULTICAST));
++  assert(session->sock.flags & (COAP_SOCKET_CONNECTED | COAP_SOCKET_MULTICAST | COAP_SOCKET_BROADCAST));
+ 
+   if (COAP_PROTO_NOT_RELIABLE(session->proto)) {
+     ssize_t bytes_read;
+@@ -1151,7 +1151,8 @@
+       coap_log(LOG_DEBUG, "*  %s: received %zd bytes\n",
+                coap_session_str(session), bytes_read);
+       session->last_rx_tx = now;
+-      coap_packet_set_addr(packet, &session->remote_addr, &session->local_addr);
++	  coap_address_copy(&session->remote_addr, &packet->src);
++	  coap_address_copy(&session->local_addr, &packet->dst);
+       coap_handle_dgram_for_proto(ctx, session, packet);
+     }
+   } else {

@@ -1,0 +1,104 @@
+diff -uprN backports-4.19.7-1.orig/include/net/mac80211.h backports-4.19.7-1.new/include/net/mac80211.h
+--- backports-4.19.7-1.orig/include/net/mac80211.h	2019-12-05 15:24:32.013814962 +0800
++++ backports-4.19.7-1.new/include/net/mac80211.h	2019-12-05 15:28:05.473823920 +0800
+@@ -3830,6 +3830,7 @@ struct ieee80211_ops {
+ 	void (*del_nan_func)(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+ 			    u8 instance_id);
++	int (*priv_ioctl)(struct ieee80211_hw *hw, struct ifreq *rq, int cmd);
+ };
+ 
+ /**
+diff -uprN backports-4.19.7-1.orig/local-symbols backports-4.19.7-1.new/local-symbols
+--- backports-4.19.7-1.orig/local-symbols	2019-12-05 15:25:44.213817992 +0800
++++ backports-4.19.7-1.new/local-symbols	2019-12-05 15:35:36.821842861 +0800
+@@ -72,6 +72,7 @@ MAC80211_MESH_PS_DEBUG=
+ MAC80211_TDLS_DEBUG=
+ MAC80211_DEBUG_COUNTERS=
+ MAC80211_STA_HASH_MAX_SIZE=
++MAC80211_PRIV_IOCTL=
+ WLAN=
+ WIRELESS_WDS=
+ PCMCIA_RAYCS=
+@@ -404,6 +405,7 @@ USB_ACM=
+ USB_PRINTER=
+ USB_WDM=
+ USB_TMC=
++WLAN_VENDOR_RWNX=
+ STAGING=
+ RTL8723BS=
+ R8188EU=
+diff -uprN backports-4.19.7-1.orig/net/mac80211/driver-ops.h backports-4.19.7-1.new/net/mac80211/driver-ops.h
+--- backports-4.19.7-1.orig/net/mac80211/driver-ops.h	2019-12-05 15:24:30.517814899 +0800
++++ backports-4.19.7-1.new/net/mac80211/driver-ops.h	2019-12-05 15:30:34.721830184 +0800
+@@ -86,6 +86,19 @@ static inline int drv_get_et_sset_count(
+ int drv_start(struct ieee80211_local *local);
+ void drv_stop(struct ieee80211_local *local);
+ 
++#ifdef CPTCFG_MAC80211_PRIV_IOCTL
++static inline int drv_ioctl(struct ieee80211_local *local,
++                struct ifreq *rq, int cmd)
++{
++    int ret = 0;
++	might_sleep();
++
++    if(local->ops->priv_ioctl)
++        ret = local->ops->priv_ioctl(&local->hw, rq, cmd);
++    return ret;
++}
++#endif
++
+ #ifdef CONFIG_PM
+ static inline int drv_suspend(struct ieee80211_local *local,
+ 			      struct cfg80211_wowlan *wowlan)
+diff -uprN backports-4.19.7-1.orig/net/mac80211/iface.c backports-4.19.7-1.new/net/mac80211/iface.c
+--- backports-4.19.7-1.orig/net/mac80211/iface.c	2019-12-05 15:24:30.785814911 +0800
++++ backports-4.19.7-1.new/net/mac80211/iface.c	2019-12-05 15:33:14.277836879 +0800
+@@ -1199,6 +1199,21 @@ static int __change_mtu(struct net_devic
+ }
+ #endif
+ 
++#ifdef CPTCFG_MAC80211_PRIV_IOCTL
++static int ieee80211_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
++{
++	//if some driver do not implement the ioctl function,
++	//do nothing
++
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	int ret = -1;
++
++	ret = drv_ioctl(local, ifr, cmd);
++	return ret;
++}
++#endif
++
+ static const struct net_device_ops ieee80211_dataif_ops = {
+ #if LINUX_VERSION_IS_LESS(4,10,0)
+ 	.ndo_change_mtu = __change_mtu,
+@@ -1214,7 +1229,10 @@ static const struct net_device_ops ieee8
+ #if LINUX_VERSION_IS_GEQ(4,11,0)
+ 	.ndo_get_stats64	= ieee80211_get_stats64,
+ #else
+-	.ndo_get_stats64 = bp_ieee80211_get_stats64,
++	.ndo_get_stats64	= bp_ieee80211_get_stats64,
++#endif
++#ifdef CPTCFG_MAC80211_PRIV_IOCTL
++	.ndo_do_ioctl		= ieee80211_do_ioctl,
+ #endif
+ 
+ };
+diff -uprN backports-4.19.7-1.orig/net/mac80211/Kconfig backports-4.19.7-1.new/net/mac80211/Kconfig
+--- backports-4.19.7-1.orig/net/mac80211/Kconfig	2019-12-05 15:24:30.409814895 +0800
++++ backports-4.19.7-1.new/net/mac80211/Kconfig	2019-12-05 15:29:18.281826976 +0800
+@@ -293,6 +293,10 @@ config MAC80211_DEBUG_COUNTERS
+ 
+ 	  If unsure, say N.
+ 
++config MAC80211_PRIV_IOCTL
++	bool "Enable mac80211's private ioctl function, this is add by siflower"
++	depends on MAC80211
++
+ config MAC80211_STA_HASH_MAX_SIZE
+ 	int "Station hash table maximum size" if MAC80211_DEBUG_MENU
+ 	default 0

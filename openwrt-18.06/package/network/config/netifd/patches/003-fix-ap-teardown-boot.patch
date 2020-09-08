@@ -1,0 +1,37 @@
+diff -uprN netifd-2018-12-16-2750ce2e.orig/utils.c netifd-2018-12-16-2750ce2e/utils.c
+--- netifd-2018-12-16-2750ce2e.orig/utils.c	2019-12-02 12:01:05.254425133 +0800
++++ netifd-2018-12-16-2750ce2e/utils.c	2019-12-02 12:03:26.426431058 +0800
+@@ -18,6 +18,7 @@
+ #include <arpa/inet.h>
+ #include <netinet/in.h>
+ #include <sys/socket.h>
++#include "netifd.h"
+ 
+ #ifdef __APPLE__
+ #include <libproc.h>
+@@ -185,14 +186,23 @@ bool check_pid_path(int pid, const char
+ 	proc_exe_len = proc_pidpath(pid, proc_exe_buf, sizeof(proc_exe_buf));
+ #else
+ 	char proc_exe[32];
+-	char *proc_exe_buf = alloca(exe_len);
++	//alloc enough buffer len for result
++	char *proc_exe_buf = alloca(exe_len + 128);
+ 
+ 	sprintf(proc_exe, "/proc/%d/exe", pid);
+ 	proc_exe_len = readlink(proc_exe, proc_exe_buf, exe_len);
+ #endif
+ 
+-	if (proc_exe_len != exe_len)
++	if (proc_exe_len != exe_len) {
++		D(WIRELESS, "check proc fail1 '%s' pid %d proc_exe=%s proc_exe_buf=%s exe_len=%d proc_exe_len=%d\n", exe, pid,proc_exe,proc_exe_buf,exe_len,proc_exe_len);
++		//check if proc_exe is substr of proc_exe_buf
++		//RM#1938 for when first boot ,link /usr/sbin/wpad may refer to /tmp/root/usr/sbin/wpad when mount switch from /tmp/root
++		if(proc_exe_len > 0 && strstr(proc_exe_buf,exe)){
++			D(WIRELESS, "check proc in substr exe=%s proc_exe=%s\n",exe,proc_exe_buf);
++			return true;
++		}
+ 		return false;
++	}
+ 
+ 	return !memcmp(exe, proc_exe_buf, exe_len);
+ }

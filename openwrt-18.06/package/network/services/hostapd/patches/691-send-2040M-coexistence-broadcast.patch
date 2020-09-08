@@ -1,0 +1,31 @@
+--- a/src/ap/ieee802_11_ht.c	2019-11-28 16:15:16.828302161 +0800
++++ b/scr/ap/ieee802_11_ht.c	2019-11-28 16:17:35.084307963 +0800
+@@ -359,6 +359,28 @@ void hostapd_2040_coex_action(struct hos
+ 				       HOSTAPD_MODULE_IEEE80211,
+ 				       HOSTAPD_LEVEL_INFO,
+ 				       "Switching to 20 MHz operation");
++			struct ieee80211_mgmt *resp;
++
++			/*
++			 * IEEE 802.11-REVma/D9.0 - 7.3.1.11
++			 * Return the Action frame to the source without change
++			 * except that MSB of the Category set to 1.
++			 */
++			wpa_printf(MSG_DEBUG, "IEEE 802.11: Return Action "
++						"frame back to broadcast");
++			resp = os_malloc(len);
++			if (resp == NULL)
++			      return;
++			os_memcpy(resp, mgmt, len);
++			os_memcpy(resp->da, broadcast_ether_addr, ETH_ALEN);
++			os_memcpy(resp->sa, hapd->own_addr, ETH_ALEN);
++			os_memcpy(resp->bssid, hapd->own_addr, ETH_ALEN);
++
++			if (hostapd_drv_send_mlme(hapd, resp, len, 0) < 0) {
++				wpa_printf(MSG_ERROR, "IEEE 802.11: Failed to send "
++							"Action frame");
++			}
++			os_free(resp);
+ 			iface->conf->secondary_channel = 0;
+ 			ieee802_11_set_beacons(iface);
+ 		}

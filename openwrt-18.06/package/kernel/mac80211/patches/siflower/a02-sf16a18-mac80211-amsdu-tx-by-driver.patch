@@ -1,0 +1,57 @@
+diff -uprN backports-4.19.7-1.orig/net/mac80211/agg-tx.c backports-4.19.7-1.new/net/mac80211/agg-tx.c
+--- backports-4.19.7-1.orig/net/mac80211/agg-tx.c	2019-12-05 17:47:55.662176022 +0800
++++ backports-4.19.7-1.new/net/mac80211/agg-tx.c	2019-12-05 17:53:47.486190787 +0800
+@@ -64,7 +64,7 @@
+ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+ 					 const u8 *da, u16 tid,
+ 					 u8 dialog_token, u16 start_seq_num,
+-					 u16 agg_size, u16 timeout)
++					 u16 agg_size, u16 timeout, bool amsdu_supported)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+@@ -98,7 +98,8 @@ static void ieee80211_send_addba_request
+ 	mgmt->u.action.u.addba_req.action_code = WLAN_ACTION_ADDBA_REQ;
+ 
+ 	mgmt->u.action.u.addba_req.dialog_token = dialog_token;
+-	capab = (u16)(1 << 0);		/* bit 0 A-MSDU support */
++	//capab = (u16)(1 << 0);		/* bit 0 A-MSDU support */
++	capab = (u16)(amsdu_supported << 0);    /*  bit 0 AMSDU supported */
+ 	capab |= (u16)(1 << 1);		/* bit 1 aggregation policy */
+ 	capab |= (u16)(tid << 2); 	/* bit 5:2 TID number */
+ 	capab |= (u16)(agg_size << 6);	/* bit 15:6 max size of aggergation */
+@@ -379,6 +380,7 @@ int ___ieee80211_stop_tx_ba_session(stru
+ 	 * to the driver but are put onto tid_tx->pending instead,
+ 	 * with locking to ensure proper access.
+ 	 */
++	tid_tx->amsdu = false;
+ 	clear_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state);
+ 
+ 	/*
+@@ -527,7 +529,7 @@ void ieee80211_tx_ba_session_handle_star
+ 	/* send AddBA request */
+ 	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
+ 				     tid_tx->dialog_token, params.ssn,
+-				     buf_size, tid_tx->timeout);
++				     buf_size, tid_tx->timeout, params.amsdu);
+ }
+ 
+ /*
+diff -uprN backports-4.19.7-1.orig/net/mac80211/Kconfig backports-4.19.7-1.new/net/mac80211/Kconfig
+--- backports-4.19.7-1.orig/net/mac80211/Kconfig	2019-12-05 17:47:55.658176022 +0800
++++ backports-4.19.7-1.new/net/mac80211/Kconfig	2019-12-05 17:48:50.074178305 +0800
+@@ -305,6 +305,14 @@ config MAC80211_SIFLOWER_MONITOR_ENABLE
+ 	bool "Enable monitor in mac80211, this is add by siflower"
+ 	depends on MAC80211
+ 
++config MAC80211_LITE_FLASH
++	bool "mac80211 is running on the platform with lite flash, this is add by siflower"
++	depends on MAC80211
++
++config MAC80211_LITE_MEMORY
++	bool "mac80211 is running on the platform with lite memory, this is add by siflower"
++	depends on MAC80211
++
+ config MAC80211_STA_HASH_MAX_SIZE
+ 	int "Station hash table maximum size" if MAC80211_DEBUG_MENU
+ 	default 0

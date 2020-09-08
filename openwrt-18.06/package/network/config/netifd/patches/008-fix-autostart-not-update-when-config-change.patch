@@ -1,0 +1,16 @@
+diff -uprN netifd-2018-12-16-2750ce2e.orig/interface.c netifd-2018-12-16-2750ce2e/interface.c
+--- netifd-2018-12-16-2750ce2e.orig/interface.c	2019-12-02 16:31:50.347106873 +0800
++++ netifd-2018-12-16-2750ce2e/interface.c	2019-12-02 16:33:23.019110762 +0800
+@@ -1234,11 +1234,10 @@ interface_change_config(struct interface
+ 	if (if_old->config_autostart != if_new->config_autostart) {
+ 		if (if_old->config_autostart)
+ 			reload = true;
+-
+-		if_old->autostart = if_new->config_autostart;
+ 	}
+ 
+ 	if_old->device_config = if_new->device_config;
++	if_old->autostart = if_new->autostart;
+ 	if_old->config_autostart = if_new->config_autostart;
+ 	if_old->ifname = if_new->ifname;
+ 	if_old->parent_ifname = if_new->parent_ifname;

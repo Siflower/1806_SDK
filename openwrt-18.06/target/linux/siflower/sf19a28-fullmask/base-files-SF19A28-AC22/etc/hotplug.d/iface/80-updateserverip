@@ -1,0 +1,6 @@
+#!/bin/sh
+
+[ "$ACTION" = ifup ] || exit 0
+[ "$INTERFACE" = "wwan" ] || [ "$INTERFACE" = "wan" ] || exit 0
+aclscript l_update_ip &
+echo "update lease network server ip" > /dev/ttyS0

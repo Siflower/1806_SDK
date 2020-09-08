@@ -1,0 +1,18 @@
+--- a/configure.ac	2017-11-21 14:26:20.426096929 +0800
++++ b/configure.ac	2017-11-21 14:26:38.102097450 +0800
+@@ -60,15 +60,6 @@
+ dnl allows us to provide different error messages for missing pcap and non
+ dnl functional pcap and so avoids confusing generic error messages.
+ dnl
+-AC_MSG_CHECKING([for a compatible pcap library])
+-AC_LINK_IFELSE([AC_LANG_CALL([], [pcap_sendpacket])],
+-   [AC_MSG_RESULT([yes])],
+-   [
+-   AC_MSG_RESULT([no])
+-   AC_MSG_NOTICE([Cannot find pcap_sendpacket in pcap library])
+-   AC_MSG_ERROR([Check that the pcap library is at least version 0.9])
+-   ])
+-
+ dnl Checks for header files.
+ AC_HEADER_STDC
+ AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h sys/socket.h sys/time.h unistd.h getopt.h pcap.h sys/ioctl.h sys/stat.h fcntl.h])

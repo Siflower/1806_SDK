@@ -1,0 +1,221 @@
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=sf_smac
+PKG_RELEASE=1
+
+include $(INCLUDE_DIR)/kernel.mk
+include $(INCLUDE_DIR)/package.mk
+
+define KernelPackage/sf_smac
+  SUBMENU:=Wireless Drivers
+  TITLE:=SIFLOWER sf16a18 wireless driver
+  DEPENDS:=+kmod-mac80211 +@DRIVER_11N_SUPPORT
+  FILES:=\
+	$(PKG_BUILD_DIR)/rf/sf16a18_rf.ko \
+	$(PKG_BUILD_DIR)/smac/sf16a18_smac.ko \
+	$(PKG_BUILD_DIR)/startcore/startcore.ko
+ifndef CONFIG_FLASH_OPTIMIZE
+	FILES += $(PKG_BUILD_DIR)/fmac/sf16a18_fmac.ko
+endif
+endef
+
+define KernelPackage/sf_smac/config
+	if PACKAGE_kmod-sf_smac
+
+		config PACKAGE_SFSMAC_LB_LA_ENABLE
+			bool "enable LA function for low band"
+			default "n"
+
+		config PACKAGE_SFSMAC_HB_LA_ENABLE
+			bool "enable LA function for high band"
+			depends on !PACKAGE_SFSMAC_LB_LA_ENABLE
+			default "n"
+
+		config PACKAGE_SFUMAC_WIFI_ATE_TOOLS
+			bool "enable wifi ate tool"
+			default "y"
+
+		menu "softmac/fullmac Configuration"
+			choice
+				prompt "decide if use fullmac when bootup"
+				default PACKAGE_SFUMAC_SMAC
+
+			config PACKAGE_SFUMAC_SMAC
+				bool "use softmac"
+
+			config PACKAGE_SFUMAC_FMAC
+				bool "use fullmac"
+			endchoice
+		endmenu
+	endif
+endef
+
+EXTRA_KCONFIG = \
+	CONFIG_SF16A18_WIFI_MAC_HOST_OFFLOAD=m	\
+	CONFIG_SF16A18_WIFI_SOFT_MAC=m	\
+	CONFIG_SF16A18_WIFI_RF=m
+
+ifndef CONFIG_FLASH_OPTIMIZE
+	EXTRA_KCONFIG += CONFIG_SF16A18_WIFI_FULL_MAC=m
+endif
+
+ifdef CONFIG_TARGET_siflower_sf16a18_mpw0
+SF_ARCH=mpw0
+endif
+ifdef CONFIG_TARGET_siflower_sf16a18_mpw1
+SF_ARCH=mpw1
+#for mpw1,rf is not avaiable,so we use fpga macro to setup mac only
+EXTRA_KCONFIG += CONFIG_SF16A18_WIFI_MPW1_FPGA=y
+endif
+
+SF_UMAC_TYPE?=smac
+ifdef CONFIG_PACKAGE_SFUMAC_SMAC
+SF_UMAC_TYPE=smac
+endif
+ifdef CONFIG_PACKAGE_SFUMAC_FMAC
+SF_UMAC_TYPE=fmac
+endif
+
+ifdef CONFIG_TARGET_siflower_sf16a18_fullmask
+SF_ARCH=fullmask
+endif
+
+define KernelPackage/sf_smac/description
+ Kernel module to sf16a18 smac && rf.
+endef
+
+NOSTDINC_FLAGS = \
+	-I$(PKG_BUILD_DIR) \
+	-I$(STAGING_DIR)/usr/include/mac80211-backport/uapi \
+	-I$(STAGING_DIR)/usr/include/mac80211-backport \
+	-I$(STAGING_DIR)/usr/include/mac80211/uapi \
+	-I$(STAGING_DIR)/usr/include/mac80211 \
+	-include backport/autoconf.h \
+	-include backport/backport.h
+
+ifdef CONFIG_PACKAGE_MAC80211_MESH
+  NOSTDINC_FLAGS += -DCONFIG_MAC80211_MESH
+endif
+
+ifdef CONFIG_PACKAGE_MAC80211_DEBUGFS
+  NOSTDINC_FLAGS += -DCONFIG_MAC80211_DEBUGFS
+endif
+
+ifdef CONFIG_PACKAGE_SFSMAC_LB_LA_ENABLE
+NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_LA_ENABLE
+endif
+
+ifdef CONFIG_PACKAGE_SFSMAC_HB_LA_ENABLE
+NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_LA_ENABLE
+endif
+
+ifdef CONFIG_PACKAGE_SFUMAC_WIFI_ATE_TOOLS
+EXTRA_KCONFIG += CONFIG_SF16A18_WIFI_ATE_TOOLS=y
+NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_ATE_TOOLS
+endif
+
+#ifdef CONFIG_FLASH_OPTIMIZE
+#EXTRA_KCONFIG += CONFIG_RWNX_TINY_DRIVER=y
+#endif
+
+NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_RF
+
+ifeq ($(SF_ARCH), fullmask)
+#use m_SFDSP as default
+CONFIG_SF16A18_LMAC_USE_M_SFDSP=y
+NOSTDINC_FLAGS += -DCONFIG_SF16A18_LMAC_USE_M_SFDSP
+else
+#if use interaptiv,you must set CONFIG_NR_CPUS to 2
+CONFIG_SF16A18_LMAC_USE_INTERPTIV=y
+NOSTDINC_FLAGS += -DCONFIG_SF16A18_LMAC_USE_INTERPTIV
+endif
+
+#if driver is final release
+#EXTRA_KCONFIG += CONFIG_SF16A18_RELEASE=y
+
+ifdef CONFIG_FLASH_OPTIMIZE
+EXTRA_KCONFIG += CONFIG_SF16A18_UMAC_MEMORY_LITE=y
+#that must be sync with lmac binaries if defined,here defined 8 to save power for 86v product
+EXTRA_KCONFIG += CONFIG_SF16A18_TXQ_MAX_CNT=8
+endif
+
+define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) ./src/* $(PKG_BUILD_DIR)/
+	$(CP) -r ./config $(PKG_BUILD_DIR)/
+	$(CP) ./src/bb_src/ $(PKG_BUILD_DIR)/smac/ -rf
+	$(CP) ./src/bb_src/ $(PKG_BUILD_DIR)/fmac/ -rf
+endef
+
+define Build/Compile
+	+$(MAKE) $(PKG_JOBS) -C "$(LINUX_DIR)" \
+		ARCH="$(LINUX_KARCH)" \
+		CROSS_COMPILE="$(TARGET_CROSS)" \
+		SUBDIRS="$(PKG_BUILD_DIR)" \
+		NOSTDINC_FLAGS="$(NOSTDINC_FLAGS)" \
+		$(EXTRA_KCONFIG)  \
+		modules
+endef
+
+define KernelPackage/sf_smac/install
+	$(INSTALL_DIR) $(1)/lib/firmware
+	cp \
+		$(PKG_BUILD_DIR)/config/rwnx_aetnensis.ini \
+		$(PKG_BUILD_DIR)/config/rwnx_settings.ini \
+		$(PKG_BUILD_DIR)/config/tx_adjust_gain_table.bin \
+		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/agcram.bin \
+		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_pmem.bin \
+		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_default_reg.bin \
+		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_xdma_reg.bin \
+		$(1)/lib/firmware
+
+ifeq ($(CONFIG_SF16A18_LMAC_USE_M_SFDSP), y)
+ifdef CONFIG_FLASH_OPTIMIZE
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/flash-opt/sf1688_lb_smac.bin $(1)/lib/firmware/
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/flash-opt/sf1688_hb_smac.bin $(1)/lib/firmware/
+else
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf1688_lb_smac.bin $(1)/lib/firmware/
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf1688_hb_smac.bin $(1)/lib/firmware/
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf1688_lb_fmac.bin $(1)/lib/firmware/
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf1688_hb_fmac.bin $(1)/lib/firmware/
+endif
+else
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/idle_task.bin $(1)/lib/firmware/
+ifndef CONFIG_FLASH_OPTIMIZE
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf1688_fmac.bin $(1)/lib/firmware/
+endif
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf1688_smac.bin $(1)/lib/firmware/
+endif
+
+	$(INSTALL_DIR) $(1)/lib/preinit
+	cp $(PKG_BUILD_DIR)/config/99_rf_misc $(1)/lib/preinit/
+
+ifdef CONFIG_PACKAGE_SFUMAC_FMAC
+	echo 'boot_hook_add preinit_main insmod_cfg80211' >> $(1)/lib/preinit/99_rf_misc
+endif
+ifdef CONFIG_PACKAGE_SFUMAC_SMAC
+	echo 'boot_hook_add preinit_main insmod_mac80211' >> $(1)/lib/preinit/99_rf_misc
+endif
+ifndef CONFIG_PACKAGE_SFSMAC_HB_LA_ENABLE
+	echo 'boot_hook_add preinit_main insmod_$(SF_UMAC_TYPE)_lb' >> $(1)/lib/preinit/99_rf_misc
+endif
+ifndef CONFIG_PACKAGE_SFSMAC_LB_LA_ENABLE
+	echo 'boot_hook_add preinit_main insmod_$(SF_UMAC_TYPE)_hb' >> $(1)/lib/preinit/99_rf_misc
+endif
+	cp $(PKG_BUILD_DIR)/config/sfwifi.sh $(1)/lib/
+	$(INSTALL_DIR) $(1)/sbin
+	cp $(PKG_BUILD_DIR)/config/sfwifi $(1)/sbin/
+	cp $(PKG_BUILD_DIR)/config/rf_recali.sh $(1)/sbin/
+ifndef CONFIG_FLASH_OPTIMIZE
+	$(INSTALL_DIR) $(1)/sbin
+	cp $(PKG_BUILD_DIR)/config/sfwifi $(1)/sbin/
+	cp $(PKG_BUILD_DIR)/config/sfwifi_ate $(1)/sbin/
+	cp $(PKG_BUILD_DIR)/config/rf_recali.sh $(1)/sbin/
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_check/* $(1)/sbin/
+	$(INSTALL_DIR) $(1)/bin
+	cp $(PKG_BUILD_DIR)/config/station_24g.sh $(1)/bin/
+	cp $(PKG_BUILD_DIR)/config/station_5g.sh $(1)/bin/
+endif
+endef
+
+$(eval $(call KernelPackage,sf_smac))

@@ -1,0 +1,58 @@
+diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-62566bc2/src/ap/ubus.c
+--- hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c	2019-11-29 14:48:10.371708682 +0800
++++ hostapd-2018-05-21-62566bc2/src/ap/ubus.c	2019-11-29 14:51:28.611717001 +0800
+@@ -1055,6 +1055,46 @@ int del_sta_whitelist(struct ubus_contex
+ 	return 0;
+ }
+ 
++enum {
++	HIDDEN_ELEMENTS,
++	__UPDATE_ELEMENTS_MAX
++};
++
++static const struct blobmsg_policy up_policy[__VENDOR_ELEMENTS_MAX] = {
++	/*set param ignore_broadcast_ssid  0/1/2 see hostapd.conf*/
++	[HIDDEN_ELEMENTS] = { "hidden", BLOBMSG_TYPE_INT32 },
++};
++
++static int
++hostapd_update_params(struct ubus_context *ctx, struct ubus_object *obj,
++			struct ubus_request_data *req, const char *method,
++			struct blob_attr *msg)
++{
++	struct blob_attr *tb[__UPDATE_ELEMENTS_MAX];
++	struct hostapd_data *hapd = get_hapd_from_object(obj);
++	struct blob_attr *cur;
++	bool beacon_change = false;
++
++	blobmsg_parse(up_policy, __UPDATE_ELEMENTS_MAX, tb,
++		      blob_data(msg), blob_len(msg));
++
++	if(tb[HIDDEN_ELEMENTS]){
++		if ((cur = tb[HIDDEN_ELEMENTS])) {
++			int ignore_broadcast_ssid = blobmsg_get_u32(cur);
++			if(ignore_broadcast_ssid != hapd->conf->ignore_broadcast_ssid){
++				hapd->conf->ignore_broadcast_ssid = ignore_broadcast_ssid;
++				beacon_change = true;
++			}
++		}
++	}
++	if(beacon_change){
++		if (ieee802_11_update_beacons(hapd->iface) != 0){
++			return UBUS_STATUS_NOT_SUPPORTED;
++		}
++	}
++	return UBUS_STATUS_OK;
++}
++
+ static const struct ubus_method bss_methods[] = {
+ 	UBUS_METHOD_NOARG("get_clients", hostapd_bss_get_clients),
+ 	UBUS_METHOD("del_client", hostapd_bss_del_client, del_policy),
+@@ -1067,6 +1107,7 @@ static const struct ubus_method bss_meth
+ 	UBUS_METHOD("switch_chan", hostapd_switch_chan, csa_policy),
+ #endif
+ 	UBUS_METHOD("set_vendor_elements", hostapd_vendor_elements, ve_policy),
++	UBUS_METHOD("update_params", hostapd_update_params, up_policy),
+ 	UBUS_METHOD("notify_response", hostapd_notify_response, notify_policy),
+ 	UBUS_METHOD("bss_mgmt_enable", hostapd_bss_mgmt_enable, bss_mgmt_enable_policy),
+ 	UBUS_METHOD_NOARG("rrm_nr_get_own", hostapd_rrm_nr_get_own),

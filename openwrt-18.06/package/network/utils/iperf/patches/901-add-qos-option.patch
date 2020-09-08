@@ -1,0 +1,85 @@
+Index: iperf-2.0.10/include/Settings.hpp
+===================================================================
+--- iperf-2.0.10.orig/include/Settings.hpp	2017-08-09 11:54:14.000000000 +0800
++++ iperf-2.0.10/include/Settings.hpp	2018-05-15 12:55:34.139112362 +0800
+@@ -161,6 +161,7 @@
+         bool   mNoServerReport;         // -x
+         bool   mNoMultReport;           // -x m
+         bool   mSinlgeClient;           // -1 */
++	int qos_value; //-q value[0..7]
+     int flags;
+     int flags_extend;
+     // enums (which should be special int's)
+Index: iperf-2.0.10/src/Client.cpp
+===================================================================
+--- iperf-2.0.10.orig/src/Client.cpp	2017-08-09 11:54:14.000000000 +0800
++++ iperf-2.0.10/src/Client.cpp	2018-05-15 12:55:03.255111066 +0800
+@@ -763,6 +763,36 @@
+                  &mSettings->size_local );
+     getpeername( mSettings->mSock, (sockaddr*) &mSettings->peer,
+                  &mSettings->size_peer );
++
++	if(mSettings->qos_value != -1){
++		int qos1 = 0;
++		Socklen_t  optlen = 0;
++		int rc1;
++		printf("set qos value=%d\n",mSettings->qos_value);
++		if(mSettings->qos_value < 0 || mSettings->qos_value > 7){
++			printf("qos value out of range[0..7]!\n");
++		}
++		if (setsockopt( mSettings->mSock, SOL_SOCKET, SO_PRIORITY, (char *)&mSettings->qos_value, sizeof(mSettings->qos_value)) < 0 ) {
++			printf("set tos value=%d fail-----\n",mSettings->qos_value);
++			return;
++		}
++
++		#define IPTOS_LOWDELAY      0x10
++		#define IPTOS_RELIABILITY   0x04
++
++		int tos_value = 0;
++		optlen = sizeof(tos_value);
++		if(getsockopt(mSettings->mSock, SOL_IP, IP_TOS, (void *)&tos_value, &optlen) < 0){
++			printf("get tos fail\n");
++			return;
++		}
++		char tos = (mSettings->qos_value & 0x7) << 5;
++		unsigned char  service_type = tos | (tos_value & (~0xE0));
++		if (setsockopt( mSettings->mSock, SOL_IP, IP_TOS, (void *)&service_type, sizeof(service_type)) < 0 ) {
++			printf("set tos value=%d fail-----\n",mSettings->qos_value);
++			return;
++		}
++	}
+ } // end Connect
+ 
+ void Client::HdrXchange(int flags) {
+Index: iperf-2.0.10/src/Settings.cpp
+===================================================================
+--- iperf-2.0.10.orig/src/Settings.cpp	2017-08-12 01:55:44.000000000 +0800
++++ iperf-2.0.10/src/Settings.cpp	2018-05-15 12:55:22.031111854 +0800
+@@ -189,7 +189,7 @@
+ 
+ #define SHORT_OPTIONS()
+ 
+-const char short_options[] = "1b:c:def:hi:l:mn:o:p:rst:uvw:x:y:zB:CDF:IL:M:NP:RS:T:UVWXZ:";
++const char short_options[] = "1b:c:def:hi:l:mn:o:p:rst:uvw:x:y:zB:CDF:IL:M:NP:RS:T:UVWXZ:q:";
+ 
+ /* -------------------------------------------------------------------
+  * defaults
+@@ -252,7 +252,7 @@
+     main->mTTL          = 1;             // -T,  link-local TTL
+     //main->mDomain     = kMode_IPv4;    // -V,
+     //main->mSuggestWin = false;         // -W,  Suggest the window size.
+-
++	main->qos_value = -1;                // -q,  support qos value from[0..7]
+ } // end Settings
+ 
+ void Settings_Copy( thread_Settings *from, thread_Settings **into ) {
+@@ -394,6 +394,9 @@
+         case 'e': // Use enhanced reports
+             setEnhanced( mExtSettings );
+             break;
++		case 'q':
++			mExtSettings->qos_value = atoi(optarg);
++			break;
+         case 'f': // format to print in
+             mExtSettings->mFormat = (*optarg);
+             break;

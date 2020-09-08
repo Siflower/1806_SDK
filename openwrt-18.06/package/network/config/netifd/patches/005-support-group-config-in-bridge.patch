@@ -1,0 +1,215 @@
+diff -uprN netifd-2018-12-16-2750ce2e.orig/bridge.c netifd-2018-12-16-2750ce2e/bridge.c
+--- netifd-2018-12-16-2750ce2e.orig/bridge.c	2019-12-02 13:34:20.946659961 +0800
++++ netifd-2018-12-16-2750ce2e/bridge.c	2019-12-02 14:00:51.354726704 +0800
+@@ -450,14 +450,26 @@ bridge_member_update(struct vlist_tree *
+
+
+ static void
+-bridge_add_member(struct bridge_state *bst, const char *name)
++bridge_add_member(struct bridge_state *bst, const char *name, bool inherit)
+ {
+ 	struct device *dev;
++	struct device *br_dev = &(bst->dev);
+
+ 	dev = device_get(name, true);
+ 	if (!dev)
+ 		return;
+
++	if(inherit){
++		//inherit device info from bridge device
++		if(br_dev->settings.flags & DEV_OPT_GROUP){
++			dev->settings.flags |= DEV_OPT_GROUP;
++			dev->settings.group = br_dev->settings.group;
++		}
++		if(br_dev->settings.flags & DEV_OPT_BRINPUT_DISABLE){
++			dev->settings.flags |= DEV_OPT_BRINPUT_DISABLE;
++			dev->settings.disable_input = br_dev->settings.disable_input;
++		}
++	}
+ 	bridge_create_member(bst, name, dev, false);
+ }
+
+@@ -554,7 +566,7 @@ bridge_config_init(struct device *dev)
+ 	vlist_update(&bst->members);
+ 	if (bst->ifnames) {
+ 		blobmsg_for_each_attr(cur, bst->ifnames, rem) {
+-			bridge_add_member(bst, blobmsg_data(cur));
++			bridge_add_member(bst, blobmsg_data(cur), true);
+ 		}
+ 	}
+ 	vlist_flush(&bst->members);
+diff -uprN netifd-2018-12-16-2750ce2e.orig/device.c netifd-2018-12-16-2750ce2e/device.c
+--- netifd-2018-12-16-2750ce2e.orig/device.c	2019-12-02 13:34:20.946659961 +0800
++++ netifd-2018-12-16-2750ce2e/device.c	2019-12-02 14:09:06.366747478 +0800
+@@ -58,6 +58,8 @@ static const struct blobmsg_policy dev_a
+ 	[DEV_ATTR_SENDREDIRECTS] = { .name = "sendredirects", .type = BLOBMSG_TYPE_BOOL },
+ 	[DEV_ATTR_NEIGHLOCKTIME] = { .name = "neighlocktime", .type = BLOBMSG_TYPE_INT32 },
+ 	[DEV_ATTR_ISOLATE] = { .name = "isolate", .type = BLOBMSG_TYPE_BOOL },
++	[DEV_ATTR_GROUP] = { .name = "group", .type = BLOBMSG_TYPE_INT32 },
++	[DEV_ATTR_BRINPUT_DISABLE] = { .name = "disable_input", .type = BLOBMSG_TYPE_BOOL },
+ };
+
+ const struct uci_blob_param_list device_attr_list = {
+@@ -227,6 +229,8 @@ device_merge_settings(struct device *dev
+ 	n->multicast_fast_leave = s->multicast_fast_leave;
+ 	n->learning = s->learning;
+ 	n->unicast_flood = s->unicast_flood;
++	n->group = s->group;
++	n->disable_input = s->disable_input;
+ 	n->sendredirects = s->flags & DEV_OPT_SENDREDIRECTS ?
+ 		s->sendredirects : os->sendredirects;
+ 	n->flags = s->flags | os->flags | os->valid_flags;
+@@ -368,6 +372,16 @@ device_init_settings(struct device *dev,
+ 		s->flags |= DEV_OPT_ISOLATE;
+ 	}
+
++	if ((cur = tb[DEV_ATTR_GROUP])) {
++		s->group = blobmsg_get_u32(cur);
++		s->flags |= DEV_OPT_GROUP;
++	}
++
++	if ((cur = tb[DEV_ATTR_BRINPUT_DISABLE])) {
++		s->disable_input = blobmsg_get_bool(cur);
++		s->flags |= DEV_OPT_BRINPUT_DISABLE;
++	}
++
+ 	device_set_disabled(dev, disabled);
+ }
+
+@@ -1040,6 +1054,10 @@ device_dump_status(struct blob_buf *b, s
+ 			blobmsg_add_u8(b, "unicast_flood", st.unicast_flood);
+ 		if (st.flags & DEV_OPT_SENDREDIRECTS)
+ 			blobmsg_add_u8(b, "sendredirects", st.sendredirects);
++		if (st.flags & DEV_OPT_GROUP)
++			blobmsg_add_u32(b, "group", st.group);
++		if (st.flags & DEV_OPT_BRINPUT_DISABLE)
++			blobmsg_add_u32(b, "disableinput", st.disable_input);
+ 	}
+
+ 	s = blobmsg_open_table(b, "statistics");
+diff -uprN netifd-2018-12-16-2750ce2e.orig/device.h netifd-2018-12-16-2750ce2e/device.h
+--- netifd-2018-12-16-2750ce2e.orig/device.h	2019-12-02 13:34:20.946659961 +0800
++++ netifd-2018-12-16-2750ce2e/device.h	2019-12-02 14:11:25.578753320 +0800
+@@ -51,6 +51,8 @@ enum {
+ 	DEV_ATTR_SENDREDIRECTS,
+ 	DEV_ATTR_NEIGHLOCKTIME,
+ 	DEV_ATTR_ISOLATE,
++	DEV_ATTR_GROUP,
++	DEV_ATTR_BRINPUT_DISABLE,
+ 	__DEV_ATTR_MAX,
+ };
+
+@@ -104,6 +106,8 @@ enum {
+ 	DEV_OPT_SENDREDIRECTS		= (1 << 21),
+ 	DEV_OPT_NEIGHLOCKTIME		= (1 << 22),
+ 	DEV_OPT_ISOLATE			= (1 << 23),
++	DEV_OPT_GROUP			= (1 << 24),
++	DEV_OPT_BRINPUT_DISABLE		= (1 << 25),
+ };
+
+ /* events broadcasted to all users of a device */
+@@ -171,6 +175,8 @@ struct device_settings {
+ 	bool unicast_flood;
+ 	bool sendredirects;
+ 	bool isolate;
++	unsigned int group;
++	bool disable_input;
+ };
+
+ /*
+diff -uprN netifd-2018-12-16-2750ce2e.orig/system-linux.c netifd-2018-12-16-2750ce2e/system-linux.c
+--- netifd-2018-12-16-2750ce2e.orig/system-linux.c	2019-12-02 13:34:20.946659961 +0800
++++ netifd-2018-12-16-2750ce2e/system-linux.c	2019-12-02 14:16:55.510767166 +0800
+@@ -359,6 +359,16 @@ static void system_bridge_set_multicast_
+ 			      dev->ifname, val);
+ }
+
++static void system_bridge_set_group(struct device *dev, const char *val)
++{
++	system_set_dev_sysctl("/sys/class/net/%s/brport/group", dev->ifname, val);
++}
++
++static void system_bridge_set_disable_input(struct device *dev, const char *val)
++{
++	system_set_dev_sysctl("/sys/class/net/%s/brport/disableinput", dev->ifname, val);
++}
++
+ static void system_bridge_set_robustness(struct device *dev, const char *val)
+ {
+ 	system_set_dev_sysctl("/sys/devices/virtual/net/%s/bridge/multicast_startup_query_count",
+@@ -788,6 +798,16 @@ int system_bridge_addif(struct device *b
+ 	    dev->settings.isolate)
+ 		system_bridge_set_isolated(dev, "1");
+
++	if (dev->settings.flags & DEV_OPT_GROUP) {
++		snprintf(buf, sizeof(buf), "%i", dev->settings.group);
++		system_bridge_set_group(dev, buf);
++	}
++
++	if (dev->settings.flags & DEV_OPT_BRINPUT_DISABLE) {
++		system_bridge_set_disable_input(dev, dev->settings.disable_input ? "1" : "0");
++	}
++
++
+ 	return ret;
+ }
+
+diff -uprN netifd-2018-12-16-2750ce2e.orig/wireless.c netifd-2018-12-16-2750ce2e/wireless.c
+--- netifd-2018-12-16-2750ce2e.orig/wireless.c	2019-12-02 15:50:14.763002144 +0800
++++ netifd-2018-12-16-2750ce2e/wireless.c	2019-12-02 15:55:19.831014946 +0800
+@@ -37,6 +37,8 @@ enum {
+ 	VIF_ATTR_NETWORK,
+ 	VIF_ATTR_ISOLATE,
+ 	VIF_ATTR_MODE,
++	VIF_ATTR_GROUP,
++	VIF_ATTR_BRINPUT_DISABLE,
+ 	__VIF_ATTR_MAX,
+ };
+
+@@ -45,6 +47,8 @@ static const struct blobmsg_policy vif_p
+ 	[VIF_ATTR_NETWORK] = { .name = "network", .type = BLOBMSG_TYPE_ARRAY },
+ 	[VIF_ATTR_ISOLATE] = { .name = "isolate", .type = BLOBMSG_TYPE_BOOL },
+ 	[VIF_ATTR_MODE] = { .name = "mode", .type = BLOBMSG_TYPE_STRING },
++	[VIF_ATTR_GROUP] = { .name = "group", .type = BLOBMSG_TYPE_INT32 },
++	[VIF_ATTR_BRINPUT_DISABLE] = { .name = "disable_input", .type = BLOBMSG_TYPE_BOOL },
+ };
+
+ static const struct uci_blob_param_list vif_param = {
+@@ -216,6 +220,10 @@ static void wireless_interface_handle_li
+ 			dev->wireless_isolate = vif->isolate;
+ 			dev->wireless = true;
+ 			dev->wireless_ap = vif->ap_mode;
++			dev->settings.group = vif->group;
++			dev->settings.disable_input = vif->disable_input;
++			dev->settings.flags |= DEV_OPT_GROUP;
++			dev->settings.flags |= DEV_OPT_BRINPUT_DISABLE;
+ 		}
+ 	}
+
+@@ -582,6 +590,14 @@ wireless_interface_init_config(struct wi
+ 	cur = tb[VIF_ATTR_MODE];
+ 	if (cur)
+ 		vif->ap_mode = !strcmp(blobmsg_get_string(cur), "ap");
++
++	cur = tb[VIF_ATTR_GROUP];
++	if (cur)
++		vif->group = blobmsg_get_u32(cur);
++
++	cur = tb[VIF_ATTR_BRINPUT_DISABLE];
++	if (cur)
++		vif->disable_input = blobmsg_get_bool(cur);
+ }
+
+ static void
+diff -uprN netifd-2018-12-16-2750ce2e.orig/wireless.h netifd-2018-12-16-2750ce2e/wireless.h
+--- netifd-2018-12-16-2750ce2e.orig/wireless.h	2019-12-02 13:34:20.946659961 +0800
++++ netifd-2018-12-16-2750ce2e/wireless.h	2019-12-02 14:31:23.990803613 +0800
+@@ -79,6 +79,8 @@ struct wireless_interface {
+ 	struct blob_attr *network;
+ 	bool isolate;
+ 	bool ap_mode;
++	unsigned int group;
++	bool disable_input;
+ };
+
+ struct wireless_process {

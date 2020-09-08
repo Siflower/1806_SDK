@@ -1,0 +1,54 @@
+Index: curl-7.63.0/include/curl/curl.h
+===================================================================
+--- curl-7.63.0.orig/include/curl/curl.h	2018-12-12 06:59:21.000000000 +0800
++++ curl-7.63.0/include/curl/curl.h	2020-05-08 15:11:29.751473503 +0800
+@@ -1875,6 +1875,9 @@
+   /* Specify URL using CURL URL API. */
+   CINIT(CURLU, OBJECTPOINT, 282),
+ 
++  /* Option for ocn to set connection not close, when get close type in http head */
++  CINIT(OCN_TCP_KEEP_ALIVE, LONG, 283),
++
+   CURLOPT_LASTENTRY /* the last unused */
+ } CURLoption;
+ 
+Index: curl-7.63.0/lib/http.c
+===================================================================
+--- curl-7.63.0.orig/lib/http.c	2018-12-12 06:59:21.000000000 +0800
++++ curl-7.63.0/lib/http.c	2020-05-08 14:59:54.039452991 +0800
+@@ -3802,7 +3802,8 @@
+        * the connection will close when this request has been
+        * served.
+        */
+-      streamclose(conn, "Connection: close used");
++      if(!data->set.ocn_tcp_keep_alive)
++      	streamclose(conn, "Connection: close used");
+     }
+     else if(checkprefix("Transfer-Encoding:", k->p)) {
+       /* One or more encodings. We check for chunked and/or a compression
+Index: curl-7.63.0/lib/setopt.c
+===================================================================
+--- curl-7.63.0.orig/lib/setopt.c	2018-12-12 06:59:21.000000000 +0800
++++ curl-7.63.0/lib/setopt.c	2020-05-08 15:18:35.679486060 +0800
+@@ -2636,6 +2636,9 @@
+       return CURLE_BAD_FUNCTION_ARGUMENT;
+     data->set.upkeep_interval_ms = arg;
+     break;
++  case CURLOPT_OCN_TCP_KEEP_ALIVE:
++    data->set.ocn_tcp_keep_alive = (0 != va_arg(param, long))?TRUE:FALSE;
++    break;
+   default:
+     /* unknown tag and its companion, just ignore: */
+     result = CURLE_UNKNOWN_OPTION;
+Index: curl-7.63.0/lib/urldata.h
+===================================================================
+--- curl-7.63.0.orig/lib/urldata.h	2018-12-12 06:59:21.000000000 +0800
++++ curl-7.63.0/lib/urldata.h	2020-05-08 15:07:40.795466753 +0800
+@@ -1705,6 +1705,7 @@
+   bool pipewait;        /* wait for pipe/multiplex status before starting a
+                            new connection */
+   long expect_100_timeout; /* in milliseconds */
++  long ocn_tcp_keep_alive; /* edward: make connection type keep-alive,close not close tcp connection for ocn tr069*/
+   bool suppress_connect_headers;  /* suppress proxy CONNECT response headers
+                                      from user callbacks */
+ 

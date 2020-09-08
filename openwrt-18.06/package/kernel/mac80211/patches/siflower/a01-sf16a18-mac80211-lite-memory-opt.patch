@@ -1,0 +1,57 @@
+diff -uprN backports-4.19.7-1.orig/net/mac80211/Kconfig backports-4.19.7-1.new/net/mac80211/Kconfig
+--- backports-4.19.7-1.orig/net/mac80211/Kconfig	2019-12-05 17:47:55.658176022 +0800
++++ backports-4.19.7-1.new/net/mac80211/Kconfig	2019-12-05 17:48:50.074178305 +0800
+@@ -305,6 +305,14 @@ config MAC80211_SIFLOWER_MONITOR_ENABLE
+ 	bool "Enable monitor in mac80211, this is add by siflower"
+ 	depends on MAC80211
+
++config MAC80211_LITE_FLASH
++	bool "mac80211 is running on the platform with lite flash, this is add by siflower"
++	depends on MAC80211
++
++config MAC80211_LITE_MEMORY
++	bool "mac80211 is running on the platform with lite memory, this is add by siflower"
++	depends on MAC80211
++
+ config MAC80211_STA_HASH_MAX_SIZE
+ 	int "Station hash table maximum size" if MAC80211_DEBUG_MENU
+ 	default 0
+diff -uprN backports-4.19.7-1.orig/net/mac80211/ieee80211_i.h backports-4.19.7-1.new/net/mac80211/ieee80211_i.h
+--- backports-4.19.7-1.orig/net/mac80211/ieee80211_i.h	2019-12-05 17:27:35.630124822 +0800
++++ backports-4.19.7-1.new/net/mac80211/ieee80211_i.h	2019-12-05 17:37:47.278150491 +0800
+@@ -42,12 +42,20 @@ struct ieee80211_local;
+
+ /* Maximum number of broadcast/multicast frames to buffer when some of the
+  * associated stations are using power saving. */
++#ifdef CPTCFG_MAC80211_LITE_MEMORY
++#define AP_MAX_BC_BUFFER 64
++#else
+ #define AP_MAX_BC_BUFFER 128
++#endif
+
+ /* Maximum number of frames buffered to all STAs, including multicast frames.
+  * Note: increasing this limit increases the potential memory requirement. Each
+  * frame can be up to about 2 kB long. */
++#ifdef CPTCFG_MAC80211_LITE_MEMORY
++#define TOTAL_MAX_TX_BUFFER 256
++#else
+ #define TOTAL_MAX_TX_BUFFER 512
++#endif
+
+ /* Required encryption head and tailroom */
+ #define IEEE80211_ENCRYPT_HEADROOM 8
+diff -uprN backports-4.19.7-1.orig/net/mac80211/sta_info.h backports-4.19.7-1.new/net/mac80211/sta_info.h
+--- backports-4.19.7-1.orig/net/mac80211/sta_info.h	2019-12-05 17:27:35.630124822 +0800
++++ backports-4.19.7-1.new/net/mac80211/sta_info.h	2019-12-05 17:38:40.394152720 +0800
+@@ -664,7 +664,11 @@ rcu_dereference_protected_tid_tx(struct
+ }
+
+ /* Maximum number of frames to buffer per power saving station per AC */
++#ifdef CPTCFG_MAC80211_LITE_MEMORY
++#define STA_MAX_TX_BUFFER	32
++#else
+ #define STA_MAX_TX_BUFFER	64
++#endif
+
+ /* Minimum buffered frame expiry time. If STA uses listen interval that is
+  * smaller than this value, the minimum value here is used instead. */

@@ -1,0 +1,131 @@
+/dts-v1/;
+
+#include "sf19a28_fullmask_fpga.dtsi"
+
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "siflower,sf16a18-soc";
+
+	spdif_codec: spdif-codec@0 {
+		compatible = "linux,spdif-dit";
+	};
+
+	w18_wifi_rf: w18_wifi-rf@7A00000{
+		compatible = "siflower,pistachio-uccp";
+		phy = <&phy1>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		phy1: w18_wifi-phy@1 {
+			reg = <1>;
+			max-speed = <100>;
+		};
+	};
+
+};
+
+&ethernet {
+	shutdown-portlist = "*****";
+        led-on-off-time = /bits/ 16 <0xff 0x2ff>;
+	status = "okay";
+	smp-affinity = <2>;
+};
+
+&switch{
+	sfax8,port-map = "*lll*";
+	status = "okay";
+	smp-affinity = <2>;
+};
+
+
+&gmac {
+	status = "okay";
+    smp-affinity = <0>;
+};
+
+&usb_phy{
+	status = "disabled";
+};
+
+
+&gdma {
+	status = "disabled";
+};
+
+&usb {
+	status = "disabled";
+};
+
+&spi0 {
+	status = "disabled";
+	use-dma;
+	dmas = <&gdma 10
+	&gdma 11>;
+	dma-names = "tx", "rx";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	w25q128@0 {
+		compatible = "w25q128";
+		reg = <0>;	/* chip select */
+		spi-max-frequency = <33000000>;
+
+		bank-width = <2>;
+		device-width = <2>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "spl-loader";
+			reg = <0x0 0x20000>; /* 128k */
+			read-only;
+		};
+
+		partition@20000 {
+			label = "u-boot";
+			reg = <0x20000 0x60000>; /* 384k */
+		};
+
+		partition@80000 {
+			label = "u-boot-env";
+			reg = <0x80000 0x10000>; /* 64k */
+		};
+
+		factory:partition@90000 {
+			label = "factory";
+			reg = <0x90000 0x10000>; /* 64k */
+		};
+
+		partition@a0000 {
+			label = "firmware";
+			reg = <0xa0000 0xf60000>; /* 640k-16M */
+		};
+	};
+
+	spidev: spi@8200000 {
+		compatible = "rohm,dh2228fv";
+		reg = <1>;
+		clock = <50000000>;
+		spi-cpha;
+		spi-cpol;
+		spi-max-frequency=<12000000>;
+	};
+};
+
+
+&uart0 {
+	status = "okay";
+};
+
+&uart1 {
+	status = "disabled";
+};
+
+&timer0 {
+	status = "disabled";
+};
+&timer1 {
+	status = "disabled";
+};

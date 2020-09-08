@@ -1,0 +1,21 @@
+diff -uprN netifd-2018-12-16-2750ce2e.orig/wireless.c netifd-2018-12-16-2750ce2e.new/wireless.c
+--- netifd-2018-12-16-2750ce2e.orig/wireless.c	2019-12-04 11:44:46.293635758 +0800
++++ netifd-2018-12-16-2750ce2e.new/wireless.c	2019-12-04 11:59:05.861671830 +0800
+@@ -327,7 +327,7 @@ wireless_device_setup_cancel(struct wire
+ 
+ 	D(WIRELESS, "Cancel wireless device '%s' setup\n", wdev->name);
+ 	wdev->cancel = true;
+-	uloop_timeout_set(&wdev->timeout, 10 * 1000);
++	uloop_timeout_set(&wdev->timeout, 15 * 1000);
+ }
+ 
+ static void
+@@ -338,7 +338,7 @@ wireless_device_setup_wpas_cancel(struct
+ 
+ 	D(WIRELESS, "Cancel wireless device '%s' wpas setup\n", wdev->name);
+ 	wdev->wpa_cancel = true;
+-	uloop_timeout_set(&wdev->wpa_timeout, 10 * 1000);
++	uloop_timeout_set(&wdev->wpa_timeout, 15 * 1000);
+ }
+ 
+ static void

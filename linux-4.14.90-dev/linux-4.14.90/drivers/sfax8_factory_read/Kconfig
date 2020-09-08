@@ -1,0 +1,4 @@
+config SFAX8_FACTORY_READ
+	tristate "vender siflower read factory memory"
+	depends on MTD
+	default y

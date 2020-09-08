@@ -1,0 +1,102 @@
+diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.c hostapd-2018-05-21-62566bc2/hostapd/config_file.c
+--- hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.c	2019-11-29 16:28:11.183960511 +0800
++++ hostapd-2018-05-21-62566bc2/hostapd/config_file.c	2019-11-29 16:35:51.111979812 +0800
+@@ -1133,6 +1133,60 @@ static int add_r1kh(struct hostapd_bss_c
+ 
+ 	return 0;
+ }
++
++//for smaller hostapd config file,we just have mac addr
++static int add_r0r1_mac(struct hostapd_bss_config *bss, char *mac)
++{
++	char r0_kh[69];
++	char r1_kh[69];
++	/* 02:01:02:03:04:05 */
++	memcpy(&r0_kh[0], mac, 17);
++	r0_kh[17] = ' ';
++	memcpy(&r0_kh[18], mac, 17);
++	r0_kh[35] = ' ';
++	memcpy(&r0_kh[36], "00112233445566778899aabbccddeeff\0", 33);
++
++	memcpy(&r1_kh, &r0_kh, sizeof(r0_kh));
++	if(add_r0kh(bss, (char *)&r0_kh) < 0)
++	{
++		wpa_printf(MSG_ERROR, "add r0kh error: '%s'", mac);
++		return -1;
++	}
++
++	if(add_r1kh(bss, (char *)&r1_kh) < 0)
++	{
++		wpa_printf(MSG_ERROR, "add r1kh error: '%s'", mac);
++		return -1;
++	}
++	return 0;
++}
++//for hostapd ctrl iface command
++int add_r0r1kh(struct hostapd_bss_config *bss, char *value)
++{
++	struct ft_remote_r1kh *r1kh;
++	char *pos, *next;
++	/* 02:01:02:03:04:05,02:01:02:03:04:06 */
++	pos = value;
++	while(pos != NULL)
++	{
++		next = os_strchr(pos, ',');
++		if (next)
++			*next++ = '\0';
++		if(add_r0r1_mac(bss, pos) < 0)
++		{
++			wpa_printf(MSG_ERROR, "add r0r1kh error: '%s'", pos);
++			return -1;
++		}
++
++		if((next == NULL) || (*next == '\0'))
++			break;
++		else
++			pos = next;
++	}
++
++	return 0;
++}
++
+ #endif /* CONFIG_IEEE80211R_AP */
+ 
+ 
+@@ -2857,6 +2911,11 @@ static int hostapd_config_fill(struct ho
+ 				   line, pos);
+ 			return 1;
+ 		}
++	} else if (os_strcmp(buf, "r1mac") == 0) {
++		if (add_r0r1_mac(bss, pos) < 0) {
++			wpa_printf(MSG_DEBUG, "Line %d: Invalid r1mac '%s'",line, pos);
++			return 1;
++		}
+ 	} else if (os_strcmp(buf, "pmk_r1_push") == 0) {
+ 		bss->pmk_r1_push = atoi(pos);
+ 	} else if (os_strcmp(buf, "ft_over_ds") == 0) {
+diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.h hostapd-2018-05-21-62566bc2/hostapd/config_file.h
+--- hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.h	2019-11-29 16:28:11.175960511 +0800
++++ hostapd-2018-05-21-62566bc2/hostapd/config_file.h	2019-11-29 16:36:22.479981129 +0800
+@@ -13,6 +13,7 @@ struct hostapd_config * hostapd_config_r
+ int hostapd_set_iface(struct hostapd_config *conf,
+ 		      struct hostapd_bss_config *bss, const char *field,
+ 		      char *value);
++int add_r0r1kh(struct hostapd_bss_config *bss, char *value);
+ int hostapd_acl_comp(const void *a, const void *b);
+ int hostapd_add_acl_maclist(struct mac_acl_entry **acl, int *num,
+ 			    int vlan_id, const u8 *addr);
+diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/ctrl_iface.c hostapd-2018-05-21-62566bc2/hostapd/ctrl_iface.c
+--- hostapd-2018-05-21-62566bc2.orig/hostapd/ctrl_iface.c	2019-11-29 16:28:11.179960511 +0800
++++ hostapd-2018-05-21-62566bc2/hostapd/ctrl_iface.c	2019-11-29 16:38:02.119985310 +0800
+@@ -3097,6 +3097,11 @@ static int hostapd_ctrl_iface_receive_pr
+ #ifdef RADIUS_SERVER
+ 		radius_server_erp_flush(hapd->radius_srv);
+ #endif /* RADIUS_SERVER */
++#ifdef CONFIG_IEEE80211R
++	} else if (os_strncmp(buf, "R1KH ", 5) == 0) {
++		if(add_r0r1kh(hapd->conf, buf + 5) < 0)
++			reply_len = -1;
++#endif /* CONFIG_IEEE80211R */
+ 	} else if (os_strncmp(buf, "EAPOL_REAUTH ", 13) == 0) {
+ 		if (hostapd_ctrl_iface_eapol_reauth(hapd, buf + 13))
+ 			reply_len = -1;

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+if [ "x$1" = "xadd" -o "x$1" = "xold" ];then
+	echo "$(date) INFO DHCP server lease $2 $3 $@" >> /tmp/sf_log.txt
+	mac=${2//":"/"_"}
+	mac=$(echo $mac | tr '[a-z]' '[A-Z]')
+	in_wldevlist=$(uci -q get wldevlist.${mac})
+	in_devlist=$(uci -q get devlist.${mac})
+	if [ -n "${in_wldevlist}" ]
+	then
+		uci -q set wldevlist.${mac}.hostname=$4
+	elif [ -n "${in_devlist}" ]
+	then
+		uci -q set devlist.${mac}.hostname=$4
+	else
+		logger -t dhcplease this mac:$2 is not in wldevlist or devlist
+	fi
+	uci commit
+fi

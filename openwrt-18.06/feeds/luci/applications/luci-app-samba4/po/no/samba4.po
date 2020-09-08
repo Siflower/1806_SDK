@@ -1,0 +1,164 @@
+msgid ""
+msgstr ""
+"Last-Translator: Lars Hardy <lars.hardy@gmail.com>\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:97
+msgid "Allow guests"
+msgstr "Tillat gjester"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:94
+msgid "Allowed users"
+msgstr "Tillatte brukere"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:128
+msgid "Apple Time-machine share"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:81
+msgid "Browse-able"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:113
+msgid "Create mask"
+msgstr "Opprett Maske"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:38
+msgid "Description"
+msgstr "Beskrivelse"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:119
+msgid "Directory mask"
+msgstr "Katalog maske"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:51
+msgid "Disable Active Directory Domain Controller"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:48
+msgid "Disable Netbios"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:54
+msgid "Disable Winbind"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:30
+msgid "Edit Template"
+msgstr "Rediger Mal"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:58
+msgid "Edit the template that is used for generating the samba configuration."
+msgstr "Rediger malen som brukes til å generere samba konfigurasjonen."
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:44
+msgid "Enable macOS compatible shares"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:45
+msgid ""
+"Enables Apple's AAPL extension globally and adds macOS compatibility options "
+"to all shares."
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:92
+msgid "Force Root"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:41
+msgid "Force synchronous I/O"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:29
+msgid "General Settings"
+msgstr "Generelle Innstillinger"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:103
+msgid "Guests only"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:108
+msgid "Inherit owner"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:32
+msgid "Interface"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:33
+msgid "Listen only on the given interface or, if unspecified, on lan"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:75
+msgid "Name"
+msgstr "Navn"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:21
+#: applications/luci-app-samba4/luasrc/controller/samba4.lua:10
+msgid "Network Shares"
+msgstr "Nettverks Mapper"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:42
+msgid ""
+"On lower-end devices may increase speeds, by forceing synchronous I/O "
+"instead of the default asynchronous."
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:76
+msgid "Path"
+msgstr "Fysisk bane"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:71
+msgid ""
+"Please add directories to share. Each directory refers to a folder on a "
+"mounted device."
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:86
+msgid "Read-only"
+msgstr "Skrivebeskyttet"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:70
+msgid "Shared Directories"
+msgstr "Delte Kataloger"
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:59
+msgid ""
+"This is the content of the file '/etc/samba/smb.conf.template' from which "
+"your samba configuration will be generated. Values enclosed by pipe symbols "
+"('|') should not be changed. They get their values from the 'General "
+"Settings' tab."
+msgstr ""
+"Dette er innholdet av filen '/etc/samba/smb.conf.template' som din samba "
+"konfigurasjon vil bli generert fra. Verdier omsluttet av ('|') bør ikke "
+"endres. De får sine verdier fra 'Generelle Innstillinger' fanen."
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:130
+msgid "Time-machine size in GB"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:125
+msgid "Vfs objects"
+msgstr ""
+
+#: applications/luci-app-samba4/htdocs/luci-static/resources/view/samba4.js:35
+msgid "Workgroup"
+msgstr "Arbeidsgruppe"
+
+#~ msgid ""
+#~ "Allow system users to reach their home directories via network shares"
+#~ msgstr ""
+#~ "Tillat systembrukere å nå sine hjemmekataloger via nettverks mapper."
+
+#~ msgid "Hostname"
+#~ msgstr "Vertsnavn"
+
+#~ msgid "Share home-directories"
+#~ msgstr "Del Hjemmekataloger"
+
+#~ msgid "Mask for new directories"
+#~ msgstr "Maske for nye kataloger"
+
+#~ msgid "Mask for new files"
+#~ msgstr "Maske for nye filer"

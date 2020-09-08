@@ -1,0 +1,13 @@
+Index: igmpproxy-0.2.1/src/igmpproxy.c
+===================================================================
+--- igmpproxy-0.2.1.orig/src/igmpproxy.c	2018-02-14 03:21:42.000000000 +0800
++++ igmpproxy-0.2.1/src/igmpproxy.c	2020-01-15 16:42:02.997268493 +0800
+@@ -297,7 +297,7 @@
+             timeout = NULL;
+         } else {
+             timeout->tv_nsec = 0;
+-            timeout->tv_sec = (secs > 3) ? 3 : secs; // aimwang: set max timeout
++            timeout->tv_sec = secs = (secs > 3) ? 3 : secs; // aimwang: set max timeout
+         }
+ 
+         // Prepare for select.

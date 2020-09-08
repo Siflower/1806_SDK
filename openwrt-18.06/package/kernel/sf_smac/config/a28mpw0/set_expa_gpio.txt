@@ -1,0 +1,55 @@
+############HB2#############
+#HB0_PA_EN
+cd sys/class/gpio/
+echo 30 > export
+cd gpio30/
+echo out > direction
+echo 1 > value
+devmem 0x19e3fcf0 32 0x17
+devmem 0x19e3fcf4 32 0xc
+
+#HB0_LNA_EN
+cd sys/class/gpio/
+echo 31 > export
+cd gpio31/
+echo out > direction
+echo 1 > value
+devmem 0x19e3fcf8 32 0x17
+devmem 0x19e3fcfc 32 0xc
+
+#HB0_SW_CTRL0
+cd sys/class/gpio/
+echo 32 > export
+cd gpio32/
+echo out > direction
+echo 1 > value
+devmem 0x19e3fd00 32 0x17
+devmem 0x19e3fd04 32 0xc
+
+############HB1#############
+#HB1_PA_EN
+cd sys/class/gpio/
+echo 34 > export
+cd gpio34/
+echo out > direction
+echo 1 > value
+devmem 0x19e3fd10 32 0x17
+devmem 0x19e3fd14 32 0xc
+
+#HB1_LNA_EN
+cd sys/class/gpio/
+echo 35 > export
+cd gpio35/
+echo out > direction
+echo 1 > value
+devmem 0x19e3fcf8 32 0x17
+devmem 0x19e3fcfc 32 0xc
+
+#HB1_SW_CTRL0
+cd sys/class/gpio/
+echo 36 > export
+cd gpio36/
+echo out > direction
+echo 1 > value
+devmem 0x19e3fd20 32 0x17
+devmem 0x19e3fd24 32 0xc

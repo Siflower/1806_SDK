@@ -1,0 +1,46 @@
+diff -uprN netifd-2018-12-16-2750ce2e.orig/device.c netifd-2018-12-16-2750ce2e/device.c
+--- netifd-2018-12-16-2750ce2e.orig/device.c	2019-12-02 14:36:02.482815300 +0800
++++ netifd-2018-12-16-2750ce2e/device.c	2019-12-02 14:41:10.822828240 +0800
+@@ -30,6 +30,7 @@
+ #include "system.h"
+ #include "config.h"
+ 
++#define SET_IFINDEX_RETRY 10
+ static struct list_head devtypes = LIST_HEAD_INIT(devtypes);
+ static struct avl_tree devices;
+ 
+@@ -424,7 +425,8 @@ int device_claim(struct device_user *dep
+ 		return -1;
+ 
+ 	dep->claimed = true;
+-	D(DEVICE, "Claim %s %s, new active count: %d\n", dev->type->name, dev->ifname, dev->active + 1);
++	D(DEVICE, "Claim %s %s, new active count: %d external=%d\n", dev->type->name,
++				dev->ifname, dev->active + 1, (int)dev->external);
+ 	if (++dev->active != 1)
+ 		return 0;
+ 
+@@ -437,13 +439,21 @@ int device_claim(struct device_user *dep
+ 			ret = -1;
+ 
+ 		system_if_get_settings(dev, &dev->orig_settings);
+-	} else
+-		ret = dev->set_state(dev, true);
++	} else {
++		int retry_cnt = SET_IFINDEX_RETRY;
++		ret = -1;
++		while(retry_cnt > 0 && ret){
++			ret = dev->set_state(dev, true);
++			retry_cnt--;
++		}
++		D(DEVICE, "set_state %s %s ret=%d retry=%d\n", dev->type->name, dev->ifname, ret, SET_IFINDEX_RETRY - retry_cnt);
++	}
+ 
+ 	if (ret == 0)
+ 		device_broadcast_event(dev, DEV_EVENT_UP);
+ 	else {
+-		D(DEVICE, "claim %s %s failed: %d\n", dev->type->name, dev->ifname, ret);
++		D(DEVICE, "claim %s %s failed: %d ifindex=%d\n", dev->type->name,
++					dev->ifname, ret,dev->ifindex);
+ 		dev->active = 0;
+ 		dep->claimed = false;
+ 	}

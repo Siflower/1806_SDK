@@ -1,0 +1,41 @@
+diff -uprN netifd-2018-12-16-2750ce2e.orig/wireless.c netifd-2018-12-16-2750ce2e.new/wireless.c
+--- netifd-2018-12-16-2750ce2e.orig/wireless.c	2019-12-04 13:36:52.101918012 +0800
++++ netifd-2018-12-16-2750ce2e.new/wireless.c	2019-12-04 13:57:05.517968934 +0800
+@@ -40,6 +40,7 @@ enum {
+ 	VIF_ATTR_GROUP,
+ 	VIF_ATTR_BRINPUT_DISABLE,
+ 	VIF_ATTR_NETISOLATE,
++	VIF_ATTR_NAME,
+ 	__VIF_ATTR_MAX,
+ };
+ 
+@@ -51,6 +52,7 @@ static const struct blobmsg_policy vif_p
+ 	[VIF_ATTR_GROUP] = { .name = "group", .type = BLOBMSG_TYPE_INT32 },
+ 	[VIF_ATTR_BRINPUT_DISABLE] = { .name = "disable_input", .type = BLOBMSG_TYPE_BOOL },
+ 	[VIF_ATTR_NETISOLATE] = { .name = "netisolate", .type = BLOBMSG_TYPE_BOOL },
++	[VIF_ATTR_NAME] = { .name = "ifname", .type = BLOBMSG_TYPE_STRING  },
+ };
+ 
+ static const struct uci_blob_param_list vif_param = {
+@@ -1136,7 +1138,7 @@ void wireless_interface_create(struct wi
+ 	struct blob_attr *tb[__VIF_ATTR_MAX];
+ 	struct blob_attr *cur;
+ 	char *name_buf;
+-	char name[8];
++	char name[16];
+ 
+ 	blobmsg_parse(vif_policy, __VIF_ATTR_MAX, tb, blob_data(data), blob_len(data));
+ 
+@@ -1144,7 +1146,11 @@ void wireless_interface_create(struct wi
+ 	if (cur && blobmsg_get_bool(cur))
+ 		return;
+ 
+-	sprintf(name, "%d", wdev->vif_idx++);
++	cur = tb[VIF_ATTR_NAME];
++	if (cur)
++		sprintf(name, "%s", blobmsg_get_string(cur));
++	else
++		sprintf(name, "%d", wdev->vif_idx++);
+ 
+ 	vif = calloc_a(sizeof(*vif),
+ 		       &name_buf, strlen(name) + 1);

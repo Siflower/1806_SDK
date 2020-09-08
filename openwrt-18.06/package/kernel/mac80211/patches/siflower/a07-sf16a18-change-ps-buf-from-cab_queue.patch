@@ -1,0 +1,34 @@
+diff -uprN backports-4.19.7-1.orig/net/mac80211/tx.c backports-4.19.7-1.new/net/mac80211/tx.c
+--- backports-4.19.7-1.orig/net/mac80211/tx.c	2019-12-06 15:49:00.501502442 +0800
++++ backports-4.19.7-1.new/net/mac80211/tx.c	2019-12-06 15:50:08.117505280 +0800
+@@ -445,17 +445,25 @@ ieee80211_tx_h_multicast_ps_buf(struct i
+ 	if (!atomic_read(&ps->num_sta_ps) && skb_queue_empty(&ps->bc_buf))
+ 		return TX_CONTINUE;
+ 
+-#ifdef CPTCFG_WLAN_VENDOR_RWNX
+-	if (ieee80211_hw_check(&tx->local->hw, QUEUE_CONTROL))
+-		info->hw_queue = tx->sdata->vif.cab_queue;
+-#endif
+-
++#ifndef CPTCFG_WLAN_VENDOR_RWNX
+ 	info->flags |= IEEE80211_TX_CTL_SEND_AFTER_DTIM;
++#endif
+ 
+ 	/* device releases frame after DTIM beacon */
+ 	if (!ieee80211_hw_check(&tx->local->hw, HOST_BROADCAST_PS_BUFFERING))
+ 		return TX_CONTINUE;
+ 
++    //RM#5214 usually we should not change cab_queue for multicast buf case usually cap_queue is set as AC_BCN which has small queue length
++    //sometims when we receive large multicast pkts at one monent, the AC_BCN queue will be blocked , and at the sametime the origin net_dev queue
++    //will be blocked at the sametime , eg. AC_BE, so the tid map to AC_BE of net_dev queue will be blocked
++    //so if driver don't support HOST_BROADCAST_PS_BUFFERING, we don't change the hw_queue for multicast buf
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++	info->flags |= IEEE80211_TX_CTL_SEND_AFTER_DTIM;
++
++	if (ieee80211_hw_check(&tx->local->hw, QUEUE_CONTROL))
++		info->hw_queue = tx->sdata->vif.cab_queue;
++#endif
++
+ 	/* buffered in mac80211 */
+ 	if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
+ 		purge_old_ps_buffers(tx->local);

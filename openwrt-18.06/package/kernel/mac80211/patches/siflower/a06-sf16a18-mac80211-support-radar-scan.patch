@@ -1,0 +1,26 @@
+diff -uprN backports-4.19.7-1.orig/net/wireless/nl80211.c backports-4.19.7-1.new/net/wireless/nl80211.c
+--- backports-4.19.7-1.orig/net/wireless/nl80211.c	2019-12-06 14:48:16.273349509 +0800
++++ backports-4.19.7-1.new/net/wireless/nl80211.c	2019-12-06 15:10:28.761405428 +0800
+@@ -7182,7 +7182,12 @@ static int nl80211_trigger_scan(struct s
+ 	}
+
+ 	request->n_channels = i;
+-
++	// when country code is not ETSI type, func below will just return busy.
++	// commit them so that scan can be supported in radar channel.
++	// As we use scan only when wds is needed, the influence can be ignored.
++	// sorry if any bugs is caused by this change and please let me know.
++	// RM#5803
++	/*
+ 	wdev_lock(wdev);
+ 	if (!cfg80211_off_channel_oper_allowed(wdev)) {
+ 		struct ieee80211_channel *chan;
+@@ -7201,7 +7206,7 @@ static int nl80211_trigger_scan(struct s
+ 		}
+ 	}
+ 	wdev_unlock(wdev);
+-
++	*/
+ 	i = 0;
+ 	if (n_ssids) {
+ 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS], tmp) {

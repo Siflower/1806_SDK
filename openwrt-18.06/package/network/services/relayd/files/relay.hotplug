@@ -1,0 +1,12 @@
+#!/bin/sh
+/etc/init.d/relayd enabled && /etc/init.d/relayd restart
+logger -t relay "Reloading relay due to $ACTION of $INTERFACE ($DEVICE)"
+
+[ "$ACTION" = ifup ] || exit 0
+[ "$INTERFACE" = "wwan" ] || exit 0
+[ "$DEVICE" = "sfi0" ] || [ "$DEVICE" = "sfi1" ] || [ "$DEVICE" = "rai0" ] || [ "$DEVICE" = "rai1" ] || exit 0
+ip=`ifconfig $DEVICE | awk -F "inet addr:|Bcast" '{printf "%s", $2}'`
+uci set network.stabridge.ipaddr=$ip
+uci commit network
+/etc/init.d/relayd reload
+# echo "setting $DEVICE stabridge ipaddr to $ip!!!!" > /dev/ttyS0

@@ -1,0 +1,2 @@
+config SIFLOWER_RESET_BUTTON_TOP
+	tristate "Siflower reset button top driver"

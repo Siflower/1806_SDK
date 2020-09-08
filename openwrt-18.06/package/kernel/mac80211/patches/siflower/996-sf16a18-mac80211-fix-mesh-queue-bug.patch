@@ -1,0 +1,12 @@
+diff -uprN backports-4.19.7-1.orig/net/mac80211/rx.c backports-4.19.7-1.new/net/mac80211/rx.c
+--- backports-4.19.7-1.orig/net/mac80211/rx.c	2019-12-05 16:40:56.518007355 +0800
++++ backports-4.19.7-1.new/net/mac80211/rx.c	2019-12-05 16:52:50.294037309 +0800
+@@ -2672,7 +2672,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80
+ 		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, dropped_frames_congestion);
+ 		return RX_DROP_MONITOR;
+ 	}
+-	skb_set_queue_mapping(skb, q);
++	skb_set_queue_mapping(skb, ac);
+ 
+ 	if (!--mesh_hdr->ttl) {
+ 		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, dropped_frames_ttl);

@@ -1,0 +1,49 @@
+diff -uprN backports-4.19.7-1.orig/net/mac80211/util.c backports-4.19.7-1.new/net/mac80211/util.c
+--- backports-4.19.7-1.orig/net/mac80211/util.c	2019-12-05 16:19:18.549952885 +0800
++++ backports-4.19.7-1.new/net/mac80211/util.c	2019-12-05 16:38:40.074001629 +0800
+@@ -1871,7 +1871,7 @@ int ieee80211_reconfig(struct ieee80211_
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_chanctx *ctx;
+-	struct sta_info *sta;
++	struct sta_info *sta, *tmp;
+ 	int res, i;
+ 	bool reconfig_due_to_wowlan = false;
+ 	struct ieee80211_sub_if_data *sched_scan_sdata;
+@@ -2018,6 +2018,10 @@ int ieee80211_reconfig(struct ieee80211_
+ 		if (!ieee80211_sdata_running(sdata))
+ 			continue;
+ 
++		//for VP_VLAN interface is not associated with driver,
++		//so we ignore it to avoid check_sdata_in_driver WARNING here
++		if(sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++			continue;
+ 		ieee80211_assign_chanctx(local, sdata);
+ 
+ 		switch (sdata->vif.type) {
+@@ -2152,6 +2156,25 @@ int ieee80211_reconfig(struct ieee80211_
+ 			WARN_ON(drv_sta_state(local, sta->sdata, sta, state,
+ 					      state + 1));
+ 	}
++	//traversal all ap list to detect stations associated with AP-VLANs interface,
++	//we must find the actual hw device for these stations and then call drv_sta_state
++	//to add back them
++	//see RM#1553
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if(sdata->vif.type == NL80211_IFTYPE_AP){
++			list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
++				if (sta->sdata->vif.type ==  NL80211_IFTYPE_AP_VLAN &&
++					sdata != sta->sdata &&
++					sdata->bss == sta->sdata->bss)
++				{
++					enum ieee80211_sta_state state;
++					pr_info("find ap_vlan-%s station\n",sta->sdata->name);
++					for (state = IEEE80211_STA_NOTEXIST;state < sta->sta_state; state++)
++						WARN_ON(drv_sta_state(local, sdata, sta, state, state + 1));
++				}
++			}
++		}
++	}
+ 	mutex_unlock(&local->sta_mtx);
+ 
+ 	/* add back keys */

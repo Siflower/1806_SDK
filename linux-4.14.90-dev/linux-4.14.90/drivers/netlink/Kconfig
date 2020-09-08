@@ -1,0 +1,18 @@
+#
+# Netlink subsystem configuration
+#
+
+menu "Netlink support"
+
+config SFAX8_GENL
+	tristate "Generic netlink socket"
+	help
+	  Use generic netlink socket to connect user space and kernel.
+
+config SEND_ERR
+	bool "send err to user interface"
+    default n
+	help
+	  Use generic netlink socket to connect user space and kernel.
+
+endmenu

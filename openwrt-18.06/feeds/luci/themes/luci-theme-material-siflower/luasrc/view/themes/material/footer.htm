@@ -1,0 +1,96 @@
+<%#
+    Material is a clean HTML5 theme for LuCI. It is based on luci-theme-bootstrap and MUI
+
+    luci-theme-material
+        Copyright 2015 Lutty Yang <lutty@wcan.in>
+
+    Have a bug? Please create an issue here on GitHub!
+        https://github.com/LuttyYang/luci-theme-material/issues
+
+    luci-theme-bootstrap:
+    Copyright 2008 Steven Barth <steven@midlink.org>
+    Copyright 2008 Jo-Philipp Wich <jow@openwrt.org>
+    Copyright 2012 David Menting <david@nut-bolt.nl>
+
+    MUI:
+    https://github.com/muicss/mui
+
+    Licensed to the public under the Apache License 2.0
+-%>
+
+<%
+	local ver = require "luci.version"
+	local disp = require "luci.dispatcher"
+	local request  = disp.context.path
+	local category = request[1]
+	local tree = disp.node()
+	local categories = disp.node_childs(tree)
+	local strlist = {}
+	local reps = ' '
+	string.gsub(ver.distversion,'[^'..reps..']+',function ( w )
+		table.insert(strlist,w)
+	end)
+	local softversion = strlist[3] or ver.distversion
+	local systemnew = require "luci.controller.admin.systemnew"
+%>
+                </div>
+
+            </div>
+</div>
+</div>
+<footer class="mobile-hide">
+    <ul class="footCon">
+		<li id="softVersion"><%:software version%> <span id="software-version"><%= softversion %></span></li>
+    <!--<a>软件版本:<%= ver.distversion %></a>-->
+    <% if #categories > 1 then %>
+    <ul class="breadcrumb pull-right" id="modemenu">
+        <% for i, r in ipairs(categories) do %>
+        <li<% if request[1] == r then %> class="active"<%end%>><a href="<%=controller%>/<%=r%>/"><%=striptags(translate(tree.nodes[r].title))%></a> <span class="divider">|</span></li>
+        <% end %>
+    </ul>
+    <% end %>
+    <% local lang = luci.i18n.context.lang%>
+    <% if lang == "zh-cn" then %>
+	<li id="footerZh" class="netAddrTel"><a id="websiteZh" href="http://www.siflower.com.cn" target="_blank"><%:Siflower official website%></a><label id="technicalSupportZh"><%:Technical support hotline%> +021 5131-7015</label></li>
+    <% else %>
+	<li id="footerEn" class="netAddrTel"><a id="websiteEn" href="http://www.siflower.com.cn" target="_blank"><%:Siflower official website%></a><label id="technicalSupportEn"><%:Technical support hotline%> +021 5131-7015</label></li>
+    <% end %>
+    </ul>
+</footer>
+
+    <script src="<%=media%>/js/jquery.min.js"></script>
+    <script src="<%=media%>/js/siwifi.js"></script>
+    <script>
+        var luciLocation = <%= luci.http.write_json(luci.dispatcher.context.path) %>;
+        setStyle();
+        function setStyle(style){
+            var result = <%=systemnew.get_style()%>;
+            var style= result.style;
+            console.log("style", style);
+            var selector;
+            var isIE678 = !-[1,];
+            if(isIE678 ){
+                console.log("I am IE 6 or 7 or 8.");
+            }
+            var font = style["font"];
+            addCSS(font, "color");
+            var background = style["background"];
+            addCSS(background, "background");
+            var border = style["border"];
+            addCSS(border, "border-color");
+            var text = style["text"];
+            for(selector in text){
+                var ele = document.getElementById(selector);
+                if (ele){
+                    ele.innerText = text[selector];
+                    if(ele.nodeName == "A"){
+                        ele.href = text[selector+"Address"];
+                    }
+                }
+            }
+            document.getElementById("loading").style.display = "none";
+        }
+    </script>
+    <script src="<%=media%>/js/script.js"></script>
+</body>
+</html>

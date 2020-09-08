@@ -1,0 +1,200 @@
+diff -uprN backports-4.19.7-1.orig/include/linux/ieee80211.h backports-4.19.7-1.new/include/linux/ieee80211.h
+--- backports-4.19.7-1.orig/include/linux/ieee80211.h	2019-12-05 12:01:20.029303315 +0800
++++ backports-4.19.7-1.new/include/linux/ieee80211.h	2019-12-05 13:33:30.717535415 +0800
+@@ -1679,6 +1679,7 @@ struct ieee80211_mu_edca_param_set {
+ #define IEEE80211_VHT_CAP_VHT_LINK_ADAPTATION_VHT_MRQ_MFB	0x0c000000
+ #define IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN			0x10000000
+ #define IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN			0x20000000
++#define IEEE80211_VHT_CAP_NOT_SUP_WIDTH_80			0x80000000
+ 
+ /* 802.11ax HE MAC capabilities */
+ #define IEEE80211_HE_MAC_CAP0_HTC_HE				0x01
+diff -uprN backports-4.19.7-1.orig/net/mac80211/mlme.c backports-4.19.7-1.new/net/mac80211/mlme.c
+--- backports-4.19.7-1.orig/net/mac80211/mlme.c	2019-12-05 12:01:20.025303314 +0800
++++ backports-4.19.7-1.new/net/mac80211/mlme.c	2019-12-05 13:36:16.953542391 +0800
+@@ -1618,11 +1618,22 @@ void ieee80211_recalc_ps(struct ieee8021
+ 		}
+ 		if (sdata->vif.type != NL80211_IFTYPE_STATION)
+ 			continue;
++
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++        if (!ieee80211_powersave_allowed(sdata)) {
++            count = 0;
++            break;
++        }
++#endif
+ 		found = sdata;
+ 		count++;
+ 	}
+ 
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++	if (count) {
++#else
+ 	if (count == 1 && ieee80211_powersave_allowed(found)) {
++#endif
+ 		u8 dtimper = found->u.mgd.dtim_period;
+ 
+ 		timeout = local->dynamic_ps_forced_timeout;
+diff -uprN backports-4.19.7-1.orig/net/mac80211/rc80211_minstrel_ht.c backports-4.19.7-1.new/net/mac80211/rc80211_minstrel_ht.c
+--- backports-4.19.7-1.orig/net/mac80211/rc80211_minstrel_ht.c	2019-12-05 12:01:20.017303314 +0800
++++ backports-4.19.7-1.new/net/mac80211/rc80211_minstrel_ht.c	2019-12-05 14:52:37.237734607 +0800
+@@ -140,7 +140,11 @@
+ 		}					\
+ 	}
+ 
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++static bool minstrel_vht_only = false;
++#else
+ static bool minstrel_vht_only = true;
++#endif
+ module_param(minstrel_vht_only, bool, 0644);
+ MODULE_PARM_DESC(minstrel_vht_only,
+ 		 "Use only VHT rates when VHT is supported by sta.");
+@@ -514,7 +518,11 @@ minstrel_ht_update_stats(struct minstrel
+ 
+ 	/* Initialize global rate indexes */
+ 	for(j = 0; j < MAX_THR_RATES; j++){
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++		tmp_mcs_tp_rate[j] = mi->min_ridx;
++#else
+ 		tmp_mcs_tp_rate[j] = 0;
++#endif
+ 		tmp_cck_tp_rate[j] = 0;
+ 	}
+ 
+@@ -529,7 +537,11 @@ minstrel_ht_update_stats(struct minstrel
+ 
+ 		/* (re)Initialize group rate indexes */
+ 		for(j = 0; j < MAX_THR_RATES; j++)
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++			tmp_group_tp_rate[j] = group * MCS_GROUP_RATES + ffs(mg->supported) - 1;
++#else
+ 			tmp_group_tp_rate[j] = group;
++#endif
+ 
+ 		for (i = 0; i < MCS_GROUP_RATES; i++) {
+ 			if (!(mi->supported[group] & BIT(i)))
+@@ -661,8 +673,10 @@ minstrel_aggr_check(struct ieee80211_sta
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 	u16 tid;
+ 
++#ifndef CPTCFG_WLAN_VENDOR_RWNX
+ 	if (skb_get_queue_mapping(skb) == IEEE80211_AC_VO)
+ 		return;
++#endif
+ 
+ 	if (unlikely(!ieee80211_is_data_qos(hdr->frame_control)))
+ 		return;
+@@ -1238,8 +1252,17 @@ minstrel_ht_update_caps(void *priv, stru
+ 				continue;
+ 
+ 			mi->supported[i] = mcs->rx_mask[nss - 1];
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++			if (mi->supported[i]) {
++				if (!n_supported++) {
++					mi->min_ridx = i * MCS_GROUP_RATES +
++						ffs(mi->supported[i]) - 1;
++				}
++			}
++#else
+ 			if (mi->supported[i])
+ 				n_supported++;
++#endif
+ 			continue;
+ 		}
+ 
+@@ -1267,8 +1290,17 @@ minstrel_ht_update_caps(void *priv, stru
+ 		mi->supported[i] = minstrel_get_valid_vht_rates(bw, nss,
+ 				vht_cap->vht_mcs.tx_mcs_map);
+ 
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++		if (mi->supported[i]) {
++			if (!n_supported++) {
++				mi->min_ridx = i * MCS_GROUP_RATES +
++					ffs(mi->supported[i]) - 1;
++			}
++		}
++#else
+ 		if (mi->supported[i])
+ 			n_supported++;
++#endif
+ 	}
+ 
+ 	if (!n_supported)
+diff -uprN backports-4.19.7-1.orig/net/mac80211/rc80211_minstrel_ht.h backports-4.19.7-1.new/net/mac80211/rc80211_minstrel_ht.h
+--- backports-4.19.7-1.orig/net/mac80211/rc80211_minstrel_ht.h	2019-12-05 12:01:20.021303314 +0800
++++ backports-4.19.7-1.new/net/mac80211/rc80211_minstrel_ht.h	2019-12-05 14:24:10.461662980 +0800
+@@ -62,7 +62,9 @@ struct minstrel_ht_sta {
+ 
+ 	/* ampdu length (EWMA) */
+ 	unsigned int avg_ampdu_len;
+-
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++	u16 min_ridx;
++#endif
+ 	/* overall sorted rate set */
+ 	u16 max_tp_rate[MAX_THR_RATES];
+ 	u16 max_prob_rate;
+diff -uprN backports-4.19.7-1.orig/net/mac80211/tx.c backports-4.19.7-1.new/net/mac80211/tx.c
+--- backports-4.19.7-1.orig/net/mac80211/tx.c	2019-12-05 12:01:20.013303314 +0800
++++ backports-4.19.7-1.new/net/mac80211/tx.c	2019-12-05 14:34:33.849689141 +0800
+@@ -436,13 +436,20 @@ ieee80211_tx_h_multicast_ps_buf(struct i
+ 	if (ieee80211_is_probe_req(hdr->frame_control))
+ 		return TX_CONTINUE;
+ 
++#ifndef CPTCFG_WLAN_VENDOR_RWNX
+ 	if (ieee80211_hw_check(&tx->local->hw, QUEUE_CONTROL))
+ 		info->hw_queue = tx->sdata->vif.cab_queue;
++#endif
+ 
+ 	/* no stations in PS mode and no buffered packets */
+ 	if (!atomic_read(&ps->num_sta_ps) && skb_queue_empty(&ps->bc_buf))
+ 		return TX_CONTINUE;
+ 
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++	if (ieee80211_hw_check(&tx->local->hw, QUEUE_CONTROL))
++		info->hw_queue = tx->sdata->vif.cab_queue;
++#endif
++
+ 	info->flags |= IEEE80211_TX_CTL_SEND_AFTER_DTIM;
+ 
+ 	/* device releases frame after DTIM beacon */
+@@ -631,6 +638,9 @@ ieee80211_tx_h_select_key(struct ieee802
+ 		case WLAN_CIPHER_SUITE_CCMP_256:
+ 		case WLAN_CIPHER_SUITE_GCMP:
+ 		case WLAN_CIPHER_SUITE_GCMP_256:
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++		case WLAN_CIPHER_SUITE_SMS4:
++#endif
+ 			if (!ieee80211_is_data_present(hdr->frame_control) &&
+ 			    !ieee80211_use_mfp(hdr->frame_control, tx->sta,
+ 					       tx->skb) &&
+diff -uprN backports-4.19.7-1.orig/net/mac80211/util.c backports-4.19.7-1.new/net/mac80211/util.c
+--- backports-4.19.7-1.orig/net/mac80211/util.c	2019-12-05 12:01:20.017303314 +0800
++++ backports-4.19.7-1.new/net/mac80211/util.c	2019-12-05 14:27:05.121670310 +0800
+@@ -3052,7 +3052,11 @@ u32 ieee80211_chandef_downgrade(struct c
+ 		/* freq_P40 */
+ 		c->center_freq1 = c->center_freq1 - 20 + 40 * tmp;
+ 		c->width = NL80211_CHAN_WIDTH_40;
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++		ret = 0;
++#else
+ 		ret = IEEE80211_STA_DISABLE_VHT;
++#endif
+ 		break;
+ 	case NL80211_CHAN_WIDTH_80P80:
+ 		c->center_freq2 = 0;
+diff -uprN backports-4.19.7-1.orig/net/wireless/chan.c backports-4.19.7-1.new/net/wireless/chan.c
+--- backports-4.19.7-1.orig/net/wireless/chan.c	2019-12-05 12:01:20.009303314 +0800
++++ backports-4.19.7-1.new/net/wireless/chan.c	2019-12-05 14:28:15.665673271 +0800
+@@ -772,6 +772,10 @@ bool cfg80211_chandef_usable(struct wiph
+ 	case NL80211_CHAN_WIDTH_80:
+ 		if (!vht_cap->vht_supported)
+ 			return false;
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++		if (vht_cap->cap & IEEE80211_VHT_CAP_NOT_SUP_WIDTH_80)
++			return false;
++#endif
+ 		prohibited_flags |= IEEE80211_CHAN_NO_80MHZ;
+ 		width = 80;
+ 		break;

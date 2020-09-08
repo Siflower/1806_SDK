@@ -1,0 +1,300 @@
+/*
+ * Siflower pmu device tree stub
+ *
+ * ALTERNATIVELY, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") as published by the Free Software
+ * Foundation, either version 2 of that License or (at your option) any
+ * later version.
+ *
+ * THIS SOFTWARE IS PROVIDED BY Freescale Semiconductor ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL Freescale Semiconductor BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+pmu: pmu@30 {
+	compatible = "siflower, sfax8-pmu";
+	reg = <0x30>;
+
+	/*
+	   IR device
+	   miscdev {
+	   interrupts = <249 0>;
+	   };
+	 */
+
+	reset-button {
+		rb-gpio = <&gpio 60 0>;
+	};
+
+	power-management {
+		ip6103-dcdc0-supply = <&ip6103_core>;
+		ip6103-dcdc0-default-uv = <875000>;
+		ip6103-dcdc1-supply = <&ip6103_dcdc1>;
+
+		ip6103-dcdc2-supply = <&ip6103_ddr>;
+
+		ip6103-dcdc3-supply = <&ip6103_vddio>;
+
+		ip6103-ldo0-supply = <&ip6103_rflb_pa>;
+
+		ip6103-ldo1-supply = <&ip6103_rfhb_pa>;
+
+		ip6103-ldo2-supply = <&ip6103_vdd18>;
+
+		ip6103-ldo4-supply = <&ip6103_rfvdda>;
+
+		ip6103-ldo5-supply = <&ip6103_rfpa_en>;
+
+		ip6103-ldo6-supply = <&ip6103_ldo6_32khz>;
+
+
+
+
+		rn5t567-dcdc1-supply = <&rn5t567_dcdc1>;
+
+		rn5t567-dcdc2-supply = <&rn5t567_dcdc2>;
+
+		rn5t567-dcdc3-supply = <&rn5t567_core>;
+		rn5t567-dcdc3-default-uv = <875000>;
+
+		rn5t567-dcdc4-supply = <&rn5t567_dcdc4>;
+
+		rn5t567-ldo1-supply  = <&rn5t567_ldo1>;
+
+		rn5t567-ldo2-supply  = <&rn5t567_ldo2>;
+
+		rn5t567-ldo3-supply  = <&rn5t567_ldo3>;
+
+		rn5t567-ldo4-supply  = <&rn5t567_ldo4>;
+
+		rn5t567-ldo5-supply  = <&rn5t567_ldo5>;
+
+
+	};
+
+	ip6103-regulators {
+		ip6103_core: dcdc0 {
+				 regulator-name = "VDD_CORE_0.9V";
+				 /*set default to 0.8v to save power*/
+				 regulator-min-microvolt = <600000>;
+				 regulator-max-microvolt = <1000000>;
+				 regulator-min-microamp = <3000000>;
+				 regulator-max-microamp = <3000000>;
+				 regulator-always-on;
+				 regulator-boot-on;
+			 };
+
+		ip6103_dcdc1: dcdc1 {
+				  regulator-name = "DCDC1";
+				  regulator-min-microvolt = <600000>;
+				  regulator-max-microvolt = <2175000>;
+				  regulator-min-microamp = <3000000>;
+				  regulator-max-microamp = <3000000>;
+				  regulator-always-on;
+				  regulator-boot-on;
+			  };
+
+		ip6103_ddr: dcdc2 {
+				regulator-name = "DDR_1.5-1.8V";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-min-microamp = <3000000>;
+				regulator-max-microamp = <3000000>;
+				regulator-always-on;
+				regulator-boot-on;
+			};
+
+		ip6103_vddio: dcdc3 {
+				  regulator-name = "VDDIO_3.3V";
+				  regulator-min-microvolt = <2200000>;
+				  regulator-max-microvolt = <3300000>;
+				  regulator-min-microamp = <2000000>;
+				  regulator-max-microamp = <2000000>;
+				  regulator-always-on;
+				  regulator-boot-on;
+			  };
+
+		ip6103_rflb_pa: ldo0 {
+					regulator-name = "RFLB_PA_2.6V";
+					regulator-min-microvolt = <700000>;
+					regulator-max-microvolt = <2600000>;
+					regulator-min-microamp = <400000>;
+					regulator-max-microamp = <400000>;
+					regulator-always-on;
+					regulator-boot-on;
+				};
+
+		ip6103_rfhb_pa: ldo1 {
+					regulator-name = "RFHB_PA_2.6V";
+					regulator-min-microvolt = <700000>;
+					regulator-max-microvolt = <2600000>;
+					regulator-min-microamp = <400000>;
+					regulator-max-microamp = <400000>;
+					regulator-always-on;
+					regulator-boot-on;
+				};
+
+		ip6103_vdd18: ldo2 {
+				  regulator-name = "VDD18_1.8V";
+				  regulator-min-microvolt = <700000>;
+				  regulator-max-microvolt = <1800000>;
+				  regulator-min-microamp = <400000>;
+				  regulator-max-microamp = <400000>;
+				  regulator-always-on;
+				  regulator-boot-on;
+			  };
+
+		ip6103_rfvdda: ldo4 {
+				   regulator-name = "RF_VDDA_1.5V";
+				   regulator-min-microvolt = <700000>;
+				   regulator-max-microvolt = <1500000>;
+				   regulator-min-microamp = <200000>;
+				   regulator-max-microamp = <200000>;
+				   regulator-always-on;
+				   regulator-boot-on;
+			   };
+
+		ip6103_rfpa_en: ldo5 {
+					regulator-name = "RFPA_EN";
+					regulator-min-microvolt = <700000>;
+					regulator-max-microvolt = <700000>;
+					regulator-min-microamp = <200000>;
+					regulator-max-microamp = <200000>;
+					regulator-always-on;
+					regulator-boot-on;
+				};
+
+		ip6103_ldo6_32khz: ldo6 {
+					   regulator-name = "LDO6";
+					   regulator-min-microvolt = <700000>;
+					   regulator-max-microvolt = <700000>;
+					   regulator-min-microamp = <200000>;
+					   regulator-max-microamp = <200000>;
+					   regulator-always-on;
+					   regulator-boot-on;
+				   };
+
+				   /*
+					  svcc {
+					  regulator-name = "SVCC";
+					  regulator-min-microvolt = <2600000>;
+					  regulator-max-microvolt = <2600000>;
+					  regulator-max-microvolt = <3300000>;
+					  regulator-min-microamp = <50000>;
+					  regulator-max-microamp = <50000>;
+					  regulator-always-on;
+					  regulator-boot-on;
+					  };
+					*/
+	};
+	rn5t567-regulators {
+		rn5t567_dcdc1: dcdc1 {
+				   regulator-name = "DCDC1";
+				   regulator-min-microvolt = <600000>;
+				   regulator-max-microvolt = <3300000>;
+				   regulator-min-microamp = <3000000>;
+				   regulator-max-microamp = <3000000>;
+				   regulator-always-on;
+				   regulator-boot-on;
+			   };
+
+		rn5t567_dcdc2: dcdc2 {
+				   regulator-name = "DCDC2";
+				   regulator-min-microvolt = <600000>;
+				   regulator-max-microvolt = <2700000>;
+				   regulator-min-microamp = <3000000>;
+				   regulator-max-microamp = <3000000>;
+				   regulator-always-on;
+				   regulator-boot-on;
+			   };
+
+		rn5t567_core: dcdc3 {
+				  regulator-name = "DCDC3";
+				  regulator-min-microvolt = <600000>;
+				  regulator-max-microvolt = <1000000>;
+				  regulator-min-microamp = <2000000>;
+				  regulator-max-microamp = <2000000>;
+				  regulator-always-on;
+				  regulator-boot-on;
+			  };
+
+		rn5t567_dcdc4: dcdc4 {
+				   regulator-name = "DCDC4";
+				   regulator-min-microvolt = <600000>;
+				   regulator-max-microvolt = <1500000>;
+				   regulator-min-microamp = <2000000>;
+				   regulator-max-microamp = <2000000>;
+				   regulator-always-on;
+				   regulator-boot-on;
+			   };
+
+		rn5t567_ldo1: ldo1 {
+				  regulator-name = "LDO1";
+				  regulator-min-microvolt = <900000>;
+				  regulator-max-microvolt = <1800000>;
+				  regulator-min-microamp = <300000>;
+				  regulator-max-microamp = <300000>;
+				  regulator-always-on;
+				  regulator-boot-on;
+			  };
+
+		rn5t567_ldo2: ldo2 {
+				  regulator-name = "LDO2";
+				  regulator-min-microvolt = <900000>;
+				  regulator-max-microvolt = <1800000>;
+				  regulator-min-microamp = <300000>;
+				  regulator-max-microamp = <300000>;
+				  regulator-always-on;
+				  regulator-boot-on;
+			  };
+
+		rn5t567_ldo3: ldo3 {
+				  regulator-name = "LDO3";
+				  regulator-min-microvolt = <600000>;
+				  regulator-max-microvolt = <3500000>;
+				  regulator-min-microamp = <300000>;
+				  regulator-max-microamp = <300000>;
+				  regulator-always-on;
+				  regulator-boot-on;
+			  };
+
+		rn5t567_ldo4: ldo4 {
+				  regulator-name = "LDO4";
+				  regulator-min-microvolt = <900000>;
+				  regulator-max-microvolt = <3500000>;
+				  regulator-min-microamp = <200000>;
+				  regulator-max-microamp = <200000>;
+				  regulator-always-on;
+				  regulator-boot-on;
+			  };
+
+		rn5t567_ldo5: ldo5 {
+				  regulator-name = "LDO5";
+				  regulator-min-microvolt = <900000>;
+				  regulator-max-microvolt = <1500000>;
+				  regulator-min-microamp = <200000>;
+				  regulator-max-microamp = <200000>;
+				  regulator-always-on;
+				  regulator-boot-on;
+			  };
+			  /*
+				 svcc {
+				 regulator-name = "SVCC";
+				 regulator-min-microvolt = <2600000>;
+				 regulator-max-microvolt = <2600000>;
+				 regulator-max-microvolt = <3300000>;
+				 regulator-min-microamp = <50000>;
+				 regulator-max-microamp = <50000>;
+				 regulator-always-on;
+				 regulator-boot-on;
+				 };
+			   */
+	};
+
+};

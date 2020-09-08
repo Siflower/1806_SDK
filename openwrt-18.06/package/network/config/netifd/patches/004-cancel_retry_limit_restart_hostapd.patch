@@ -1,0 +1,15 @@
+diff -uprN netifd-2018-12-16-2750ce2e.orig/wireless.c netifd-2018-12-16-2750ce2e/wireless.c
+--- netifd-2018-12-16-2750ce2e.orig/wireless.c	2019-12-02 13:31:00.050651531 +0800
++++ netifd-2018-12-16-2750ce2e/wireless.c	2019-12-02 13:34:04.822659285 +0800
+@@ -410,8 +410,9 @@ wireless_device_retry_setup(struct wirel
+ 	if (wdev->state == IFS_TEARDOWN || wdev->state == IFS_DOWN || wdev->cancel)
+ 		return;
+ 
+-	if (--wdev->retry < 0)
+-		wdev->retry_setup_failed = true;
++	//cancel retry limit to restart hostapd
++	//if (--wdev->retry < 0)
++	//	wdev->retry_setup_failed = true;
+ 
+ 	__wireless_device_set_down(wdev);
+ }

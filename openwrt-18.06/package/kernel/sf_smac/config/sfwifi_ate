@@ -1,0 +1,55 @@
+#!/bin/sh
+# Copyright (C) 2006 OpenWrt.org
+
+. /lib/sfwifi.sh
+. /usr/share/libubox/jshn.sh
+
+usage() {
+	cat <<EOF
+Usage: $0 [reset|remove|reload] [lb/hb]
+reset wifi firmware.
+EOF
+	exit 1
+}
+
+firmware_remove(){
+	#stop wifi first
+	/sbin/wifi down
+	sleep 1
+	#unregist umac
+	unload_smac
+	#unregist lmac
+	unload_firmware
+	#unregist rf
+	unload_rf
+}
+
+firmware_reload(){
+	local band="$1"
+	#reload firmware
+	load_firmware
+	#reload rf
+	insmod_rf
+	[ lb = "$band" ] && {
+		insmod_umac_lb
+	}
+	[ hb = "$band" ] && {
+		insmod_umac_hb
+	}
+	[ -z "$band" ] && {
+		insmod_smac
+	}
+}
+
+firmware_reset(){
+	firmware_remove
+	firmware_reload $1
+}
+
+case "$1" in
+	reset) firmware_reset $2;;
+	remove) firmware_remove;;
+	reload) firmware_reload $2;;
+	--help|help) usage;;
+	*) firmware_reset;;
+esac

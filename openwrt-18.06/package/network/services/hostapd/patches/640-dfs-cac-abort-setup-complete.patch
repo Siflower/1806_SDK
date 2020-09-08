@@ -1,0 +1,27 @@
+diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/dfs.c hostapd-2018-05-21-62566bc2/src/ap/dfs.c
+--- hostapd-2018-05-21-62566bc2.orig/src/ap/dfs.c	2019-12-02 10:39:17.922219193 +0800
++++ hostapd-2018-05-21-62566bc2/src/ap/dfs.c	2019-12-02 10:42:24.778227034 +0800
+@@ -811,6 +811,23 @@ int hostapd_dfs_complete_cac(struct host
+ 				iface->cac_started = 0;
+ 			}
+ 		}
++	} else {
++		/*
++		 * add by austin.xu:
++		 * If we switch a channel from a dfs channel which doesn't
++		 * finish dfs cac, netifd will stop this device and mac80211
++		 * will abort dfs cac. But in hostapd, we do nothing when
++		 * receive NL80211_RADAR_CAC_ABORTED cmd, and this hostapd
++		 * process will not be killed. Then netifd will create a new
++		 * hostapd process which will be conflicted with the old one
++		 * and setup will fail.
++		 * Add setup complete here and set err=1 can solute this problem.
++		 * It will finish the old process and new process can work well
++		 * when we switch a channel from a dfs channel.
++		 * If it brings more questions, I am very sorry and please
++		 * tell me and remove it.
++		 */
++		hostapd_setup_interface_complete(iface, 1);
+ 	}
+ 
+ 	return 0;

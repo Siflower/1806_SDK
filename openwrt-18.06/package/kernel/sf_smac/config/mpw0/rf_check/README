@@ -1,0 +1,13 @@
+1.input "devmem 0x17a07800 16" to record the result_0   
+2.run "./catena_rf_cmd_dump.sh 0" to record the latest 125 rf cmds
+3.run "macbypass_check.sh lb(hb) tx" to send tx by macbypass 
+4.input "devmem 0x17a07800 16" to record the result_1
+5.input "devmem 0x17a07800 16" to record the result_2
+6.A.If the result_2 is different with result_1,and result_1 is different with result_0,the rf should be ok.
+  B.Check if TX can send signal now.
+7.run "./catena_rf_cmd_dump.sh 1" to record the latest 125 rf cmds
+
+
+#run "rf_dump.sh all" to dump all RF registers
+#run "rf_status.sh lb(hb)"
+#run "MIB_ccheck.sh lb(hb) tx"

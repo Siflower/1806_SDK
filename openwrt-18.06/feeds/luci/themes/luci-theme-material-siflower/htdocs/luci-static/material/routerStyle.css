@@ -1,0 +1,3037 @@
+.main > .main-left > .nav > .slide {
+	padding: 0;
+	width: 18.3em;
+	border: 0px solid;
+	border: 1px solid gray\9;
+	margin: 0 1.14em 0 auto;
+	color: #737373;
+	font-size: 14px;
+	font-weight: bold;
+	line-height: 55px;
+	border-radius: 5px;
+
+}
+
+.main > .main-left > .nav > .slide > .slide-menu > li {
+	font-size: 13px;
+	padding: 0.4em 2.5em;
+	cursor: pointer;
+	margin-left: 0;
+	height: 45px;
+	line-height: 29px;
+	color: #934141;
+	background: rgba(255, 255, 255,0.1);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1affffff', endColorstr='#1affffff',GradientType=0  );
+	border-bottom: 1px solid #666;
+	box-shadow: 0 0 5px 0 #aaa;
+}
+
+.main > .main-left > .nav > li a {
+		/*margin: 0 2rem;*/
+}
+
+.main-right > #maincontent {
+	margin-bottom: 4rem;
+}
+
+.wan-td-left {
+	text-align: right;
+	width: 22.5em;
+	border: none;
+}
+.wan-td-right {
+	text-align: left;
+	border: none;
+}
+
+
+
+.tb-no-border {
+	border-spacing: 0;
+	border-collapse: collapse;
+	width: 96%;
+	border: none;
+	margin-left: 0;
+	margin-bottom: 0.5rem;
+}
+
+.tb-no-border>tbody>tr>td, .tb-no-border>tbody>tr>th, .tb-no-border>tfoot>tr>td, .tb-no-border>tfoot>tr>th,
+.tb-no-border>thead>tr>td, .tb-no-border>thead>tr>th {
+	padding: .5rem;
+	border: none;
+	white-space: nowrap;
+}
+
+.mac-td-left{
+	text-align: right;
+	width: 16em;
+	border: none;
+}
+.mac-td-right{
+	text-align: left;
+	border: none;
+}
+
+.tb-rd {
+	width: 10px;
+}
+
+
+
+@media screen and (max-device-width: 780px) {
+	.wan-td-left {
+		text-align: right;
+		width: 5rem;
+		border: none;
+	}
+
+	.mac-td-left{
+		text-align: right;
+		width: 5rem;
+		border: none;
+	}
+	#maincontent > .container {
+		font-size: 12px;
+		margin-left: 0rem;
+		margin-top: -1rem;
+	}
+	.td-tittle {
+		text-align: left;
+		text-indent: 1.2rem;
+	}
+}
+
+.td-37-left {
+	text-align: left;
+	width: 70%;
+}
+.td-37-right {
+	text-align: right;
+	width: 30%;
+}
+
+/*switch Radio*/
+input[id=switchInput] {
+	visibility: hidden;
+}
+input[id=ownerNetWork] {
+	visibility: hidden;
+}
+input[id=visitorNetWork] {
+	visibility: hidden;
+}
+
+.checkboxSwitch {
+	width: 50px;
+	height: 20px;
+	background: #9b9696;
+	margin: 10px 30px;
+	border-radius: 50px;
+	position: relative;
+}
+
+.checkboxSwitch:before {
+	content: 'On';
+	position: absolute;
+	top: 3.5px;
+	left: 4px;
+	height: 2px;
+	color: #a0d468;
+	font-size: 11px;
+}
+
+.checkboxSwitch:after {
+	content: 'Off';
+	position: absolute;
+	top: 3.5px;
+	left: 28px;
+	height: 2px;
+	color: #ddd;
+	font-size: 11px;
+}
+
+.checkboxSwitch label {
+	display: block;
+	width: 22px;
+	height: 12px;
+	border-radius: 50px;
+
+	-webkit-transition: all .5s ease;
+	-moz-transition: all .5s ease;
+	-o-transition: all .5s ease;
+	-ms-transition: all .5s ease;
+	transition: all .5s ease;
+	cursor: pointer;
+	position: absolute;
+	top: 4px;
+	z-index: 1;
+	left: 4px;
+	background: #ddd;
+}
+
+.checkboxSwitch input[type=checkbox]:checked + label {
+	left: 25px;
+	background: #a0d468;
+}
+
+.loginBg {
+	background: #353535;
+	height: 98%;
+	width: 100%;
+	margin: 0px;
+}
+
+.cbi-section {
+	border: none;
+}
+
+.cbi-section-node {
+	text-align: center;
+	border: none;
+}
+
+.cbi-input-password{
+/*	background: #fff 0px 0px;*/
+	color: #000;
+	font-size: 14px;
+	width: 18em;
+	height: 32px;
+	margin: 3.2px;
+	border: 0px;
+	line-height: 32px;
+}
+
+.cbi-value-field{
+	background: #fff;
+	width: 20rem;
+	height: 2.5rem;
+	float: left;
+	border-radius: 5px;
+}
+
+.cbi-value-div{
+	width: 25rem;
+	margin: 4rem auto auto 20rem;
+	float: left;
+}
+.div-button{
+	width: 5rem;
+	float: left;
+}
+.submit {
+	width: 70px;
+	display: inline-block;
+	padding: .3em .5em;
+	background: #a0d468;
+	border: 0px solid ;
+	border-radius: 5px;
+	text-align: center;
+	color: white;
+	margin: 0 1rem
+}
+
+.line-row{
+	height:60px;
+	border-color:#000000;
+	border-left-style:solid;
+	border-width:1px
+}
+.login-tb {
+
+	background: #fff;
+	border-radius: 5px;
+	margin: auto;
+
+}
+
+.pwd-tb {
+
+	width: 15em;
+
+}
+
+.lg-tb-st {
+
+	margin: 8em auto;
+
+}
+
+.sub-td{
+	position: relative;
+}
+
+.cbi-button{
+	width: 4em;
+	background: #df0007;
+	border: 0px solid;
+	border-radius: 50%;
+	text-align: center;
+	color: white;
+	margin: 0 1.2em;
+	height: 4em;
+	cursor: pointer;
+	position: absolute;
+	bottom: 0em;
+}
+
+li.loginHelp {
+	margin-top: 15px;
+	text-indent: 7px;
+	text-align: left;
+	list-style-type: none;
+	font-size: 14px;
+	position: absolute;
+}
+
+i.loginHelp {
+	width: 15px;
+	height: 15px;
+	display: inline-block;
+	vertical-align: middle;
+	cursor: pointer;
+	background: url(images/sibasic.png) no-repeat -80px -304px;
+}
+
+.loginTip {
+	color: #fff;
+	font-size: 21px;
+	margin-bottom: 4px;
+}
+span.loginHelp {
+	color: #fff;
+	*margin-left: 5px;
+	vertical-align: middle;
+	cursor: pointer;
+	font-size: 12px;
+}
+
+.loginFeg p{
+	color: white;
+	padding-bottom: 3px;
+}
+.loginFeg {
+	width: 24.4em;
+/*	height: 42px; for login forget password*/
+	border-radius: 3px;
+	margin-top: 10px;
+	position: relative;
+	left: 0.5em;
+	background: #df0007;
+	visibility: hidden;
+}
+.loginFeg i {
+	height: 0;
+	line-height: 0;
+	width: 0;
+	top: -3px;
+	left: 40px;
+	position: absolute;
+	border-style: solid;
+    border-color: rgba(255,255,255,0) rgba(255,255,255,0) #df0007 rgba(255,255,255,0);
+    border-color: #353535 #353535 #df0007 #353535\9;
+	border-width: 0 4px 3px 4px;
+}
+
+i.subImg {
+	height: 7px;
+	width: 7px;
+	margin-right: 2em;
+	display: inline-block;
+	vertical-align: middle;
+	background: rgba(255, 255, 255,0.1);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1affffff', endColorstr='#1affffff',GradientType=0  );
+	border-radius: 50%;
+}
+
+.main > .main-left > .nav > .slide > .slide-menu > .active > a >i{
+	background: white;
+}
+
+/*tittle of header*/
+img.Logo {
+	margin-top: 16px;
+	margin-left: 16px;
+	float: left;
+}
+ul.headFunc {
+	list-style: none;
+	overflow: hidden;
+	margin-top: 1.1em;
+	float: right;
+}
+ul.headFunc li {
+	height: 30px;
+	width: 70px;
+	float: left;
+	margin-left: 20px;
+	overflow: hidden;
+	border-radius: 4px;
+	cursor: pointer;
+}
+ul.headFunc li label {
+	float: left;
+	width: 100%;
+	color: white;
+	font-size: 12px;
+	font-weight: bold;
+	margin-top: 7px;
+	text-align: center;
+	cursor: pointer;
+	line-height: 14px;
+}
+
+ul.gridToolBar li {
+	color: #d7000f;
+	font-size: 12px;
+	margin-left: 15px;
+	cursor: pointer;
+	display: inline-block;
+	*display: inline;
+}
+
+ul.gridToolBar li.refresh i {
+	background: url(images/sibasic.png) no-repeat -158px -170px;
+}
+ul.gridToolBar i {
+	height: 19px;
+	line-height: 19px;
+	width: 20px;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+ul.gridToolBar span {
+	margin-left: 3px;
+	vertical-align: middle;
+}
+
+i.edit {
+	width: 23px;
+	height: 23px;
+	cursor: pointer;
+	display: inline-block;
+	background: url(images/sibasic.png) no-repeat scroll -107px -170px;
+}
+
+#dhcpLsUl li {
+
+	margin: auto;
+
+}
+ul.gridToolBar {
+	font-size: 16px;
+	margin: 10px 2em 0 0;
+	list-style: none;
+}
+
+ul.gridToolBar li {
+	color: #8c000a;
+	font-size: 12px;
+	/*margin-left: 15px;*/
+	cursor: pointer;
+	display: inline-block;
+	*display: inline;
+}
+
+ul.gridToolBar li.add i {
+	background: url(images/sibasic.png) no-repeat -5px -171px;
+}
+ul.gridToolBar li.delAll i {
+	background: url(images/sibasic.png) no-repeat -29px -171px;
+}
+ul.gridToolBar li.delSelUn i {
+	background: url(images/sibasic.png) no-repeat -53px -171px;/*delete button on table*/
+}
+ul.gridToolBar i {
+	height: 19px;
+	line-height: 19px;
+	width: 19px;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+ul.gridToolBar span {
+	margin-left: 3px;
+	vertical-align: middle;
+}
+
+ul.gridToolBar li.delSelUn span {
+	color: #999;
+}
+
+ul.gridToolBar li.delSel i {
+	background: url(images/sibasic.png) no-repeat -29px -171px;;
+}
+ul.gridToolBar li.delAllUn i {
+	background: url(images/sibasic.png) no-repeat -53px -171px;/*delete all button on table*/
+}
+ul.gridToolBar li.delAllUn span {
+	color: #999;
+}
+.tb-disable{
+	background: grey;
+}
+
+#upnpLsUl{
+	margin: 1.5em auto auto 43em;
+}
+
+#routeSysUl {
+	margin: 1em auto auto 43em;
+}
+
+
+/*upload soft2*/
+.file-box{
+	position:relative;
+	width:360px;
+	margin: 20px auto 2.67em 8em;
+}
+.txt{
+	height:28px;
+	line-height:28px;
+	width:250px;
+	margin: auto 10px;
+}
+#save-config {
+	margin: auto 10px;
+}
+.btn{
+	width:70px;
+	color:#fff;
+	background-color: #d7000f;
+	border:0 none;height:28px;
+	line-height:16px!important;
+	cursor:pointer;
+	margin: 0.67em auto auto 0.8em;
+}
+.lbtn {
+	width: 100px;
+}
+
+.file{
+	position: absolute;
+	top: 2.5em;
+	*top: 3.5em;
+	right: -7px;
+	height: 30px;
+	line-height: 30px;
+	filter: alpha(opacity:0);
+	opacity: 0;
+	width: 350px;
+    cursor: pointer;
+}
+
+.file-box p {
+	margin: 0.93em;
+}
+
+.div-box p {
+	margin: 0.93em;
+	line-height: 1.6em;
+}
+.div-box {
+	position: relative;
+	width: auto;
+	margin: 20px auto 2.67em 8em;
+
+}
+.notice-box {
+	margin: 50px auto 2.67em 8em;
+}
+#ip-mac-bind td input {
+	width: 10.33em;
+	height: 21px;
+	border-radius: 0px;
+	line-height: 100%;
+}
+#ip-mac-bind td{
+	padding: 0px;
+}
+.mac-cancel{
+	margin: 0;
+	width: 62px;
+	height: 25px;
+	padding: auto;
+	border-style:solid;
+	border-width:1px;
+	line-height: 11px;
+}
+
+.mac-save{
+	margin: 0;
+	width: 62px;
+	height: 25px;
+	padding: auto;
+	border-style:solid;
+	border-width:1px;
+	line-height: 11px;
+}
+
+
+input.checkbox {
+	height: 13px;
+	width: 13px;
+	font-size: 0;
+	margin: 0;
+	padding: 0;
+	vertical-align: middle;
+}
+
+/*setting guide*/
+
+div.wizardCon {
+	margin-top: 130px;
+	height: auto;
+	position: relative;
+	border-radius: 3px;
+	background: #fff;
+
+}
+
+div.wizardContent {
+	width: 680px;
+	margin: 0 auto;
+	padding-bottom: 40px;
+}
+
+div.wizardContent div.wizardLogo {
+	height: 50px;
+	background: url(images/logo.png) no-repeat 0 18px;
+}
+
+li.wizardTop {
+	height: 110px;
+	overflow: hidden;
+	text-align: center;
+	position: relative;
+	border-radius: 3px 3px 0 0;
+}
+
+li.wizardTop h1 {
+	color: #fff;
+	font-size: 34px;
+	line-height: 35px;
+	font-weight: normal;
+	margin-top: 38px;
+	border-bottom: none;
+}
+
+li.wizardTop a {
+	top: 10px;
+	right: 10px;
+	position: absolute;
+	cursor: pointer;
+}
+
+li.wizardTop i {
+	height: 13px;
+	width: 13px;
+	display: inline-block;
+	cursor: pointer;
+	vertical-align: middle;
+	background: url(images/sibasic.png) no-repeat -63px -305px;/*skip guide*/
+}
+li.wizardTop span {
+	color: #fff;
+	font-size: 12px;
+	font-weight: bold;
+	margin-left: 2px;
+	vertical-align: middle;
+}
+
+li.lgBtns {
+	font-size: 0;
+	width: 100%;
+	padding-bottom: 20px;
+	text-align: center;
+}
+.black {
+	height: 50px;
+}
+
+li.wizardBom {
+	height: auto;
+	text-align: center;
+	*margin-top: -1px;
+}
+
+p.wizardPwdTip {
+	color: #4c4c4c;
+	font-weight: bold;
+	font-size: 12px;
+	padding-left: 150px;
+	_padding-left: 142px;
+	padding-top: 20px;
+	text-align: left;
+	visibility: hidden;
+}
+
+p.wizardTip {
+	color: #4c4c4c;
+	font-weight: bold;
+	font-size: 12px;
+	padding-left: 150px;
+	_padding-left: 142px;
+	padding-top: 5px;
+	text-align: left;
+}
+ul.inputUl {
+	margin-left: 120px;
+	height: 40px;
+	text-align: left;
+	list-style: none;
+
+}
+ul.wizardIptPos {
+	margin-left: 200px;
+}
+ul.inputUl li.inputLi {
+	width: 280px;
+	font-size: 0;
+	border-radius: 3px;
+	text-align: left;
+	margin-left: -20px;
+}
+ul.inputUl li {
+	height: 41px;
+	line-height: 40px;
+	*line-height: 41px;
+	display: inline-block;
+	float: left;
+}
+li.inputLi label {
+	width: 130px;
+	font-size: 12px;
+	line-height: 30px;
+	display: inline-block;
+	border-right: 1px solid #ccc;
+	text-align: center;
+	vertical-align: middle;
+}
+li.inputLi input {
+	border: 0;
+	padding: 0;
+	width: 158px;
+	height: 40px;
+	line-height: 40px;
+	font-size: 12px;
+	margin-left: 13px;
+	*margin-top: -2px;
+	vertical-align: middle;
+}
+li.inputLi i.tip {
+	width: 17px;
+	height: 16px;
+	display: inline-block;
+	font-size: 12px;
+	margin-left: 5px;
+	background: url(images/sibasic.png) no-repeat -5px -305px;/*tick mean success*/
+	vertical-align: middle;
+	visibility: hidden;
+}
+#wzdAntNote {
+	display: none;
+}
+ul.inputUl li.note {
+	font-size: 0;
+	text-align: left;
+	visibility: hidden;
+	margin-left: 7px;
+}
+ul.inputUl li {
+	height: 41px;
+	line-height: 40px;
+	*line-height: 41px;
+	display: inline-block;
+	margin-left: 7px;
+	_margin-left: 4px;
+	float: left;
+}
+
+
+
+.t_left {
+
+	width: 78px;
+	color: #000;
+	font-size: 12px;
+	_padding-top: 3px;
+	line-height: 30px;
+	display: inline-block;
+	border-right: 1px solid #ccc;
+	text-align: center;
+	vertical-align: middle;
+
+}
+#wan-connect-type {
+
+	width: 187px;
+	word-break: break-all;
+	word-wrap: break-word;
+	vertical-align: middle;
+	display: inline-block;
+	overflow: hidden;
+	\*display: inline;
+	\*zoom: 1;
+
+}
+.t_right {
+
+	width: 280px;
+	font-size: 0;
+	border-radius: 3px;
+	background: #efefef;
+	text-align: left;
+	height: 41px;
+	line-height: 40px;
+	\*line-height: 41px;
+	display: inline-block;
+	margin-left: 7px;
+	_margin-left: 4px;
+	float: left;
+
+}
+input.subBtn {
+	color: #fff;
+	font-size: 12px;
+	border-radius: 3px;
+	border: 0;
+	cursor: pointer;
+	vertical-align: middle;
+	background: #d7000f;
+}
+.wizardTop input.wzdDetect {
+	width: 70px;
+	margin-left: 150px;
+	margin-top: 5px;
+	height: 30px;
+	background-color: rgba(0, 0, 0,0.25);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#40000000', endColorstr='#40000000',GradientType=0  );
+	cursor: pointer;
+}
+input {
+	font-family: 微软雅黑,宋体,Arial;
+	outline: 0;
+    margin-right: 15px;
+}
+
+.c_left {
+	text-align: right;
+    width: 206px;
+	font-size: 12px;
+}
+.c_input_left {
+	text-align: right;
+	width: 116px;
+	font-size: 12px;
+}
+.c_label_left {
+	text-align: right;
+	width: 156px;
+	font-size: 12px;
+}
+.c_right {
+	text-align: left;
+	font-size: 12px;
+}
+.c_right label {
+	padding: 0 0 0 18px;
+	border-left: 1px solid white;
+
+}
+.c_right input {
+
+	width: 187px;
+
+}
+
+.guide {
+	font-size: 12px;
+}
+.guide .WifiErrTip {
+    margin: -24.7em 0 0 38em;
+    *margin: -25.7em 0 0 38em;
+	width: 200px;
+}
+.guide .GUHeader {
+	width: 100%;
+	height: 70px;
+	background: linear-gradient(red,#9b1b1b);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='red', endColorstr='#9b1b1b',GradientType=0  );
+	z-index: 1;
+}
+.wizardWirelessTip {
+	color: #fb6e52;
+	font-size: 12px;
+	margin-top: 10px;
+	text-align: left;
+}
+
+li.wizardBomEnd span {
+	font-size: 20px;
+	line-height: 20px;
+	color: #fff;
+}
+li.wizardTopEnd h1.wzdEndTitleF {
+	margin-top: 45px !important;
+}
+li.wizardTopEnd h1 {
+	font-size: 40px !important;
+}
+li.wizardTop {
+	height: 90px;
+	overflow: hidden;
+	text-align: left;
+	position: relative;
+	border-radius: 3px 3px 0 0;
+	background: #d7000f;
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16), 0 0 5px 0 rgba(0, 0, 0, .12);
+}
+li.wizardTopEnd {
+	height: 80px !important;
+	box-shadow: none;
+}
+li.wizardTopEnd h1.wzdEndTitleS {
+	margin-top: 15px !important;
+}
+li.wizardTopEnd h1 {
+	font-size: 40px !important;
+}
+li.wizardTop .NTLeft,.NTRight {
+	font-size: 34px;
+	line-height: 110px;
+	font-weight: normal;
+	margin-top: 38px;
+	margin-left: 25px;
+}
+li.wizardTop .NTLeft {
+	padding-right: 15px;
+	border-right: 2px solid #fff;
+}
+li.wizardTop .Set-2 {
+	border-right: 0px solid #fff;
+}
+li.wizardTop .NTRight {
+	font-size: 16px;
+	margin-left: 15px;
+}
+li.wizardBomEnd {
+	height: auto;
+	background: #d7000f;
+	text-align: center;
+	*margin-top: -4px;
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16), 0 0 5px 0 rgba(0, 0, 0, .12);
+}
+li.wizardBomEnd i.wirelessNoChg {
+	width: 100%;
+	height: 297px;
+	margin-top: -55px;
+	display: none;
+	background: url(images/common.png) no-repeat -0px -0px;
+	background-size: 100%;
+	position: relative;
+}
+li.lgBtnsWzd {
+	width: 100%;
+	bottom: 20px;
+	text-align: center;
+	padding: 20px;
+}
+
+li.lgBtnsWzd .guideProto input[type="checkbox"]{
+	width: 0;
+	height: 0;
+	margin: 0;
+	display: none;
+}
+li.lgBtnsWzd .guideProto input[type="checkbox"] + label::before{
+	content: "\a0";/*is a space*/
+	display: inline-block;
+	vertical-align: 2px;
+	width: 22px;
+	height: 22px;
+	margin-right: 2px;
+	text-indent: 2px;
+	line-height: 0.65;
+	background-color: #e74a45;
+	background: url(images/sibasic.png) no-repeat -376px -252px;
+}
+li.lgBtnsWzd .guideProto input[type="checkbox"]:checked + label::before{
+	background-color: #e74a45;
+	background: url(images/sibasic.png) no-repeat -401px -252px;
+}
+
+li.lgBtnsWzd span.btnConWzd {
+	width: 50px;
+	display: inline-block;
+}
+span.btnConWzdL {
+	margin-right: 60px;
+}
+
+span.btnConWzd span {
+	font-size: 14px;
+	font-weight: bold;
+	margin-top: 5px;
+	display: inline-block;
+}
+span.btnWzdEndDes {
+	color: #fff;
+}
+
+#Cover {
+	width: 100%;
+	height: 100%;
+	bottom: 0;
+	right: 0;
+	position: fixed;
+	_top: 0;
+	_left: 0;
+	_position: absolute;
+	background: #333;
+	opacity: .8;
+	filter: alpha(opacity=80);
+	display: none;
+	visibility: hidden;
+	z-index: 1010;
+}
+div.confirmCon {
+	width: 100%;
+	top: 295px;
+	left: 0px;
+	position: absolute;
+	z-index: 1011;
+}
+div.confirm {
+	width: 415px;
+	height: 295px;
+	border-radius: 3px;
+	margin: 0 auto;
+	background: white;
+}
+div.confirm i.confirmLogo {
+    width: 100px;
+    height: 100px;
+    margin: 0px 0 0 160px;
+    display: block;
+    background: url(images/sibasic.png) no-repeat -520px 0px;/*no password confirm logo*/
+}
+
+
+div.confirm span {
+	display: inline-block;
+}
+p.confirmQuestion {
+    font-weight: bold;
+    font-size: 16px;
+    margin: 30px 0 0 0;
+    vertical-align: top;
+    line-height: 1em;
+    text-align: center;
+}
+input.confirmInput{
+    vertical-align: top;
+    width: 80px;
+    height: 30px;
+    margin: 45px 0 10px 167px;
+    background-color: #df0007;
+	color: #fff;
+	font-size: 12px;
+	border: 0;
+	cursor: pointer;
+}
+p.confirmFuncCon {
+	color: #b2b2b2;
+	font-size: 12px;
+	text-align: right;
+	margin: 20px 18px 0 0;
+}
+div.confirm span {
+	display: inline-block;
+}
+span.confrimInputCancel {
+	border-bottom: 1px solid #b2b2b2;
+	cursor: pointer;
+}
+
+
+/*common-settings*/
+.Con, .guide, .GuideHTml{
+	width: 100%;
+	background-color: #353535;
+}
+
+.Con {
+	min-width: 1180px;
+}
+
+.GuideHTml{
+	min-width: 520px;
+}
+
+.Con table{
+	border-top: 0px solid #b2b2b2;
+	border-left: 0px solid #b2b2b2;
+	border-right: 0px solid #b2b2b2;
+}
+.head {
+	height: 10%;
+	min-height: 4.3em;
+	width: 100%;
+	min-width: 1180px;
+	position: relative;
+	flex: 0 0 auto;
+	background: linear-gradient(red,#9b1b1b);
+	max-height: 4.3rem;
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='red', endColorstr='#9b1b1b',GradientType=0  );
+}
+.headCnt {
+	width: 1180px;
+	height: 100%;
+	min-height: 4.3em;
+	margin: 0 auto;
+	z-index: 1;
+}
+
+.head .headCnt{
+	position: relative;
+}
+.headLCnt {
+	width: 34.5%;
+	height: 100%;
+	min-height: 4.3em;
+	float: left;
+	text-align: left;
+}
+
+
+.headRCnt {
+	width: 65.5%;
+	height: 100%;
+	min-height: 4.3em;
+	float: left;
+	text-align: left;
+}
+
+#basicContent {
+	height: 83%;
+	min-height: 55.66em;
+	min-width: 1180px;
+	flex: 1 0 auto;
+}
+#basicSCon {
+	min-height: 31.66em;
+	height: 56.7%;
+	position: relative;
+	clear: both;
+}
+.commonBtn {
+	width: 230px;
+	height: 232px;
+	background: rgba(255,255,255,0.05);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#0dffffff', endColorstr='#0dffffff',GradientType=0  );
+	color: white;
+	border-radius: 5px;
+	text-align: center;
+	cursor: pointer;
+	border-bottom: 2px solid rgba(255,255,255,0.05);
+	margin-top: 35px;
+}
+.commonBtn p{
+	color: white;
+}
+div.bConfL {
+	width: 50%;
+	height: 100%;
+	min-height: 31.66em;
+	top: 0;
+	left: 0;
+	position: absolute;
+	text-align: right;
+}
+div.bConfLBC {
+}
+
+div.bConfR {
+	width: 50%;
+	height: 100%;
+	min-height: 31.66em;
+	top: 0;
+	left: 50%;
+	position: absolute;
+	text-align: left;
+}
+div.bConfRBC {
+}
+
+#bConCnt {
+	width: 1180px;
+	height: 100%;
+	min-height: 31.66em;
+	_height: expression(this.offsetHeight<parseInt(document.body.style.fontSize)*31.66?"31.66em":this.offsetHeight);
+	margin: 0 auto;
+	position: relative;
+	z-index: 1;
+}
+
+div.bConfLBC {
+}
+div.bConfLCnt {
+	width: 30.5%;
+	min-height: 31.66em;
+	_height: expression(this.offsetHeight<parseInt(document.body.style.fontSize)*31.66?"31.66em":this.offsetHeight);
+	float: left;
+	text-align: left;
+}
+
+h1.bModelTitle {
+	color: white;
+	font-size: 2.83em;
+	font-weight: bold;
+	line-height: 1.1em;
+	text-align: center;
+	border-bottom: none;
+}
+i.bEptLSImg {
+	width: 22px;
+	height: 22px;
+	cursor: pointer;
+	display: inline-block;
+	background: url(images/sibasic.png) no-repeat scroll -107px -170px;
+}
+ul.bEptMenu {
+	width: 100%;
+	margin-top: 1.75em;
+	list-style: none;
+	margin-left: 12px;
+}
+ul.bEptMenu li.bEptMenuLi {
+	width: 200px;
+	float: left;
+}
+.liBottomBorder{
+	border-bottom: 3px solid;
+	border-color: rgb(216,0,11);
+}
+#NSetMenu {
+	margin-left: 0;
+	height: 4.166em;
+}
+#NSetMenu .bEptMenuLi {
+	text-align: center;
+}
+#net-dhcp {
+	width: 33%;
+}
+#auto-detect {
+	width: 17%;
+}
+#auto-detect button {
+    margin: 0;
+    width: auto;
+    *width: 100%;
+	line-height: normal;
+}
+ul.bEptMenu li {
+	height: 4.166em;
+	line-height: 4.166em;
+	position: relative;
+	cursor: pointer;
+	text-align: left;
+}
+
+ul.bEptMenu i.bEptMenuIcon {
+	width: 5em;
+	display: inline-block;
+	text-align: center;
+	vertical-align: middle;
+}
+ul.bEptMenu span.des {
+	font-size: 18px;
+	display: inline-block;
+	vertical-align: middle;
+}
+ul.bEptMenu i.bEptMenuNum {
+	width: 23px;
+	height: 23px;
+	top: 16px;
+	left: 160px;
+	position: absolute;
+	background: #df0007;
+	border-radius: 50%;
+}
+i.bEptLSImgHandleC {
+	width: 21px;
+	height: 21px;
+	display: inline-block;
+}
+i.banEnable{
+	background: url("images/sibasic.png") no-repeat scroll -207px -171px;
+	cursor: pointer;
+}
+i.banDisable{
+    background: url("images/sibasic.png") no-repeat scroll -181px -171px;
+}
+i.banRelease{
+	background: url("images/sibasic.png") no-repeat scroll -133px -171px;
+	cursor: pointer;
+	height: 20.7px;
+}
+ul.bEptMenu span.numSpn {
+	width: 23px;
+	height: 23px;
+	line-height: 1.6em;
+	color: #fff;
+	font-size: 1em;
+	font-weight: bold;
+	top: 1.40em;
+	left: 160px;
+	position: absolute;
+	text-align: center;
+}
+
+div.bConfRBC {
+}
+div.bConfRCnt {
+	width: 69.5%;
+	height: 757px;
+	min-height: 31.66em;
+	_height: expression(this.offsetHeight<parseInt(document.body.style.fontSize)*31.66?"31.66em":this.offsetHeight);
+	float: left;
+	text-align: left;
+	margin-top: 35px;
+	border-radius: 5px;
+	background-color: #fff;
+}
+#bConFun {
+	min-height: 24em;
+	height: 43.3%;
+	_height: expression(this.offsetHeight<parseInt(document.body.style.fontSize)*24?"24em":this.offsetHeight);
+}
+ul.basicMenuUl {
+	width: 1180px;
+	height: 4.3em;
+	margin: 0 auto;
+	list-style: none;
+	overflow: hidden;
+}
+
+#bmLinkEqt {
+	margin-left: 60px;
+	_margin-left: 30px;
+}
+ul.basicMenuUl li {
+	width: 230px;
+	height: 22em;
+	float: left;
+	text-align: center;
+}
+#linkEptArrow {
+	border-left: .83em solid #f0f0f0;
+	border-right: .83em solid #f0f0f0;
+	border-bottom: 0 solid #f0f0f0;
+	border-top: .83em solid #3ec7a3;
+}
+i.bEptMenuArrow {
+	width: 0;
+	height: 0;
+	display: block;
+	margin: 0 auto;
+	overflow: hidden;
+}
+
+ul.basicMenuUl li div {
+	height: 19.333em;
+	width: 19.25em;
+	max-width: 230px;
+	margin: 0 auto;
+	margin-top: 0px;
+	margin-top: 1.83em;
+	vertical-align: top;
+	border-radius: .416em;
+	cursor: pointer;
+	overflow: hidden;
+	position: relative;
+	_width: expression(this.offsetWidth<230?this.offsetWidth:"230px");
+}
+
+i.basicMenuBg {
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	position: absolute;
+}
+
+ul.basicMenuUl h2 {
+	color: #fff;
+	font-weight: bold;
+	font-size: 1.16em;
+	margin-top: 1em;
+	margin-left: 1.45em;
+	text-align: left;
+	position: relative;
+	border-bottom: none;
+}
+ul.basicMenuUl p.logo {
+	height: 7.75em;
+	margin-top: 3em;
+	position: relative;
+}
+
+i.bmEquipMngLg {
+	height: 125px;
+	width: 125px;
+	display: inline-block;
+	background: url(images/sibasic.png) no-repeat scroll -5px -5px;
+	margin-top: 15px;
+}
+
+span.bmEquipMngNum {
+	top: 0;
+	right: 3.7em;
+	position: absolute;
+	width: 1.87em;
+	height: 1.6em;
+	line-height: 1.6em;
+	color: #fff;
+	font-size: 1.29em;
+	font-weight: bold;
+	text-align: center;
+}
+
+ul.basicMenuUl p.bmStatus {
+	margin-top: 2.7em;
+	font-weight: bold;
+	font-size: 1em;
+	color: #fff;
+	position: relative;
+}
+
+li.bmNetWork {
+	margin-left: 85px;
+}
+#networkArrow {
+	border-left: .83em solid #f0f0f0;
+	border-right: .83em solid #f0f0f0;
+	border-bottom: 0 solid #f0f0f0;
+	border-top: .83em solid #fc7e65;
+}
+
+i.bmNetworkLg {
+	height: 125px;
+	width: 125px;
+	display: inline-block;
+	background: url(images/sibasic.png) no-repeat scroll -135px -5px;
+	margin-top: 15px;;
+}
+
+li.bmWireless {
+	margin-left: 85px;
+}
+#wirelessArrow {
+	border-left: .83em solid #f0f0f0;
+	border-right: .83em solid #f0f0f0;
+	border-bottom: 0 solid #f0f0f0;
+	border-top: .83em solid #a0d468;
+}
+
+.MnueCon {
+	font-size: 23px;
+	margin-top: 20px;
+	line-height: 25px;
+}
+.bmStatus {
+	margin-top: 20px;
+	font-weight: bold;
+}
+i.bmWirelssSetLg {
+	height: 125px;
+	width: 125px;
+	display: inline-block;
+	background: url(images/sibasic.png) no-repeat scroll -265px -5px;
+	margin-top: 15px;
+}
+
+.foot {
+	height: 7%;
+	flex: 0 0 auto;
+	width: 100%;
+	min-height: 4.5em;
+	_height: expression(this.offsetHeight<parseInt(document.body.style.fontSize)*4.5?"4.5em":this.offsetHeight);
+	min-width: 980px;
+	_width: expression(this.offsetWidth<980?"980px":this.offsetWidth);
+	background: #dfdfdf;
+}
+
+ul.footCon {
+	width: 980px;
+	height: 100%;
+	margin: 0 auto;
+	list-style: none;
+}
+
+#softVersion {
+	text-align: left;
+	textr-indent: .5em;
+	width: 65%;
+}
+ul.footCon li {
+	width: 50%;
+	float: left;
+	line-height: 1.4em;
+	margin-top: 1.5em;
+	color: #999;
+	font-size: 1em;
+	font-weight: bold;
+}
+.footCon .netAddrTel {
+	text-align: right;
+	text-indent: .5em;
+	width: 35%;
+	white-space: nowrap;
+}
+.netAddrTel a {
+	text-decoration: none;
+	color: #999;
+}
+.netAddrTel label {
+	margin-left: 10px;
+	padding-left: 10px;
+	text-decoration: none;
+	border-left: 1px solid #999;
+}
+
+
+/*netsetting*/
+p.bNwState {
+	color: #fff;
+	font-weight: bold;
+	font-size: 1.16em;
+	margin-top: 1em;
+	text-align: center;
+}
+
+.WifiErrTip li{
+	height: 42px line-height:42px;
+	display: inline-block;
+	float: left;
+}
+.WifiErrTip li.note{
+	margin-left: .5em;
+	text-align: left;
+	visibility: hidden;
+	margin-bottom: 1.1em;
+}
+.WifiErrTip {
+	float: left;
+	width: 200px;
+	margin: -27em 0 0 44em;
+	*margin: -28em 0 0 44em;
+	position: absolute;
+}
+/*wireless_setting*/
+div.bcRCon {
+	_height: expression(this.offsetHeight<parseInt(document.body.style.fontSize)*31.66?"31.66em":this.offsetHeight);
+	min-height: 31.66em;
+	margin: 4em 0 0 18.16em;
+	position: relative;
+}
+.WirelessSave{
+	float: initial;
+	margin-top: 20px;
+	margin-left: 90px;
+}
+div.bWlSwitchCon {
+
+	height: 2.25em;
+	padding-top: 4.33em;
+	margin-bottom: 3.25em;
+
+}
+i.switchBg {
+
+	width: 36px;
+	height: 17px;
+	margin-left: 3px;
+	display: inline-block;
+	background: url(images/sibasic.png) no-repeat scroll -5px -283px;
+	vertical-align: top;
+	cursor: pointer;
+
+}
+
+i.switchBall {
+	left: 18px;
+	width: 22px;
+	height: 23px;
+	top: -3px;
+	position: absolute;
+	display: inline-block;
+	cursor: pointer;
+	z-index: 1;
+	background: url("images/sibasic.png") no-repeat scroll -214px -134px;
+
+}
+
+i.switchBallOff {
+	left: 0px;
+	width: 22px;
+	height: 23px;
+	top: -3px;
+	position: absolute;
+	display: inline-block;
+	cursor: pointer;
+	z-index: 1;
+	background: url("images/sibasic.png") no-repeat scroll -146px -134px;
+
+}
+span.bWlStateDes {
+	width: 7em;
+	color: #000;
+	font-size: 18px;
+	line-height: 24px;
+	display: inline-block;
+	text-align: center;
+	vertical-align: middle;
+
+}
+
+div.bWlSwitchCon i.hLine {
+
+	height: 100%;
+	border-left: 1px solid #fff;
+	display: inline-block;
+	vertical-align: middle;
+
+}
+div.switchCon {
+
+	width: 3.33em;
+	height: 1.41em;
+	cursor: pointer;
+	position: relative;
+	vertical-align: middle;
+	display: inline-block;
+	*display: inline;
+	*zoom: 1;
+
+}
+
+span.bWlSwitchOff {
+	color: rgb(175,175,175);
+	font-size: 1em;
+	font-weight: bold;
+	margin-left: .6em;
+	vertical-align: middle;
+
+}
+span.spanSwitchOn{
+	color: rgb(223,0,7);
+}
+ul.bcInputUl {
+
+	height: 42px;
+	margin-top: .83em;
+	text-align: left;
+	list-style: none;
+
+}
+
+ul.bcInputUl li.bcInputLi {
+
+	width: 23.33em;
+	border-radius: 3px;
+	text-align: left;
+	white-space: nowrap;
+
+}
+ul.bcInputUl li {
+	display: inline-block;
+	float: left;
+
+}
+li.bcInputLi label {
+	width: 10em;
+	font-size: 1em;
+	line-height: 2.5em;
+	display: inline-block;
+	border-right: 1px solid #ccc;
+	text-align: center;
+	vertical-align: middle;
+
+}
+
+li.bcInputLi input {
+
+	border: 0;
+	padding: 0;
+	width: 13.15em;
+	height: 41px;
+	line-height: 41px;
+	font-size: 1em;
+	margin-left: 1.08em;
+	vertical-align: middle;
+	font-family: 微软雅黑,宋体,Arial;
+	outline: 0;
+}
+
+ul.bcInputUl li.note {
+
+	margin-left: .5em;
+	text-align: left;
+	visibility: hidden;
+
+}
+ul.bcInputUl li {
+	display: inline-block;
+	float: left;
+
+}
+#ssidBlankNote {
+
+	display: none;
+
+}
+li.note i.arrowL {
+
+	line-height: 0;
+	border-style: solid;
+	border-width: 4px 3px 4px 0;
+	vertical-align: middle;
+	display: inline-block;
+	*display: inline;
+	*zoom: 1;
+    border-color: rgba(255,255,255,0) #df0007 rgba(255,255,255,0) rgba(255,255,255,0);
+    border-color: #fff #df0007 #fff #fff\9;
+}
+
+li.note div.noteCon {
+	background: #df0007;
+	height: 40px;
+	color: white;
+	font-size: 12px;
+	padding: 0 6px;
+	border-radius: 3px;
+	vertical-align: middle;
+	display: inline-block;
+	*display: inline;
+	*zoom: 1;
+}
+
+div.noteCon p.vlM {
+	line-height: 3.32em !important;
+	margin: 0 !important;
+}
+div.noteCon p.pwdError{
+	width: 12em;
+}
+div.noteCon p {
+	width: 13em;
+	line-height: 1.33em;
+	font-size: 1em;
+	margin-top: .1em;
+	padding-left: .33em;
+}
+input.imeModeN {
+
+	ime-mode: disabled;
+
+}
+
+i.hsSubLoading{
+	background: url("images/saveLoading.gif") repeat scroll 0% 0%;
+	width: 16px;
+	height: 16px;
+	position: absolute;
+	margin-top: 5px;
+}
+.hsSubLoading.saving{
+	background: url(images/saveLoading.gif) no-repeat;
+	position: inherit;
+	padding: 4px 9px;
+}
+.hsSubLoading.save-suc{
+	background: url("images/sibasic.png") no-repeat scroll -5px -305px;/*tick mean success*/
+	position: inherit;
+	padding: 4px 9px;
+	width: 0px;
+}
+p.bWlState {
+	color: #fff;
+	font-weight: bold;
+	font-size: 1.16em;
+	text-align: center;
+}
+
+#net-settingR table{
+	border: 0px solid;
+}
+
+#net-settingR td{
+	border: 0px solid;
+}
+
+.bcRCon .c_right {
+	width: 197px;
+}
+
+.net-td-btn {
+	text-align: left;
+}
+#net-settingR .bcRCon {
+	margin-left: 1.5em;
+}
+input:disabled{
+    border:1px solid #DDD;
+    background-color:#efefef;
+    color:#ACA899;
+}
+
+.main > .main-left > .nav > .slide.index-guide {
+	/*margin-top: 120px;*/
+}
+/*.index-5{
+    display: none;
+}*/
+
+/*index style*/
+.logoF{
+    cursor: pointer;
+    margin-left: 20px;
+    margin-right: 20px;
+    vertical-align: middle;
+    display: inline-block;
+    width: 22px;
+    height: 20px;
+}
+/*nav left icon*/
+.active .logo-network {
+    background: url(images/sibasic.png) no-repeat -175px -252px;
+}
+.logo-network {
+    background: url(images/sibasic.png) no-repeat -150px -252px;
+}
+
+.active .logo-wireless {
+    background: url(images/sibasic.png) no-repeat -225px -252px;
+}
+.logo-wireless {
+    background: url(images/sibasic.png) no-repeat -199px -252px;
+}
+.active .logo-advance {
+    background: url(images/sibasic.png) no-repeat -327px -252px;
+}
+.logo-advance {
+    background: url(images/sibasic.png) no-repeat -300px -252px;
+}
+.active .logo-system {
+    background: url(images/sibasic.png) no-repeat -273px -252px;
+}
+.logo-system {
+    background: url(images/sibasic.png) no-repeat -351px -252px;
+}
+
+.active i.menuDown {
+	background: url(images/sibasic.png) no-repeat -98px -227px;
+	cursor: pointer;
+	margin-left: 40px;
+	vertical-align: middle;
+	display: inline-block;
+	width: 21px;
+	height: 20px;
+	margin-top: 10px;
+}
+
+
+/*some details---wan*/
+.wan .panel-title {
+	float: left;
+	width: 70%;
+	border-bottom: 0px solid #ebebeb;
+	text-align: left;
+}
+
+div.handleRelCon {
+	top: 7px;
+	right: 40px;
+	visibility: visible;
+	margin-top: 15px;
+	text-align: left;
+}
+.net-td-btn #netSetState {
+	text-align: right;
+}
+div.handleRelCon i.state {
+
+	width: 12px;
+	height: 12px;
+	display: inline-block;
+	vertical-align: middle;
+	*display: inline;
+	*zoom: 1;
+}
+div.handleRelCon i#linked{
+	background: url("images/sibasic.png") no-repeat scroll -233px -171px;
+	width: 18px;
+	height: 18px;
+}
+div.handleRelCon i#linking{
+	background: url("images/sibasic.png") no-repeat scroll -26px -305px;
+}
+div.handleRelCon i#break{
+	background: url("images/sibasic.png") no-repeat scroll -42px -305px;
+	width: 18px;
+	height: 18px;
+}
+
+div.handleRelCon span.state {
+	color: #df0007;
+	font-size: 14px;
+	line-height: normal;
+	font-weight: bold;
+	margin-left: 4px;
+	display: inline-block;
+	text-indent: 0;
+	vertical-align: middle;
+}
+i.helpBtn {
+	height: 26px;
+	width: 27px;
+	cursor: pointer;
+	position: absolute;
+	background: url(images/sibasic.png) no-repeat -77px -171px;
+	margin: -20px auto auto 80px;
+}
+.border-line {
+	margin-top: 20px;
+	border-top: 1.5px solid rgb(230, 230, 230);
+	border-top: 1.5px solid rgba(0, 0, 0,0.1);
+	width: 97.5%;
+}
+.deviceOnlineR .border-line {
+	margin-top: 70px;
+	*margin-top: -3px;
+}
+
+#Error ,#delAllTip, #isSureTip, #checkToken, #WdsEnError{
+	width: 980px;
+	height: 0;
+	margin: 0 auto;
+	line-height: 0;
+	font-size: 0;
+	position: relative;
+	z-index: 1014;
+	visibility: hidden;
+	top: -9999px;
+	display: block;
+	_display: none;
+}
+div.hsTip {
+    width: 413px;
+    height: 155px;
+    top: 95px;
+    position: fixed;
+    border: 1px solid #d2d2d2;
+    border-radius: 5px;
+    font-size: 14px;
+    margin-left: 20em;
+    background: #fff;
+    z-index: 1;
+    box-shadow: 0 0 7px rgba(210,210,210,1);
+
+}
+div.hsTip i.altIcon {
+    height: 44px;
+    width: 44px;
+    margin-top: 30px;
+    margin-left: 35px;
+    display: inline-block;
+    background: url("images/sibasic.png") no-repeat scroll -681px -5px;
+}
+div.hsTip input {
+    width: 70px;
+    float: right;
+    margin: 10px 20px 0 0;
+/*    padding: 6px;
+    *padding: 4px 6px;*/
+    height: 30px;
+}
+div.hsTip span.detail {
+    height: 60px;
+    width: 265px;
+    color: #000;
+    font-size: 12px;
+    line-height: 20px;
+    margin: 40px 0 0 20px;
+    vertical-align: top;
+    display: inline-block;
+
+}
+/*some details---common*/
+fieldset .panel-title {
+	float: left;
+	width: 90%;
+	border-bottom: 0px solid #ebebeb;
+	color: #df0007;
+}
+
+fieldset i.helpBtn {
+	margin: 10px auto;
+}
+
+fieldset .border-line {
+	margin-top: 55px;
+}
+
+/*wan*/
+.wan .wan-speed {
+	width: 10em;
+	margin-right: 15px;
+}
+.wan i.helpBtn {
+	margin: -18px auto auto 160px;
+}
+.wan .border-line {
+	margin-top: 25px;
+}
+.border-line.bottom {
+	margin-top: 45px;
+}
+.notChild {
+	margin: 1.33em 0 0 0;
+}
+/*dhcp*/
+.dhcp .panel-title {
+	float: left;
+	width: 130px;
+	border-bottom: 0px solid #ebebeb;
+
+}
+
+.bWlSwitchCon.dhcp {
+	float: left;
+	width: 100px;
+	padding-top: 0px;
+	margin: 15px;
+	white-space: nowrap;
+
+}
+
+.dhcp i.helpBtn {
+	margin: 10px auto auto 460px;
+}
+
+
+/*ip_mac*/
+.tb-disable.tb-binded {
+	height: 21px;
+	width: 21px;
+	border: 0;
+	font-size: 0;
+	cursor: default;
+	background: url(images/sibasic.png) no-repeat -135px -202px;
+}
+.tb-nobind {
+	height: 21px;
+	width: 21px;
+	border: 0;
+	font-size: 0;
+	cursor: pointer;
+	background: url(images/sibasic.png) no-repeat -5px -202px;
+}
+/*owner*/
+.owner .panel-title {
+	float: left;
+	width: auto;
+	border-bottom: 0px solid #ebebeb;
+
+}
+.owner i.helpBtn {
+	margin: 10px auto auto 24.15%;
+}
+/*have no wireless-type*/
+.wireless-type {
+    margin-top: 15px;
+}
+.wireless-type a {
+    text-decoration: none;
+	border-radius: 5px;
+	font-size: 14px;
+}
+.wireless-type a:link {
+	color: white;
+}
+.wireless-type a:hover {
+	color: white;
+}
+.wireless-type a:active {
+	color: white;
+}
+.wireless-type a:visited {
+	color: white;
+}
+/*dmz*/
+.dmz .panel-title {
+	float: left;
+	width: 130px;
+	border-bottom: 0px solid #ebebeb;
+
+}
+
+.dmz i.helpBtn {
+	margin: 10px 460px;
+}
+/*upnp*/
+.upnp .panel-title {
+	float: left;
+	width: 130px;
+	border-bottom: 0px solid #ebebeb;
+
+}
+
+.upnp i.helpBtn {
+	margin: 10px 500px;
+}
+/*virtual server*/
+#virtual-servers input[type="checkbox"] {
+	height: 13px;
+	width: 13px;
+	margin: 0px 8px;
+
+}
+#virtual-servers input, #virtual-servers select {
+	height: 20px;
+	width: 80px;
+	margin-right: 0px;
+	border-radius: 0px;
+	padding: 0px;
+	line-height: 100%;
+
+}
+#virtual-servers td {
+	padding: 0px;
+}
+
+.router td input,.router td select {
+	height: 20px;
+	width: 80px;
+	margin-right: 0px;
+	border-radius: 0px;
+	line-height: 100%;
+}
+.router input[type="checkbox"] {
+	height: 13px;
+	width: 13px;
+	margin: 0px 8px;
+
+}
+.router td {
+	padding: 0px;
+}
+/*ddns*/
+.ddns .panel-title {
+	float: left;
+	width: 80%;
+	border-bottom: 0px solid #ebebeb;
+	text-align: left;
+}
+.ddns i.helpBtn {
+	margin: 15px auto auto 80px;
+}
+/*.ddns .border-line {
+	margin-top: 25px;
+
+}*/
+
+/*syslog*/
+.log-td-right{
+	text-align: left;
+	word-break: break-all;
+	word-wrap: break-word;
+	white-space: normal !important;
+}
+div.pageListPo {
+	padding-top: 10px;
+	margin-bottom: 20px;
+	margin-right: 21px;
+}
+span.pageArrowLa {
+	background: url(images/sibasic.png) no-repeat -57px -202px;
+}
+span.pageArrowL {
+	background: url(images/sibasic.png) no-repeat -109px -202px;
+}
+span.pageArrow {
+	width: 21px;
+	height: 21px;
+	line-height: 21px;
+	float: right;
+	margin-left: 4px;
+	cursor: pointer;
+}
+span.pageArrowR {
+	background: url(images/sibasic.png) no-repeat -31px -202px;
+}
+span.pageArrowFi {
+	background: url(images/sibasic.png) no-repeat -83px -202px;
+}
+div.pageListContent {
+	height: 21px;
+	float: right;
+	max-width: 96px;
+	margin-left: 4px;
+	margin-right: 1px;
+	overflow: hidden;
+	_width: expression(this.offsetWidth<96?"":"96px");
+}
+div.pageListDiv {
+	float: left;
+	text-align: center;
+}
+div.pageListDiv span {
+	width: 17px;
+	color: #d7000f;
+	font-size: 12px;
+	font-weight: bold;
+	float: left;
+	margin-left: 2px;
+	line-height: 20px;
+	display: inline-block;
+	cursor: pointer;
+}
+span.listSpanS {
+	text-decoration: underline;
+}
+span.ListSpan {
+	text-decoration: normal;
+}
+/*visitor*/
+.visitor .panel-title {
+    float: left;
+    width: 130px;
+    border-bottom: 0px solid #ebebeb;
+    white-space: nowrap;
+
+}
+.visitor .time {
+    width: 50px;
+    margin-left: 10px;
+}
+.visitor .helpBtn {
+	margin: 10px auto auto 24.15%;
+}
+ul.hourList {
+	color: #b5b5b5;
+	padding-left: 0;
+	font-size: 12px;
+	list-style: none;
+	text-align: left;
+}
+ul.hourList li {
+	display: inline-block;
+	text-align: center;
+	*display: inline;
+	*zoom: 1;
+	width: 25px;
+}
+ul.hourList span {
+	width: 18px;
+	height: 18px;
+	color: #fff;
+	text-align: center;
+	background: url(images/sibasic.png) no-repeat -253px -252px;
+	display: inline-block;
+	cursor: pointer;
+	*display: inline;
+	*zoom: 1;
+	padding-top: 3px;
+}
+ul.weekList {
+	_width: 40px;
+	float: left;
+	color: #505050;
+	font-size: 12px;
+	list-style: none;
+	padding-left: 0;
+}
+.weekList li {
+	font-size: 11.99px;
+	font-weight: bold;
+	cursor: pointer;
+	height: 25px;
+	line-height: 25px;
+}
+p.guestNetTimeTip {
+	margin-top: 15px;
+	text-align: left;
+	*zoom: 1;
+	display: none;
+}
+p.guestNetTimeTip span {
+	color: #000;
+	vertical-align: middle;
+}
+div.blockFuncA {
+	margin: 30px 100px 30px auto;
+	padding-right: 30px;
+	text-align: center;
+	*zoom: 1;
+}
+.blockFuncA .btnA {
+	width: 70px;
+	height: 30px;
+}
+p.guestNetTimeTip i {
+	height: 18px;
+	width: 18px;
+	vertical-align: middle;
+	background: #a0d468;
+	display: inline-block;
+}
+table.tableWeek {
+	float: left;
+	margin-top: 5px;
+	margin-left: 0;
+	font-weight: normal;
+	border-collapse: collapse;
+	width: 400px;
+}
+td.weekTd {
+	border: 1px solid #e3e6e9;
+	margin: 0;
+	font-size: 0;
+	text-align: center;
+	padding: 1px;
+	height: 22px;
+}
+i.tableICell {
+	display: inline-block;
+	height: 22px;
+	width: 22px;
+	background-color: rgb(252, 252, 252);
+}
+.tableICellSel {
+	display: inline-block;
+	height: 22px;
+	width: 22px;
+	background-color: #a0d468;
+}
+/*wds*/
+i.signalCon {
+    width: 32px;
+    height: 18px;
+    display: inline-block;
+    text-align: left;
+    background: url(images/sibasic.png) no-repeat -114px -252px;
+}
+i.signalCon i.signal {
+    height: 100%;
+    display: inline-block;
+    background: url(images/sibasic.png) no-repeat -77px -252px;
+}
+.wds .panel-title {
+    float: left;
+    width: 150px;
+    border-bottom: 0px solid #ebebeb;
+    white-space: nowrap;
+}
+#WDSguide {
+    margin-top: 12px !important;
+}
+div.block {
+    margin-top: 80px;
+    text-align: center;
+}
+div.WDSFNote {
+    height: 136px;
+    margin-top: 13px;
+	border: 1px solid #c62a2a;
+    background: #fcfcfc;
+}
+p.WDSTitle,th.WDSTitle {
+    line-height: 32px;
+	color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+	background: #df0007;
+    text-align: center !important;
+	padding: 0;
+	height: 30px;
+}
+span.WDSRefresh {
+	*line-height: 19px;
+	right: 10px;
+	position: relative;
+	cursor: pointer;
+	vertical-align: middle;
+	float: right;
+	margin-top: -33px;
+}
+span.WDSRefresh i {
+	width: 21px;
+	height: 21px;
+	line-height: 19px;
+	vertical-align: middle;
+	display: inline-block;
+	background: url(images/sibasic.png) no-repeat -133px -171px;/*TODO can use sibasic png*/
+}
+span.WDSRefresh span {
+	color: #8c000a;
+	font-size: 14px;
+	margin-left: 3px;
+	vertical-align: middle;
+}
+ul.WDSFNote {
+    padding-left: 40px;
+}
+ul.WDSFNote li.WDSFNoteF {
+    margin-top: 20px;
+}
+ul.WDSFNote li {
+    line-height: 30px;
+    text-align: left;
+}
+ul.WDSFNote li {
+    line-height: 30px;
+    text-align: left;
+}
+div.WDSBlockFuncA {
+    font-size: 0;
+    margin: 18px 0;
+    text-align: right;
+    overflow: hidden;
+}
+#back {
+    display: none;
+}
+div.block input.btnA {
+    width: 70px;
+    margin-left: 15px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    *padding-top: 4px;
+    *padding-bottom: 4px;
+    _padding-bottom: 2px;
+    height: 30px;
+    line-height: 100%;
+}
+#band-select .WDSFNote {
+    width: 400px;
+    border-radius: 7px;
+    box-shadow: 0 0 4px rgba(179,179,179,1);
+    margin: 0px 9%;
+    height: 100px;
+}
+.hsVignetteTipCon {
+	width: 50%;
+	position: absolute;
+	z-index: 1000;
+	top: 25px;
+	margin-left: 90px;
+}
+div.hsVignetteCon {
+	width: 100%;
+	height: 100%;
+    position: fixed;
+	z-index: 11;
+}
+
+div.hsVigWDS {
+    width: 335px;
+    height: 155px;
+}
+/*ap set*/
+.apSet div.hsVignetteCon {
+    position: static;
+}
+.apSet .panel-title{
+    width: 50%;
+}
+.apSet .dualSwitch{
+    float: right;
+    width: 35%;
+    white-space: nowrap;
+}
+.apSet .dualSwitchCon{
+    float: right;
+    width: auto;
+    white-space: nowrap;
+    margin: 15px;
+    padding-top: 0px;
+}
+.apSet .wan-td-right{
+    white-space: normal;
+}
+.apSet .wan-td-left{
+    width: 15.5em;
+}
+#ap-groups-modify {
+    top: 200px;
+}
+#ap-groups-modify .hsVigApGroup {
+	width: 300px;
+	margin-left: 5%;
+	border: 1px solid #d0d0d0;
+	border-radius: 5px;
+	background: #fff;
+	box-shadow: 0 0 7px rgba(208,208,208,0.6);
+}
+.wirelessRadio{
+	margin-left: 15px;
+}
+div.hsVigApGroup {
+	width: 90%;
+	max-width: 800px;
+	border: 1px solid #d0d0d0;
+	border-radius: 5px;
+	box-shadow: 0 0 7px rgba(208,208,208,0.6);
+}
+
+div.hsVigApImportConfig {
+	width: 600px;
+	height: 200px;
+	margin: 0 auto;
+	margin-top: 110px;
+	border: 1px solid #d0d0d0;
+	border-radius: 5px;
+	background: #fff;
+	box-shadow: 0 0 7px rgba(208,208,208,0.6);
+	margin-right: 473px;
+}
+div.hsVignette {
+    margin-top: 198px;
+    border: 1px solid #d0d0d0;
+    border-radius: 5px;
+    background: #fff;
+    box-shadow: 0 0 7px rgba(208,208,208,0.6);
+    margin-left: 10%;
+}
+p.hsVigTtop {
+	text-align: right;
+}
+i.hsVigClose {
+	width: 14px;
+	height: 14px;
+	display: inline-block;
+	cursor: pointer;
+	margin: 7px 7px 0 0;
+	background: url(images/sibasic.png) no-repeat -27px -252px;
+}
+p.hsVigWDSPWD {
+    font-size: 14px;
+    font-weight: bold;
+    margin: 16px 0 0 35px;
+    text-align: left;
+}
+ul.hsVigWDSPWD {
+	padding-left: 35px;
+}
+ul.gridLineA {
+	font-size: 0;
+	height: 40px;
+	line-height: 40px;
+	margin-top: 10px;
+}
+ul.gridLine {
+	text-align: left;
+	list-style: none;
+}
+
+ul.gridLine li.textCon {
+    border: #d7000f 1px solid;
+    border-radius: 3px;
+    background: #efefef;
+    width: 180px;
+    white-space: nowrap;
+
+}
+ul.gridLine li {
+
+	height: 100%;
+	line-height: 100%;
+	display: inline-block;
+	*display: inline;
+	*zoom: 1;
+
+}
+li.textConA {
+
+	width: 230px;
+
+}
+ul.gridLine input.text {
+	height: 38px;
+	line-height: 38px;
+	color: #000;
+	font-size: 14px;
+	border: 0;
+	padding: 0;
+	*margin-top: -1px;
+	vertical-align: middle;
+	background: transparent;
+}
+input.textA {
+	width: 168px;
+	margin-left: 0px;
+	margin-right: 0px;
+}
+div.hsVignetteCon input.btnA {
+	width: 70px;
+	height: 27px;
+	line-height: 100%;
+	margin-left: 15px;
+	padding-top: 6px;
+	padding-bottom: 6px;
+	*padding-top: 4px;
+	*padding-bottom: 4px;
+	_padding-bottom: 2px;
+}
+div.LoadConCover {
+	width: 100%;
+	top: 0;
+	position: fixed;
+	_position: absolute;
+	z-index: 1011;
+}
+div.coverLoadCon {
+	font-size: 12px;
+	height: 0;
+	width: 0;
+	margin: 0 auto;
+	margin-top: 0px;
+	margin-top: 280px;
+	position: fixed;
+}
+div.coverLoad {
+	width: 160px;
+	height: 160px;
+    background: #D4D4D4;
+	border-radius: 5px;
+	box-shadow: 0 0 4px rgba(0,0,0,1);
+	position: relative;
+	top: 0;
+	left: 320px;
+}
+i.coverLoadClose {
+	width: 16px;
+	height: 16px;
+	margin: 6px 6px 0 0;
+	float: right;
+	cursor: pointer;
+    background: url("images/sibasic.png") no-repeat scroll -42px -305px
+}
+i.coverLoading {
+	width: 80px;
+	height: 80px;
+	margin: 15px 0 5px 40px;
+	background-image: url("images/coverLoading.gif");
+	position: absolute
+}
+p.coverLoadNote {
+    color: #df0007;
+	font-size: 12px;
+	margin: 115px 21px auto;
+	padding: 0 2px;
+	text-align: center;
+	position: absolute;
+}
+.wds ul {
+	float: left;
+	text-align: right;
+	margin-top: 15px;
+}
+.wds-guide li {
+	height: 50px;
+}
+.wds-guide li p {
+	padding-top: 12px;
+}
+.wds-guide .no-pad {
+	text-align: left;
+}
+.wds-guide .no-pad p{
+	padding-top: 0px;
+}
+.wds-guide {
+	margin-left: 15%;
+	width: 430px;
+}
+.wds-this-settings,.wds-infos{
+	border: 1px solid #a0d468;
+	margin-top: 80px;
+}
+.wds-td2-left {
+	width: 50%;
+	text-align: right;
+}
+.wds-td2-right {
+	width: 50%;
+	text-align: left;
+}
+/*help*/
+.Help,.Helphc {
+	visibility: hidden;
+	width: 674px;
+	top: 72px;
+	position: absolute;
+	border: 4px solid #df0007;
+	background: #fff;
+	border-radius: 7px;
+	box-shadow: 0 0 4px rgba(179,179,179,1);
+	z-index: 1003;
+}
+p.helpTop {
+	height: 33px;
+	font-size: 12px;
+	padding: 0;
+	margin: 0;
+	position: relative;
+	cursor: move;
+	background: #df0007;
+	text-align: center;
+}
+span.helpDes {
+	color: white;
+	line-height: 33px;
+	font-weight: bold;
+}
+i.helpClose {
+	width: 26px;
+	height: 26px;
+	top: 2px;
+	right: 3px;
+	position: absolute;
+	cursor: pointer;
+	background: url(images/sibasic.png) -46px -252px;
+}
+.helpDetail,.helpDetailhc {
+	font-size: 12px;
+	margin: 21px 35px 35px;
+	word-wrap: break-word;
+	word-break: break-all;
+}
+.helpDetail ul.help ,.helpDetailhc ul.help{
+	color: #000;
+	list-style: none;
+	margin-top: 3px;
+}
+ul.help li.title {
+	font-weight: bold;
+	margin-top: 10px;
+}
+ul.help li.content {
+	margin-top: 2px;
+}
+ul.help li.warnning {
+	color: #fb6e52;
+	margin-top: 10px;
+}
+
+.deviceTableDiv {
+	width: 99%;
+	height: 626px;
+	margin-top: 30px;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+.deviceTable {
+	width: 98%;
+	margin-top: 0px;
+	margin-left: 2%;
+	*width: 96%;
+	*margin-right: 2%;
+	*margin-left: 2%;
+}
+.tb-l {
+    border-top: 0px;
+    border-left: 0px;
+}
+.tb-c {
+    border-top: 0px;
+}
+.tb-r {
+    border-top: 0px;
+    border-right: 0px;
+    color: white;
+}
+#ld-value,#lu-value{
+    height: 20px;
+    width: 55px;
+    border-radius: 0px;
+}
+.deviceOnlineR th {
+	height: 45px;
+	background: #df0007;
+	color: white;
+}
+/*web*/
+#zones{
+	width: 30em;
+}
+/*some auto apply screen*/
+@media screen and (max-device-width: 1280px) {
+	#headCnt {
+		width: 100%;
+	}
+}
+@media screen and (max-device-width: 980px) {
+	#headCnt {
+		width: 100%;
+	}
+	#maincontent > .container {
+		/*width: 100%;*/
+	}
+	.wan i.helpBtn {
+		margin: -18px auto auto 120px;
+	}
+	.dhcp i.helpBtn {
+		margin: 10px auto;
+		margin-left: 60%;
+	}
+}
+
+@media screen and (max-device-width: 420px) {
+	i.Logo{
+		display: none;
+	}
+	.visitor .helpBtn {
+		margin: 10px auto;
+	}
+}
+@media screen and (min-device-width: 1282px) {
+	.c_right input {
+		margin: auto;
+	}
+
+	.c_left span {
+
+		padding-right: 14px;
+
+	}
+}
+
+@media screen and (max-device-width: 820px){
+	.dhcp i.helpBtn {
+		margin: 10px auto;
+		margin-left: 50%;
+	}
+
+	.owner i.helpBtn {
+		margin: 10px auto auto 50%;
+	}
+}
+
+@media screen and (max-device-width: 700px) {
+	div.wizardContent {
+		width: 520px;
+	}
+	.c_left {
+		width: 162px;
+	}
+	.guide .WifiErrTip {
+		margin-left: 32em;
+	}
+	ul.wizardIptPos {
+		margin-left: 134px;
+	}
+	ul.inputUl li.note {
+		position: absolute;
+	}
+	div.noteCon p.pwdError{
+		width: 10em;
+	}
+	li.wizardBomEnd i.wirelessNoChg {
+		height: 228px;
+	}
+	div.wizardCon {
+		margin-top: 100px;
+	}
+	div.coverLoad {
+		left: 240px;
+	}
+	.dhcp i.helpBtn {
+		margin: 10px auto;
+		margin-left: 38%;
+	}
+	div.hsTip {
+		margin-left: 5rem;
+	}
+}
+@media screen and (max-device-width: 500px) {
+	div.coverLoad {
+		left: 140px;
+	}
+	.wan i.helpBtn {
+		margin: -18px auto auto 80px;
+	}
+	.dhcp i.helpBtn {
+		margin: 10px auto;
+		margin-left: 28%;
+	}
+
+	.owner i.helpBtn {
+		margin: 10px auto auto 15rem;
+	}
+
+	.visitor i.helpBtn {
+		margin: 10px auto auto 14.5rem;
+	}
+
+	div.hsTip {
+		width: 313px;
+		margin-left: 0;
+	}
+	div.hsTip span.detail {
+		width: 185px;
+		margin: 30px 0 0 20px;
+	}
+	div.hsVignette {
+		margin-top: 98px;
+		margin-left: 0;
+	}
+}
+@media screen and (max-device-width: 300px) {
+	div.coverLoad {
+		left: 40px;
+	}
+	.dhcp i.helpBtn {
+		margin: 10px auto;
+		margin-left: 10%;
+	}
+}
+
+input:disabled{
+	border:1px solid #DDD;
+	background-color:#efefef;
+	color:#ACA899;
+}
+
+select:disabled{
+	border:1px solid #DDD;
+	background-color:#efefef;
+	color:#ACA899;
+}
+button:disabled{
+	background: #bebebe;
+}
+
+.arrowLeft {
+	height: 0;
+	line-height: 0;
+	width: 0;
+	top: 150px;
+	left: 28.1%;
+	position: absolute;
+	border-style: solid;
+	border-color: rgba(255,255,255,0) rgba(255,255,255,1) rgba(255,255,255,0) rgba(255,255,255,0);
+	border-color: #353535 #fff #353535 #353535\9;
+	border-width: 15px 28px 15px 0px;
+
+}
+.Radio5 {
+	margin-left: 30px;
+}
+.ownerRadioSel {
+	margin: 20px 250px 20px;
+}
+.proPoint{
+	width: 400px;
+}
+progress{
+	background: rgb(190, 190, 190) none repeat scroll 0% 0%;
+	border: 0px solid #fff;
+	color:#961a0c;
+}
+.chlidValue{
+	height: 15px;
+	background: #df0007;
+	width: 0%;
+}
+.pointDiv {
+	width: 350px;
+	border: 1px solid #df0007;
+	height: 15px;
+	margin: 2em auto auto 0.8em;
+}
+.ap-menu{
+	display: block;
+	padding: 0.4rem 2.2rem;
+	text-decoration: none;
+	cursor: default;
+	font-size: 14px;
+	width: 100%;
+	height: 100%;
+	background: #353535;
+	border-bottom: 1px solid black;
+	box-shadow: 0 0 5px 0 #ccc;
+}
+
+.line_a{
+	border-bottom: 1px solid #4FA7F7;
+	color: #4FA7F7;
+	cursor: pointer;
+}
+
+.ap-wirless-tittle{
+	text-align: center;
+	margin-right: 100px;
+	white-space: pre;
+}
+
+.version-td{
+	text-align: left;
+	width: 20%;
+	word-break: break-all;
+	word-wrap: break-word;
+	white-space: normal;
+}
+
+.position-horizon-37{
+	margin-left: 30%;
+}
+
+.float-left{
+	float: left;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+	padding-left:0.5rem;
+}
+
+.float-left-37{
+	float: left;
+	width: 30%;
+	text-align: right;
+	color: black;
+	padding: 0.5rem;
+}
+
+.float-clear{
+	clear: both;
+}
+
+.float-clear-bottom{
+	clear: both;
+	margin-bottom: 0.5rem;
+}
+
+.input-v6-short{
+	width: 1.5rem;
+	margin-r7ght: 0;
+}
+
+.input-v6-long{
+	width: 17.3em;
+	margin-right: 0;
+}
+
+.whole{
+	width: 100%;
+}
+
+.span-v6{
+	display: inline-block;
+	height: 3em;
+	line-height: 3em;
+}

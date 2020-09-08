@@ -1,0 +1,108 @@
+diff -uprN backports-4.19.7-1.orig/net/mac80211/cfg.c backports-4.19.7-1.new/net/mac80211/cfg.c
+--- backports-4.19.7-1.orig/net/mac80211/cfg.c	2019-12-05 17:15:53.198095344 +0800
++++ backports-4.19.7-1.new/net/mac80211/cfg.c	2019-12-05 17:17:17.326098875 +0800
+@@ -747,8 +747,13 @@ static int ieee80211_set_monitor_channel
+ 		sdata = rtnl_dereference(local->monitor_sdata);
+ 		if (sdata) {
+ 			ieee80211_vif_release_channel(sdata);
++#ifdef CPTCFG_MAC80211_SIFLOWER_MONITOR_ENABLE
++			ret = ieee80211_vif_use_channel(sdata, chandef,
++					IEEE80211_CHANCTX_SHARED);
++#else
+ 			ret = ieee80211_vif_use_channel(sdata, chandef,
+ 					IEEE80211_CHANCTX_EXCLUSIVE);
++#endif
+ 		}
+ 	} else if (local->open_count == local->monitors) {
+ 		local->_oper_chandef = *chandef;
+diff -uprN backports-4.19.7-1.orig/net/mac80211/iface.c backports-4.19.7-1.new/net/mac80211/iface.c
+--- backports-4.19.7-1.orig/net/mac80211/iface.c	2019-12-05 17:15:53.202095344 +0800
++++ backports-4.19.7-1.new/net/mac80211/iface.c	2019-12-05 17:23:07.094113553 +0800
+@@ -411,6 +411,10 @@ int ieee80211_add_virtual_monitor(struct
+ 		 wiphy_name(local->hw.wiphy));
+ 	sdata->wdev.iftype = NL80211_IFTYPE_MONITOR;
+ 
++#ifdef CPTCFG_MAC80211_SIFLOWER_MONITOR_ENABLE
++	memcpy(sdata->vif.addr, local->hw.wiphy->perm_addr, ETH_ALEN);
++#endif
++
+ 	sdata->encrypt_headroom = IEEE80211_ENCRYPT_HEADROOM;
+ 
+ 	ieee80211_set_default_queues(sdata);
+@@ -433,8 +437,13 @@ int ieee80211_add_virtual_monitor(struct
+ 	mutex_unlock(&local->iflist_mtx);
+ 
+ 	mutex_lock(&local->mtx);
++#ifdef CPTCFG_MAC80211_SIFLOWER_MONITOR_ENABLE
++	ret = ieee80211_vif_use_channel(sdata, &local->monitor_chandef,
++					IEEE80211_CHANCTX_SHARED);
++#else
+ 	ret = ieee80211_vif_use_channel(sdata, &local->monitor_chandef,
+ 					IEEE80211_CHANCTX_EXCLUSIVE);
++#endif
+ 	mutex_unlock(&local->mtx);
+ 	if (ret) {
+ 		mutex_lock(&local->iflist_mtx);
+@@ -446,6 +455,9 @@ int ieee80211_add_virtual_monitor(struct
+ 		return ret;
+ 	}
+ 
++#ifdef IEEE80211_CHANCTX_EXCLUSIVE
++	set_bit(SDATA_STATE_RUNNING, &sdata->state);
++#endif
+ 	skb_queue_head_init(&sdata->skb_queue);
+ 	INIT_WORK(&sdata->work, ieee80211_iface_work);
+ 
+@@ -602,7 +614,11 @@ int ieee80211_do_open(struct wireless_de
+ 			res = drv_add_interface(local, sdata);
+ 			if (res)
+ 				goto err_stop;
++#ifdef CPTCFG_MAC80211_SIFLOWER_MONITOR_ENABLE
++		} else if (local->monitors == 0) {
++#else
+ 		} else if (local->monitors == 0 && local->open_count == 0) {
++#endif
+ 			res = ieee80211_add_virtual_monitor(local);
+ 			if (res)
+ 				goto err_stop;
+@@ -1067,8 +1083,10 @@ static void ieee80211_do_stop(struct iee
+ 	ieee80211_configure_filter(local);
+ 	ieee80211_hw_config(local, hw_reconf_flags);
+ 
++#ifndef CPTCFG_MAC80211_SIFLOWER_MONITOR_ENABLE
+ 	if (local->monitors == local->open_count)
+ 		ieee80211_add_virtual_monitor(local);
++#endif
+ }
+ 
+ static int ieee80211_stop(struct net_device *dev)
+diff -uprN backports-4.19.7-1.orig/net/mac80211/util.c backports-4.19.7-1.new/net/mac80211/util.c
+--- backports-4.19.7-1.orig/net/mac80211/util.c	2019-12-05 17:15:53.198095344 +0800
++++ backports-4.19.7-1.new/net/mac80211/util.c	2019-12-05 17:24:50.278117883 +0800
+@@ -2212,8 +2212,11 @@ int ieee80211_reconfig(struct ieee80211_
+ 		cfg80211_sched_scan_stopped_rtnl(local->hw.wiphy, 0);
+ 
+  wake_up:
+-
++#ifdef CPTCFG_MAC80211_SIFLOWER_MONITOR_ENABLE
++	if (local->monitors > 0)
++#else
+ 	if (local->monitors == local->open_count && local->monitors > 0)
++#endif
+ 		ieee80211_add_virtual_monitor(local);
+ 
+ 	/*
+diff -uprN backports-4.19.7-1.orig/net/wireless/chan.c backports-4.19.7-1.new/net/wireless/chan.c
+--- backports-4.19.7-1.orig/net/wireless/chan.c	2019-12-05 17:15:53.190095344 +0800
++++ backports-4.19.7-1.new/net/wireless/chan.c	2019-12-05 17:25:35.078119763 +0800
+@@ -984,8 +984,10 @@ int cfg80211_set_monitor_channel(struct
+ {
+ 	if (!rdev->ops->set_monitor_channel)
+ 		return -EOPNOTSUPP;
++#ifndef CPTCFG_CFG80211_SIFLOWER_MONITOR_ENABLE
+ 	if (!cfg80211_has_monitors_only(rdev))
+ 		return -EBUSY;
++#endif
+ 
+ 	return rdev_set_monitor_channel(rdev, chandef);
+ }

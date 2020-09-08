@@ -1,0 +1,50 @@
+diff -uprN hostapd-2018-05-21-62566bc2.orig/wpa_supplicant/events.c hostapd-2018-05-21-62566bc2/wpa_supplicant/events.c
+--- hostapd-2018-05-21-62566bc2.orig/wpa_supplicant/events.c	2019-11-29 16:22:22.703945887 +0800
++++ hostapd-2018-05-21-62566bc2/wpa_supplicant/events.c	2019-11-29 16:27:03.791957683 +0800
+@@ -3419,6 +3419,30 @@ static void wpas_event_disconnect(struct
+ 					     locally_generated);
+ }
+ 
++/*
++ * Modified by nevermore, set wifi deauth/disassoc reason.
++ * Now completed by writing a non-zero value to /tmp/wds_$macaddr.
++ */
++static int set_wds_connect_status(const unsigned char *addr, int reason)
++{
++	FILE *fp;
++	char mac_buf[20];
++	char filename[32] = "/tmp/wds_reason_code";
++
++	if (addr == NULL)
++		return 0;
++
++	fp = fopen(filename, "w+");
++	if (reason == WLAN_REASON_MICHAEL_MIC_FAILURE || reason == WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT ||
++			reason == WLAN_REASON_DEAUTH_LEAVING ||
++			reason == WLAN_REASON_PREV_AUTH_NOT_VALID)
++		fwrite("2\n", 1, 2, fp);
++	else
++		fwrite("1\n", 1, 2, fp);
++	fclose(fp);
++
++	return 0;
++}
+ 
+ static void wpas_event_disassoc(struct wpa_supplicant *wpa_s,
+ 				struct disassoc_info *info)
+@@ -3436,6 +3460,7 @@ static void wpas_event_disassoc(struct w
+ 		ie = info->ie;
+ 		ie_len = info->ie_len;
+ 		reason_code = info->reason_code;
++		set_wds_connect_status(addr, reason_code);
+ 		locally_generated = info->locally_generated;
+ 		wpa_dbg(wpa_s, MSG_DEBUG, " * reason %u%s", reason_code,
+ 			locally_generated ? " (locally generated)" : "");
+@@ -3490,6 +3515,7 @@ static void wpas_event_deauth(struct wpa
+ 		ie = info->ie;
+ 		ie_len = info->ie_len;
+ 		reason_code = info->reason_code;
++		set_wds_connect_status(addr, reason_code);
+ 		locally_generated = info->locally_generated;
+ 		wpa_dbg(wpa_s, MSG_DEBUG, " * reason %u%s",
+ 			reason_code,

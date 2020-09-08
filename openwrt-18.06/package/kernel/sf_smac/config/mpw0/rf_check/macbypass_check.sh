@@ -1,0 +1,106 @@
+#!/bin/sh
+# Copyright (C) 2006 OpenWrt.org
+. /usr/share/libubox/jshn.sh
+. command_parser.sh
+timer=3
+if [ $1 == "lb" ]
+then
+	if [ $2 == "rx" ]
+	then
+		while [ $timer -gt 0 ];
+		do
+			devmem 0x11160088
+
+			timer=$((timer - 1))
+			sleep 1
+		done
+	fi
+	if [ $2 == "tx" ]
+	then	
+		devmem 0x11160000 32 0x0
+		devmem 0x11100888 32 0x1111
+		sleep 100
+		devmem 0x11100888 32 0x0
+
+		devmem 0x11160048 32 0x300
+		devmem 0x11160200 32 0x1d
+		devmem 0x11160204 32 0x00 #0x40,0x80
+		devmem 0x11160208 32 0x3
+		devmem 0x1116020c 32 0x0
+		devmem 0x11160210 32 0x7
+		devmem 0x11160214 32 0x2 #NO-HT:0x0;HT-MM:0x2;VHT:0x4
+		devmem 0x11160218 32 0xf0
+		devmem 0x1116021c 32 0x0f #54Mbps//0xcf
+		devmem 0x11160220 32 0x0
+		devmem 0x11160224 32 0x0
+		devmem 0x11160228 32 0xf0
+		devmem 0x1116022c 32 0x0f
+		devmem 0x11160230 32 0x0
+		devmem 0x11160234 32 0x1
+		devmem 0x11160238 32 0x0
+		devmem 0x1116023c 32 0x0
+
+		devmem 0x11160000 32 0x300
+		sleep 100
+		devmem 0x11160000 32 0x301
+	fi
+	if [ $2 == "stop" ]
+	then
+		devmem 0x11160000 32 0x0
+		devmem 0x11100888 32 0x1111
+		sleep 100
+		devmem 0x11100888 32 0x0
+	fi
+fi
+
+if [ $1 == "hb" ]
+then
+	if [ $2 == "rx" ]
+	then
+		while [ $timer -gt 0 ];
+		do
+			devmem 0x11560088
+			timer=$((timer - 1))
+			sleep 1
+		done
+	fi
+	if [ $2 == "tx" ]
+	then	
+		devmem 0x11560000 32 0x0
+		devmem 0x11500888 32 0x1111
+		sleep 100
+		devmem 0x11500888 32 0x0
+
+		devmem 0x11560048 32 0x300
+		devmem 0x11560200 32 0x1d
+		devmem 0x11560204 32 0x00 #0x40,0x80
+		devmem 0x11560208 32 0x3
+		devmem 0x1156020c 32 0x0
+		devmem 0x11560210 32 0x7
+		devmem 0x11560214 32 0x4 #NO-HT:0x0;HT-MM:0x2;VHT:0x4
+		devmem 0x11560218 32 0xf0
+		devmem 0x1156021c 32 0x0f #54Mbps//0xcf
+		devmem 0x11560220 32 0x0
+		devmem 0x11560224 32 0x0
+		devmem 0x11560228 32 0xf0
+		devmem 0x1156022c 32 0x0f
+		devmem 0x11560230 32 0x0
+		devmem 0x11560234 32 0x1
+		devmem 0x11560238 32 0x0
+		devmem 0x1156023c 32 0x0
+
+		devmem 0x11560000 32 0x300
+		sleep 100
+		devmem 0x11560000 32 0x301
+	fi
+	if [ $2 == "stop" ]
+	then
+		devmem 0x11560000 32 0x0
+		#devmem 0x11500888 32 0x1111
+		sleep 100
+		#devmem 0x11500888 32 0x0
+		opmode=5
+		band=0
+		send_command CWA_TRX_SwitchMode $(((band<<12) +  (opmode<<8) + 63))
+	fi
+fi

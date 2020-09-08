@@ -1,0 +1,144 @@
+diff -uprN netifd-2018-12-16-2750ce2e.orig/device.c netifd-2018-12-16-2750ce2e/device.c
+--- netifd-2018-12-16-2750ce2e.orig/device.c	2019-12-02 15:35:47.998965769 +0800
++++ netifd-2018-12-16-2750ce2e/device.c	2019-12-02 15:37:47.694970792 +0800
+@@ -61,6 +61,7 @@ static const struct blobmsg_policy dev_a
+ 	[DEV_ATTR_ISOLATE] = { .name = "isolate", .type = BLOBMSG_TYPE_BOOL },
+ 	[DEV_ATTR_GROUP] = { .name = "group", .type = BLOBMSG_TYPE_INT32 },
+ 	[DEV_ATTR_BRINPUT_DISABLE] = { .name = "disable_input", .type = BLOBMSG_TYPE_BOOL },
++	[DEV_ATTR_NETISOLATE] = { .name = "netisolate", .type = BLOBMSG_TYPE_BOOL },
+ };
+
+ const struct uci_blob_param_list device_attr_list = {
+@@ -232,6 +233,7 @@ device_merge_settings(struct device *dev
+ 	n->unicast_flood = s->unicast_flood;
+ 	n->group = s->group;
+ 	n->disable_input = s->disable_input;
++	n->netisolate = s->netisolate;
+ 	n->sendredirects = s->flags & DEV_OPT_SENDREDIRECTS ?
+ 		s->sendredirects : os->sendredirects;
+ 	n->flags = s->flags | os->flags | os->valid_flags;
+@@ -383,6 +385,11 @@ device_init_settings(struct device *dev,
+ 		s->flags |= DEV_OPT_BRINPUT_DISABLE;
+ 	}
+
++	if ((cur = tb[DEV_ATTR_NETISOLATE])) {
++		s->netisolate = blobmsg_get_bool(cur);
++		s->flags |= DEV_OPT_NETISOLATE;
++	}
++
+ 	device_set_disabled(dev, disabled);
+ }
+
+@@ -1068,6 +1075,8 @@ device_dump_status(struct blob_buf *b, s
+ 			blobmsg_add_u32(b, "group", st.group);
+ 		if (st.flags & DEV_OPT_BRINPUT_DISABLE)
+ 			blobmsg_add_u32(b, "disableinput", st.disable_input);
++		if (st.flags & DEV_OPT_NETISOLATE)
++			blobmsg_add_u32(b, "netisolate", st.netisolate);
+ 	}
+
+ 	s = blobmsg_open_table(b, "statistics");
+diff -uprN netifd-2018-12-16-2750ce2e.orig/device.h netifd-2018-12-16-2750ce2e/device.h
+--- netifd-2018-12-16-2750ce2e.orig/device.h	2019-12-02 15:35:47.998965769 +0800
++++ netifd-2018-12-16-2750ce2e/device.h	2019-12-02 15:40:34.074977775 +0800
+@@ -53,6 +53,7 @@ enum {
+ 	DEV_ATTR_ISOLATE,
+ 	DEV_ATTR_GROUP,
+ 	DEV_ATTR_BRINPUT_DISABLE,
++	DEV_ATTR_NETISOLATE,
+ 	__DEV_ATTR_MAX,
+ };
+
+@@ -108,6 +109,7 @@ enum {
+ 	DEV_OPT_ISOLATE			= (1 << 23),
+ 	DEV_OPT_GROUP			= (1 << 24),
+ 	DEV_OPT_BRINPUT_DISABLE		= (1 << 25),
++	DEV_OPT_NETISOLATE		= (1 << 26),
+ };
+
+ /* events broadcasted to all users of a device */
+@@ -177,6 +179,7 @@ struct device_settings {
+ 	bool isolate;
+ 	unsigned int group;
+ 	bool disable_input;
++	bool netisolate;
+ };
+
+ /*
+diff -uprN netifd-2018-12-16-2750ce2e.orig/system-linux.c netifd-2018-12-16-2750ce2e/system-linux.c
+--- netifd-2018-12-16-2750ce2e.orig/system-linux.c	2019-12-02 15:35:47.998965769 +0800
++++ netifd-2018-12-16-2750ce2e/system-linux.c	2019-12-02 15:43:13.946984484 +0800
+@@ -369,6 +369,11 @@ static void system_bridge_set_disable_in
+ 	system_set_dev_sysctl("/sys/class/net/%s/brport/disableinput", dev->ifname, val);
+ }
+
++static void system_bridge_set_netisolate(struct device *dev, const char *val)
++{
++	system_set_dev_sysctl("/sys/class/net/%s/brport/netisolate", dev->ifname, val);
++}
++
+ static void system_bridge_set_robustness(struct device *dev, const char *val)
+ {
+ 	system_set_dev_sysctl("/sys/devices/virtual/net/%s/bridge/multicast_startup_query_count",
+@@ -807,6 +812,9 @@ int system_bridge_addif(struct device *b
+ 		system_bridge_set_disable_input(dev, dev->settings.disable_input ? "1" : "0");
+ 	}
+
++	if (dev->settings.flags & DEV_OPT_NETISOLATE) {
++		system_bridge_set_netisolate(dev, dev->settings.netisolate ? "1" : "0");
++	}
+
+ 	return ret;
+ }
+diff -uprN netifd-2018-12-16-2750ce2e.orig/wireless.c netifd-2018-12-16-2750ce2e/wireless.c
+--- netifd-2018-12-16-2750ce2e.orig/wireless.c	2019-12-02 15:56:44.175018486 +0800
++++ netifd-2018-12-16-2750ce2e/wireless.c	2019-12-02 16:02:52.215033931 +0800
+@@ -39,6 +39,7 @@ enum {
+ 	VIF_ATTR_MODE,
+ 	VIF_ATTR_GROUP,
+ 	VIF_ATTR_BRINPUT_DISABLE,
++	VIF_ATTR_NETISOLATE,
+ 	__VIF_ATTR_MAX,
+ };
+
+@@ -49,6 +50,7 @@ static const struct blobmsg_policy vif_p
+ 	[VIF_ATTR_MODE] = { .name = "mode", .type = BLOBMSG_TYPE_STRING },
+ 	[VIF_ATTR_GROUP] = { .name = "group", .type = BLOBMSG_TYPE_INT32 },
+ 	[VIF_ATTR_BRINPUT_DISABLE] = { .name = "disable_input", .type = BLOBMSG_TYPE_BOOL },
++	[VIF_ATTR_NETISOLATE] = { .name = "netisolate", .type = BLOBMSG_TYPE_BOOL },
+ };
+
+ static const struct uci_blob_param_list vif_param = {
+@@ -222,8 +224,10 @@ static void wireless_interface_handle_li
+ 			dev->wireless_ap = vif->ap_mode;
+ 			dev->settings.group = vif->group;
+ 			dev->settings.disable_input = vif->disable_input;
++			dev->settings.netisolate = vif->netisolate;
+ 			dev->settings.flags |= DEV_OPT_GROUP;
+ 			dev->settings.flags |= DEV_OPT_BRINPUT_DISABLE;
++			dev->settings.flags |= DEV_OPT_NETISOLATE;
+ 		}
+ 	}
+
+@@ -598,6 +602,10 @@ wireless_interface_init_config(struct wi
+ 	cur = tb[VIF_ATTR_BRINPUT_DISABLE];
+ 	if (cur)
+ 		vif->disable_input = blobmsg_get_bool(cur);
++
++	cur = tb[VIF_ATTR_NETISOLATE];
++	if (cur)
++		vif->netisolate = blobmsg_get_bool(cur);
+ }
+
+ static void
+diff -uprN netifd-2018-12-16-2750ce2e.orig/wireless.h netifd-2018-12-16-2750ce2e/wireless.h
+--- netifd-2018-12-16-2750ce2e.orig/wireless.h	2019-12-02 15:35:47.998965769 +0800
++++ netifd-2018-12-16-2750ce2e/wireless.h	2019-12-02 15:48:03.934996653 +0800
+@@ -81,6 +81,7 @@ struct wireless_interface {
+ 	bool ap_mode;
+ 	unsigned int group;
+ 	bool disable_input;
++	bool netisolate;
+ };
+
+ struct wireless_process {

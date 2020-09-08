@@ -1,0 +1,38 @@
+Index: rpcd-2018-11-28-3aa81d0d/uci.c
+===================================================================
+--- rpcd-2018-11-28-3aa81d0d.orig/uci.c	2018-11-28 19:12:04.000000000 +0800
++++ rpcd-2018-11-28-3aa81d0d/uci.c	2020-06-16 19:33:34.724070301 +0800
+@@ -734,6 +734,7 @@
+ 	{
+ 		blobmsg_for_each_attr(cur, tb[RPC_A_VALUES], rem)
+ 		{
++			ptr.flags = 0;
+ 			ptr.o = NULL;
+ 			ptr.option = blobmsg_name(cur);
+ 
+@@ -817,6 +818,7 @@
+ 	struct blob_attr *cur;
+ 	int rem, rv;
+ 
++	ptr->flags = 0;
+ 	ptr->o = NULL;
+ 	ptr->option = blobmsg_name(opt);
+ 	ptr->value = NULL;
+@@ -1285,6 +1287,8 @@
+ 		uci_unload(cursor, p);
+ 	}
+ 
++	free(configs);
++
+ 	blobmsg_close_table(&buf, c);
+ 
+ 	ubus_send_reply(ctx, req, buf.head);
+@@ -1389,6 +1393,8 @@
+ 	for (i = 0; configs[i]; i++)
+ 		blobmsg_add_string(&buf, NULL, configs[i]);
+ 
++	free(configs);
++
+ 	blobmsg_close_array(&buf, c);
+ 
+ 	ubus_send_reply(ctx, req, buf.head);

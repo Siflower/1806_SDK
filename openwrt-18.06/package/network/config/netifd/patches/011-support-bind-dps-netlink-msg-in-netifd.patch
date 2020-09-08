@@ -1,0 +1,176 @@
+diff -uprN netifd-2018-12-16-2750ce2e.orig/system-linux.c netifd-2018-12-16-2750ce2e/system-linux.c
+--- netifd-2018-12-16-2750ce2e.orig/system-linux.c	2019-12-02 16:04:06.271037039 +0800
++++ netifd-2018-12-16-2750ce2e/system-linux.c	2019-12-02 16:13:40.075061119 +0800
+@@ -65,6 +65,8 @@
+ #include <netlink/msg.h>
+ #include <netlink/attr.h>
+ #include <netlink/socket.h>
++#include <unl.h>
++#include <netlink/genl/genl.h>
+ #include <libubox/uloop.h>
+ 
+ #include "netifd.h"
+@@ -81,6 +83,7 @@ static int sock_ioctl = -1;
+ static struct nl_sock *sock_rtnl = NULL;
+ 
+ static int cb_rtnl_event(struct nl_msg *msg, void *arg);
++static int cb_sf_eth_event(struct nl_msg *msg, void *arg);
+ static void handle_hotplug_event(struct uloop_fd *u, unsigned int events);
+ static int system_add_proto_tunnel(const char *name, const uint8_t proto,
+ 					const unsigned int link, struct blob_attr **tb);
+@@ -161,10 +164,10 @@ create_raw_event_socket(struct event_soc
+ }
+ 
+ static bool
+-create_event_socket(struct event_socket *ev, int protocol,
++create_event_socket(struct event_socket *ev, int protocol, int groups,
+ 		    int (*cb)(struct nl_msg *msg, void *arg))
+ {
+-	if (!create_raw_event_socket(ev, protocol, 0, handler_nl_event, ULOOP_ERROR_CB))
++	if (!create_raw_event_socket(ev, protocol, groups, handler_nl_event, ULOOP_ERROR_CB))
+ 		return false;
+ 
+ 	/* Install the valid custom callback handler */
+@@ -237,16 +240,32 @@ int system_init(void)
+ {
+ 	static struct event_socket rtnl_event;
+ 	static struct event_socket hotplug_event;
++	static struct event_socket sf_eth_event;
++	int dpsgroup = 0;
++	struct unl unl;
++	int ret;
+ 
+ 	sock_ioctl = socket(AF_LOCAL, SOCK_DGRAM, 0);
+ 	system_fd_set_cloexec(sock_ioctl);
+ 
++	ret = unl_genl_init(&unl,"DPS_NL");
++	netifd_log_message(L_NOTICE, "init DPS_NL ret=%d\n",ret);
++	if(!ret){
++		dpsgroup = unl_genl_multicast_id(&unl,"updown");
++		netifd_log_message(L_NOTICE, "get dps group=%d\n",dpsgroup);
++		unl_free(&unl);
++	}
++
++	if (dpsgroup != 0 && !create_event_socket(&sf_eth_event, NETLINK_GENERIC, 1 << (dpsgroup - 1), cb_sf_eth_event)){
++		netifd_log_message(L_WARNING, "Can't initialize generic netlink\n");
++	}
++
+ 	/* Prepare socket for routing / address control */
+ 	sock_rtnl = create_socket(NETLINK_ROUTE, 0);
+ 	if (!sock_rtnl)
+ 		return -1;
+ 
+-	if (!create_event_socket(&rtnl_event, NETLINK_ROUTE, cb_rtnl_event))
++	if (!create_event_socket(&rtnl_event, NETLINK_ROUTE, 0, cb_rtnl_event))
+ 		return -1;
+ 
+ 	if (!create_raw_event_socket(&hotplug_event, NETLINK_KOBJECT_UEVENT, 1,
+@@ -589,6 +608,108 @@ static int cb_rtnl_event(struct nl_msg *
+ 
+ out:
+ 	return 0;
++}
++
++static void call_dps_event(const char *ifname,const char *action,const char *event)
++{
++	char *argv[3];
++	int pid;
++
++	pid = fork();
++	if (pid < 0) return;
++	if (!pid) {
++		setenv("ACTION", action, 1);
++		setenv("INTERFACE", ifname, 1);
++		setenv("EVENT", event, 1);
++		argv[0] = hotplug_cmd_path;
++		argv[1] = "dps";
++		argv[2] = NULL;
++		execvp(argv[0], argv);
++		exit(127);
++	}
++}
++
++//this must be sync with linux kernel
++enum {
++	SF_ETH_CMD_ATTR_UNSPEC = 0,
++	SF_ETH_CMD_ATTR_DPS_PORT,            /* eth phy port*/
++	SF_ETH_CMD_ATTR_DPS_LINK,            /* 0---link down  1---link up */
++	SF_ETH_CMD_ATTR_DPS_IS_WAN,          /* 0---lan     1---wan */
++	SF_ETH_CMD_ATTR_DPS_VLANID,          /* 0---lan     1---wan */
++	SF_ETH_CMD_ATTR_DPS_IFNAME,
++	__SF_ETH_CMD_ATTR_MAX,
++};
++
++static struct nla_policy sf_eth_policy[__SF_ETH_CMD_ATTR_MAX+1] = {
++	[SF_ETH_CMD_ATTR_DPS_PORT]   = { .type = NLA_U32 },
++	[SF_ETH_CMD_ATTR_DPS_LINK]   = { .type = NLA_U32 },
++	[SF_ETH_CMD_ATTR_DPS_IS_WAN]   = { .type = NLA_U32 },
++	[SF_ETH_CMD_ATTR_DPS_VLANID]   = { .type = NLA_U32 },
++	[SF_ETH_CMD_ATTR_DPS_IFNAME]   = { .type = NLA_STRING },
++};
++
++#define SF_CMD_GENERIC      1
++#define SF_CMD_ATTR_DPS     1
++static int cb_sf_eth_event(struct nl_msg *msg, void *arg)
++{
++	struct nlmsghdr *nh = nlmsg_hdr(msg);
++	struct genlmsghdr *ghdr;
++	struct nlattr *nla[__SF_ETH_CMD_ATTR_MAX + 1];
++	int port = 0;
++	int updown = 0;
++	int is_wan = 0;
++	int vlanid = 0;
++	char ifname[32] = {0};
++	char vlan_ifame[32] = {0};
++
++	if (!nlmsg_valid_hdr(nh, GENL_HDRLEN)){
++		netifd_log_message(L_WARNING, "sf eth event recv invalid ghr\n");
++		goto out;
++	}
++	ghdr = nlmsg_data(nh);
++	if(ghdr->cmd != SF_CMD_GENERIC){
++		netifd_log_message(L_WARNING, "sf eth event recv wrong ghr cmd=%d\n",(int)ghdr->cmd);
++		goto out;
++	}
++
++	genlmsg_parse(nh, 0, nla, __SF_ETH_CMD_ATTR_MAX, sf_eth_policy);
++
++	if(nla[SF_ETH_CMD_ATTR_DPS_PORT]){
++		port = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_PORT]);
++	}
++
++	if(nla[SF_ETH_CMD_ATTR_DPS_LINK]){
++		updown = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_LINK]);
++	}
++
++	if(nla[SF_ETH_CMD_ATTR_DPS_IS_WAN]){
++		is_wan = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_IS_WAN]);
++	}
++	if(nla[SF_ETH_CMD_ATTR_DPS_VLANID]){
++		vlanid = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_VLANID]);
++	}
++
++	if(nla[SF_ETH_CMD_ATTR_DPS_IFNAME]){
++		sprintf(ifname,"%s",nla_get_string(nla[SF_ETH_CMD_ATTR_DPS_IFNAME]));
++	}
++
++	netifd_log_message(L_NOTICE, "sf_eth_event port %d updown %d is_wan %d vlanid %d ifname %s\n",
++				port, updown, is_wan,vlanid, ifname);
++	if(is_wan){
++		sprintf(vlan_ifame,"%s.%d",ifname,vlanid);
++		struct device *dev = device_get(vlan_ifame, false);
++		if(!dev){
++			goto out;
++		}
++		device_set_link(dev, (updown == 1) ? true : false);
++		netifd_log_message(L_NOTICE, "+++++++++++++++++++++set link state %d dev %s\n",
++					updown, dev->ifname);
++		//some times we may not have wan interface,so just triger dps hotplug
++		call_dps_event(vlan_ifame, (updown == 1) ? "ifup" : "ifdown", "dpswan");
++	}
++
++out:
++	return 0;
+ }
+ 
+ static void

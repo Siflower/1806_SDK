@@ -1,0 +1,144 @@
+diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.c hostapd-2018-05-21-62566bc2/hostapd/config_file.c
+--- hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.c	2019-11-28 19:03:52.612726679 +0800
++++ hostapd-2018-05-21-62566bc2/hostapd/config_file.c	2019-11-28 19:07:59.284737031 +0800
+@@ -3827,6 +3827,14 @@ static int hostapd_config_fill(struct ho
+ 	} else if (os_strcmp(buf, "wowlan_triggers") == 0) {
+ 		os_free(bss->wowlan_triggers);
+ 		bss->wowlan_triggers = os_strdup(pos);
++	} else if (os_strcmp(buf, "prohibit_weak_sig_sta_enable") == 0) {
++		conf->prohibit_weak_sig_sta_enable = atoi(pos);
++	} else if (os_strcmp(buf, "sta_min_dbm") == 0) {
++		conf->sta_min_dbm = atoi(pos);
++	} else if (os_strcmp(buf, "disassociate_weak_sig_sta_enable") == 0) {
++		conf->disassociate_weak_sig_sta_enable = atoi(pos);
++	} else if (os_strcmp(buf, "weak_sta_signal") == 0) {
++		conf->weak_sta_signal = atoi(pos);
+ #ifdef CONFIG_FST
+ 	} else if (os_strcmp(buf, "fst_group_id") == 0) {
+ 		size_t len = os_strlen(pos);
+diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.c hostapd-2018-05-21-62566bc2/src/ap/ap_config.c
+--- hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.c	2019-11-28 19:03:45.980726400 +0800
++++ hostapd-2018-05-21-62566bc2/src/ap/ap_config.c	2019-11-28 19:08:56.688739440 +0800
+@@ -232,6 +232,10 @@ struct hostapd_config * hostapd_config_d
+ 	 * by default to indicate that the regulations encompass all
+ 	 * environments for the current frequency band in the country. */
+ 	conf->country[2] = ' ';
++	conf->sta_min_dbm = -75;
++	conf->prohibit_weak_sig_sta_enable = 0;
++	conf->disassociate_weak_sig_sta_enable = 0;
++	conf->weak_sta_signal = -75;
+
+ 	return conf;
+ }
+diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.h hostapd-2018-05-21-62566bc2/src/ap/ap_config.h
+--- hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.h	2019-11-28 19:03:39.632726134 +0800
++++ hostapd-2018-05-21-62566bc2/src/ap/ap_config.h	2019-11-28 19:09:50.704741706 +0800
+@@ -818,6 +818,10 @@ struct hostapd_config {
+ 	} *acs_chan_bias;
+ 	unsigned int num_acs_chan_bias;
+ #endif /* CONFIG_ACS */
++	int sta_min_dbm;
++	int prohibit_weak_sig_sta_enable;
++	int disassociate_weak_sig_sta_enable;
++	int weak_sta_signal;
+
+ 	struct wpabuf *lci;
+ 	struct wpabuf *civic;
+diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ieee802_11.c hostapd-2018-05-21-62566bc2/src/ap/ieee802_11.c
+--- hostapd-2018-05-21-62566bc2.orig/src/ap/ieee802_11.c	2019-11-28 19:03:33.064725858 +0800
++++ hostapd-2018-05-21-62566bc2/src/ap/ieee802_11.c	2019-11-28 19:10:37.016743650 +0800
+@@ -3202,6 +3202,10 @@ static void handle_assoc(struct hostapd_
+ 		.frame_info = fi,
+ 	};
+
++	if(hapd->iconf->prohibit_weak_sig_sta_enable)
++		if(fi->ssi_signal < hapd->iconf->sta_min_dbm)
++			return;
++
+ 	if (len < IEEE80211_HDRLEN + (reassoc ? sizeof(mgmt->u.reassoc_req) :
+ 				      sizeof(mgmt->u.assoc_req))) {
+ 		wpa_printf(MSG_INFO, "handle_assoc(reassoc=%d) - too short payload (len=%lu)",
+diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/sta_info.c hostapd-2018-05-21-62566bc2/src/ap/sta_info.c
+--- hostapd-2018-05-21-62566bc2.orig/src/ap/sta_info.c	2019-11-28 19:03:21.916725391 +0800
++++ hostapd-2018-05-21-62566bc2/src/ap/sta_info.c	2019-11-28 19:38:12.824813137 +0800
+@@ -263,6 +263,8 @@ void ap_free_sta(struct hostapd_data *ha
+ 	wpa_printf(MSG_DEBUG, "%s: cancel ap_handle_timer for " MACSTR,
+ 		   __func__, MAC2STR(sta->addr));
+ 	eloop_cancel_timeout(ap_handle_timer, hapd, sta);
++	if(hapd->iconf->disassociate_weak_sig_sta_enable)
++		eloop_cancel_timeout(ap_sta_sig_handle_timer, hapd, sta);
+ 	eloop_cancel_timeout(ap_handle_session_timer, hapd, sta);
+ 	eloop_cancel_timeout(ap_handle_session_warning_timer, hapd, sta);
+ 	ap_sta_clear_disconnect_timeouts(hapd, sta);
+@@ -391,6 +393,42 @@ void hostapd_free_stas(struct hostapd_da
+ 	}
+ }
+
++/**
++ * ap_sta_sig_handle_timer - Per STA timer handler
++ * @eloop_ctx: struct hostapd_data *
++ * @timeout_ctx: struct sta_info *
++ *
++ * This function is called to check station signal and to remove
++ * stations whose signal is too weak.
++ */
++void ap_sta_sig_handle_timer(void *eloop_ctx, void *timeout_ctx)
++{
++	struct hostap_sta_driver_data data;
++	struct hostapd_data *hapd = eloop_ctx;
++	struct sta_info *sta = timeout_ctx;
++
++	//get signal
++	if (hostapd_drv_read_sta_data(hapd, &data, sta->addr) < 0)
++		return;
++	//if signal is too weak,deauth sta
++	if (data.signal < hapd->iconf->weak_sta_signal)
++	{
++		sta->too_weak_count ++;
++		if(sta->too_weak_count > 5)
++		{
++			ap_sta_deauthenticate(hapd,sta,WLAN_REASON_UNSPECIFIED);
++			return;
++		}
++		//if have a too weak signal,then get signal every 5 seconds
++		eloop_register_timeout(2, 0, ap_sta_sig_handle_timer, hapd, sta);
++	}
++	else
++	{
++		//if have a signal that is good,then set too_weak_count to 0
++		sta->too_weak_count = 0;
++		eloop_register_timeout(5, 0, ap_sta_sig_handle_timer, hapd, sta);
++	}
++}
+
+ /**
+  * ap_handle_timer - Per STA timer handler
+@@ -688,6 +726,9 @@ struct sta_info * ap_sta_add(struct host
+ 			   hapd->conf->ap_max_inactivity);
+ 		eloop_register_timeout(hapd->conf->ap_max_inactivity, 0,
+ 				       ap_handle_timer, hapd, sta);
++		//check sta signal every ap_max_inactivity seconds
++		if(hapd->iconf->disassociate_weak_sig_sta_enable)
++			eloop_register_timeout(5, 0, ap_sta_sig_handle_timer, hapd, sta);
+ 	}
+
+ 	/* initialize STA info data */
+diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/sta_info.h hostapd-2018-05-21-62566bc2/src/ap/sta_info.h
+--- hostapd-2018-05-21-62566bc2.orig/src/ap/sta_info.h	2019-11-28 19:03:13.572725040 +0800
++++ hostapd-2018-05-21-62566bc2/src/ap/sta_info.h	2019-11-28 19:38:49.556814679 +0800
+@@ -209,6 +209,7 @@ struct sta_info {
+ 	u16 last_seq_ctrl;
+ 	/* Last Authentication/(Re)Association Request/Action frame subtype */
+ 	u8 last_subtype;
++	u8 too_weak_count;
+
+ #ifdef CONFIG_MBO
+ 	u8 cell_capa; /* 0 = unknown (not an MBO STA); otherwise,
+@@ -296,6 +296,7 @@ void ap_free_sta(struct hostapd_data *ha
+ void ap_sta_ip6addr_del(struct hostapd_data *hapd, struct sta_info *sta);
+ void hostapd_free_stas(struct hostapd_data *hapd);
+ void ap_handle_timer(void *eloop_ctx, void *timeout_ctx);
++void ap_sta_sig_handle_timer(void *eloop_ctx, void *timeout_ctx);
+ void ap_sta_replenish_timeout(struct hostapd_data *hapd, struct sta_info *sta,
+ 			      u32 session_timeout);
+ void ap_sta_session_timeout(struct hostapd_data *hapd, struct sta_info *sta,

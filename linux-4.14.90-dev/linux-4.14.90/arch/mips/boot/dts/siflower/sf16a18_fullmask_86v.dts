@@ -1,0 +1,249 @@
+/dts-v1/;
+
+#include "sf16a18_full_mask.dtsi"
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "siflower,sf16a18-soc";
+
+	model = "sf16a18-86v";
+	memory {
+		device_type = "memory";
+		reg =  <0x00000000 0x10000000>;
+	};
+};
+
+&ethernet {
+	shutdown-portlist = "lllll";
+	led-on-off-time = /bits/ 16 <0xff 0x2ff>;
+	status = "okay";
+};
+
+&switch{
+	sfax8,port-map = "llllw";
+	status = "okay";
+};
+
+&gmac {
+	status = "okay";
+};
+
+&gdma {
+	status = "okay";
+};
+
+&i2c0 {
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+	/include/	"sf16a18_pmu.dtsi"
+};
+&ip6103_core{
+	regulator-name = "VDD_CORE_0.9V";
+	regulator-min-microvolt = <850000>;
+	regulator-max-microvolt = <850000>;
+	regulator-min-microamp = <3000000>;
+	regulator-max-microamp = <3000000>;
+	regulator-always-on;
+	regulator-boot-on;
+};
+
+&leds {
+	status = "okay";
+	led1 {
+		label = "led1";
+		gpios = <&gpio 61 1>;
+		default-state = "on";
+	};
+};
+
+&gpio_keys {
+	status = "okay";
+	button1@16 {
+		label = "Function Mode Select";
+		/*linux,input-type = <0x5>;*/
+		linux,code = <0x102>;
+		gpios = <&gpio 16 1>;
+		poll-interval = <10>;
+		debounce-interval = <20>;
+	};
+
+	button2@26 {
+		label = "WIfI reset button";
+		linux,code = <0x101>;
+		gpios = <&gpio 26 1>;
+		poll-interval = <10>;
+		debounce-interval = <20>;
+	};
+};
+
+&spi0 {
+	status = "okay";
+	use-dma;
+	dmas = <&gdma 10
+	&gdma 11>;
+	dma-names = "tx", "rx";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	spiflash:w25q128@0 {
+		compatible = "w25q128";
+		reg = <0>;	/* chip select */
+		spi-max-frequency = <33000000>;
+
+		bank-width = <2>;
+		device-width = <2>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "spl-loader";
+			reg = <0x0 0x8000>; /* 32k */
+			read-only;
+		};
+
+		partition@8000{
+			label = "u-boot";
+			reg = <0x8000 0x29000>; /* 164k */
+		};
+
+		factory:partition@31000 {
+			label = "factory";
+			reg = <0x31000 0x1000>; /* 4k */
+		};
+
+		partition@32000 {
+			label = "firmware";
+			#reg = <0x32000 0x3CE000>; /* 200k-4M */
+			reg = <0x32000 0x760000>;
+		};
+	};
+
+	spidev: spi@8200000 {
+		compatible = "rohm,dh2228fv";
+		reg = <1>;
+		clock = <50000000>;
+		spi-cpha;
+		spi-cpol;
+		spi-max-frequency=<12000000>;
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&pwm0 {
+	status = "okay";
+};
+
+&timer0 {
+	status = "okay";
+};
+
+&watchdog {
+	status = "okay";
+};
+
+&wifi_rf {
+	status = "okay";
+};
+
+&wifi_lb {
+	status = "okay";
+};
+
+&wifi_hb {
+	status = "okay";
+};
+
+&cpu0 {
+	operating-points = <
+		/* kHz    uV(dummy) */
+		/*800000 900000
+		672000 875000
+		600000 875000
+		550000 875000
+		*/500000 850000
+		450000 850000
+		400000 850000
+		350000 850000
+		336000 850000
+		300000 850000
+		250000 850000
+		200000 850000
+		150000 850000
+		100000 850000
+	>;
+};
+&cpu1 {
+	operating-points = <
+		/* kHz    uV(dummy) */
+		/*800000 900000
+		672000 875000
+		600000 875000
+		550000 875000
+		*/500000 850000
+		450000 850000
+		400000 850000
+		350000 850000
+		336000 850000
+		300000 850000
+		250000 850000
+		200000 850000
+		150000 850000
+		100000 850000
+	>;
+};
+&cpu2 {
+	operating-points = <
+		/* kHz    uV(dummy) */
+		/*800000 900000
+		672000 875000
+		600000 875000
+		550000 875000
+		*/500000 850000
+		450000 850000
+		400000 850000
+		350000 850000
+		336000 850000
+		300000 850000
+		250000 850000
+		200000 850000
+		150000 850000
+		100000 850000
+	>;
+};
+&cpu3 {
+	operating-points = <
+		/* kHz    uV(dummy) */
+		/*800000 900000
+		672000 875000
+		600000 875000
+		550000 875000
+		*/500000 850000
+		450000 850000
+		400000 850000
+		350000 850000
+		336000 850000
+		300000 850000
+		250000 850000
+		200000 850000
+		150000 850000
+		100000 850000
+	>;
+};
+
+&ip6103_vdd18 {
+	regulator-compatible = "null";
+};
+
+&ip6103_rfpa_en {
+	regulator-compatible = "null";
+};
+
+&ip6103_ldo6_32khz {
+	regulator-compatible = "null";
+};

@@ -1,0 +1,131 @@
+diff -uprN backports-4.19.7-1.orig/net/mac80211/offchannel.c backports-4.19.7-1.new/net/mac80211/offchannel.c
+--- backports-4.19.7-1.orig/net/mac80211/offchannel.c	2019-12-05 16:58:24.658051341 +0800
++++ backports-4.19.7-1.new/net/mac80211/offchannel.c	2019-12-05 17:01:11.082058325 +0800
+@@ -775,6 +775,53 @@ int ieee80211_cancel_remain_on_channel(s
+ 	return ieee80211_cancel_roc(local, cookie, false);
+ }
+ 
++/* austin: add this func to printk the info about auth/deauth,
++ * assoc/reassoc/disassoc. */
++static void ieee80211_tx_mgmt_info(struct ieee80211_sub_if_data *sdata,
++		const u8 *buf)
++{
++	struct ieee80211_mgmt *mgmt = (void *)buf;
++	u16 fc;
++	fc = le16_to_cpu(mgmt->frame_control);
++
++	switch (fc & IEEE80211_FCTL_STYPE) {
++	case IEEE80211_STYPE_AUTH:
++		sdata_dbg(sdata, "transmit a AUTH frame to %pM\n", mgmt->da);
++		break;
++	case IEEE80211_STYPE_DEAUTH:
++		sdata_info(sdata,
++				"transmit a DEAUTH frame to %pM, Reason: %u\n",
++				mgmt->da,
++				le16_to_cpu(mgmt->u.deauth.reason_code));
++		break;
++	case IEEE80211_STYPE_DISASSOC:
++		sdata_info(sdata, "transmit a DISASSOC frame to %pM, Reason: "
++				  "%u\n",
++				mgmt->da,
++				le16_to_cpu(mgmt->u.deauth.reason_code));
++		break;
++	case IEEE80211_STYPE_ASSOC_RESP:
++		sdata_dbg(sdata, "transmit a ASSOC_RESP frame to %pM\n",
++				mgmt->da);
++		break;
++	case IEEE80211_STYPE_REASSOC_RESP:
++		sdata_dbg(sdata, "transmit a REASSOC_RESP frame to %pM\n",
++				mgmt->da);
++		break;
++	case IEEE80211_STYPE_ASSOC_REQ:
++		sdata_dbg(sdata, "transmit a ASSOC_REQ frame to %pM\n",
++				mgmt->da);
++		break;
++	case IEEE80211_STYPE_REASSOC_REQ:
++		sdata_dbg(sdata, "transmit a REASSOC_REQ frame to %pM\n",
++				mgmt->da);
++		break;
++	default:
++		break;
++	}
++	return;
++}
++
+ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		      struct cfg80211_mgmt_tx_params *params, u64 *cookie)
+ {
+@@ -937,6 +984,8 @@ int ieee80211_mgmt_tx(struct wiphy *wiph
+ 		*cookie = 0xffffffff;
+ 	}
+ 
++	ieee80211_tx_mgmt_info(sdata, skb->data);
++
+ 	if (!need_offchan) {
+ 		ieee80211_tx_skb(sdata, skb);
+ 		ret = 0;
+diff -uprN backports-4.19.7-1.orig/net/mac80211/rx.c backports-4.19.7-1.new/net/mac80211/rx.c
+--- backports-4.19.7-1.orig/net/mac80211/rx.c	2019-12-05 16:58:24.658051341 +0800
++++ backports-4.19.7-1.new/net/mac80211/rx.c	2019-12-05 17:05:02.018068017 +0800
+@@ -3266,6 +3266,53 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 	return RX_QUEUED;
+ }
+ 
++/* austin: add this func to printk the info about auth/deauth,
++ * assoc/reassoc/disassoc. */
++static void ieee80211_rx_mgmt_info(struct ieee80211_sub_if_data *sdata,
++		const u8 *buf)
++{
++	struct ieee80211_mgmt *mgmt = (void *)buf;
++	u16 fc;
++	fc = le16_to_cpu(mgmt->frame_control);
++
++	switch (fc & IEEE80211_FCTL_STYPE) {
++	case IEEE80211_STYPE_AUTH:
++		sdata_dbg(sdata, "receive a AUTH frame from %pM\n", mgmt->sa);
++		break;
++	case IEEE80211_STYPE_DEAUTH:
++		sdata_info(sdata,
++				"receive a DEAUTH frame from %pM, Reason: %u\n",
++				mgmt->sa,
++				le16_to_cpu(mgmt->u.deauth.reason_code));
++		break;
++	case IEEE80211_STYPE_DISASSOC:
++		sdata_info(sdata, "receive a DISASSOC frame from %pM, Reason: "
++				  "%u\n",
++				mgmt->sa,
++				le16_to_cpu(mgmt->u.deauth.reason_code));
++		break;
++	case IEEE80211_STYPE_ASSOC_REQ:
++		sdata_dbg(sdata, "receive a ASSOC_REQ frame from %pM\n",
++				mgmt->sa);
++		break;
++	case IEEE80211_STYPE_REASSOC_REQ:
++		sdata_dbg(sdata, "receive a REASSOC_REQ frame from %pM\n",
++				mgmt->sa);
++		break;
++	case IEEE80211_STYPE_ASSOC_RESP:
++		sdata_dbg(sdata, "receive a ASSOC_RESP frame from %pM\n",
++				mgmt->sa);
++		break;
++	case IEEE80211_STYPE_REASSOC_RESP:
++		sdata_dbg(sdata, "receive a REASSOC_RESP frame from %pM\n",
++				mgmt->sa);
++		break;
++	default:
++		break;
++	}
++	return;
++}
++
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_userspace_mgmt(struct ieee80211_rx_data *rx)
+ {
+@@ -3289,6 +3336,7 @@ ieee80211_rx_h_userspace_mgmt(struct iee
+ 
+ 	if (cfg80211_rx_mgmt(&rx->sdata->wdev, status->freq, sig,
+ 			     rx->skb->data, rx->skb->len, 0)) {
++		ieee80211_rx_mgmt_info(rx->sdata, rx->skb->data);
+ 		if (rx->sta)
+ 			rx->sta->rx_stats.packets++;
+ 		dev_kfree_skb(rx->skb);

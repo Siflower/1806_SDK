@@ -1,0 +1,80 @@
+/dts-v1/;
+
+#include "sf16a18_full_mask.dtsi"
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "siflower,sf16a18-soc";
+
+	memory {
+		device_type = "memory";
+		reg =  <0x00000000 0x10000000>;
+	};
+};
+
+
+&spi0 {
+	status = "okay";
+	//use-dma;
+	dmas = <&gdma 10
+	&gdma 11>;
+	dma-names = "tx", "rx";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	spiflash:w25q128@0 {
+		compatible = "w25q128";
+		reg = <0>;	/* chip select */
+		spi-max-frequency = <33000000>;
+
+		bank-width = <2>;
+		device-width = <2>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "spl-loader";
+			reg = <0x0 0x20000>; /* 128k */
+			read-only;
+		};
+
+		partition@20000 {
+			label = "u-boot";
+			reg = <0x20000 0x60000>; /* 384k */
+		};
+
+		partition@80000 {
+			label = "u-boot-env";
+			reg = <0x80000 0x10000>; /* 64k */
+		};
+
+		factory:partition@90000 {
+			label = "factory";
+			reg = <0x90000 0x10000>; /* 64k */
+		};
+
+		partition@a0000 {
+			label = "firmware";
+			reg = <0xa0000 0xf60000>; /* 640k-16M */
+		};
+	};
+
+	spidev: spi@8200000 {
+		compatible = "rohm,dh2228fv";
+		reg = <1>;
+		clock = <50000000>;
+		spi-cpha;
+		spi-cpol;
+		spi-max-frequency=<12000000>;
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&timer0 {
+	status = "okay";
+};

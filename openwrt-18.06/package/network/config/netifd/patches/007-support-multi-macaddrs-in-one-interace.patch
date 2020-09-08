@@ -1,0 +1,44 @@
+diff -uprN netifd-2018-12-16-2750ce2e.orig/bridge.c netifd-2018-12-16-2750ce2e/bridge.c
+--- netifd-2018-12-16-2750ce2e.orig/bridge.c	2019-12-02 14:52:49.170857546 +0800
++++ netifd-2018-12-16-2750ce2e/bridge.c	2019-12-02 14:53:33.138859391 +0800
+@@ -450,7 +450,7 @@ bridge_member_update(struct vlist_tree *
+ 
+ 
+ static void
+-bridge_add_member(struct bridge_state *bst, const char *name, bool inherit)
++bridge_add_member(struct bridge_state *bst, const char *name, bool inherit, int index)
+ {
+ 	struct device *dev;
+ 	struct device *br_dev = &(bst->dev);
+@@ -469,6 +469,13 @@ bridge_add_member(struct bridge_state *b
+ 			dev->settings.flags |= DEV_OPT_BRINPUT_DISABLE;
+ 			dev->settings.disable_input = br_dev->settings.disable_input;
+ 		}
++		if(br_dev->settings.flags & DEV_OPT_MACADDR){
++			dev->settings.flags |= DEV_OPT_MACADDR;
++			memcpy(dev->settings.macaddr,br_dev->settings.macaddr,
++						sizeof(dev->settings.macaddr));
++			dev->settings.macaddr[sizeof(dev->settings.macaddr) - 1] =
++				dev->settings.macaddr[sizeof(dev->settings.macaddr) - 1] + index;
++		}
+ 	}
+ 	bridge_create_member(bst, name, dev, false);
+ }
+@@ -554,6 +561,7 @@ bridge_config_init(struct device *dev)
+ 	struct bridge_state *bst;
+ 	struct blob_attr *cur;
+ 	int rem;
++	int index = 0;
+ 
+ 	bst = container_of(dev, struct bridge_state, dev);
+ 
+@@ -566,7 +574,8 @@ bridge_config_init(struct device *dev)
+ 	vlist_update(&bst->members);
+ 	if (bst->ifnames) {
+ 		blobmsg_for_each_attr(cur, bst->ifnames, rem) {
+-			bridge_add_member(bst, blobmsg_data(cur), true);
++			bridge_add_member(bst, blobmsg_data(cur), true, index);
++			index++;
+ 		}
+ 	}
+ 	vlist_flush(&bst->members);

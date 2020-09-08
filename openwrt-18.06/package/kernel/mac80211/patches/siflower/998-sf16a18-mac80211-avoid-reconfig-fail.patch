@@ -1,0 +1,18 @@
+diff -uprN backports-4.19.7-1.orig/net/mac80211/util.c backports-4.19.7-1.new/net/mac80211/util.c
+--- backports-4.19.7-1.orig/net/mac80211/util.c	2019-12-05 17:10:02.486080626 +0800
++++ backports-4.19.7-1.new/net/mac80211/util.c	2019-12-05 17:13:53.090090304 +0800
+@@ -2257,7 +2257,13 @@ int ieee80211_reconfig(struct ieee80211_
+ 	 * If this is for hw restart things are still running.
+ 	 * We may want to change that later, however.
+ 	 */
+-	if (local->open_count && (!suspended || reconfig_due_to_wowlan))
++	/*
++	 * moidfy by robert for RM#2092
++	 * we should notify the driver that reconfig has complete at any time when reconfig complete,
++	 * for the wireless driver will change some flag in ops reconfig_complete
++	 */
++	//if (local->open_count && (!suspended || reconfig_due_to_wowlan))
++	if (!suspended || reconfig_due_to_wowlan)
+ 		drv_reconfig_complete(local, IEEE80211_RECONFIG_TYPE_RESTART);
+ 
+ 	if (!suspended)

@@ -1,0 +1,22 @@
+#
+# Siflower SoC common stuff
+#
+platform-$(CONFIG_SIFLOWER)	+= siflower/
+cflags-$(CONFIG_SIFLOWER)	+= -I$(srctree)/arch/mips/include/asm/mach-siflower
+
+ifdef CONFIG_KVM_GUEST
+    load-$(CONFIG_SIFLOWER)	+= 0x0000000040100000
+else
+    load-$(CONFIG_SIFLOWER)	+= 0xffffffff80100000
+endif
+
+#
+# Siflower sf16a18
+cflags-$(CONFIG_SOC_SF16A18)	+= -I$(srctree)/arch/mips/include/asm/mach-siflower/
+
+#
+# Siflower sf19a28
+#
+cflags-$(CONFIG_SOC_SF19A28)	+= -I$(srctree)/arch/mips/include/asm/mach-siflower/
+
+all-$(CONFIG_SIFLOWER)	:= $(COMPRESSION_FNAME).bin
