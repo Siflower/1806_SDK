@@ -1442,6 +1442,21 @@ msgstr "无法连接到设备！仍旧等待设备…"
 msgid "Diagnostics"
 msgstr "网络诊断"
 
+msgid "Auto-adapt"
+msgstr "wan/lan自适应"
+
+msgid "Manual Set"
+msgstr "手动配置"
+
+msgid "Auto Set"
+msgstr "自动配置"
+
+msgid "Auto Start"
+msgstr "开机自启动"
+
+msgid "Set Now"
+msgstr "立即配置"
+
 #: protocols/luci-proto-3g/htdocs/luci-static/resources/protocol/3g.js:101
 #: protocols/luci-proto-ncm/htdocs/luci-static/resources/protocol/ncm.js:93
 msgid "Dial number"

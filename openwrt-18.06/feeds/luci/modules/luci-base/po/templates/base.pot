@@ -1403,6 +1403,21 @@ msgstr ""
 msgid "Diagnostics"
 msgstr ""
 
+msgid "Auto-adapt"
+msgstr ""
+
+msgid "Manual Set"
+msgstr ""
+
+msgid "Auto Set"
+msgstr ""
+
+msgid "Auto Start"
+msgstr ""
+
+msgid "Set Now"
+msgstr ""
+
 #: protocols/luci-proto-3g/htdocs/luci-static/resources/protocol/3g.js:101
 #: protocols/luci-proto-ncm/htdocs/luci-static/resources/protocol/ncm.js:93
 msgid "Dial number"

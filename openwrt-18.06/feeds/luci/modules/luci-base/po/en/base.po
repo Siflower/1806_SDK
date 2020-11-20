@@ -1443,6 +1443,21 @@ msgstr ""
 msgid "Diagnostics"
 msgstr "Diagnostics"
 
+msgid "Auto-adapt"
+msgstr "WAN/LAN Auto-adapt"
+
+msgid "Manual Set"
+msgstr "Manual Set"
+
+msgid "Auto Set"
+msgstr "Auto Set"
+
+msgid "Auto Start"
+msgstr "Auto Start"
+
+msgid "Set Now"
+msgstr "Set Now"
+
 #: protocols/luci-proto-3g/htdocs/luci-static/resources/protocol/3g.js:101
 #: protocols/luci-proto-ncm/htdocs/luci-static/resources/protocol/ncm.js:93
 msgid "Dial number"

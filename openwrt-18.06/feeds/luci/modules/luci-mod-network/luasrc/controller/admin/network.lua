@@ -4,6 +4,9 @@
 
 module("luci.controller.admin.network", package.seeall)
 
+local uci = require "luci.model.uci"
+local json = require "luci.json"
+
 function index()
 	local page
 
@@ -58,6 +61,19 @@ function index()
 
 		page = entry({"admin", "network", "diag_traceroute6"}, post("diag_traceroute6"), nil)
 		page.leaf = true
+
+		local auto_adapt_html_en = io.open("/bin/auto_adapt.sh")
+		if auto_adapt_html_en then
+			auto_adapt_html_en:close()
+			page = node("admin", "network", "auto_adapt")
+			page.target = template("admin_network/auto_adapt")
+			page.title  = _("Auto-adapt")
+			page.order  = 70
+
+			page = entry({"admin", "network", "set_port"}, post("set_port"), nil)
+			page.leaf = true
+		end
+
 --	end
 end
 
@@ -144,6 +160,43 @@ function diag_command(cmd, addr)
 	end
 
 	luci.http.status(500, "Bad address")
+end
+
+function set_port(cmd)
+	luci.http.prepare_content("text/plain")
+	local result = "set finish!"
+	if cmd == "disable" then
+		uci:set("network","lan","auto_adapt",0)
+		uci:commit("network")
+	elseif cmd == "enable" then
+		uci:set("network","lan","auto_adapt",1)
+		uci:commit("network")
+	elseif cmd == "start" then
+		os.execute("/bin/auto_adapt.sh start")
+	elseif cmd == "get" then
+		local result_t = {}
+		local connected = {}
+
+		local file = io.popen("uci get network.@switch_vlan[1].ports | awk -F ' ' '{print $1}'")
+		result_t["wan"] = file:read("*a"):match("%d")
+		file:close()
+
+		local file = io.popen("cat /sys/kernel/debug/gsw_debug | grep 'status 1' | awk -F ' ' '{print $1}'")
+		local connect_info = file:read("*a")
+		file:close()
+		for k in string.gmatch(connect_info,"phy(%d)") do
+			connected[#connected + 1] = tonumber(k) + 1
+		end
+		result_t["connect"] = connected
+
+		result_t["enable"] = uci:get("network","lan","auto_adapt") or 0
+		result = json.encode(result_t)
+	else
+		result = "set port "..cmd.." as wan!"
+		os.execute("/bin/auto_adapt.sh set "..cmd)
+	end
+	luci.http.write(result)
+	return
 end
 
 function diag_ping(addr)

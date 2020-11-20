@@ -11,35 +11,29 @@ if [ ! $? -eq 0 ] ; then
 	branch="default"
 else
 	# branch=`git branch  -r | grep "\->" |awk -F "/" 'END{print $NF}'`
-	#local_branch_name=`git branch -vv |grep "*" |awk '{print $2}'`
+	local_branch_name=`git branch -vv |grep "*" |awk '{print $2}'`
 	# echo "local branch name $local_branch_name"
-	local_branch_name=github
 	if [ "$local_branch_name" = "(no" ]; then
 		echo "branch set fail no local branch"
 		exit 1
 	fi
 
-	#branch=`git branch -vv |grep "*" | awk -F "[][]" '{print $2}'| awk -F "[/:]" '{print $2}'`
-	branch=github
+	branch=`git branch -vv |grep "*" | awk -F "[][]" '{print $2}'| awk -F "[/:]" '{print $2}'`
 	echo "branch is $branch"
 
-#	tag=`git tag  |  grep "${branch}-" | sort -V | awk 'END{print}'`
-#	if [ ! -n "$tag" ] ;then
+	tag=`git tag  |  grep "${branch}-" | sort -V | awk 'END{print}'`
+	if [ ! -n "$tag" ] ;then
 		#compatible with old version
-#		tag=`git tag  |  grep -v "v"  | sort -V | awk 'END{print}'`
-#		version=$tag
-#	else
+		tag=`git tag  |  grep -v "v"  | sort -V | awk 'END{print}'`
+		version=$tag
+	else
 		# version=`printf "$tag" | awk -F "[-]" '{print $2}'`
-#		 version=`echo ${tag##*-}`
-#	fi
-
-	version=1
+		 version=`echo ${tag##*-}`
+	fi
 	echo "version is $version"
-	#tag_commit=`git show $tag|grep ^commit | awk '{print substr($2,0,7)}'`
-	tag_commit=2
+	tag_commit=`git show $tag|grep ^commit | awk '{print substr($2,0,7)}'`
 	echo "tag commit $tag_commit"
-	#last_commit=`git rev-parse --short HEAD`
-	last_commit=2
+	last_commit=`git rev-parse --short HEAD`
 	echo "last commit $last_commit"
 
 	if [ $tag_commit != $last_commit ]; then
@@ -115,6 +109,10 @@ echo "set openwrt version"
 
 echo "set up board $target_config"
 
+if [ "$imgtype" = "flash" ]; then
+	target_board=target/linux/siflower/${chip}_p10_${chip_ver}_flash.config
+fi
+
 if [ -f .board ] && [ "$imagetype" != "auto" ]; then
 	cmp_reselt=`cmp $target_board .config`
 	if [ -n "$cmp_reselt" ]; then
@@ -135,6 +133,9 @@ case ${imgtype} in
 		echo "build auto"
 		;;
 
+	flash)
+		echo "build flash"
+		;;
 	rel)
 		echo "build release"
 		;;
