@@ -1,7 +1,8 @@
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/dfs.c hostapd-2018-05-21-62566bc2/src/ap/dfs.c
---- hostapd-2018-05-21-62566bc2.orig/src/ap/dfs.c	2019-12-02 10:39:17.922219193 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/dfs.c	2019-12-02 10:42:24.778227034 +0800
-@@ -811,6 +811,23 @@ int hostapd_dfs_complete_cac(struct host
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/dfs.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/dfs.c	2019-08-07 21:25:25.000000000 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/dfs.c	2020-11-11 16:54:05.355032560 +0800
+@@ -812,6 +812,23 @@
  				iface->cac_started = 0;
  			}
  		}

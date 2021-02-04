@@ -1,34 +1,11 @@
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/acs.h hostapd-2018-05-21-62566bc2/src/ap/acs.h
---- hostapd-2018-05-21-62566bc2.orig/src/ap/acs.h	2019-11-29 10:02:49.382990184 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/acs.h	2019-11-29 10:04:32.642994517 +0800
-@@ -14,7 +14,7 @@
-
- enum hostapd_chan_status acs_init(struct hostapd_iface *iface);
- void acs_cleanup(struct hostapd_iface *iface);
--
-+void ap_dynamic_select_channel_timeout(void *eloop_ctx, void *timeout_ctx);
- #else /* CONFIG_ACS */
-
- static inline enum hostapd_chan_status acs_init(struct hostapd_iface *iface)
-@@ -27,6 +27,11 @@ static inline void acs_cleanup(struct ho
- {
- }
-
-+void ap_dynamic_select_channel_timeout(void *eloop_ctx, void *timeout_ctx)
-+{
-+	wpa_printf(MSG_ERROR, "ACS was disabled on your build, rebuild hostapd with CONFIG_ACS=y or set channel");
-+	return;
-+}
- #endif /* CONFIG_ACS */
-
- #endif /* ACS_H */
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/acs.c hostapd-2018-05-21-62566bc2/src/ap/acs.c
---- hostapd-2018-05-21-62566bc2.orig/src/ap/acs.c	2019-11-29 10:02:49.334990182 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/acs.c	2019-11-29 10:39:19.979082114 +0800
-@@ -583,6 +583,24 @@ acs_find_ideal_chan(struct hostapd_iface
- 		   n_chans == 2 ? 40 :
- 		   80);
-
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/acs.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/acs.c	2020-11-11 11:31:23.714220032 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/acs.c	2020-11-11 11:52:14.310272514 +0800
+@@ -605,6 +605,24 @@
+ 	wpa_printf(MSG_DEBUG,
+ 		   "ACS: Survey analysis for selected bandwidth %d MHz", bw);
+ 
 +	FILE *channel_file = NULL;
 +	u8 acs_chan_last_chan = 0;
 +	char buf[8];
@@ -50,10 +27,10 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/acs.c hostapd-2018-05-21-6256
  	for (i = 0; i < iface->current_mode->num_channels; i++) {
  		double total_weight;
  		struct acs_bias *bias, tmp_bias;
-@@ -615,6 +633,16 @@ acs_find_ideal_chan(struct hostapd_iface
- 			continue;
+@@ -660,6 +678,16 @@
+ 			}
  		}
-
+ 
 +		if(acs_chan_last_chan && acs_chan_last_chan == chan->chan)
 +		{
 +			//current channel(last channel) is not busy enouth to have to change it
@@ -67,9 +44,9 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/acs.c hostapd-2018-05-21-6256
  		factor = 0;
  		if (acs_usable_chan(chan))
  			factor = chan->interference_factor;
-@@ -678,7 +706,15 @@ acs_find_ideal_chan(struct hostapd_iface
+@@ -730,7 +758,15 @@
  		factor /= total_weight;
-
+ 
  		bias = NULL;
 -		if (iface->conf->acs_chan_bias) {
 +		if(acs_chan_last_chan)
@@ -84,8 +61,8 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/acs.c hostapd-2018-05-21-6256
  			for (k = 0; k < iface->conf->num_acs_chan_bias; k++) {
  				bias = &iface->conf->acs_chan_bias[k];
  				if (bias->channel == chan->chan)
-@@ -921,3 +957,19 @@ enum hostapd_chan_status acs_init(struct
-
+@@ -977,3 +1013,19 @@
+ 
  	return HOSTAPD_CHAN_ACS;
  }
 +
@@ -104,10 +81,36 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/acs.c hostapd-2018-05-21-6256
 +	eloop_terminate();
 +	return;
 +}
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.c hostapd-2018-05-21-62566bc2/src/ap/ap_config.c
---- hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.c	2019-11-29 10:02:49.334990182 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/ap_config.c	2019-11-29 10:05:27.578996823 +0800
-@@ -226,6 +226,11 @@ struct hostapd_config * hostapd_config_d
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/acs.h
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/acs.h	2019-08-07 21:25:25.000000000 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/acs.h	2020-11-11 11:36:36.474233157 +0800
+@@ -14,6 +14,7 @@
+ 
+ enum hostapd_chan_status acs_init(struct hostapd_iface *iface);
+ void acs_cleanup(struct hostapd_iface *iface);
++void ap_dynamic_select_channel_timeout(void *eloop_ctx, void *timeout_ctx);
+ 
+ #else /* CONFIG_ACS */
+ 
+@@ -27,6 +28,12 @@
+ {
+ }
+ 
++void ap_dynamic_select_channel_timeout(void *eloop_ctx, void *timeout_ctx)
++{
++	wpa_printf(MSG_ERROR, "ACS was disabled on your build, rebuild hostapd with CONFIG_ACS=y or set channel");
++	return;
++}
++
+ #endif /* CONFIG_ACS */
+ 
+ #endif /* ACS_H */
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ap_config.c	2020-11-11 11:31:23.790220035 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.c	2020-11-11 11:54:03.774277108 +0800
+@@ -242,6 +242,11 @@
  	conf->acs_ch_list.num = 0;
  #ifdef CONFIG_ACS
  	conf->acs_num_scans = 5;
@@ -117,12 +120,13 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.c hostapd-2018-05-2
 +	conf->acs_chan_busy_per = 50;
 +	conf->acs_chan_bet_per = 20;
  #endif /* CONFIG_ACS */
-
- 	/* The third octet of the country string uses an ASCII space character
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.h hostapd-2018-05-21-62566bc2/src/ap/ap_config.h
---- hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.h	2019-11-29 10:02:49.306990181 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/ap_config.h	2019-11-29 10:07:13.447001266 +0800
-@@ -817,6 +817,11 @@ struct hostapd_config {
+ 
+ #ifdef CONFIG_IEEE80211AX
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.h
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ap_config.h	2020-11-11 11:31:23.790220035 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.h	2020-11-11 11:55:32.854280846 +0800
+@@ -976,6 +976,11 @@
  		double bias;
  	} *acs_chan_bias;
  	unsigned int num_acs_chan_bias;
@@ -132,26 +136,28 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.h hostapd-2018-05-2
 +	unsigned int acs_chan_busy_per;
 +	unsigned int acs_chan_bet_per;
  #endif /* CONFIG_ACS */
+ 
  	int sta_min_dbm;
- 	int prohibit_weak_sig_sta_enable;
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/hostapd.c hostapd-2018-05-21-62566bc2/src/ap/hostapd.c
---- hostapd-2018-05-21-62566bc2.orig/src/ap/hostapd.c	2019-11-29 10:02:49.382990184 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/hostapd.c	2019-11-29 10:14:34.431019772 +0800
-@@ -2051,6 +2051,10 @@ dfs_offload:
-
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/hostapd.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/hostapd.c	2020-11-11 11:31:23.754220033 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/hostapd.c	2020-11-11 11:59:18.170290302 +0800
+@@ -2086,6 +2086,10 @@
+ 
  	for (j = 0; j < iface->num_bss; j++)
- 		hostapd_set_own_neighbor_report(iface->bss[j]);
+ 		hostapd_neighbor_set_own_report(iface->bss[j]);
 +	//setup of interface done,if user have dynamic channel select enable,loop a timer
 +	if(hapd->iconf->acs_chan_dynamic_select_enable)
 +	      eloop_register_timeout(hapd->iconf->acs_chan_dynamic_select_period * 60, 0,
 +				      ap_dynamic_select_channel_timeout, hapd, NULL);
-
+ 
  	return 0;
-
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/hw_features.c hostapd-2018-05-21-62566bc2/src/ap/hw_features.c
---- hostapd-2018-05-21-62566bc2.orig/src/ap/hw_features.c	2019-11-29 10:02:49.334990182 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/hw_features.c	2019-11-29 10:16:25.767024444 +0800
-@@ -819,6 +819,18 @@ int hostapd_acs_completed(struct hostapd
+ 
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/hw_features.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/hw_features.c	2020-11-11 11:31:23.346220016 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/hw_features.c	2020-11-11 12:00:56.778294440 +0800
+@@ -833,6 +833,18 @@
  			hostapd_hw_get_freq(iface->bss[0],
  					    iface->conf->channel),
  			iface->conf->channel);

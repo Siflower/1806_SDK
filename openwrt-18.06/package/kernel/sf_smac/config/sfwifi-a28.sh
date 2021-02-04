@@ -36,7 +36,7 @@ insmod_umac(){
     modparams="
     ht_on=${ht_on-1}
     vht_on=${vht_on-1}
-    he_on=${he_on-1}
+    he_on=${he_on-0}
     ldpc_on=${ldpc_on-1}
     stbc_on=${stbc_on-1}
     phycfg=${phycfg-0}
@@ -62,6 +62,8 @@ insmod_umac(){
     tdls=${tdls-1}
     txpower_lvl=${txpower_lvl-1}
     uf=${uf-0}
+    ampdu_max_cnt=${ampdu_max_cnt-32}
+    independent_antenna_control=${independent_antenna_control-0}
     "
     smac_modparams="
     mfp_on=${mfp_on-0}

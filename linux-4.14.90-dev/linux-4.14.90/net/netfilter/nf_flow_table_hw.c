@@ -9,10 +9,9 @@
 #include <net/netfilter/nf_conntrack_core.h>
 #include <net/netfilter/nf_conntrack_tuple.h>
 
-static DEFINE_SPINLOCK(flow_offload_hw_pending_list_lock);
-static LIST_HEAD(flow_offload_hw_pending_list);
-
-static DEFINE_MUTEX(nf_flow_offload_hw_mutex);
+// static DEFINE_SPINLOCK(flow_offload_hw_pending_list_lock);
+// static LIST_HEAD(flow_offload_hw_pending_list);
+// static DEFINE_MUTEX(nf_flow_offload_hw_mutex);
 
 struct flow_offload_hw {
 	struct list_head	list;
@@ -86,10 +85,12 @@ static void flow_offload_hw_free(struct flow_offload_hw *offload)
 	dev_put(offload->dest.dev);
 	if (offload->ct)
 		nf_conntrack_put(&offload->ct->ct_general);
-	list_del(&offload->list);
+	// list_del(&offload->list);
 	kfree(offload);
 }
 
+//RM#8396 use sync method make sure add - del  in order
+#if 0
 static void flow_offload_hw_work(struct work_struct *work)
 {
 	struct flow_offload_hw *offload, *next;
@@ -102,16 +103,18 @@ static void flow_offload_hw_work(struct work_struct *work)
 	list_for_each_entry_safe(offload, next, &hw_offload_pending, list) {
 		mutex_lock(&nf_flow_offload_hw_mutex);
 		switch (offload->type) {
-		case FLOW_OFFLOAD_ADD:
-			if (nf_ct_is_dying(offload->ct))
-				break;
+			case FLOW_OFFLOAD_ADD:
+				if (nf_ct_is_dying(offload->ct))
+				  break;
 
-			if (do_flow_offload_hw(offload) >= 0)
-				offload->flow->flags |= FLOW_OFFLOAD_HW;
-			break;
-		case FLOW_OFFLOAD_DEL:
-			do_flow_offload_hw(offload);
-			break;
+				if (do_flow_offload_hw(offload) >= 0)
+				  offload->flow->flags |= FLOW_OFFLOAD_HW;
+				break;
+			case FLOW_OFFLOAD_DEL:
+				do_flow_offload_hw(offload);
+				break;
+			case FLOW_OFFLOAD_FLOW_NULL:
+				break;
 		}
 		mutex_unlock(&nf_flow_offload_hw_mutex);
 
@@ -127,7 +130,7 @@ static void flow_offload_queue_work(struct flow_offload_hw *offload)
 
 	schedule_work(&nf_flow_offload_hw_work);
 }
-
+#endif
 static struct flow_offload_hw *
 flow_offload_hw_prepare(struct net *net, struct flow_offload *flow)
 {
@@ -171,14 +174,27 @@ static void flow_offload_hw_add(struct net *net, struct flow_offload *flow,
 	struct flow_offload_hw *offload;
 
 	offload = flow_offload_hw_prepare(net, flow);
-	if (!offload)
+	if (!offload){
+		// printk("offload check\n");
 		return;
+	}
 
 	nf_conntrack_get(&ct->ct_general);
 	offload->type = FLOW_OFFLOAD_ADD;
 	offload->ct = ct;
 
-	flow_offload_queue_work(offload);
+	if (nf_ct_is_dying(offload->ct)){
+		// printk("ct dyin\n");
+		goto err_free;
+	}
+
+	if (do_flow_offload_hw(offload) >= 0)
+	  offload->flow->flags |= FLOW_OFFLOAD_HW;
+
+err_free:
+	flow_offload_hw_free(offload);
+	return;
+	// flow_offload_queue_work(offload);
 }
 
 static void flow_offload_hw_del(struct net *net, struct flow_offload *flow)
@@ -186,12 +202,24 @@ static void flow_offload_hw_del(struct net *net, struct flow_offload *flow)
 	struct flow_offload_hw *offload;
 
 	offload = flow_offload_hw_prepare(net, flow);
-	if (!offload)
+	if (!offload){
+		// printk("offload check\n");
 		return;
+	}
+	// offload->type = FLOW_OFFLOAD_FLOW_NULL;
+	// mutex_lock(&nf_flow_offload_hw_mutex);
+	// do_flow_offload_hw(offload);
+	// mutex_unlock(&nf_flow_offload_hw_mutex);
 
 	offload->type = FLOW_OFFLOAD_DEL;
+	do_flow_offload_hw(offload);
 
-	flow_offload_queue_work(offload);
+	// flow_offload_queue_work(offload);
+
+	offload->flow->flags &= ~(FLOW_OFFLOAD_HW);
+	flow_offload_hw_free(offload);
+
+	return;
 }
 
 static const struct nf_flow_table_hw flow_offload_hw = {
@@ -202,7 +230,7 @@ static const struct nf_flow_table_hw flow_offload_hw = {
 
 static int __init nf_flow_table_hw_module_init(void)
 {
-	INIT_WORK(&nf_flow_offload_hw_work, flow_offload_hw_work);
+	// INIT_WORK(&nf_flow_offload_hw_work, flow_offload_hw_work);
 	nf_flow_table_hw_register(&flow_offload_hw);
 
 	return 0;
@@ -210,14 +238,14 @@ static int __init nf_flow_table_hw_module_init(void)
 
 static void __exit nf_flow_table_hw_module_exit(void)
 {
-	struct flow_offload_hw *offload, *next;
-	LIST_HEAD(hw_offload_pending);
+	// struct flow_offload_hw *offload, *next;
+	// LIST_HEAD(hw_offload_pending);
 
 	nf_flow_table_hw_unregister(&flow_offload_hw);
-	cancel_work_sync(&nf_flow_offload_hw_work);
+	// cancel_work_sync(&nf_flow_offload_hw_work);
 
-	list_for_each_entry_safe(offload, next, &hw_offload_pending, list)
-		flow_offload_hw_free(offload);
+	// list_for_each_entry_safe(offload, next, &hw_offload_pending, list)
+	// 	flow_offload_hw_free(offload);
 }
 
 module_init(nf_flow_table_hw_module_init);

@@ -1,0 +1,32 @@
+Index: dnsmasq-2.80/src/config.h
+===================================================================
+--- dnsmasq-2.80.orig/src/config.h	2020-12-14 20:23:56.752722843 +0800
++++ dnsmasq-2.80/src/config.h	2020-12-14 20:27:05.412730760 +0800
+@@ -34,7 +34,11 @@
+ #define CACHESIZ 150 /* default cache size */
+ #define TTL_FLOOR_LIMIT 3600 /* don't allow --min-cache-ttl to raise TTL above this under any circumstances */
+ #define MAXLEASES 1000 /* maximum number of DHCP leases */
++#ifdef QUICK_ICMP
++#define PING_WAIT 0.5 /* wait for ping address-in-use test, 50ms from huawei */
++#else
+ #define PING_WAIT 3 /* wait for ping address-in-use test */
++#endif
+ #define PING_CACHE_TIME 30 /* Ping test assumed to be valid this long. */
+ #define DECLINE_BACKOFF 600 /* disable DECLINEd static addresses for this long */
+ #define DHCP_PACKET_MAX 16384 /* hard limit on DHCP packet size */
+Index: dnsmasq-2.80/src/dnsmasq.c
+===================================================================
+--- dnsmasq-2.80.orig/src/dnsmasq.c	2020-12-14 20:23:56.752722843 +0800
++++ dnsmasq-2.80/src/dnsmasq.c	2020-12-14 20:28:27.172734191 +0800
+@@ -953,7 +953,11 @@
+       /* Whilst polling for the dbus, or doing a tftp transfer, wake every quarter second */
+       if (daemon->tftp_trans ||
+ 	  (option_bool(OPT_DBUS) && !daemon->dbus))
++#ifdef QUICK_ICMP
++	timeout = 50;
++#else
+ 	timeout = 250;
++#endif
+ 
+       /* Wake every second whilst waiting for DAD to complete */
+       else if (is_dad_listeners())

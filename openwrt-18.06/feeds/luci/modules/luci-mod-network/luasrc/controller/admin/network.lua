@@ -181,7 +181,7 @@ function set_port(cmd)
 		result_t["wan"] = file:read("*a"):match("%d")
 		file:close()
 
-		local file = io.popen("cat /sys/kernel/debug/gsw_debug | grep 'status 1' | awk -F ' ' '{print $1}'")
+		local file = io.popen("cat /sys/kernel/debug/esw_debug | grep 'status 1' | awk -F ' ' '{print $1}'")
 		local connect_info = file:read("*a")
 		file:close()
 		for k in string.gmatch(connect_info,"phy(%d)") do

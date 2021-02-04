@@ -53,7 +53,13 @@ for dev in /sys/class/net/*; do
 	irq_cpu_mask="$((1 << $irq_cpu))"
 
 	for q in ${dev}/queues/rx-*; do
+		# RM#8294 fix interrupt (wifi->gmac) on cpu2
+		gmac_interrupt="$(echo $device | grep gmac)"
+		if [ $gmac_interrupt ];then
+			set_hex_val "$q/rps_cpus" "4"
+		else
 		set_hex_val "$q/rps_cpus" "$(($PROC_MASK & ~$irq_cpu_mask))"
+		fi
 	done
 
 	ntxq="$(ls -d ${dev}/queues/tx-* | wc -l)"

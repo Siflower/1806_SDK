@@ -23,7 +23,7 @@ local route_host = luci.config.diag and luci.config.diag.route or "dev.openwrt.o
 	function set_auto_adapt(port)
 	{
 		if ( en_btn == 1 ){
-			en_btn = 0
+			en_btn = 0;
 			var stxhr = new XHR();
 			var output;
 			if ( port == "start" )
@@ -50,6 +50,7 @@ local route_host = luci.config.diag and luci.config.diag.route or "dev.openwrt.o
 							document.getElementById('b'+old_wan).value='lan';
 							get_auto_adapt()
 							output.innerHTML = '';
+							en_btn = 1;
 						}
 						else
 						{

@@ -30,63 +30,13 @@ endchoice
 
 if SF16A18_FULL_MASK
 
-config DT_SF16A18_FULLMASK_P20
-	bool "Built-in device tree for sf16a18 full mask p20 boards"
-	default n
-	select BUILTIN_DTB
-	help
-	  Add an FDT blob for XLP EVP boards into the kernel.
-	  This DTB will be used if the firmware does not pass in a DTB
-	  pointer to the kernel.  The corresponding DTS file is at
-	  arch/mips/boot/dts/sf16a18_fullmask_p20.dts
-
 config DT_SF16A18_FULLMASK_EVB_V5
 	bool "Built-in device tree for sf16a18 full mask evb_v5 boards"
 	default n
 	select BUILTIN_DTB
 	help
-	  Add an FDT blob for XLP EVB_V5 boards into the kernel.
-	  This DTB will be used if the firmware does not pass in a DTB
-	  pointer to the kernel.  The corresponding DTS file is at
-	  arch/mips/boot/dts/sf16a18_fullmask_p20.dts
-
-config DT_SF16A18_FULLMASK_86V
-	bool "Built-in device tree for sf16a18 86v boards"
-	default n
-	select BUILTIN_DTB
-	help
 	  The corresponding DTS file is at
-	  arch/mips/boot/dts/sf16a18_fullmask_86v.dts
-
-config DT_SF16A18_FULLMASK_AC20_SJBY
-      bool "Built-in device tree for sf16a18 full mask ac20 boards"
-      default n
-      select BUILTIN_DTB
-      help
-      Add an FDT blob for XLP EVP boards into the kernel.
-      This DTB will be used if the firmware does not pass in a DTB
-      pointer to the kernel.  The corresponding DTS file is at
-      arch/mips/boot/dts/sf16a18_fullmask_ac20_sjby.dts
-
-config DT_SF16A18_FULLMASK_AC20
-      bool "Built-in device tree for sf16a18 full mask ac20 boards"
-      default n
-      select BUILTIN_DTB
-      help
-      Add an FDT blob for XLP EVP boards into the kernel.
-      This DTB will be used if the firmware does not pass in a DTB
-      pointer to the kernel.  The corresponding DTS file is at
-      arch/mips/boot/dts/sf16a18_fullmask_ac20.dts
-
-config DT_SF16A18_FULLMASK_P10H
-      bool "Built-in device tree for sf16a18 full mask p10h boards"
-      default n
-      select BUILTIN_DTB
-      help
-      Add an FDT blob for XLP EVP boards into the kernel.
-      This DTB will be used if the firmware does not pass in a DTB
-      pointer to the kernel.  The corresponding DTS file is at
-
+	  arch/mips/boot/dts/sf16a18_fullmask_p20.dts
 
 endif #SF16A18_FULL_MASK
 
@@ -115,35 +65,26 @@ config DT_SF19A28_FULLMASK_FPGA
 	default n
 	select BUILTIN_DTB
 	help
-	  Add an FDT blob for XLP EVP boards into the kernel.
-	  This DTB will be used if the firmware does not pass in a DTB
-	  pointer to the kernel.  The corresponding DTS file is at
+	  The corresponding DTS file is at
 	  arch/mips/boot/dts/sf19a28_fullmask_fpga.dts
 
-endif #SF19A28_FULLMASK
-
-if SF19A28_MPW1
-
-config DT_SF19A28_MPW1_AC28
-	bool "Built-in device tree for sf19a28 mpw1 ac28"
+config DT_SF19A28_FULLMASK_EVB
+	bool "Built-in device tree for sf19a28 fullmask evb"
 	default n
 	select BUILTIN_DTB
 	help
-	  Add an FDT blob for XLP EVP boards into the kernel.
-	  This DTB will be used if the firmware does not pass in a DTB
-	  pointer to the kernel.  The corresponding DTS file is at
+	  The corresponding DTS file is at
+	  arch/mips/boot/dts/sf19a28_fullmask_evb.dts
+
+config DT_SF19A28_FULLMASK_AC28
+	bool "Built-in device tree for sf19a28 fullmask ac28"
+	default n
+	select BUILTIN_DTB
+	help
+	  The corresponding DTS file is at
 	  arch/mips/boot/dts/sf19a28_fullmask_ac28.dts
 
-config DT_SF19A28_MPW1_AC22
-	bool "Built-in device tree for sf19a28 mpw1 ac22"
-	default n
-	select BUILTIN_DTB
-	help
-	  Add an FDT blob for XLP EVP boards into the kernel.
-	  This DTB will be used if the firmware does not pass in a DTB
-	  pointer to the kernel.  The corresponding DTS file is at
-	  arch/mips/boot/dts/sf19a28_fullmask_ac22.dts
-endif #SF19A28_MPW1
+endif #SF19A28_FULLMASK
 
 
 endif #SOC_SF19A28
@@ -168,7 +109,7 @@ config CORE1_MEM_RES
 	default n
 config SIFLOWER_TIMER_CLKSRC
 	bool "Enable SiFlower Timer based clocksource"
-	depends on SOC_SF16A18
+	depends on SIFLOWER
 	select CLKSRC_SFAX8_TIMER
 	select MIPS_EXTERNAL_TIMER
 	help

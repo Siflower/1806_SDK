@@ -524,7 +524,7 @@ static u32 dwc2_read_common_intr(struct dwc2_hsotg *hsotg)
 irqreturn_t dwc2_handle_common_intr(int irq, void *dev)
 {
 	struct dwc2_hsotg *hsotg = dev;
-	u32 gintsts;
+	u32 gintsts,gotgint;
 	irqreturn_t retval = IRQ_NONE;
 
 	spin_lock(&hsotg->lock);
@@ -534,7 +534,17 @@ irqreturn_t dwc2_handle_common_intr(int irq, void *dev)
 		goto out;
 	}
 
+	gotgint = dwc2_readl(hsotg->regs + GOTGINT);
 	gintsts = dwc2_read_common_intr(hsotg);
+	if(gotgint & GOTGINT_MULTVALLPCHNG) {
+		if (hsotg->wq_otg && hsotg->dr_mode == USB_DR_MODE_HOST)
+		{
+			dwc2_handle_conn_id_status_change_intr(hsotg);
+		}
+
+		dwc2_writel(GOTGINT_MULTVALLPCHNG, hsotg->regs + GOTGINT);
+	}
+
 	if (gintsts & ~GINTSTS_PRTINT)
 		retval = IRQ_HANDLED;
 

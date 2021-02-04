@@ -395,6 +395,7 @@ static const struct spi_device_id m25p_ids[] = {
 	{ "mr25h10" },  /*   1 Mib, 40 MHz */
 	{ "mr25h40" },  /*   4 Mib, 40 MHz */
 
+	{"zb25vq64a"},
 	{ },
 };
 MODULE_DEVICE_TABLE(spi, m25p_ids);

@@ -1,7 +1,8 @@
-diff -uprN hostapd-2018-05-21-62566bc2.orig/wpa_supplicant/events.c hostapd-2018-05-21-62566bc2/wpa_supplicant/events.c
---- hostapd-2018-05-21-62566bc2.orig/wpa_supplicant/events.c	2019-11-29 16:22:22.703945887 +0800
-+++ hostapd-2018-05-21-62566bc2/wpa_supplicant/events.c	2019-11-29 16:27:03.791957683 +0800
-@@ -3419,6 +3419,30 @@ static void wpas_event_disconnect(struct
+Index: hostapd-2019-08-08-ca8c2bd2/wpa_supplicant/events.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/wpa_supplicant/events.c	2020-11-11 16:12:06.086926837 +0800
++++ hostapd-2019-08-08-ca8c2bd2/wpa_supplicant/events.c	2020-11-11 16:16:06.626936931 +0800
+@@ -3578,6 +3578,30 @@
  					     locally_generated);
  }
  
@@ -32,19 +33,19 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/wpa_supplicant/events.c hostapd-2018
  
  static void wpas_event_disassoc(struct wpa_supplicant *wpa_s,
  				struct disassoc_info *info)
-@@ -3436,6 +3460,7 @@ static void wpas_event_disassoc(struct w
+@@ -3595,6 +3619,7 @@
  		ie = info->ie;
  		ie_len = info->ie_len;
  		reason_code = info->reason_code;
 +		set_wds_connect_status(addr, reason_code);
  		locally_generated = info->locally_generated;
- 		wpa_dbg(wpa_s, MSG_DEBUG, " * reason %u%s", reason_code,
- 			locally_generated ? " (locally generated)" : "");
-@@ -3490,6 +3515,7 @@ static void wpas_event_deauth(struct wpa
+ 		wpa_dbg(wpa_s, MSG_DEBUG, " * reason %u (%s)%s", reason_code,
+ 			reason2str(reason_code),
+@@ -3650,6 +3675,7 @@
  		ie = info->ie;
  		ie_len = info->ie_len;
  		reason_code = info->reason_code;
 +		set_wds_connect_status(addr, reason_code);
  		locally_generated = info->locally_generated;
- 		wpa_dbg(wpa_s, MSG_DEBUG, " * reason %u%s",
- 			reason_code,
+ 		wpa_dbg(wpa_s, MSG_DEBUG, " * reason %u (%s)%s",
+ 			reason_code, reason2str(reason_code),

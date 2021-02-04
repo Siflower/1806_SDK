@@ -54,6 +54,7 @@ struct mtd_oob_buf64 {
  *			which are defined by the internal ecclayout
  * @MTD_OPS_RAW:	data are transferred as-is, with no error correction;
  *			this mode implies %MTD_OPS_PLACE_OOB
+ * @MTD_OPS_SF_FIXED:	same as MTD_OPS_AUTO_OOB, but it doesn't enable ecc;
  *
  * These modes can be passed to ioctl(MEMWRITE) and are also used internally.
  * See notes on "MTD file modes" for discussion on %MTD_OPS_RAW vs.
@@ -63,6 +64,7 @@ enum {
 	MTD_OPS_PLACE_OOB = 0,
 	MTD_OPS_AUTO_OOB = 1,
 	MTD_OPS_RAW = 2,
+	MTD_OPS_SF_FIXED = 3,
 };
 
 /**
