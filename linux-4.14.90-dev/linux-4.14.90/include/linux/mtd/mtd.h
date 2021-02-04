@@ -208,6 +208,19 @@ struct mtd_pairing_scheme {
 			 const struct mtd_pairing_info *info);
 };
 
+/*
+ * Internal ECC layout control structure. For historical reasons, there is a
+ * similar, smaller struct nand_ecclayout_user (in mtd-abi.h) that is retained
+ * for export to user-space via the ECCGETLAYOUT ioctl.
+ * nand_ecclayout should be expandable in the future simply by the above macros.
+ */
+struct nand_ecclayout {
+	__u32 eccbytes;
+	__u32 eccpos[MTD_MAX_ECCPOS_ENTRIES_LARGE];
+	__u32 oobavail;
+	struct nand_oobfree oobfree[MTD_MAX_OOBFREE_ENTRIES_LARGE];
+};
+
 struct module;	/* only needed for owner field in mtd_info */
 
 /**
@@ -282,6 +295,9 @@ struct mtd_info {
 	/* NAND pairing scheme, only provided for MLC/TLC NANDs */
 	const struct mtd_pairing_scheme *pairing;
 
+	/* ECC layout structure pointer - read only! */
+	struct nand_ecclayout *ecclayout;
+
 	/* the ecc step size. */
 	unsigned int ecc_step_size;
 
@@ -347,6 +363,11 @@ struct mtd_info {
 	 */
 	int (*_get_device) (struct mtd_info *mtd);
 	void (*_put_device) (struct mtd_info *mtd);
+
+	/* Backing device capabilities for this device
+	 * - provides mmap capabilities
+	 */
+	struct backing_dev_info *backing_dev_info;
 
 	struct notifier_block reboot_notifier;  /* default mode before reboot */
 

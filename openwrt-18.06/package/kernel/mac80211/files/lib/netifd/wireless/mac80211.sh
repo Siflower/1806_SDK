@@ -22,7 +22,7 @@ drv_mac80211_init_device_config() {
 	hostapd_common_add_device_config
 
 	config_add_string path phy 'macaddr:macaddr'
-	config_add_string hwmode
+	config_add_string hwmode band
 	config_add_int beacon_int chanbw frag rts max_all_num_sta
 	config_add_int rxantenna txantenna antenna_gain txpower txpower_lvl distance
 	config_add_boolean noscan ht_coex
@@ -842,7 +842,7 @@ drv_mac80211_setup() {
 		country chanbw distance \
 		txpower txpower_lvl antenna_gain \
 		rxantenna txantenna \
-		frag rts beacon_int:100 htmode
+		frag rts beacon_int:100 htmode band
 	json_get_values basic_rate_list basic_rate
 	json_select ..
 
@@ -879,9 +879,17 @@ drv_mac80211_setup() {
 
 	[ -n "$txpower_lvl" ] && {
 		if [ "$band" == "2.4G" ]; then
+			if [ -d  "/sys/module/sf16a18_lb_smac" ]; then
 			echo $txpower_lvl > /sys/module/sf16a18_lb_smac/parameters/txpower_lvl
 		else
+				echo $txpower_lvl > /sys/module/sf16a18_lb_fmac/parameters/txpower_lvl
+			fi
+		else
+			if [ -d  "/sys/module/sf16a18_hb_smac" ]; then
 			echo $txpower_lvl > /sys/module/sf16a18_hb_smac/parameters/txpower_lvl
+			else
+				echo $txpower_lvl > /sys/module/sf16a18_hb_fmac/parameters/txpower_lvl
+			fi
 		fi
 	}
 	set_default rxantenna all

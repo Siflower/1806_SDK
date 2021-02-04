@@ -21,8 +21,11 @@ if [ -f /etc/init.d/get_ip_status ];then
 /etc/init.d/get_ip_status stop
 fi
 
+touch /tmp/dual_band_test
 case "$1" in
 	master) run_master;;
 	slave) run_slave;;
 	*) run_master;;
 esac
+
+rm /tmp/dual_band_test

@@ -428,11 +428,6 @@ static void sys_init_emac(unsigned int initvalue)
 		//for RGMII Init
 		writew((GMAC_PHY_INTF_SEL_RGMII & GMAC_PHY_INTF_SEL_MASK),
 			(void *)EMAC_PHY_INTF_SEL_I);
-		// set TX/RX CLK delay for RGMII
-		// x (1 <= x <= 256) means to delay (x * 0.04)ns
-		writew(0x30, (void *)EMAC_CLK_TX_I_DLY);
-		writew(0x40, (void *)EMAC_CLK_PHY_RX_I_DLY);
-		writew(1, (void *)EMAC_CLK_PHY_RX_I_DLY_EN);
 	}else if(initvalue == 2){
 		//for RGMII Init
 		writew((GMAC_PHY_INTF_SEL_GMII_MII & GMAC_PHY_INTF_SEL_MASK),

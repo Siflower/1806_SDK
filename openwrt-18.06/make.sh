@@ -56,11 +56,11 @@ case ${board} in
 	evb_v5)
 		target_board=target/linux/siflower/sf16a18_evb_v5_fullmask_def.config
 		;;
-	ac28)
-		target_board=target/linux/siflower/sf19a28_ac28_mpw1_def.config
+	a28_evb)
+		target_board=target/linux/siflower/sf19a28_evb_fullmask_def.config
 		;;
-	ac22)
-		target_board=target/linux/siflower/sf19a28_ac22_mpw1_def.config
+	a28_ac28)
+		target_board=target/linux/siflower/sf19a28_ac28_fullmask_def.config
 		;;
 	clean)
 		echo "clean build enviroment"

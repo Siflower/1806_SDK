@@ -20,23 +20,14 @@ define Package/auto_adapt/description
 endef
 
 define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)
-	$(CP) ./src/* $(PKG_BUILD_DIR)/
 endef
 
 define Build/Compile
-	$(MAKE) -C $(PKG_BUILD_DIR) \
-		CC="$(TARGET_CC)" \
-		CFLAGS="$(TARGET_CFLAGS) -Wall -g" \
-		LDFLAGS="$(TARGET_LDFLAGS)"
-endef
-
-define Build/Configure
 endef
 
 define Package/auto_adapt/install
 	$(INSTALL_DIR) $(1)/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/send $(1)/bin
+	$(INSTALL_BIN) ./files/send $(1)/bin
 	$(INSTALL_BIN) ./files/auto_adapt.sh $(1)/bin
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/admin_network
 	$(INSTALL_DATA) ./files/auto_adapt.htm $(1)/usr/lib/lua/luci/view/admin_network

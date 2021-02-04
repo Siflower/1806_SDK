@@ -39,17 +39,20 @@ static u64 notrace gic_read_count(void)
 
 static int gic_next_event(unsigned long delta, struct clock_event_device *evt)
 {
-	unsigned long flags;
+	int cpu = cpumask_first(evt->cpumask);
 	u64 cnt;
 	int res;
 
 	cnt = gic_read_count();
 	cnt += (u64)delta;
-	local_irq_save(flags);
-	write_gic_vl_other(mips_cm_vp_id(cpumask_first(evt->cpumask)));
-	write_gic_vo_compare(cnt);
-	local_irq_restore(flags);
+	if (cpu == raw_smp_processor_id()) {
+		write_gic_vl_compare(cnt);
+	} else {
+		write_gic_vl_other(mips_cm_vp_id(cpu));
+		write_gic_vo_compare(cnt);
+	}
 	res = ((int)(gic_read_count() - cnt) >= 0) ? -ETIME : 0;
+
 	return res;
 }
 
@@ -81,7 +84,7 @@ static void gic_clockevent_cpu_init(unsigned int cpu,
 	cd->cpumask		= cpumask_of(cpu);
 	cd->set_next_event	= gic_next_event;
 
-	clockevents_config_and_register(cd, gic_frequency, 0x300, 0x7fffffff);
+	clockevents_config_and_register(cd, gic_frequency, 0x1000, 0x7fffffff);
 
 	enable_percpu_irq(gic_timer_irq, IRQ_TYPE_NONE);
 }

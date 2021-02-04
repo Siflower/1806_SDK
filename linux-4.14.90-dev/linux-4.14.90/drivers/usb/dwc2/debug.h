@@ -16,12 +16,23 @@
 
 #include "core.h"
 
+struct dwc2_data_statistic {
+        spinlock_t lock;
+        u64 total_data;
+};
+
 #ifdef CONFIG_DEBUG_FS
 int dwc2_debugfs_init(struct dwc2_hsotg *hsotg);
 void dwc2_debugfs_exit(struct dwc2_hsotg *hsotg);
+extern void dwc2_statistic_add(u32);
+extern void dwc2_statistic_decrease(u32);
+extern void dwc2_statistic_clear(void);
 #else
 static inline int dwc2_debugfs_init(struct dwc2_hsotg *hsotg)
 {  return 0;  }
 static inline void dwc2_debugfs_exit(struct dwc2_hsotg *hsotg)
 {  }
+static void dwc2_statistic_add(u32) {}
+static void dwc2_statistic_decrease(u32) {}
+static void dwc2_statistic_clear(void) {}
 #endif

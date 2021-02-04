@@ -389,6 +389,45 @@ static void dwc2_hsotg_create_debug(struct dwc2_hsotg *hsotg)
 static inline void dwc2_hsotg_create_debug(struct dwc2_hsotg *hsotg) {}
 #endif
 
+static int statistic_show(struct seq_file *seq, void *v)
+{
+	struct dwc2_data_statistic *statistic = seq->private;
+	unsigned long flags;
+
+	spin_lock_irqsave(&statistic->lock, flags);
+	seq_printf(seq, "%lld\n", statistic->total_data);
+	spin_unlock_irqrestore(&statistic->lock, flags);
+
+	return 0;
+}
+
+static int statistic_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, statistic_show, inode->i_private);
+}
+
+static const struct file_operations statistic_fops = {
+    .owner = THIS_MODULE,
+    .open = statistic_open,
+    .read = seq_read,
+    .llseek = seq_lseek,
+    .release = single_release,
+};
+
+static void dwc2_hsotg_create_statistic(struct dwc2_hsotg *hsotg, struct dwc2_data_statistic *statistic)
+{
+	struct dentry *root;
+	struct dentry *file;
+
+	spin_lock_init(&statistic->lock);
+	dwc2_statistic_clear();
+
+	root = hsotg->debug_root;
+	file = debugfs_create_file("statistic", S_IRUGO, root, statistic, &statistic_fops);
+	if (IS_ERR(file))
+		dev_err(hsotg->dev, "%s: failed to create statistic\n", __func__);
+}
+
 /* dwc2_hsotg_delete_debug is removed as cleanup in done in dwc2_debugfs_exit */
 
 #define dump_register(nm)	\
@@ -725,6 +764,29 @@ static const struct debugfs_reg32 dwc2_regs[] = {
 	dump_register(HCDMAB(15)),
 };
 
+static struct dwc2_data_statistic transfer_statistic;
+
+void dwc2_statistic_add(u32 length)
+{
+	spin_lock(&transfer_statistic.lock);
+	transfer_statistic.total_data += (u64)length;
+	spin_unlock(&transfer_statistic.lock);
+}
+
+void dwc2_statistic_decrease(u32 length)
+{
+	spin_lock(&transfer_statistic.lock);
+	transfer_statistic.total_data -= (u64)length;
+	spin_unlock(&transfer_statistic.lock);
+}
+
+void dwc2_statistic_clear()
+{
+	spin_lock(&transfer_statistic.lock);
+	transfer_statistic.total_data = 0;
+	spin_unlock(&transfer_statistic.lock);
+}
+
 #define print_param(_seq, _ptr, _param) \
 seq_printf((_seq), "%-30s: %d\n", #_param, (_ptr)->_param)
 
@@ -894,6 +956,9 @@ int dwc2_debugfs_init(struct dwc2_hsotg *hsotg)
 
 	/* Add gadget debugfs nodes */
 	dwc2_hsotg_create_debug(hsotg);
+
+	/* Add transfer length node */
+	dwc2_hsotg_create_statistic(hsotg, &transfer_statistic);
 
 	hsotg->regset = devm_kzalloc(hsotg->dev, sizeof(*hsotg->regset),
 								GFP_KERNEL);

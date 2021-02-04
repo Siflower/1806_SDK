@@ -832,6 +832,7 @@ struct flow_offload_hw_path;
 enum flow_offload_type {
 	FLOW_OFFLOAD_ADD	= 0,
 	FLOW_OFFLOAD_DEL,
+	FLOW_OFFLOAD_FLOW_NULL,
 };
 
 /*

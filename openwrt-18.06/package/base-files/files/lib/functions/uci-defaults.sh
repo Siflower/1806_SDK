@@ -184,7 +184,7 @@ _ucidef_finish_switch_roles() {
 
 ucidef_add_switch() {
 	local name="$1"; shift
-	local port num role device index need_tag prev_role
+	local port num role device index need_tag prev_role device_vlan vlan
 	local cpu0 cpu1 cpu2 cpu3 cpu4 cpu5
 	local n_cpu=0 n_vlan=0 n_ports=0
 
@@ -197,7 +197,12 @@ ucidef_add_switch() {
 				case "$port" in
 					[0-9]*@*)
 						num="${port%%@*}"
-						device="${port##*@}"
+						device_vlan="${port##*@}"
+						device="${device_vlan%%:*}"
+						vlan="${device_vlan##*:}"
+						[ "$device_vlan" != "$device" ] && {
+							index="$vlan"
+						}
 						need_tag=0
 						want_untag=0
 						[ "${num%t}" != "$num" ] && {
@@ -224,12 +229,31 @@ ucidef_add_switch() {
 					_ucidef_add_switch_port
 				fi
 
-				unset num device role index need_tag want_untag
+				unset num device role index need_tag want_untag device_vlan vlan
 			done
 		json_select ..
 	json_select ..
 
 	_ucidef_finish_switch_roles
+}
+
+ucidef_add_switch_port() {
+	local device="$1"
+	local port="${2##*:}"
+	local pvid="${3##*:}"
+
+	[ -z "$device" -o -z "$port" -o -z "$pvid" ] && return
+
+	json_select_object switch
+		json_select_object $device""
+			json_select_array "switch_ports"
+			json_add_object
+				json_add_string port "$port"
+				json_add_string pvid "$pvid"
+			json_close_object
+			json_select ..
+		json_select ..
+	json_select ..
 }
 
 ucidef_add_switch_attr() {

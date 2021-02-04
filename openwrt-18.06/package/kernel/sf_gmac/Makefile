@@ -93,7 +93,7 @@ ifdef CONFIG_SFAX8_FACTORY_READ
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_FACTORY_READ
 endif
 
-SFAX8_KO_NAME="ac28_sgmac.ko"
+SFAX8_KO_NAME="a28_sgmac.ko"
 
 ifneq ($(findstring EVB-V5,$(PROFILE)),)
 SFAX8_KO_NAME="evb_v5_sgmac.ko"

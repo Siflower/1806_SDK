@@ -54,6 +54,7 @@
 
 #include "core.h"
 #include "hcd.h"
+#include "debug.h"
 
 static void dwc2_port_resume(struct dwc2_hsotg *hsotg);
 
@@ -4818,6 +4819,10 @@ static int _dwc2_hcd_urb_enqueue(struct usb_hcd *hcd, struct urb *urb,
 	dwc2_urb->interval = urb->interval;
 	dwc2_urb->status = -EINPROGRESS;
 
+	#ifdef CONFIG_DEBUG_FS
+	dwc2_statistic_add(urb->transfer_buffer_length);
+	#endif
+
 	for (i = 0; i < urb->number_of_packets; ++i)
 		dwc2_hcd_urb_set_iso_desc_params(dwc2_urb, i,
 						 urb->iso_frame_desc[i].offset,
@@ -4914,6 +4919,10 @@ static int _dwc2_hcd_urb_dequeue(struct usb_hcd *hcd, struct urb *urb,
 	}
 
 	rc = dwc2_hcd_urb_dequeue(hsotg, urb->hcpriv);
+
+	#ifdef CONFIG_DEBUG_FS
+	dwc2_statistic_decrease(urb->transfer_buffer_length);
+	#endif
 
 	usb_hcd_unlink_urb_from_ep(hcd, urb);
 

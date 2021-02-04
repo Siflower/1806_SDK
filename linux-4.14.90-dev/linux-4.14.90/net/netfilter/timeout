@@ -1,0 +1,57 @@
+Binary file ./nf_flow_table_core.o matches
+./ipvs/ip_vs_ovf.c:2: * IPVS:        Overflow-Connection Scheduling module
+./nf_flow_table_hw.c:110:				offload->flow->flags |= FLOW_OFFLOAD_HW;
+./nf_flow_table_hw.c:141:	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple;
+./nf_flow_table_hw.c:145:	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple;
+./nf_flow_table_hw.c:228:MODULE_ALIAS("nf-flow-table-hw");
+./nf_flow_table_core.c:29:	struct flow_offload_tuple *ft = &flow->tuplehash[dir].tuple;
+./nf_flow_table_core.c:86:		flow->flags |= FLOW_OFFLOAD_SNAT;
+./nf_flow_table_core.c:88:		flow->flags |= FLOW_OFFLOAD_DNAT;
+./nf_flow_table_core.c:144:	dst_release(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.dst_cache);
+./nf_flow_table_core.c:145:	dst_release(flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple.dst_cache);
+./nf_flow_table_core.c:147:	if (flow->flags & FLOW_OFFLOAD_DYING)
+./nf_flow_table_core.c:225:	flow->timeout = (u32)jiffies;
+./nf_flow_table_core.c:228:			       &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].node,
+./nf_flow_table_core.c:231:			       &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].node,
+./nf_flow_table_core.c:239:	return flow->flags & FLOW_OFFLOAD_HW;
+./nf_flow_table_core.c:249:			       &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].node,
+./nf_flow_table_core.c:252:			       &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].node,
+./nf_flow_table_core.c:258:	if (!(flow->flags & FLOW_OFFLOAD_TEARDOWN))
+./nf_flow_table_core.c:271:	flow->flags |= FLOW_OFFLOAD_TEARDOWN;
+./nf_flow_table_core.c:293:	if (flow->flags & (FLOW_OFFLOAD_DYING | FLOW_OFFLOAD_TEARDOWN))
+./nf_flow_table_core.c:340:	return (__s32)(flow->timeout - (u32)jiffies) <= 0;
+./nf_flow_table_core.c:371:		teardown = flow->flags & (FLOW_OFFLOAD_DYING |
+./nf_flow_table_core.c:377:		if ((flow->flags & FLOW_OFFLOAD_KEEP) && !teardown)
+./nf_flow_table_core.c:467:		new_port = flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple.dst_port;
+./nf_flow_table_core.c:472:		new_port = flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.src_port;
+./nf_flow_table_core.c:499:		new_port = flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple.src_port;
+./nf_flow_table_core.c:504:		new_port = flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.dst_port;
+./nf_flow_table_core.c:522:		request_module("nf-flow-table-hw");
+./nf_flow_table_core.c:579:	if (flow->tuplehash[0].tuple.iifidx == dev->ifindex ||
+./nf_flow_table_core.c:580:	    flow->tuplehash[1].tuple.iifidx == dev->ifindex)
+./xt_FLOWOFFLOAD.c:137:	struct flow_offload_tuple *tuple = &flow->tuplehash[0].tuple;
+./Kconfig:155:	  the flow-stop time (once it has been destroyed) via Connection
+Binary file ./nf_flow_table.ko matches
+./nf_flow_table_ip.c:101:		new_addr = flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple.dst_v4.s_addr;
+./nf_flow_table_ip.c:106:		new_addr = flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.src_v4.s_addr;
+./nf_flow_table_ip.c:126:		new_addr = flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple.src_v4.s_addr;
+./nf_flow_table_ip.c:131:		new_addr = flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.dst_v4.s_addr;
+./nf_flow_table_ip.c:147:	if (flow->flags & FLOW_OFFLOAD_SNAT &&
+./nf_flow_table_ip.c:151:	if (flow->flags & FLOW_OFFLOAD_DNAT &&
+./nf_flow_table_ip.c:245:	rt = (struct rtable *)flow->tuplehash[!dir].tuple.dst_cache;
+./nf_flow_table_ip.c:247:	if (unlikely(nf_flow_exceeds_mtu(skb, flow->tuplehash[dir].tuple.mtu)) &&
+./nf_flow_table_ip.c:258:	if (flow->flags & (FLOW_OFFLOAD_SNAT | FLOW_OFFLOAD_DNAT) &&
+./nf_flow_table_ip.c:262:	flow->timeout = (u32)jiffies + NF_FLOW_TIMEOUT;
+./nf_flow_table_ip.c:267:	nexthop = rt_nexthop(rt, flow->tuplehash[!dir].tuple.src_v4.s_addr);
+./nf_flow_table_ip.c:342:		new_addr = flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple.dst_v6;
+./nf_flow_table_ip.c:347:		new_addr = flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.src_v6;
+./nf_flow_table_ip.c:367:		new_addr = flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple.src_v6;
+./nf_flow_table_ip.c:372:		new_addr = flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.dst_v6;
+./nf_flow_table_ip.c:389:	if (flow->flags & FLOW_OFFLOAD_SNAT &&
+./nf_flow_table_ip.c:393:	if (flow->flags & FLOW_OFFLOAD_DNAT &&
+./nf_flow_table_ip.c:464:	rt = (struct rt6_info *)flow->tuplehash[!dir].tuple.dst_cache;
+./nf_flow_table_ip.c:466:	if (unlikely(nf_flow_exceeds_mtu(skb, flow->tuplehash[dir].tuple.mtu)))
+./nf_flow_table_ip.c:476:	if (flow->flags & (FLOW_OFFLOAD_SNAT | FLOW_OFFLOAD_DNAT) &&
+./nf_flow_table_ip.c:480:	flow->timeout = (u32)jiffies + NF_FLOW_TIMEOUT;
+./nf_flow_table_ip.c:485:	nexthop = rt6_nexthop(rt, &flow->tuplehash[!dir].tuple.src_v6);
+Binary file ./nf_flow_table_hw.ko matches

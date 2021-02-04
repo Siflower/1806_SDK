@@ -66,6 +66,7 @@ struct device_node;
  */
 struct mtd_part_parser_data {
 	unsigned long origin;
+	struct device_node *of_node;
 };
 
 

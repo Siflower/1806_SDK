@@ -15,30 +15,7 @@
 	status = "okay";
 };
 
-&gswitch {
-	status = "okay";
-};
-
-/* This is used to set voltage during dvfs.
- * You should first know which pmu is in use, and
- * remove the default core-voltage set in pmu dts.
- */
-/*
-&cpu0 {
-       cpu0-supply = <&rn5t567_core>;
-       dcdc0-maxv = <1000000>;
-};
-*/
-
-
-&i2c0 {
-	status = "disabled";
-	#address-cells = <1>;
-	#size-cells = <0>;
-};
-
-
-&spi0 {
+&spi2 {
 	status = "okay";
 	//use-dma;
 	dmas = <&gdma 10
@@ -89,31 +66,33 @@
 &uart0 {
 	status = "okay";
 };
-
-&uart1 {
-	status = "disabled";
-};
-
-&pwm0 {
-	status = "okay";
-};
-
-&pwm1 {
-	status = "okay";
-};
-
 &timer0 {
 	status = "okay";
 };
 
-&watchdog {
-	status = "okay";
+&usb_phy {
+       status = "okay";
+};
+
+&usb {
+       status = "okay";
 };
 
 &wifi_rf {
 	status = "okay";
     /*only support ext pa for 5G*/
-    force_expa = <1>;
+	force_expa = <1>;
+};
+
+&gpio_keys {
+	status = "okay";
+	restart@27 {
+		label = "Key Restart";
+		linux,code = <0x198>;
+		gpios = <&gpio 27 0>;
+		poll-interval = <10>;
+		debounce-interval = <20>;
+	};
 };
 
 &wifi_lb {

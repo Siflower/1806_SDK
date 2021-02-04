@@ -177,7 +177,7 @@ sfwifi_stress_test(){
     do
         echo "====cycle is $cycle_idx====" > /dev/console
         let "cycle_idx++"
-        firmware_reset
+        firmware_reset $1
         sleep 15
         count=`ifconfig |awk '/(HWaddr)/{print $1}' | grep "wlan" -c`
         time_t=0
@@ -218,7 +218,7 @@ case "$1" in
         ;;
     test) call_wifi_cmd $2 $3;;
     stress)
-        sfwifi_stress_test;;
+        sfwifi_stress_test $2;;
 	--help|help) usage;;
 	*) firmware_reset;;
 esac

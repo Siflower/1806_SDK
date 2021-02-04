@@ -88,6 +88,14 @@ define Package/dnsmasq/conffiles
 /etc/dnsmasq.conf
 endef
 
+define Package/dnsmasq/config
+	if PACKAGE_dnsmasq
+	config PACKAGE_dnsmasq-quickicmp
+		bool "quick icmp"
+		default n
+	endif
+endef
+
 define Package/dnsmasq-full/config
 	if PACKAGE_dnsmasq-full
 	config PACKAGE_dnsmasq_full_dhcp
@@ -126,6 +134,10 @@ TARGET_LDFLAGS += -Wl,--gc-sections
 
 COPTS = -DHAVE_UBUS \
 	$(if $(CONFIG_IPV6),,-DNO_IPV6)
+
+ifdef CONFIG_PACKAGE_dnsmasq-quickicmp
+	COPTS += -DQUICK_ICMP
+endif
 
 ifeq ($(BUILD_VARIANT),nodhcpv6)
 	COPTS += -DNO_DHCP6
