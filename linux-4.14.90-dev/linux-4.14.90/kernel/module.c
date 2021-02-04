@@ -3727,7 +3727,7 @@ static int load_module(struct load_info *info, const char __user *uargs,
 		err = PTR_ERR(args);
 		goto free_module;
 	}
-	if (force_name = strstr(args, "force_mod_name")) {
+	if ((force_name = strstr(args, "force_mod_name"))) {
 		err = parse_force_name(force_name, mod->name, MODULE_NAME_LEN);
 		if (err) {
 			printk("parse_force_name failed, err : %ld\n", err);

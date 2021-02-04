@@ -1,7 +1,8 @@
-diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.c hostapd-2018-05-21-62566bc2/hostapd/config_file.c
---- hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.c	2019-11-29 16:28:11.183960511 +0800
-+++ hostapd-2018-05-21-62566bc2/hostapd/config_file.c	2019-11-29 16:35:51.111979812 +0800
-@@ -1133,6 +1133,60 @@ static int add_r1kh(struct hostapd_bss_c
+Index: hostapd-2019-08-08-ca8c2bd2/hostapd/config_file.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/hostapd/config_file.c	2020-11-11 16:20:02.390946825 +0800
++++ hostapd-2019-08-08-ca8c2bd2/hostapd/config_file.c	2020-11-11 16:25:21.366960212 +0800
+@@ -1150,6 +1150,60 @@
  
  	return 0;
  }
@@ -62,7 +63,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.c hostapd-2018-0
  #endif /* CONFIG_IEEE80211R_AP */
  
  
-@@ -2857,6 +2911,11 @@ static int hostapd_config_fill(struct ho
+@@ -3047,6 +3101,11 @@
  				   line, pos);
  			return 1;
  		}
@@ -74,10 +75,11 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.c hostapd-2018-0
  	} else if (os_strcmp(buf, "pmk_r1_push") == 0) {
  		bss->pmk_r1_push = atoi(pos);
  	} else if (os_strcmp(buf, "ft_over_ds") == 0) {
-diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.h hostapd-2018-05-21-62566bc2/hostapd/config_file.h
---- hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.h	2019-11-29 16:28:11.175960511 +0800
-+++ hostapd-2018-05-21-62566bc2/hostapd/config_file.h	2019-11-29 16:36:22.479981129 +0800
-@@ -13,6 +13,7 @@ struct hostapd_config * hostapd_config_r
+Index: hostapd-2019-08-08-ca8c2bd2/hostapd/config_file.h
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/hostapd/config_file.h	2019-08-07 21:25:25.000000000 +0800
++++ hostapd-2019-08-08-ca8c2bd2/hostapd/config_file.h	2020-11-11 16:27:37.558965927 +0800
+@@ -13,6 +13,7 @@
  int hostapd_set_iface(struct hostapd_config *conf,
  		      struct hostapd_bss_config *bss, const char *field,
  		      char *value);
@@ -85,10 +87,11 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.h hostapd-2018-0
  int hostapd_acl_comp(const void *a, const void *b);
  int hostapd_add_acl_maclist(struct mac_acl_entry **acl, int *num,
  			    int vlan_id, const u8 *addr);
-diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/ctrl_iface.c hostapd-2018-05-21-62566bc2/hostapd/ctrl_iface.c
---- hostapd-2018-05-21-62566bc2.orig/hostapd/ctrl_iface.c	2019-11-29 16:28:11.179960511 +0800
-+++ hostapd-2018-05-21-62566bc2/hostapd/ctrl_iface.c	2019-11-29 16:38:02.119985310 +0800
-@@ -3097,6 +3097,11 @@ static int hostapd_ctrl_iface_receive_pr
+Index: hostapd-2019-08-08-ca8c2bd2/hostapd/ctrl_iface.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/hostapd/ctrl_iface.c	2020-11-11 16:20:02.006946809 +0800
++++ hostapd-2019-08-08-ca8c2bd2/hostapd/ctrl_iface.c	2020-11-11 16:29:15.866970053 +0800
+@@ -3266,6 +3266,11 @@
  #ifdef RADIUS_SERVER
  		radius_server_erp_flush(hapd->radius_srv);
  #endif /* RADIUS_SERVER */

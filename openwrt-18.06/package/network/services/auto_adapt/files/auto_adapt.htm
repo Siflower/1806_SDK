@@ -1,0 +1,184 @@
+<%#
+ Copyright 2010 Jo-Philipp Wich <jow@openwrt.org>
+ Licensed to the public under the Apache License 2.0.
+-%>
+
+<%+header%>
+
+<%
+local fs   = require "nixio.fs"
+local has_ping6 = fs.access("/bin/ping6") or fs.access("/usr/bin/ping6")
+local has_traceroute6 = fs.access("/bin/traceroute6") or fs.access("/usr/bin/traceroute6")
+
+local dns_host = luci.config.diag and luci.config.diag.dns or "dev.openwrt.org"
+local ping_host = luci.config.diag and luci.config.diag.ping or "dev.openwrt.org"
+local route_host = luci.config.diag and luci.config.diag.route or "dev.openwrt.org"
+%>
+
+<script type="text/javascript">//<![CDATA[
+	var en_btn = 1
+	var stxhr = new XHR();
+	var old_wan;
+	var auto_en;
+	function set_auto_adapt(port)
+	{
+		if ( en_btn == 1 ){
+			en_btn = 0;
+			var stxhr = new XHR();
+			var output;
+			if ( port == "start" )
+			{
+				output = document.getElementById('test-output2');
+			}
+			else
+			{
+				output = document.getElementById('test-output');
+			}
+			if (output)
+			{
+				output.innerHTML =
+					'<img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:middle" /> ' +
+					'<%:Waiting for command to complete...%>'
+				;
+
+				stxhr.post('<%=url('admin/network')%>/set_port/' + port, { token: '<%=token%>' },
+					function(x)
+					{
+						if (x.responseText)
+						{
+							document.getElementById('pic'+old_wan).src='/luci-static/resources/icons/port_down.png';
+							document.getElementById('b'+old_wan).value='lan';
+							get_auto_adapt()
+							output.innerHTML = '';
+							en_btn = 1;
+						}
+						else
+						{
+							output.innerHTML = '<span class="error"><%:Bad address specified!%></span>';
+						}
+					}
+				);
+			}
+		}
+	}
+
+	function get_auto_adapt()
+	{
+		en_btn == 1
+		var stxhr = new XHR();
+		stxhr.post('<%=url('admin/network')%>/set_port/' + 'get', { token: '<%=token%>' },
+			function(x)
+			{
+				var result = JSON.parse(x.responseText)
+				if (result)
+				{
+					var connect = result.connect
+					for(var i=0;i<connect.length;i++){
+						var pic = document.getElementById('pic'+connect[i]);
+						pic.src = '/luci-static/resources/icons/port_up.png';
+					}
+					var id_num = Number(result.wan) + 1;
+					var button = document.getElementById('b'+id_num);
+					var btn_en = document.getElementById('btn_en');
+					old_wan = id_num;
+					button.value = 'wan';
+					auto_en = result.enable;
+					if ( auto_en == 0 )
+					{
+					btn_en.innerHTML = '<button class="btn cbi-button-negative" onclick="change_enable()"><%:Disabled%></button>';
+					}
+					else
+					{
+						btn_en.innerHTML = '<button class="btn cbi-button-positive" onclick="change_enable()"><%:Enabled%></button>';
+						
+					}
+				}
+			}
+		);
+	}
+
+	function change_enable()
+	{
+		if ( auto_en == 0 )
+		{
+			btn_en.innerHTML = '<button class="btn cbi-button-negative spinning" disable="" onclick="change_enable()"><%:Disabled%></button>';
+			stxhr.post('<%=url('admin/network')%>/set_port/' + 'enable', { token: '<%=token%>' },
+				function(x)
+				{
+					if (x)
+					{
+						auto_en = 1;
+						btn_en.innerHTML = '<button class="btn cbi-button-positive" onclick="change_enable()"><%:Enabled%></button>';
+					}
+				}
+			);
+		}
+		else
+		{
+			btn_en.innerHTML = '<button class="btn cbi-button-positive spinning" disable="" onclick="change_enable()"><%:Enabled%></button>';
+			stxhr.post('<%=url('admin/network')%>/set_port/' + 'disable', { token: '<%=token%>' },
+				function(x)
+				{
+					if (x)
+					{
+						auto_en = 0;
+						btn_en.innerHTML = '<button class="btn cbi-button-negative" onclick="change_enable()"><%:Disabled%></button>';
+					}
+				}
+			);
+		}
+	}
+
+	get_auto_adapt()
+
+//]]></script>
+
+<style type="text/css">
+	td{width:100px;text-align:center;}
+</style>
+
+<form method="post" action="<%=url('admin/network/diagnostics')%>">
+	<div class="cbi-map">
+		<h2 name="content"><%:Auto-adapt%></h2>
+
+		<legend><%:Manual Set%></legend>
+		<table>
+			<tr>
+				<td></td>
+				<td><img id="pic1" src="/luci-static/resources/icons/port_down.png"></td>
+				<td><img id="pic2" src="/luci-static/resources/icons/port_down.png"></td>
+				<td><img id="pic3" src="/luci-static/resources/icons/port_down.png"></td>
+				<td><img id="pic4" src="/luci-static/resources/icons/port_down.png"></td>
+				<td><img id="pic5" src="/luci-static/resources/icons/port_down.png"></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><input id="b1" type="button" value="lan" class="cbi-button cbi-button-action" onclick="set_auto_adapt(1)" /></td>
+				<td><input id="b2" type="button" value="lan" class="cbi-button cbi-button-action" onclick="set_auto_adapt(2)" /></td>
+				<td><input id="b3" type="button" value="lan" class="cbi-button cbi-button-action" onclick="set_auto_adapt(3)" /></td>
+				<td><input id="b4" type="button" value="lan" class="cbi-button cbi-button-action" onclick="set_auto_adapt(4)" /></td>
+				<td><input id="b5" type="button" value="lan" class="cbi-button cbi-button-action" onclick="set_auto_adapt(5)" /></td>
+				<td><div class="cbi-section"><span id="test-output"></span></div></td>
+			</tr>
+		</table>
+		<br>
+		<legend><%:Auto Set%></legend>
+		<table>
+			<tr>
+				<td></td>
+				<td><input type="button" class="cbi-button cbi-button-apply" onclick="set_auto_adapt('start')" value="<%:Set Now%>"/></td>
+				<td><div class="cbi-section"><span id="test-output2"></span></div></td>
+			</tr>
+		</table>
+		<br>
+		<legend><%:Auto Start%></legend>
+		<table>
+			<tr>
+				<td></td>
+				<td id="btn_en"></td>
+			</tr>
+		</table>
+	</div>
+</form>
+
+<%+footer%>

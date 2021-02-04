@@ -141,6 +141,7 @@ void flow_offload_free(struct flow_offload *flow)
 {
 	struct flow_offload_entry *e;
 
+	// printk("free flow 0x%p  flags 0x%x flags 0x%p \n", flow, flow->flags, &flow->flags);
 	dst_release(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.dst_cache);
 	dst_release(flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple.dst_cache);
 	e = container_of(flow, struct flow_offload_entry, flow);
@@ -245,6 +246,10 @@ static void flow_offload_del(struct nf_flowtable *flow_table,
 	struct flow_offload_entry *e;
 	struct net *net = read_pnet(&flow_table->ft_net);
 
+// RM#8396 delete hw entry first
+	if (nf_flow_in_hw(flow))
+		nf_flow_offload_hw_del(net, flow);
+
 	rhashtable_remove_fast(&flow_table->rhashtable,
 			       &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].node,
 			       nf_flow_offload_rhash_params);
@@ -258,8 +263,6 @@ static void flow_offload_del(struct nf_flowtable *flow_table,
 	if (!(flow->flags & FLOW_OFFLOAD_TEARDOWN))
 		flow_offload_fixup_ct_state(e->ct);
 
-	if (nf_flow_in_hw(flow))
-		nf_flow_offload_hw_del(net, flow);
 
 	flow_offload_free(flow);
 }
@@ -387,7 +390,7 @@ out:
 	return 1;
 }
 
-static void nf_flow_offload_work_gc(struct work_struct *work)
+void nf_flow_offload_work_gc(struct work_struct *work)
 {
 	struct nf_flowtable *flow_table;
 
@@ -395,6 +398,7 @@ static void nf_flow_offload_work_gc(struct work_struct *work)
 	nf_flow_offload_gc_step(flow_table);
 	queue_delayed_work(system_power_efficient_wq, &flow_table->gc_work, HZ);
 }
+EXPORT_SYMBOL(nf_flow_offload_work_gc);
 
 static int nf_flow_nat_port_tcp(struct sk_buff *skb, unsigned int thoff,
 				__be16 port, __be16 new_port)
@@ -586,8 +590,8 @@ static void nf_flow_table_iterate_cleanup(struct nf_flowtable *flowtable,
 {
 	nf_flow_table_iterate(flowtable, nf_flow_table_do_cleanup, dev);
 	flush_delayed_work(&flowtable->gc_work);
-	if (flowtable->flags & NF_FLOWTABLE_F_HW)
-		flush_work(&nf_flow_offload_hw_work);
+	// if (flowtable->flags & NF_FLOWTABLE_F_HW)
+	// 	flush_work(&nf_flow_offload_hw_work);
 }
 
 void nf_flow_table_cleanup(struct net *net, struct net_device *dev)
@@ -600,16 +604,16 @@ void nf_flow_table_cleanup(struct net *net, struct net_device *dev)
 	mutex_unlock(&flowtable_lock);
 }
 EXPORT_SYMBOL_GPL(nf_flow_table_cleanup);
-
-struct work_struct nf_flow_offload_hw_work;
-EXPORT_SYMBOL_GPL(nf_flow_offload_hw_work);
+//8396 use sync
+// struct work_struct nf_flow_offload_hw_work;
+// EXPORT_SYMBOL_GPL(nf_flow_offload_hw_work);
 
 /* Give the hardware workqueue the chance to remove entries from hardware.*/
 static void nf_flow_offload_hw_free(struct nf_flowtable *flowtable)
 {
 	const struct nf_flow_table_hw *offload;
 
-	flush_work(&nf_flow_offload_hw_work);
+	// flush_work(&nf_flow_offload_hw_work);
 
 	rcu_read_lock();
 	offload = rcu_dereference(nf_flow_table_hw_hook);
@@ -689,7 +693,7 @@ static int nf_flow_table_netdev_event(struct notifier_block *this,
 
 	if (event != NETDEV_DOWN)
 		return NOTIFY_DONE;
-
+	// printk("dev down\n");
 	nf_flow_table_cleanup(dev_net(dev), dev);
 
 	return NOTIFY_DONE;

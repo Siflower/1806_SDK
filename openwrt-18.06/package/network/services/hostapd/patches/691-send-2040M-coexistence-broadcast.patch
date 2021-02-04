@@ -1,6 +1,8 @@
---- a/src/ap/ieee802_11_ht.c	2019-11-28 16:15:16.828302161 +0800
-+++ b/scr/ap/ieee802_11_ht.c	2019-11-28 16:17:35.084307963 +0800
-@@ -359,6 +359,28 @@ void hostapd_2040_coex_action(struct hos
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ieee802_11_ht.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ieee802_11_ht.c	2020-11-11 10:10:05.114015297 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ieee802_11_ht.c	2020-11-11 10:18:15.306035868 +0800
+@@ -359,6 +359,29 @@
  				       HOSTAPD_MODULE_IEEE80211,
  				       HOSTAPD_LEVEL_INFO,
  				       "Switching to 20 MHz operation");
@@ -26,6 +28,7 @@
 +							"Action frame");
 +			}
 +			os_free(resp);
++
  			iface->conf->secondary_channel = 0;
  			ieee802_11_set_beacons(iface);
  		}

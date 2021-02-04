@@ -1,7 +1,8 @@
-diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/Makefile hostapd-2018-05-21-62566bc2/hostapd/Makefile
---- hostapd-2018-05-21-62566bc2.orig/hostapd/Makefile	2019-11-29 16:05:28.631903330 +0800
-+++ hostapd-2018-05-21-62566bc2/hostapd/Makefile	2019-11-29 16:08:48.067911700 +0800
-@@ -294,6 +294,10 @@ NEED_SHA256=y
+Index: hostapd-2019-08-08-ca8c2bd2/hostapd/Makefile
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/hostapd/Makefile	2020-11-11 16:01:46.618900840 +0800
++++ hostapd-2019-08-08-ca8c2bd2/hostapd/Makefile	2020-11-11 16:04:17.022907152 +0800
+@@ -300,6 +300,10 @@
  NEED_AES_OMAC1=y
  endif
  
@@ -12,10 +13,11 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/Makefile hostapd-2018-05-21-
  ifdef CONFIG_IEEE80211R
  CFLAGS += -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP
  OBJS += ../src/ap/wpa_auth_ft.o
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/sta_info.c hostapd-2018-05-21-62566bc2/src/ap/sta_info.c
---- hostapd-2018-05-21-62566bc2.orig/src/ap/sta_info.c	2019-11-29 16:05:28.611903329 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/sta_info.c	2019-11-29 16:08:09.923910099 +0800
-@@ -1210,6 +1210,52 @@ void ap_sta_stop_sa_query(struct hostapd
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/sta_info.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/sta_info.c	2020-11-11 16:01:46.694900844 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/sta_info.c	2020-11-11 16:08:45.182918406 +0800
+@@ -1236,6 +1236,52 @@
  
  #endif /* CONFIG_IEEE80211W */
  
@@ -66,12 +68,12 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/sta_info.c hostapd-2018-05-21
 +}
 +#endif
  
- void ap_sta_set_authorized(struct hostapd_data *hapd, struct sta_info *sta,
- 			   int authorized)
-@@ -1268,6 +1314,10 @@ void ap_sta_set_authorized(struct hostap
+ const char * ap_sta_wpa_get_keyid(struct hostapd_data *hapd,
+ 				  struct sta_info *sta)
+@@ -1330,6 +1376,10 @@
  			wpa_msg_no_global(hapd->msg_ctx_parent, MSG_INFO,
- 					  AP_STA_CONNECTED "%s%s",
- 					  buf, ip_addr);
+ 					  AP_STA_CONNECTED "%s%s%s",
+ 					  buf, ip_addr, keyid_buf);
 +
 +#ifdef CONFIG_CUSTOM_WIFI_ONLINE
 +		broadcast_ap_sta_authorized((char *)&sta->addr,(char *)&(hapd->conf->iface),1);
@@ -79,7 +81,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/sta_info.c hostapd-2018-05-21
  	} else {
  		wpa_msg(hapd->msg_ctx, MSG_INFO, AP_STA_DISCONNECTED "%s", buf);
  		hostapd_ubus_notify(hapd, "disassoc", sta->addr);
-@@ -1276,6 +1326,10 @@ void ap_sta_set_authorized(struct hostap
+@@ -1338,6 +1388,10 @@
  		    hapd->msg_ctx_parent != hapd->msg_ctx)
  			wpa_msg_no_global(hapd->msg_ctx_parent, MSG_INFO,
  					  AP_STA_DISCONNECTED "%s", buf);

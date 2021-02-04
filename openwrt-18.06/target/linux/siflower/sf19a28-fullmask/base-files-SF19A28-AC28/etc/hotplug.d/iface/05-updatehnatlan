@@ -1,0 +1,57 @@
+#!/bin/sh
+
+if echo "$INTERFACE" | grep -q "lan"
+then
+	echo "$INTERFACE is in lan"
+else
+	exit 0
+fi
+
+lan_index=${INTERFACE:3}
+[ "x$lan_index" == "x" ] && lan_index=1
+[ $lan_index -gt 0 -a $lan_index -lt 8 ] || exit 0
+
+iptohex() {
+	IFS=.
+	for str in $1
+	do
+		printf "%02x" $str
+	done
+}
+
+clear_non_exist_lan() {
+	for i in $(seq 1 8)
+	do
+		lan_name="lan$i"
+		if [ $i == 1 ]; then
+			lan_name="lan";
+		fi
+		ifexist=`uci -q get network.$lan_name`
+		if [ "x$ifexist" == "x" ]; then
+			echo "dellan $i" > /sys/kernel/debug/hnat_debug
+		fi
+	done
+}
+
+del_lan() {
+	clear_non_exist_lan
+	echo "dellan $lan_index" > /sys/kernel/debug/hnat_debug
+}
+
+add_lan() {
+	lanip=`uci -q get network.$INTERFACE.ipaddr`
+	if [ "x$lanip" != "x" ]; then
+		lanhex=`iptohex $lanip`
+		netmask=`uci -q get network.$INTERFACE.netmask`
+		if [ "x$netmask" == "x" ]; then
+			netmask="255.255.255.0"
+		fi
+		maskhax=`iptohex $netmask`
+		echo "addlan $lan_index 0x$lanhex 0x$maskhax" > /sys/kernel/debug/hnat_debug
+	else
+		echo "dellan $lan_index" > /sys/kernel/debug/hnat_debug
+	fi
+}
+
+[ "$ACTION" = ifdown ] && del_lan && exit 0
+[ "$ACTION" = ifup ] && add_lan && exit 0

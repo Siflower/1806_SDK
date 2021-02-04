@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#when lmac send rf cmd failed,call this script
+echo "
+============================================
+send rf cmd failed,restart all wifi firmware
+============================================" > /dev/ttyS0
+sfwifi reset fmac

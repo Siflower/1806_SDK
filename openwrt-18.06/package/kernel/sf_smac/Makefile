@@ -87,6 +87,9 @@ endif
 ifdef CONFIG_TARGET_siflower_sf19a28_mpw1
 SF_ARCH=a28mpw0
 endif
+ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
+SF_ARCH=a28fullmask
+endif
 
 SF_UMAC_TYPE?=smac
 ifdef CONFIG_PACKAGE_SFUMAC_SMAC
@@ -127,10 +130,12 @@ endif
 
 ifdef CONFIG_PACKAGE_SFSMAC_LB_LA_ENABLE
 NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_LA_ENABLE
+NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_LB_LA_ENABLE
 endif
 
 ifdef CONFIG_PACKAGE_SFSMAC_HB_LA_ENABLE
 NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_LA_ENABLE
+NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_HB_LA_ENABLE
 endif
 
 ifdef CONFIG_PACKAGE_SFUMAC_LB_EXT_PA_SUPPORT
@@ -146,31 +151,43 @@ EXTRA_KCONFIG += CONFIG_SF16A18_WIFI_ATE_TOOLS=y
 NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_ATE_TOOLS
 endif
 
+ifdef CONFIG_SFAX8_HNAT_DRIVER
+EXTRA_KCONFIG += CONFIG_SFAX8_HNAT_DRIVER=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_HNAT_DRIVER
+endif
+
 NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_RF
 
 ifeq ($(SF_ARCH), fullmask)
 #use m_SFDSP as default
+EXTRA_KCONFIG += CONFIG_SFA18_FULLMASK=y
 CONFIG_SF16A18_LMAC_USE_M_SFDSP=y
 NOSTDINC_FLAGS += -DCONFIG_SF16A18_LMAC_USE_M_SFDSP
 else
 ifeq ($(SF_ARCH), a28mpw0)
 CONFIG_SF16A18_LMAC_USE_M_SFDSP=y
 NOSTDINC_FLAGS += -DCONFIG_SF16A18_LMAC_USE_M_SFDSP
-NOSTDINC_FLAGS += -DCONFIG_MULTI_NSS
-NOSTDINC_FLAGS += -DCONFIG_NSS_2
 NOSTDINC_FLAGS += -DCONFIG_SFA28_MPW0
 EXTRA_KCONFIG += CONFIG_SFA28_MPW0=y
+EXTRA_KCONFIG += CONFIG_SFA28=y
+else
+ifeq ($(SF_ARCH), a28fullmask)
+CONFIG_SF16A18_LMAC_USE_M_SFDSP=y
+NOSTDINC_FLAGS += -DCONFIG_SF16A18_LMAC_USE_M_SFDSP
+NOSTDINC_FLAGS += -DCONFIG_SFA28_FULLMASK
+EXTRA_KCONFIG += CONFIG_SFA28_FULLMASK=y
 else
 #if use interaptiv,you must set CONFIG_NR_CPUS to 2
 CONFIG_SF16A18_LMAC_USE_INTERPTIV=y
 NOSTDINC_FLAGS += -DCONFIG_SF16A18_LMAC_USE_INTERPTIV
 endif
 endif
+endif
 
 #if driver is final release
 #EXTRA_KCONFIG += CONFIG_SF16A18_RELEASE=y
 ifdef CONFIG_FLASH_OPTIMIZE
-EXTRA_KCONFIG += CONFIG_RWNX_TINY_DRIVER=y
+EXTRA_KCONFIG += CONFIG_SIWIFI_TINY_DRIVER=y
 EXTRA_KCONFIG += CONFIG_SF16A18_STARTCORE_USE_PIC=y
 endif
 ifdef CONFIG_MEMORY_OPTIMIZE
@@ -203,21 +220,36 @@ endef
 define KernelPackage/sf_smac/install
 	$(INSTALL_DIR) $(1)/lib/firmware
 	cp \
-		$(PKG_BUILD_DIR)/config/rwnx_aetnensis.ini \
-		$(PKG_BUILD_DIR)/config/rwnx_settings.ini \
+		$(PKG_BUILD_DIR)/config/siwifi_aetnensis.ini \
+		$(PKG_BUILD_DIR)/config/siwifi_settings.ini \
 		$(PKG_BUILD_DIR)/config/tx_adjust_gain_table.bin \
-		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf_rf_expa_config.ini \
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/agcram.bin \
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/ldpcram.bin \
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_pmem.bin \
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_default_reg.bin \
 		$(1)/lib/firmware
 
-ifdef CONFIG_TARGET_siflower_sf19a28_mpw1
-	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_trx_path.ini $(1)/lib/firmware
+ifdef CONFIG_TARGET_siflower_sf19a28_fullmask_SF19A28-A28-HWA
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf_rf_expa_config_hwa.ini $(1)/lib/firmware/sf_rf_expa_config.ini
+else
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf_rf_expa_config.ini $(1)/lib/firmware/sf_rf_expa_config.ini
 endif
 
-ifneq ($(SF_ARCH), a28mpw0)
+ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/dig_gaintable.ini $(1)/lib/firmware
+	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/dig_gaintable_expa.ini $(1)/lib/firmware
+	cp $(PKG_BUILD_DIR)/config/cali_table/default_txpower_calibrate_table.bin $(1)/lib/firmware
+	cp $(PKG_BUILD_DIR)/config/cali_table/default_txpower_calibrate_expa_table.bin $(1)/lib/firmware
+	cp $(PKG_BUILD_DIR)/config/cali_table/txp_offset_sleepmode_low.ini $(1)/lib/firmware
+	$(INSTALL_DIR) $(1)/usr/bin
+	cp $(PKG_BUILD_DIR)/config/cali_table/txpower_calibrate_table.sh $(1)/usr/bin
+	cp $(PKG_BUILD_DIR)/config/cali_table/txpower_calibrate_table.txt $(1)/usr/bin
+endif
+#ifdef CONFIG_TARGET_siflower_sf19a28_mpw1
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_trx_path.ini $(1)/lib/firmware
+#endif
+
+ifeq ($(SF_ARCH), fullmask)
 	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_xdma_reg.bin $(1)/lib/firmware
 	cp $(PKG_BUILD_DIR)/config/sfwifi.sh $(1)/lib/sfwifi.sh
 else
@@ -225,6 +257,7 @@ else
 endif
 	$(INSTALL_DIR) $(1)/bin
 	cp $(PKG_BUILD_DIR)/config/sfwifi $(1)/bin/
+	cp $(PKG_BUILD_DIR)/config/rfcmd_err $(1)/bin/
 	cp $(PKG_BUILD_DIR)/config/reload_wifi.sh $(1)/bin/
 ifeq ($(CONFIG_SF16A18_LMAC_USE_M_SFDSP), y)
 ifdef CONFIG_FLASH_OPTIMIZE

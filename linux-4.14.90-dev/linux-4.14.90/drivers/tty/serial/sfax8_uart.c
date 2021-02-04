@@ -1717,10 +1717,6 @@ sfax8_set_termios(struct uart_port *port, struct ktermios *termios,
 	else
 		clkdiv = 16;
 
-	if (port-> line) {
-		termios->c_cflag &= ~(CBAUD | CSIZE);
-		termios->c_cflag |= B115200 | CS8;
-	}
 	/*
 	 * Ask the core to calculate the divisor for us.
 	 */

@@ -281,6 +281,29 @@ generate_switch_vlans_ports() {
 	fi
 }
 
+generate_switch_ports() {
+	local switch="$1"
+	local switch_ports num port pvid
+
+	if json_is_a switch_ports array; then
+		json_get_keys switch_ports switch_ports
+		json_select switch_ports
+		for num in $switch_ports; do
+			json_select "$num"
+				json_get_vars port
+				json_get_vars pvid
+					uci -q batch <<-EOF
+						add network switch_port
+						set network.@switch_port[-1].device='$switch'
+						set network.@switch_port[-1].port=$port
+						set network.@switch_port[-1].pvid=$pvid
+					EOF
+			json_select ..
+		done
+		json_select ..
+	fi
+}
+
 generate_switch() {
 	local key="$1"
 	local vlans
@@ -304,6 +327,7 @@ generate_switch() {
 		for vlan in $vlans; do generate_switch_vlan $1 $vlan $cpu_port; done
 	}
 
+	generate_switch_ports "$1"
 	json_select ..
 	json_select ..
 }

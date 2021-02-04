@@ -1,7 +1,8 @@
-diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.c hostapd-2018-05-21-62566bc2/hostapd/config_file.c
---- hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.c	2019-11-29 11:28:29.831205907 +0800
-+++ hostapd-2018-05-21-62566bc2/hostapd/config_file.c	2019-11-29 14:24:25.035648866 +0800
-@@ -3837,6 +3837,12 @@ static int hostapd_config_fill(struct ho
+Index: hostapd-2019-08-08-ca8c2bd2/hostapd/config_file.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/hostapd/config_file.c	2020-11-11 15:01:23.158748779 +0800
++++ hostapd-2019-08-08-ca8c2bd2/hostapd/config_file.c	2020-11-11 15:01:23.154748779 +0800
+@@ -4202,6 +4202,12 @@
  		conf->disassociate_weak_sig_sta_enable = atoi(pos);
  	} else if (os_strcmp(buf, "weak_sta_signal") == 0) {
  		conf->weak_sta_signal = atoi(pos);
@@ -14,10 +15,11 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/hostapd/config_file.c hostapd-2018-0
  #ifdef CONFIG_FST
  	} else if (os_strcmp(buf, "fst_group_id") == 0) {
  		size_t len = os_strlen(pos);
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.h hostapd-2018-05-21-62566bc2/src/ap/ap_config.h
---- hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.h	2019-11-29 11:28:29.799205906 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/ap_config.h	2019-11-29 14:23:00.407645315 +0800
-@@ -631,6 +631,7 @@ struct hostapd_bss_config {
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.h
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ap_config.h	2020-11-11 15:01:23.158748779 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.h	2020-11-11 15:01:23.154748779 +0800
+@@ -673,6 +673,7 @@
  
  	int vendor_vht;
  	int use_sta_nsts;
@@ -25,7 +27,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.h hostapd-2018-05-2
  
  	char *no_probe_resp_if_seen_on;
  	char *no_auth_if_seen_on;
-@@ -828,6 +829,9 @@ struct hostapd_config {
+@@ -988,6 +989,9 @@
  	int prohibit_weak_sig_sta_enable;
  	int disassociate_weak_sig_sta_enable;
  	int weak_sta_signal;
@@ -35,10 +37,11 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ap_config.h hostapd-2018-05-2
  
  	struct wpabuf *lci;
  	struct wpabuf *civic;
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/beacon.c hostapd-2018-05-21-62566bc2/src/ap/beacon.c
---- hostapd-2018-05-21-62566bc2.orig/src/ap/beacon.c	2019-11-29 11:28:29.807205906 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/beacon.c	2019-11-29 14:21:42.151642030 +0800
-@@ -833,6 +833,14 @@ void handle_probe_req(struct hostapd_dat
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/beacon.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/beacon.c	2020-11-11 15:01:23.158748779 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/beacon.c	2020-11-11 15:01:23.154748779 +0800
+@@ -841,6 +841,14 @@
  	}
  #endif /* CONFIG_P2P */
  
@@ -53,7 +56,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/beacon.c hostapd-2018-05-21-6
  	if (hapd->conf->ignore_broadcast_ssid && elems.ssid_len == 0 &&
  	    elems.ssid_list_len == 0) {
  		wpa_printf(MSG_MSGDUMP, "Probe Request from " MACSTR " for "
-@@ -840,6 +848,7 @@ void handle_probe_req(struct hostapd_dat
+@@ -848,6 +856,7 @@
  		return;
  	}
  
@@ -61,9 +64,10 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/beacon.c hostapd-2018-05-21-6
  #ifdef CONFIG_P2P
  	if ((hapd->conf->p2p & P2P_GROUP_OWNER) &&
  	    elems.ssid_len == P2P_WILDCARD_SSID_LEN &&
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-62566bc2/src/ap/ubus.c
---- hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c	2019-11-29 11:28:29.803205906 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/ubus.c	2019-11-29 14:18:57.423635118 +0800
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ubus.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ubus.c	2020-11-11 15:01:23.158748779 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ubus.c	2020-11-11 15:02:26.850751452 +0800
 @@ -21,6 +21,8 @@
  #include "rrm.h"
  #include "wnm_ap.h"
@@ -73,7 +77,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
  
  static struct ubus_context *ctx;
  static struct blob_buf b;
-@@ -37,6 +39,8 @@ struct ubus_banned_client {
+@@ -37,6 +39,8 @@
  	u8 addr[ETH_ALEN];
  };
  
@@ -82,7 +86,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
  static void ubus_receive(int sock, void *eloop_ctx, void *sock_ctx)
  {
  	struct ubus_context *ctx = eloop_ctx;
-@@ -948,6 +952,109 @@ hostapd_wnm_disassoc_imminent(struct ubu
+@@ -948,6 +952,110 @@
  }
  #endif
  
@@ -159,6 +163,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
 +
 +	return 0;
 +}
++
 +int del_sta_whitelist(struct ubus_context *uctx, struct ubus_object *obj,
 +		      struct ubus_request_data *req, const char *method,
 +		      struct blob_attr *msg)
@@ -192,7 +197,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
  static const struct ubus_method bss_methods[] = {
  	UBUS_METHOD_NOARG("get_clients", hostapd_bss_get_clients),
  	UBUS_METHOD("del_client", hostapd_bss_del_client, del_policy),
-@@ -969,6 +1076,9 @@ static const struct ubus_method bss_meth
+@@ -969,6 +1077,9 @@
  #ifdef CONFIG_WNM_AP
  	UBUS_METHOD("wnm_disassoc_imminent", hostapd_wnm_disassoc_imminent, wnm_disassoc_policy),
  #endif
@@ -202,7 +207,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
  };
  
  static struct ubus_object_type bss_object_type =
-@@ -979,6 +1089,66 @@ static int avl_compare_macaddr(const voi
+@@ -979,6 +1090,66 @@
  	return memcmp(k1, k2, ETH_ALEN);
  }
  
@@ -269,7 +274,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
  void hostapd_ubus_add_bss(struct hostapd_data *hapd)
  {
  	struct ubus_object *obj = &hapd->ubus.obj;
-@@ -996,6 +1166,13 @@ void hostapd_ubus_add_bss(struct hostapd
+@@ -996,6 +1167,13 @@
  	if (asprintf(&name, "hostapd.%s", hapd->conf->iface) < 0)
  		return;
  
@@ -283,7 +288,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
  	avl_init(&hapd->ubus.banned, avl_compare_macaddr, false, NULL);
  	obj->name = name;
  	obj->type = &bss_object_type;
-@@ -1009,6 +1186,7 @@ void hostapd_ubus_free_bss(struct hostap
+@@ -1009,6 +1187,7 @@
  {
  	struct ubus_object *obj = &hapd->ubus.obj;
  	char *name = (char *) obj->name;
@@ -291,7 +296,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
  
  	if (!ctx)
  		return;
-@@ -1018,6 +1196,13 @@ void hostapd_ubus_free_bss(struct hostap
+@@ -1018,6 +1197,13 @@
  		hostapd_ubus_ref_dec();
  	}
  
@@ -305,7 +310,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
  	free(name);
  }
  
-@@ -1055,6 +1240,24 @@ int hostapd_ubus_handle_event(struct hos
+@@ -1055,6 +1241,24 @@
  	if (ban)
  		return WLAN_STATUS_AP_UNABLE_TO_HANDLE_NEW_STA;
  
@@ -319,8 +324,8 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
 +				blobmsg_add_macaddr(&b, "address", addr);
 +				if (req->mgmt_frame)
 +					blobmsg_add_macaddr(&b, "target", req->mgmt_frame->da);
-+				if (req->frame_info)
-+					blobmsg_add_u32(&b, "signal", req->frame_info->ssi_signal);
++				if (req->ssi_signal)
++					blobmsg_add_u32(&b, "signal", req->ssi_signal);
 +				blobmsg_add_u32(&b, "freq", hapd->iface->freq);
 +				ubus_invoke(ctx, sf_mm_ubus, "sta_connect", b.head, NULL, 0, 3000);
 +			}
@@ -330,21 +335,3 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
  	if (!hapd->ubus.obj.has_subscribers)
  		return WLAN_STATUS_SUCCESS;
  
-@@ -1079,7 +1282,7 @@ int hostapd_ubus_handle_event(struct hos
- 			ht_capabilities = (struct ieee80211_ht_capabilities*) req->elems->ht_capabilities;
- 			ht_cap = blobmsg_open_table(&b, "ht_capabilities");
- 			blobmsg_add_u16(&b, "ht_capabilities_info", ht_capabilities->ht_capabilities_info);
--			ht_cap_mcs_set = blobmsg_open_table(&b, "supported_mcs_set");		
-+			ht_cap_mcs_set = blobmsg_open_table(&b, "supported_mcs_set");
- 			blobmsg_add_u16(&b, "a_mpdu_params", ht_capabilities->a_mpdu_params);
- 			blobmsg_add_u16(&b, "ht_extended_capabilities", ht_capabilities->ht_extended_capabilities);
- 			blobmsg_add_u32(&b, "tx_bf_capability_info", ht_capabilities->tx_bf_capability_info);
-@@ -1090,7 +1293,7 @@ int hostapd_ubus_handle_event(struct hos
- 			}
- 			blobmsg_close_array(&b, mcs_set);
- 			blobmsg_close_table(&b, ht_cap_mcs_set);
--			blobmsg_close_table(&b, ht_cap);		
-+			blobmsg_close_table(&b, ht_cap);
- 		}
- 		if(req->elems->vht_capabilities)
- 		{

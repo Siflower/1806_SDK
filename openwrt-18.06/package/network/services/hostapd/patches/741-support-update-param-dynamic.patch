@@ -1,7 +1,8 @@
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-62566bc2/src/ap/ubus.c
---- hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c	2019-11-29 14:48:10.371708682 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/ubus.c	2019-11-29 14:51:28.611717001 +0800
-@@ -1055,6 +1055,46 @@ int del_sta_whitelist(struct ubus_contex
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ubus.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ubus.c	2020-11-11 15:29:56.578820684 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ubus.c	2020-11-11 15:33:28.738829587 +0800
+@@ -1056,6 +1056,46 @@
  	return 0;
  }
  
@@ -48,7 +49,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
  static const struct ubus_method bss_methods[] = {
  	UBUS_METHOD_NOARG("get_clients", hostapd_bss_get_clients),
  	UBUS_METHOD("del_client", hostapd_bss_del_client, del_policy),
-@@ -1067,6 +1107,7 @@ static const struct ubus_method bss_meth
+@@ -1068,6 +1108,7 @@
  	UBUS_METHOD("switch_chan", hostapd_switch_chan, csa_policy),
  #endif
  	UBUS_METHOD("set_vendor_elements", hostapd_vendor_elements, ve_policy),

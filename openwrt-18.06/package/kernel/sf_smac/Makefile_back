@@ -115,7 +115,7 @@ NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_ATE_TOOLS
 endif
 
 #ifdef CONFIG_FLASH_OPTIMIZE
-#EXTRA_KCONFIG += CONFIG_RWNX_TINY_DRIVER=y
+#EXTRA_KCONFIG += CONFIG_SIWIFI_TINY_DRIVER=y
 #endif
 
 NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_RF
@@ -160,8 +160,8 @@ endef
 define KernelPackage/sf_smac/install
 	$(INSTALL_DIR) $(1)/lib/firmware
 	cp \
-		$(PKG_BUILD_DIR)/config/rwnx_aetnensis.ini \
-		$(PKG_BUILD_DIR)/config/rwnx_settings.ini \
+		$(PKG_BUILD_DIR)/config/siwifi_aetnensis.ini \
+		$(PKG_BUILD_DIR)/config/siwifi_settings.ini \
 		$(PKG_BUILD_DIR)/config/tx_adjust_gain_table.bin \
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/agcram.bin \
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_pmem.bin \

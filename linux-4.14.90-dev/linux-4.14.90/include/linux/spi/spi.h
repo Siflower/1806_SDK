@@ -563,6 +563,8 @@ struct spi_controller {
 			    struct spi_transfer *transfer);
 	void (*handle_err)(struct spi_controller *ctlr,
 			   struct spi_message *message);
+	/* Optimized handlers for SPI memory-like operations. */
+	const struct spi_master_mem_ops *mem_ops;
 
 	/* gpio chip select */
 	int			*cs_gpios;

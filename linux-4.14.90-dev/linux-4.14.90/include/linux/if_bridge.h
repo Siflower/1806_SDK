@@ -51,7 +51,7 @@ struct br_ip_list {
 #define BR_BCAST_FLOOD		BIT(14)
 #define BR_ISOLATED		BIT(16)
 
-#define BR_DEFAULT_AGEING_TIME	(300 * HZ)
+#define BR_DEFAULT_AGEING_TIME	(1200 * HZ)
 
 extern void brioctl_set(int (*ioctl_hook)(struct net *, unsigned int, void __user *));
 

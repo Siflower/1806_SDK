@@ -920,6 +920,7 @@ static int wireless_process_ioctl(struct net *net, struct iwreq *iwr,
 				  wext_ioctl_func standard,
 				  wext_ioctl_func private)
 {
+	struct ifreq *ifr = (struct ifreq *) iwr;
 	struct net_device *dev;
 	iw_handler	handler;
 
@@ -956,6 +957,8 @@ static int wireless_process_ioctl(struct net *net, struct iwreq *iwr,
 		else if (private)
 			return private(dev, iwr, cmd, info, handler);
 	}
+	if (dev->netdev_ops->ndo_do_ioctl)
+		 return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
 	return -EOPNOTSUPP;
 }
 

@@ -9,6 +9,7 @@
 #include <linux/init.h>
 #include <linux/netfilter.h>
 #include <linux/netfilter/xt_FLOWOFFLOAD.h>
+#include <linux/etherdevice.h>
 #include <net/ip.h>
 #include <net/netfilter/nf_conntrack.h>
 #include <net/netfilter/nf_flow_table.h>
@@ -17,6 +18,12 @@ static struct nf_flowtable nf_flowtable;
 static HLIST_HEAD(hooks);
 static DEFINE_SPINLOCK(hooks_lock);
 static struct delayed_work hook_work;
+static struct hlist_head ts_blacklist;
+
+struct blacklist_dev {
+    struct hlist_node node;
+    u8 mac[ETH_ALEN];
+};
 
 struct xt_flowoffload_hook {
 	struct hlist_node list;
@@ -236,6 +243,123 @@ xt_flowoffload_route(struct sk_buff *skb, const struct nf_conn *ct,
 	return 0;
 }
 
+static struct blacklist_dev* check_dev_in_blacklist(u8 *mac)
+{
+	struct blacklist_dev *pos;
+	if (mac == NULL)
+		return NULL;
+
+	hlist_for_each_entry(pos, &ts_blacklist, node) {
+		if (ether_addr_equal(mac, pos->mac))
+			return pos;
+	}
+	return NULL;
+}
+
+static int check_flow_in_blacklist(struct net *net, struct flow_offload *flow)
+{
+	struct flow_offload_tuple *tuple;
+	struct neighbour *n;
+
+	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple;
+	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
+	if (n && check_dev_in_blacklist(n->ha)) {
+		neigh_release(n);
+		return 1;
+	}
+
+	if (n)
+		neigh_release(n);
+	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple;
+	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
+	if (n && check_dev_in_blacklist(n->ha)) {
+		neigh_release(n);
+		return 1;
+	}
+
+	if (n)
+		neigh_release(n);
+	return 0;
+}
+
+static void sf_flow_table_do_delete(struct flow_offload *flow, void *data)
+{
+	struct flow_offload_tuple *tuple;
+	struct neighbour *n;
+	u8 *mac = data;
+
+	rcu_read_lock_bh();
+	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple;
+	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
+	if (n && ether_addr_equal(mac, n->ha))
+		flow_offload_dead(flow);
+
+	if (n)
+		neigh_release(n);
+	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple;
+	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
+	if (n && ether_addr_equal(mac, n->ha))
+		flow_offload_dead(flow);
+
+	if (n)
+		neigh_release(n);
+	rcu_read_unlock_bh();
+}
+
+extern void nf_flow_offload_work_gc(struct work_struct *work);
+static void sf_free_exist_flow(u8 *mac_addr)
+{
+	struct nf_flowtable *table = &nf_flowtable;
+
+	cancel_delayed_work_sync(&table->gc_work);
+	nf_flow_table_iterate(table, sf_flow_table_do_delete, mac_addr);
+	INIT_DEFERRABLE_WORK(&table->gc_work, nf_flow_offload_work_gc);
+	nf_flow_offload_work_gc(&table->gc_work.work);
+}
+
+int sf_add_dev_to_blacklist(u8 *mac)
+{
+	struct blacklist_dev *hnode = NULL;
+	if (check_dev_in_blacklist(mac))
+		return 0;
+
+	hnode = kzalloc(sizeof(struct blacklist_dev), GFP_KERNEL);
+	if (hnode == NULL) {
+		printk("alloc blacklist_dev fail, no memory!");
+		return -ENOMEM;
+	}
+
+	memcpy(hnode->mac, mac, ETH_ALEN);
+	hlist_add_head(&hnode->node, &ts_blacklist);
+	sf_free_exist_flow(mac);
+	return 0;
+}
+EXPORT_SYMBOL(sf_add_dev_to_blacklist);
+
+int sf_del_dev_from_blacklist(u8 *mac)
+{
+	struct blacklist_dev *pos = NULL;
+	pos = check_dev_in_blacklist(mac);
+	if (pos == NULL)
+		return 0;
+
+	hlist_del(&pos->node);
+	kfree(pos);
+	return 0;
+}
+EXPORT_SYMBOL(sf_del_dev_from_blacklist);
+
+static void sf_destory_blacklist(void)
+{
+	struct blacklist_dev *pos;
+	struct hlist_node *h;
+
+	hlist_for_each_entry_safe(pos, h, &ts_blacklist, node) {
+		hlist_del(&pos->node);
+		kfree(pos);
+	}
+}
+
 static unsigned int
 flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 {
@@ -289,18 +413,24 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 	if (!flow)
 		goto err_flow_alloc;
 
-	if (flow_offload_add(&nf_flowtable, flow) < 0)
-		goto err_flow_add;
-
+//RM#8396  avoid delete flow offload called before hw add
 	xt_flowoffload_check_device(xt_in(par));
 	xt_flowoffload_check_device(xt_out(par));
 
-	if (info->flags & XT_FLOWOFFLOAD_HW)
-		nf_flow_offload_hw_add(xt_net(par), flow, ct);
+	if (info->flags & XT_FLOWOFFLOAD_HW) {
+		if (!check_flow_in_blacklist(xt_net(par), flow))
+			nf_flow_offload_hw_add(xt_net(par), flow, ct);
+	}
+
+	if (flow_offload_add(&nf_flowtable, flow) < 0)
+		goto err_flow_add;
+
 
 	return XT_CONTINUE;
 
 err_flow_add:
+	if (flow->flags & FLOW_OFFLOAD_HW)
+		nf_flow_offload_hw_del(xt_net(par), flow);
 	flow_offload_free(flow);
 err_flow_alloc:
 	dst_release(route.tuple[!dir].dst);
@@ -388,6 +518,7 @@ static int __init xt_flowoffload_tg_init(void)
 	if (ret)
 		xt_flowoffload_table_cleanup(&nf_flowtable);
 
+	INIT_HLIST_HEAD(&ts_blacklist);
 	return ret;
 }
 
@@ -396,6 +527,7 @@ static void __exit xt_flowoffload_tg_exit(void)
 	xt_unregister_target(&offload_tg_reg);
 	xt_flowoffload_table_cleanup(&nf_flowtable);
 	unregister_netdevice_notifier(&flow_offload_netdev_notifier);
+	sf_destory_blacklist();
 }
 
 MODULE_LICENSE("GPL");

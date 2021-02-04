@@ -95,7 +95,6 @@ define KernelPackage/nf-conntrack
         CONFIG_NETFILTER=y \
         CONFIG_NETFILTER_ADVANCED=y \
         CONFIG_NF_CONNTRACK_MARK=y \
-        CONFIG_NF_CONNTRACK_ZONES=y \
 	$(KCONFIG_NF_CONNTRACK)
   FILES:=$(foreach mod,$(NF_CONNTRACK-m),$(LINUX_DIR)/net/$(mod).ko)
   AUTOLOAD:=$(call AutoProbe,$(notdir $(NF_CONNTRACK-m)))

@@ -1,7 +1,8 @@
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/hostapd.c hostapd-2018-05-21-62566bc2/src/ap/hostapd.c
---- hostapd-2018-05-21-62566bc2.orig/src/ap/hostapd.c	2019-11-29 16:58:06.724035863 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/hostapd.c	2019-11-29 17:01:02.708043248 +0800
-@@ -143,6 +143,7 @@ static void hostapd_reload_bss(struct ho
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/hostapd.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/hostapd.c	2020-11-11 16:39:51.062996709 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/hostapd.c	2020-11-11 16:43:08.743005005 +0800
+@@ -159,6 +159,7 @@
  			wpa_printf(MSG_ERROR, "Failed to configure WPA IE for "
  				   "the kernel driver.");
  	} else if (hapd->wpa_auth) {
@@ -9,7 +10,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/hostapd.c hostapd-2018-05-21-
  		wpa_deinit(hapd->wpa_auth);
  		hapd->wpa_auth = NULL;
  		hostapd_set_privacy(hapd, 0);
-@@ -184,6 +185,24 @@ static void hostapd_clear_old(struct hos
+@@ -200,6 +201,24 @@
  	}
  }
  
@@ -32,12 +33,13 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/hostapd.c hostapd-2018-05-21-
 +	}
 +}
  
- int hostapd_reload_config(struct hostapd_iface *iface)
- {
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/hostapd.h hostapd-2018-05-21-62566bc2/src/ap/hostapd.h
---- hostapd-2018-05-21-62566bc2.orig/src/ap/hostapd.h	2019-11-29 16:58:06.728035863 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/hostapd.h	2019-11-29 17:01:37.064044690 +0800
-@@ -576,6 +576,7 @@ void
+ static int hostapd_iface_conf_changed(struct hostapd_config *newconf,
+ 				      struct hostapd_config *oldconf)
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/hostapd.h
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/hostapd.h	2020-11-11 16:39:51.078996710 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/hostapd.h	2020-11-11 16:44:09.783007567 +0800
+@@ -611,6 +611,7 @@
  hostapd_switch_channel_fallback(struct hostapd_iface *iface,
  				const struct hostapd_freq_params *freq_params);
  void hostapd_cleanup_cs_params(struct hostapd_data *hapd);
@@ -45,10 +47,11 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/hostapd.h hostapd-2018-05-21-
  void hostapd_periodic_iface(struct hostapd_iface *iface);
  int hostapd_owe_trans_get_info(struct hostapd_data *hapd);
  
-diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-62566bc2/src/ap/ubus.c
---- hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c	2019-11-29 16:58:06.720035862 +0800
-+++ hostapd-2018-05-21-62566bc2/src/ap/ubus.c	2019-11-29 17:02:55.224047970 +0800
-@@ -373,6 +373,16 @@ hostapd_bss_wps_cancel(struct ubus_conte
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ubus.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ubus.c	2020-11-11 16:39:51.126996712 +0800
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ubus.c	2020-11-11 16:46:01.935012273 +0800
+@@ -373,6 +373,16 @@
  }
  
  static int
@@ -65,7 +68,7 @@ diff -uprN hostapd-2018-05-21-62566bc2.orig/src/ap/ubus.c hostapd-2018-05-21-625
  hostapd_bss_update_beacon(struct ubus_context *ctx, struct ubus_object *obj,
  			struct ubus_request_data *req, const char *method,
  			struct blob_attr *msg)
-@@ -1106,6 +1116,7 @@ static const struct ubus_method bss_meth
+@@ -1107,6 +1117,7 @@
  	UBUS_METHOD_NOARG("list_bans", hostapd_bss_list_bans),
  	UBUS_METHOD_NOARG("wps_start", hostapd_bss_wps_start),
  	UBUS_METHOD_NOARG("wps_cancel", hostapd_bss_wps_cancel),
