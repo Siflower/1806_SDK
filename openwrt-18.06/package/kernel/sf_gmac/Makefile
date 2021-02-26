@@ -28,13 +28,21 @@ define KernelPackage/sf_gmac/config
 			bool "select FPGA mode gmac"
 			default "n"
 
-		config SFAX8_HNAT_ENABLE
-			bool "set hnat enable"
+		config SFAX8_HNAT_DRIVER
+			bool "hnat driver support"
+			depends on PACKAGE_kmod-sf_hnat
 			default "n"
 
-		config SFAX8_GMAC_TEST_TOOL
-			bool "set test tool"
+		config SFAX8_ESWITCH_DRIVER
+			bool "eswitch driver support"
+			depends on PACKAGE_kmod-sf_eswitch
 			default "n"
+
+		config SFAX8_HNAT_TEST_TOOL
+			bool "set test tool"
+			depends on SFAX8_HNAT_DRIVER
+			default "n"
+
 	endif
 endef
 
@@ -51,35 +59,41 @@ ifdef CONFIG_TARGET_siflower_sf19a28_mpw1
 NOSTDINC_FLAGS += -DCONFIG_SF19A28_MPW1
 endif
 
+ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
+NOSTDINC_FLAGS += -DCONFIG_SF19A28_FULLMASK
+endif
+
 ifdef CONFIG_SFAX8_RGMII_GMAC
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_RGMII_GMAC
 endif
 
-ifdef CONFIG_SFAX8_HNAT_ENABLE
-EXTRA_KCONFIG += CONFIG_SFAX8_HNAT_ENABLE=y
-NOSTDINC_FLAGS += -DCONFIG_SFAX8_HNAT_ENABLE
-define KernelPackage/sf_gmac
-  SUBMENU:=Network Devices
-  TITLE:=Siflower SFA18 gmac support
-  FILES:=$(PKG_BUILD_DIR)/sgmac.ko
-  AUTOLOAD:=$(call AutoLoad,60,sgmac,1)
-  KCONFIG:=
-  DEPENDS:= +kmod-sf_hnat
-endef
-else
-define KernelPackage/sf_gmac
-  SUBMENU:=Network Devices
-  TITLE:=Siflower SFA18 gmac support
-  FILES:=$(PKG_BUILD_DIR)/sgmac.ko
-  AUTOLOAD:=$(call AutoLoad,60,sgmac,1)
-  KCONFIG:=
-endef
+ifdef CONFIG_SFAX8_HNAT_DRIVER
+EXTRA_KCONFIG += CONFIG_SFAX8_HNAT_DRIVER=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_HNAT_DRIVER
+ifdef CONFIG_SFAX8_HNAT_TEST_TOOL
+EXTRA_KCONFIG += CONFIG_SFAX8_HNAT_TEST_TOOL=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_HNAT_TEST_TOOL
+endif
 endif
 
-ifdef CONFIG_SFAX8_GMAC_TEST_TOOL
-EXTRA_KCONFIG += CONFIG_SFAX8_GMAC_TEST_TOOL=y
-NOSTDINC_FLAGS += -DCONFIG_SFAX8_GMAC_TEST_TOOL
+ifdef CONFIG_SFAX8_ESWITCH_DRIVER
+EXTRA_KCONFIG += CONFIG_SFAX8_ESWITCH_DRIVER=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_ESWITCH_DRIVER
 endif
+
+ifdef CONFIG_SFAX8_GENL
+EXTRA_KCONFIG += CONFIG_SFAX8_GENL=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_GENL
+endif
+
+define KernelPackage/sf_gmac
+  SUBMENU:=Network Devices
+  TITLE:=Siflower SFA18 gmac support
+  FILES:=$(PKG_BUILD_DIR)/sgmac.ko
+  AUTOLOAD:=$(call AutoLoad,60,sgmac,1)
+  KCONFIG:=
+endef
+
 
 ifdef CONFIG_SFAX8_RMII_GMAC
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_RMII_GMAC

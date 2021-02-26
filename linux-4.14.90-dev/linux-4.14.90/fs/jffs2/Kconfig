@@ -41,6 +41,15 @@ config JFFS2_FS_WRITEBUFFER
 	    - NOR flash with transparent ECC
 	    - DataFlash
 
+config JFFS2_FS_REMOVE_CLEANMARKER
+	bool "Remove cleanmarker when spi nand flash was used"
+	depends on JFFS2_FS_WRITEBUFFER
+	default n
+	help
+	  Jffs2 cleanmarker was removed when this option is selected.
+	  This option is provided because some NAND Flash spare areas
+	  are all protected by ECC
+
 config JFFS2_FS_WBUF_VERIFY
 	bool "Verify JFFS2 write-buffer reads"
 	depends on JFFS2_FS_WRITEBUFFER

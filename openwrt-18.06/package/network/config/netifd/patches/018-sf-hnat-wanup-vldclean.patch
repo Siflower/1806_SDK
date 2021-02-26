@@ -1,0 +1,44 @@
+Index: netifd-2018-12-16-2750ce2e/interface.c
+===================================================================
+--- netifd-2018-12-16-2750ce2e.orig/interface.c	2021-02-04 16:57:14.249427371 +0800
++++ netifd-2018-12-16-2750ce2e/interface.c	2021-02-04 16:57:46.969428335 +0800
+@@ -14,6 +14,9 @@
+ #include <string.h>
+ #include <stdlib.h>
+ #include <stdio.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <sys/ioctl.h>
+ 
+ #include "netifd.h"
+ #include "device.h"
+@@ -712,6 +715,21 @@
+ }
+ 
+ static void
++interface_hnat_vldclean(struct interface *iface)
++{
++	if(strcmp(iface->name, "wan") == 0){
++		int handle;
++		handle = open("/sys/kernel/debug/hnat_debug",O_RDWR);
++		if(handle == -1){
++			netifd_log_message(L_NOTICE, "hnat wan vldclean: handle gsw_debug fail\n");
++			return;
++		}
++		ioctl(handle, 0, 0);
++		close(handle);
++	}
++}
++
++static void
+ interface_proto_event_cb(struct interface_proto_state *state, enum interface_proto_event ev)
+ {
+ 	struct interface *iface = state->iface;
+@@ -733,6 +751,7 @@
+ 		iface->state = IFS_UP;
+ 		iface->start_time = system_get_rtime();
+ 		interface_event(iface, IFEV_UP);
++		interface_hnat_vldclean(iface);
+ 		netifd_log_message(L_NOTICE, "Interface '%s' is now up\n", iface->name);
+ 		break;
+ 	case IFPEV_DOWN:

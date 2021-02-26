@@ -84,6 +84,14 @@ ucidef_set_interfaces_lan_wan() {
 	ucidef_set_interface_wan "$wan_if"
 }
 
+ucidef_set_interface_guest() {
+	ucidef_set_interface "guest" ifname "$1"
+}
+
+ucidef_set_interface_lease() {
+	ucidef_set_interface "lease" ifname "$1"
+}
+
 _ucidef_add_switch_port() {
 	# inherited: $num $device $need_tag $want_untag $role $index $prev_role
 	# inherited: $n_cpu $n_ports $n_vlan $cpu0 $cpu1 $cpu2 $cpu3 $cpu4 $cpu5

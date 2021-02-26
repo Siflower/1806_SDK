@@ -584,8 +584,7 @@ hrtimer_force_reprogram(struct hrtimer_cpu_base *cpu_base, int skip_equal)
 	if (cpu_base->hang_detected)
 		return;
 
-	if (tick_program_event(cpu_base->expires_next, 1))
-		raise_softirq_irqoff(HRTIMER_SOFTIRQ);
+	tick_program_event(cpu_base->expires_next, 1);
 }
 
 /*

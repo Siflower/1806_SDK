@@ -60,6 +60,14 @@ for dev in /sys/class/net/*; do
 		else
 		set_hex_val "$q/rps_cpus" "$(($PROC_MASK & ~$irq_cpu_mask))"
 		fi
+		wifi-lb_interrupt="$(echo $device | grep wifi-lb)"
+		if [ $wifi-lb_interrupt ];then
+			set_hex_val "$q/rps_cpus" "3"
+		fi
+		wifi-hb_interrupt="$(echo $device | grep wifi-hb)"
+		if [ $wifi-hb_interrupt ];then
+			set_hex_val "$q/rps_cpus" "3"
+		fi
 	done
 
 	ntxq="$(ls -d ${dev}/queues/tx-* | wc -l)"

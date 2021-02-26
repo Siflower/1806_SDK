@@ -17,7 +17,6 @@ endef
 
 define KernelPackage/sf_hnat/config
 	if PACKAGE_kmod-sf_hnat
-
 		config SFAX8_HNAT_TEST_TOOL
 			bool "set test tool"
 			default "n"
@@ -32,6 +31,15 @@ ifdef CONFIG_SFAX8_HNAT_TEST_TOOL
 EXTRA_KCONFIG += CONFIG_SFAX8_HNAT_TEST_TOOL=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_HNAT_TEST_TOOL
 endif
+
+ifdef CONFIG_TARGET_siflower_sf19a28_mpw1
+NOSTDINC_FLAGS += -DCONFIG_SF19A28_MPW1
+endif
+
+ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
+NOSTDINC_FLAGS += -DCONFIG_SF19A28_FULLMASK
+endif
+
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
