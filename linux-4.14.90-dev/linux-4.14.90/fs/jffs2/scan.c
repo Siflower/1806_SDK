@@ -113,7 +113,12 @@ int jffs2_scan_medium(struct jffs2_sb_info *c)
 	if (!flashbuf) {
 		/* For NAND it's quicker to read a whole eraseblock at a time,
 		   apparently */
+#ifndef CONFIG_JFFS2_FS_REMOVE_CLEANMARKER
 		if (jffs2_cleanmarker_oob(c))
+#else
+		if (c->mtd->type == MTD_NANDFLASH)
+			//use c->mtd->type instead of jffs2_cleanmarker_oob(c)
+#endif
 			try_size = c->sector_size;
 		else
 			try_size = PAGE_SIZE;
@@ -465,6 +470,7 @@ static int jffs2_scan_eraseblock (struct jffs2_sb_info *c, struct jffs2_eraseblo
 	jffs2_dbg(1, "%s(): Scanning block at 0x%x\n", __func__, ofs);
 
 #ifdef CONFIG_JFFS2_FS_WRITEBUFFER
+#ifndef CONFIG_JFFS2_FS_REMOVE_CLEANMARKER
 	if (jffs2_cleanmarker_oob(c)) {
 		int ret;
 
@@ -483,6 +489,10 @@ static int jffs2_scan_eraseblock (struct jffs2_sb_info *c, struct jffs2_eraseblo
 		default: 	return ret;
 		}
 	}
+#else
+	if (mtd_block_isbad(c->mtd, jeb->offset))
+		return BLK_STATE_BADBLOCK;
+#endif
 #endif
 
 	if (jffs2_sum_active()) {

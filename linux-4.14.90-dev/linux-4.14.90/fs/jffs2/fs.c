@@ -707,7 +707,12 @@ void jffs2_gc_release_page(struct jffs2_sb_info *c,
 static int jffs2_flash_setup(struct jffs2_sb_info *c) {
 	int ret = 0;
 
+#ifndef CONFIG_JFFS2_FS_REMOVE_CLEANMARKER
 	if (jffs2_cleanmarker_oob(c)) {
+#else
+	if (c->mtd->type == MTD_NANDFLASH) {
+		//use c->mtd->type instead of jffs2_cleanmarker_oob(c)
+#endif
 		/* NAND flash... do setup accordingly */
 		ret = jffs2_nand_flash_setup(c);
 		if (ret)
@@ -740,7 +745,12 @@ static int jffs2_flash_setup(struct jffs2_sb_info *c) {
 
 void jffs2_flash_cleanup(struct jffs2_sb_info *c) {
 
+#ifndef CONFIG_JFFS2_FS_REMOVE_CLEANMARKER
 	if (jffs2_cleanmarker_oob(c)) {
+#else
+	if (c->mtd->type == MTD_NANDFLASH) {
+		//use c->mtd->type instead of jffs2_cleanmarker_oob(c)
+#endif
 		jffs2_nand_flash_cleanup(c);
 	}
 

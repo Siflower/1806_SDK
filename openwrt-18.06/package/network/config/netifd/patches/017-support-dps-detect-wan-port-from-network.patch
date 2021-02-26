@@ -1,0 +1,132 @@
+Index: netifd-2018-12-16-2750ce2e/system-linux.c
+===================================================================
+--- netifd-2018-12-16-2750ce2e.orig/system-linux.c	2020-12-30 17:16:07.925496064 +0800
++++ netifd-2018-12-16-2750ce2e/system-linux.c	2020-12-30 17:17:44.193500518 +0800
+@@ -634,8 +634,6 @@
+ 	SF_ETH_CMD_ATTR_UNSPEC = 0,
+ 	SF_ETH_CMD_ATTR_DPS_PORT,            /* eth phy port*/
+ 	SF_ETH_CMD_ATTR_DPS_LINK,            /* 0---link down  1---link up */
+-	SF_ETH_CMD_ATTR_DPS_IS_WAN,          /* 0---lan     1---wan */
+-	SF_ETH_CMD_ATTR_DPS_VLANID,          /* 0---lan     1---wan */
+ 	SF_ETH_CMD_ATTR_DPS_IFNAME,
+ 	__SF_ETH_CMD_ATTR_MAX,
+ };
+@@ -643,11 +641,81 @@
+ static struct nla_policy sf_eth_policy[__SF_ETH_CMD_ATTR_MAX+1] = {
+ 	[SF_ETH_CMD_ATTR_DPS_PORT]   = { .type = NLA_U32 },
+ 	[SF_ETH_CMD_ATTR_DPS_LINK]   = { .type = NLA_U32 },
+-	[SF_ETH_CMD_ATTR_DPS_IS_WAN]   = { .type = NLA_U32 },
+-	[SF_ETH_CMD_ATTR_DPS_VLANID]   = { .type = NLA_U32 },
+ 	[SF_ETH_CMD_ATTR_DPS_IFNAME]   = { .type = NLA_STRING },
+ };
+ 
++static void substr(char *dst, char *src, char cut, int is_left)
++{
++	int i, len;
++
++	if (src == NULL || dst == NULL)
++		return;
++
++	len = strlen(src);
++	for (i = 0; i < len; i++) {
++		if (*(src+i) == cut)
++			break;
++	}
++
++	// not includ cut
++	if (is_left)
++		strncpy(dst, src, i);
++	else
++		strncpy(dst, (src + i + 1), (len - i - 1));
++}
++
++static int get_wan_port(int *wan_port, int *wan_vid)
++{
++	struct uci_package *pkg;
++	struct uci_context *ctx;
++	struct uci_section *wan_section, *s;
++	struct uci_element *e;
++	const char *wan_ifname, *vid, *ports;
++	char vid_str[4] = {'\0'}, port_str[4] = {'\0'};
++
++	ctx = uci_alloc_context();
++	uci_set_confdir(ctx, "/etc/config");
++	if (uci_load(ctx, "network", &pkg) == 0){
++
++		wan_section = uci_lookup_section(ctx, pkg, "wan");
++		if (!wan_section)
++			goto err_out;
++
++		wan_ifname = uci_lookup_option_string(ctx, wan_section, "ifname");
++		if (!wan_ifname)
++			goto err_out;
++
++		substr(vid_str, (char *)wan_ifname, '.', 0);
++		*wan_vid = atoi(vid_str);
++		uci_foreach_element(&pkg->sections, e)
++		{
++			s = uci_to_section(e);
++			if (strcmp(s->type, "switch_vlan"))
++				continue;
++
++			vid = uci_lookup_option_string(ctx, s, "vlan");
++			if (!vid)
++				continue;
++
++			if (!strcmp(vid, vid_str)) {
++				ports = uci_lookup_option_string(ctx, s, "ports");
++				substr(port_str, (char *)ports, ' ', 1);
++				*wan_port = atoi(port_str);
++				break;
++			}
++		}
++		uci_unload(ctx, pkg);
++	}
++
++	uci_free_context(ctx);
++	return 0;
++
++err_out:
++	uci_unload(ctx, pkg);
++	uci_free_context(ctx);
++	return 0;
++}
++
+ #define SF_CMD_GENERIC      1
+ #define SF_CMD_ATTR_DPS     1
+ static int cb_sf_eth_event(struct nl_msg *msg, void *arg)
+@@ -657,8 +725,8 @@
+ 	struct nlattr *nla[__SF_ETH_CMD_ATTR_MAX + 1];
+ 	int port = 0;
+ 	int updown = 0;
+-	int is_wan = 0;
+-	int vlanid = 0;
++	int is_wan = 0, wan_port = -1;
++	int vlanid = 1, wan_vid = -1;
+ 	char ifname[32] = {0};
+ 	char vlan_ifame[32] = {0};
+ 
+@@ -682,17 +750,16 @@
+ 		updown = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_LINK]);
+ 	}
+ 
+-	if(nla[SF_ETH_CMD_ATTR_DPS_IS_WAN]){
+-		is_wan = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_IS_WAN]);
+-	}
+-	if(nla[SF_ETH_CMD_ATTR_DPS_VLANID]){
+-		vlanid = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_VLANID]);
+-	}
+-
+ 	if(nla[SF_ETH_CMD_ATTR_DPS_IFNAME]){
+ 		sprintf(ifname,"%s",nla_get_string(nla[SF_ETH_CMD_ATTR_DPS_IFNAME]));
+ 	}
+ 
++	get_wan_port(&wan_port, &wan_vid);
++	if (port == wan_port) {
++		is_wan = 1;
++		vlanid = wan_vid;
++	}
++
+ 	netifd_log_message(L_NOTICE, "sf_eth_event port %d updown %d is_wan %d vlanid %d ifname %s\n",
+ 				port, updown, is_wan,vlanid, ifname);
+ 	if(is_wan){

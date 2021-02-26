@@ -5206,13 +5206,24 @@ static int process_backlog(struct napi_struct *napi, int quota)
 		struct sk_buff *skb;
 
 		while ((skb = __skb_dequeue(&sd->process_queue))) {
+#define SF_HNAT_FLAG                   40 // skb hw hnat finish flag
+#define SF_CB_HNAT_FORWARD             22 // skb need xmit directly
+
+			if (skb->cb[SF_HNAT_FLAG] == SF_CB_HNAT_FORWARD)
+			{
+				skb_push(skb, ETH_HLEN);
+				dev_queue_xmit(skb);
+			}
+			else
+			{
 			rcu_read_lock();
 			__netif_receive_skb(skb);
 			rcu_read_unlock();
+			}
+
 			input_queue_head_incr(sd);
 			if (++work >= quota)
 				return work;
-
 		}
 
 		local_irq_disable();

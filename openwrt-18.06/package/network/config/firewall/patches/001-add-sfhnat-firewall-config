@@ -1,0 +1,38 @@
+Index: firewall-2018-12-06-14589c80/defaults.c
+===================================================================
+--- firewall-2018-12-06-14589c80.orig/defaults.c	2018-12-07 04:16:03.000000000 +0800
++++ firewall-2018-12-06-14589c80/defaults.c	2021-02-24 16:13:51.588358414 +0800
+@@ -84,6 +84,7 @@
+ 	}
+ }
+ 
++/*
+ static void
+ check_kmod(struct uci_element *e, bool *module, const char *name)
+ {
+@@ -106,6 +107,7 @@
+ 	warn_elem(e, "requires not available kernel module %s, disabling", name);
+ 	*module = false;
+ }
++*/
+ 
+ static void
+ check_any_reject_code(struct uci_element *e, enum fw3_reject_code *any_reject_code)
+@@ -171,7 +173,7 @@
+ 
+ 		check_any_reject_code(e, &defs->any_reject_code);
+ 
+-		check_kmod(e, &defs->flow_offloading, "xt_FLOWOFFLOAD");
++//		check_kmod(e, &defs->flow_offloading, "xt_FLOWOFFLOAD");
+ 	}
+ }
+ 
+@@ -268,7 +270,7 @@
+ 		{
+ 			r = fw3_ipt_rule_new(handle);
+ 			fw3_ipt_rule_comment(r, "Traffic offloading");
+-			fw3_ipt_rule_extra(r, "-m conntrack --ctstate RELATED,ESTABLISHED");
++			fw3_ipt_rule_extra(r, "-m conntrack --ctstate NEW,RELATED,ESTABLISHED");
+ 			fw3_ipt_rule_target(r, "FLOWOFFLOAD");
+ 			if (defs->flow_offloading_hw)
+ 				fw3_ipt_rule_addarg(r, false, "--hw", NULL);

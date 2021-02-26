@@ -6,6 +6,10 @@ wds_if="$1"
 path_led="/sys/class/leds/siwifi-"
 wps_enabled=0
 
+if [ -e "/tmp/dual_band_test" ]; then
+	exit 0
+fi
+
 check_wps() {
 	wps_status=0
 	[ -f /tmp/wps_status ] && {

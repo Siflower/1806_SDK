@@ -107,7 +107,11 @@ static inline void jffs2_init_inode_info(struct jffs2_inode_info *f)
 #define jffs2_can_mark_obsolete(c) (c->mtd->flags & (MTD_BIT_WRITEABLE))
 #endif
 
+#ifndef CONFIG_JFFS2_FS_REMOVE_CLEANMARKER
 #define jffs2_cleanmarker_oob(c) (c->mtd->type == MTD_NANDFLASH)
+#else
+#define jffs2_cleanmarker_oob(c) (0) //Disable cleanmarker
+#endif
 
 #define jffs2_wbuf_dirty(c) (!!(c)->wbuf_len)
 
