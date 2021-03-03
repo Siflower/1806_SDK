@@ -777,20 +777,18 @@ mac80211_interface_cleanup() {
 	local mode="$2"
 
 	for wdev in $(list_phy_interfaces "$phy"); do
+		local inf=$(uci show wireless| grep ifname | grep \'$wdev\' |awk 'BEGIN{FS="."}{printf $2}')
+		local wirelessmode=$(uci get wireless.$inf.mode)
 		if [ $mode = "hostap" ]; then
-			case $wdev in
-			wlan*)
+			if [[ ! $wirelessmode ]] || [[ "$wirelessmode" = "ap" ]]; then
 				ip link set dev "$wdev" down 2>/dev/null
 				iw dev "$wdev" del
-				;;
-			esac
+			fi
 		elif [ $mode = "wpa" ]; then
-			case $wdev in
-			*i*)
+			if [[ ! $wirelessmode ]] || [[ "$wirelessmode" = "sta" ]]; then
 				ip link set dev "$wdev" down 2>/dev/null
 				iw dev "$wdev" del
-				;;
-			esac
+			fi
 		fi
 	done
 }
