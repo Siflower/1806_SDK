@@ -208,6 +208,4 @@ source "drivers/fsi/Kconfig"
 source "drivers/tee/Kconfig"
 
 source "drivers/mux/Kconfig"
-
-source "drivers/sfax8_factory_read/Kconfig"
 endmenu

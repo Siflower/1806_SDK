@@ -1,0 +1,2700 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit">
+    <title>Extender</title>
+    <script type="text/javascript" src="json2.js"></script>
+    <script type="text/javascript" src="xhr.js"></script>
+    <script>
+        function CSSload() {
+            var screenWidth = window.screen.width;
+            var linkNode = document.createElement("link");
+            linkNode.setAttribute("rel","stylesheet");
+            linkNode.setAttribute("type","text/css");
+            if(screenWidth > 600){
+                linkNode.setAttribute("href","./pc.css");
+            }else{
+                linkNode.setAttribute("href","./mobile.css");
+            }
+            document.getElementsByTagName("head")[0].appendChild(linkNode);
+        }
+        CSSload();
+        var lang;
+        var type=navigator.appName;
+        var isIE678 = !-[1,];
+        if(type="Netscape" && !isIE678){
+            lang=navigator.language;
+        }else{
+            lang=navigator.userLanguage;
+        }
+        lang=lang.substr(0,2);
+        var zh_cn = {
+            expending_expending:{
+                id:"expending-expending",
+                text:"正在扩展...",
+                style:{
+                }
+            },
+            ap_mode_setting:{
+                id:"is-in-setting",
+                text:"正在设置...",
+                style:{
+                }
+            },
+            led_whiteText:{
+                id:"abnormal-reset",
+                text:"异常请恢复出厂设置",
+                style:{
+                }
+            },
+            led_whiteBottom_center_wifi:{
+                id:"led-whiteBottom-center-wifi",
+                text:"Wifi指示灯",
+                style:{
+                }
+            },
+            led_whiteBottom_center_wifi_set:{
+                id:"led-whiteBottom-center-wifi-set",
+                text:"常亮表示设置完毕<br>快闪表示中继未设置",
+                style:{
+                }
+            },
+            led_whiteBottom_center_relay:{
+                id:"led-whiteBottom-center-relay",
+                text:"中继信号灯",
+                style:{
+                }
+            },
+            led_whiteBottom_center_relay_set:{
+                id:"led-whiteBottom-center-relay-set",
+                text:"常亮表示与上级设备连接信号强度好<br>慢闪表示信号强度差",
+                style:{
+                }
+            },
+            led_whiteBottom_center_power:{
+                id:"led-whiteBottom-center-power",
+                text:"电源灯",
+                style:{
+                }
+            },
+            led_whiteBottom_center_power_set:{
+                id:"led-whiteBottom-center-power-set",
+                text:"常亮表示扩展器上电成功",
+                style:{
+                }
+            },
+            container_MainRoute:{
+                id:"container-MainRoute",
+                text:"主网络",
+                style:{
+                }
+            },
+            container_MainRoute_ssid:{
+                id:"container-MainRoute-ssid",
+                text:"网络名称(SSID)",
+                style:{
+                }
+            },
+            container_MainRoute_password:{
+                id:"container-MainRoute-password",
+                text:"密码",
+                style:{
+                }
+            },
+            container_relay:{
+                id:"container-relay",
+                text:"扩展网络",
+                style:{
+                }
+            },
+            container_relay_24g_ssid:{
+                id:"container-relay-2.4g-ssid",
+                text:"网络名称(SSID)",
+                style:{
+                }
+            },
+            container_relay_24g_password:{
+                id:"container-relay-2.4g-password",
+                text:"密码",
+                style:{
+                }
+            },
+            container_relay_24g_open:{
+                id:"container-relay-2.4g-open",
+                text:"不加密",
+                style:{
+                }
+            },
+             container_relay_5g_ssid:{
+                id:"container-relay-5g-ssid",
+                text:"网络名称(SSID)",
+                style:{
+                }
+            },
+            container_relay_5g_password:{
+                id:"container-relay-5g-password",
+                text:"密码",
+                style:{
+                }
+            },
+             container_relay_5g_open:{
+                id:"container-relay-5g-open",
+                text:"不加密",
+                style:{
+                }
+            },
+             container_relay_freq:{
+                id:"freq-text",
+                text:"多频合一",
+                style:{
+                }
+            },
+            container_status:{
+                id:"container-status",
+                text:"状态：",
+                style:{
+                }
+            },
+            container_success:{
+                id:"success-text",
+                text:"成功：Ip地址为",
+                style:{
+                }
+            },
+            container_fail:{
+                id:"fail-text",
+                text:"失败：",
+                 style:{
+                }
+            },
+            container_fail_text2:{
+                id:"fail-text2",
+                text:"失败：",
+                 style:{
+                }
+            },
+            container_pwderror:{
+                id:"pwderror",
+                text:"密码错误",
+                 style:{
+                }
+            },
+            container_timeout:{
+                id:"timeout",
+                text:"连接超时",
+                 style:{
+                }
+            },
+            container_pre:{
+                id:"container-pre",
+                text:"返回",
+                 style:{
+                }
+            },
+            buttonGoOn:{
+                id:"buttonGoOn",
+                text:"继续",
+                 style:{
+                }
+            },
+            container_pre_ap:{
+                id:"container-pre-ap",
+                text:"返回",
+                 style:{
+                }
+            },
+            buttonGoOn_ap:{
+                id:"buttonGoOn-ap",
+                text:"继续",
+                 style:{
+                }
+            },
+            /*
+            wifiScan_text:{
+                id:"wifiScan-text",
+                text:"扩展器支持双宽带：2.4GHz和5GHz",
+                 style:{
+                }
+            },
+            */
+            inputPwd_input:{
+                id:"inputPwd-input",
+                text:"请输入",
+                style:{
+                }
+            },
+            inputPwd_ps:{
+                id:"ipnutPwd-ps",
+                text:"的密码",
+                style:{
+                }
+            },
+            inputPwdDiv_confirm:{
+                id:"inputPwdDiv-confirm",
+                text:"确定",
+                style:{
+                }
+            },
+            inputPwdDiv_cancel:{
+                id:"inputPwdDiv-cancel",
+                text:"取消",
+                style:{
+                }
+            },
+            manual_Input:{
+                id:"manual-input",
+                text:"请输入名称和密码",
+                 style:{
+                }
+            },
+            manual_ssid:{
+                id:"manual-ssid",
+                text:"名称：",
+                 style:{
+                }
+            },
+            manual_password:{
+                id:"manual-password",
+                text:"密码：",
+                 style:{
+                }
+            },
+            manual_open:{
+                id:"manual-open",
+                text:"不加密",
+                 style:{
+                }
+            },
+           manual_confirm:{
+                id:"manual-confirm",
+                text:"确定",
+                 style:{
+                }
+            },
+           manual_cancle:{
+                id:"manual-cancel",
+                text:"取消",
+                 style:{
+                }
+            },
+            title:{
+                id:"title",
+                text:"选择主网络",
+                style:{
+                }
+            },
+            manualInput:{
+                id:"manualInput" ,
+                text:"手动输入",
+                 style:{
+                }
+            },
+            manual_refresh:{
+                id:"refresh" ,
+                text:"刷新",
+                 style:{
+                }
+            },
+            container_wifiscan_back:{
+                id:"container-wifiscan-back",
+                text:"返回",
+                 style:{
+                }
+            },
+            manual_refreshing:{/*maybe no use*/
+                id:"refreshing" ,
+                text:"正在刷新",
+                 style:{
+                }
+            },
+            wifiScan_wifiScanning:{
+                id:"wifiScanning",
+                text:"正在扫描...",
+                 style:{
+                }
+            },
+            ssid:{
+                id:"ssid",
+                text:"a",
+                style:{
+                    paddingTop: "2px"
+                }
+            },
+            container_MainRoute_keepsame:{
+                id:"container-MainRoute-keepsame",
+                text:"扩展网络无线名称和密码与主网络保持一致",
+                 style:{
+                }
+            },
+            mainroute_name:{
+                id:"mainroute-name",
+                text:"主网络名称",
+                 style:{
+                }
+            },
+            expander_name_24g:{
+                id:"expander-name-24g",
+                text:"扩展网络2.4G名称",
+                 style:{
+                }
+            },
+            expander_name_5g:{
+                id:"expander-name-5g",
+                text:"扩展网络5G名称",
+                 style:{
+                }
+            },
+            expander_name_freq:{
+                id:"expander-name-freq",
+                text:"扩展网络名称",
+                 style:{
+                }
+            },
+            connected_number:{
+                id:"connected-number",
+                text:"已连接设备数",
+                 style:{
+                }
+            },
+            firmware_version:{
+                id:"firmware-version-text",
+                text:"固件版本：",
+                 style:{
+                }
+            },
+            firmware_version2:{
+                id:"firmware-version-text2",
+                text:"固件版本：",
+                 style:{
+                }
+            },
+            repeate_mode:{
+                id:"repeater-mode",
+                text:"中继模式",
+                 style:{
+                }
+            },
+            repeater_mode2:{
+                id:"repeater-mode2",
+                text:"中继模式",
+                 style:{
+                }
+            },
+            repeater_set:{
+                id:"repeater-set",
+                text:"中继设置",
+                 style:{
+                }
+            },
+            ap_mode:{
+                id:"ap-mode",
+                text:"AP模式",
+                 style:{
+                }
+            },
+            ap_mode2:{
+                id:"ap-mode2",
+                text:"AP模式",
+                 style:{
+                }
+            },
+            ap_set:{
+                id:"ap-set",
+                text:"AP设置",
+                 style:{
+                }
+            },
+            ap_set_success_text:{
+                id:"ap-set-success-text",
+                text:"AP模式设置成功，接入网线后可正常上网",
+                 style:{
+                }
+            },
+            th_network_name_5g:{
+                id:"th-network-name-5g",
+                text:"网络名称(SSID)",
+                 style:{
+                }
+            },
+            th_band_5g:{
+                id:"th-band-5g",
+                text:"频段",
+                 style:{
+                }
+            },
+            th_signal_5g:{
+                id:"th-signal-5g",
+                text:"信号",
+                 style:{
+                }
+            },
+            th_network_name_24g:{
+                id:"th-network-name-24g",
+                text:"网络名称(SSID)",
+                 style:{
+                }
+            },
+            th_band_24g:{
+                id:"th-band-24g",
+                text:"频段",
+                 style:{
+                }
+            },
+            th_signal_24g:{
+                id:"th-signal-24g",
+                text:"信号",
+                 style:{
+                }
+            },
+            software_upgrade:{
+                id:"software-upgrade",
+                text:"软件升级",
+                 style:{
+                }
+            },
+            software_upgrade_top:{
+                id:"software-upgrade-top",
+                text:"软件升级",
+                 style:{
+                }
+            },
+            select_file:{
+                id:"select-file",
+                text:"选择文件：",
+                 style:{
+                }
+            },
+            browser:{
+                id:"browser",
+                text:"浏览",
+                 style:{
+                }
+            },
+            upgrade_back:{
+                id:"upgrade-back",
+                text:"返回",
+                 style:{
+                }
+            },
+            upgrade:{
+                id:"upgrade",
+                text:"升级",
+                 style:{
+                }
+            },
+            upgrade_tip_text:{
+                id:"upgrade-tip-text",
+                text:"请确认是否升级，如果升级，需要等待3-5分钟，升级中请不要断开电源。",
+                 style:{
+                }
+            },
+            upgrade_cancel:{
+                id:"upgrade-cancel",
+                text:"取消",
+                 style:{
+                }
+            },
+            upgrade_confirm:{
+                id:"upgrade-confirm",
+                text:"确定",
+                 style:{
+                }
+            },
+            yes:{
+                id:"yes",
+                text:"是",
+                 style:{
+                }
+            },
+            no:{
+                id:"no",
+                text:"否",
+                 style:{
+                }
+            }
+        };
+        var en_cn = {
+            expending_expending:{
+                id:"expending-expending",
+                text:"Extending...",
+                style:{
+                }
+            },
+            ap_mode_setting:{
+                id:"is-in-setting",
+                text:"Setting...",
+                style:{
+                }
+            },
+            led_whiteText:{
+                id:"abnormal-reset",
+                text:"If abnormal, please restore factory settings",
+                style:{
+                    marginTop:"6px"
+                }
+            },
+            led_whiteBottom_center_wifi:{
+                id:"led-whiteBottom-center-wifi",
+                text:"Wifi indicator lamp",
+                style:{
+                }
+            },
+            led_whiteBottom_center_wifi_set:{
+                id:"led-whiteBottom-center-wifi-set",
+                text:"Constant light indicates that the setting is completed<br>Flash indicates that the relay is not set",
+                style:{
+                }
+            },
+            led_whiteBottom_center_relay:{
+                id:"led-whiteBottom-center-relay",
+                text:"Relay signal lamp",
+                style:{
+                }
+            },
+            led_whiteBottom_center_relay_set:{
+                id:"led-whiteBottom-center-relay-set",
+                text:"Constant light indicates good signal strength connected with the superior device<br>Slow flash indicates poor signal strength",
+                style:{
+                }
+            },
+            led_whiteBottom_center_power:{
+                id:"led-whiteBottom-center-power",
+                text:"The power light",
+                style:{
+                }
+            },
+            led_whiteBottom_center_power_set:{
+                id:"led-whiteBottom-center-power-set",
+                text:"Constant light indicates that the extender is energized successfully",
+                style:{
+                }
+            },
+            container_MainRoute:{
+                id:"container-MainRoute",
+                text:"Primary Network",
+                style:{
+                }
+            },
+            container_MainRoute_ssid:{
+                id:"container-MainRoute-ssid",
+                text:"Network Name(SSID)",
+                style:{
+                }
+            },
+            container_MainRoute_password:{
+                id:"container-MainRoute-password",
+                text:"Password",
+                style:{
+                }
+            },
+            container_relay:{
+                id:"container-relay",
+                text:"Extender Network",
+                style:{
+                }
+            },
+            container_relay_24g_ssid:{
+                id:"container-relay-2.4g-ssid",
+                text:"Network Name(SSID)",
+                style:{
+                }
+            },
+            container_relay_24g_password:{
+                id:"container-relay-2.4g-password",
+                text:"Password",
+                style:{
+                }
+            },
+            container_relay_24g_open:{
+                id:"container-relay-2.4g-open",
+                text:"Open",
+                style:{
+                }
+            },
+             container_relay_5g_ssid:{
+                id:"container-relay-5g-ssid",
+                text:"Network Name(SSID)",
+                style:{
+                }
+            },
+            container_relay_5g_password:{
+                id:"container-relay-5g-password",
+                text:"Password",
+                style:{
+                }
+            },
+             container_relay_5g_open:{
+                id:"container-relay-5g-open",
+                text:"Open",
+                style:{
+                }
+            },
+             container_relay_freq:{
+                id:"freq-text",
+                text:"Multifrequency Integration",
+                style:{
+                }
+            },
+            container_status:{
+                id:"container-status",
+                text:"State:",
+                style:{
+                }
+            },
+            container_success:{
+                id:"success-text",
+                text:"Success:Ip address is",
+                style:{
+                }
+            },
+            container_fail:{
+                id:"fail-text",
+                text:"Fail:",
+                 style:{
+                }
+            },
+            container_fail_text2:{
+                id:"fail-text2",
+                text:"Fail:",
+                 style:{
+                }
+            },
+            container_pwderror:{
+                id:"pwderror",
+                text:"Password error",
+                 style:{
+                }
+            },
+            container_timeout:{
+                id:"timeout",
+                text:"Connection timed out",
+                 style:{
+                }
+            },
+            container_pre:{
+                id:"container-pre",
+                text:"Back",
+                 style:{
+                }
+            },
+            buttonGoOn:{
+                id:"buttonGoOn",
+                text:"Continue",
+                 style:{
+                }
+            },
+            container_pre_ap:{
+                id:"container-pre-ap",
+                text:"Back",
+                 style:{
+                }
+            },
+            buttonGoOn_ap:{
+                id:"buttonGoOn-ap",
+                text:"Continue",
+                 style:{
+                }
+            },
+            /*
+            wifiScan_text:{
+                id:"wifiScan-text",
+                text:"Extender supports dual broadband:2.4GHz and 5GHz",
+                 style:{
+                }
+            },
+            */
+            inputPwd_input:{
+                id:"inputPwd-input",
+                text:"Please enter ",
+                style:{
+                }
+            },
+            inputPwd_ps:{
+                id:"ipnutPwd-ps",
+                text:" 's password",
+                style:{
+                }
+            },
+            inputPwdDiv_confirm:{
+                id:"inputPwdDiv-confirm",
+                text:"Confirm",
+                style:{
+                }
+            },
+            inputPwdDiv_cancel:{
+                id:"inputPwdDiv-cancel",
+                text:"Cancel",
+                style:{
+                }
+            },
+            manual_Input:{
+                id:"manual-input",
+                text:"Please enter SSID and password",
+                 style:{
+                }
+            },
+            manual_ssid:{
+                id:"manual-ssid",
+                text:"SSID:",
+                 style:{
+                }
+            },
+            manual_password:{
+                id:"manual-password",
+                text:"Password:",
+                 style:{
+                 }
+            },
+            manual_open:{
+                id:"manual-open",
+                text:"Open",
+                 style:{
+                }
+            },
+            manual_confirm:{
+                id:"manual-confirm",
+                text:"Confirm",
+                 style:{
+                }
+            },
+            manual_cancel:{
+                id:"manual-cancel",
+                text:"Cancel",
+                 style:{
+                }
+            },
+            title:{
+                id:"title",
+                text:"Select Primary Network",
+                style:{
+                }
+            },
+            manualInput:{
+                id:"manualInput" ,
+                text:"Manual Input",
+                 style:{
+                }
+            },
+            manual_refresh:{
+                id:"refresh" ,
+                text:"Refresh",
+                 style:{
+                }
+            },
+            container_wifiscan_back:{
+                id:"container-wifiscan-back",
+                text:"Back",
+                 style:{
+                }
+            },
+            manual_refreshing:{/*maybe no use*/
+                id:"refreshing" ,
+                text:"Refreshing",
+                 style:{
+                }
+            },
+            wifiScan_wifiScanning:{
+                id:"wifiScanning",
+                text:"Scanning...",
+                 style:{
+                }
+            },
+            ssid:{
+                id:"ssid",
+                text:"a",
+                style:{
+                    paddingTop: "2px"
+                }
+            },
+            container_MainRoute_keepsame:{
+                id:"container-MainRoute-keepsame",
+                text:"Keep SSID & Password of extended WiFi the same as Primary Network",
+                 style:{
+                }
+            },
+            mainroute_name:{
+                id:"mainroute-name",
+                text:"Primary Network Name",
+                 style:{
+                }
+            },
+            expander_name_24g:{
+                id:"expander-name-24g",
+                text:"Extender Network 2.4G Name",
+                 style:{
+                }
+            },
+            expander_name_5g:{
+                id:"expander-name-5g",
+                text:"Extender Network 5G Name",
+                 style:{
+                }
+            },
+            expander_name_freq:{
+                id:"expander-name-freq",
+                text:"Extender Network Name",
+                 style:{
+                }
+            },
+            connected_number:{
+                id:"connected-number",
+                text:"Connected devices number",
+                 style:{
+                }
+            },
+            firmware_version:{
+                id:"firmware-version-text",
+                text:"Firmware version:",
+                 style:{
+                }
+            },
+            firmware_version2:{
+                id:"firmware-version-text2",
+                text:"Firmware version:",
+                 style:{
+                }
+            },
+            repeate_mode:{
+                id:"repeater-mode",
+                text:"Repeater Mode",
+                 style:{
+                }
+            },
+            repeater_mode2:{
+                id:"repeater-mode2",
+                text:"Repeater Mode",
+                 style:{
+                }
+            },
+            repeater_set:{
+                id:"repeater-set",
+                text:"Repeater setting",
+                 style:{
+                }
+            },
+            ap_mode:{
+                id:"ap-mode",
+                text:"AP Mode",
+                 style:{
+                }
+            },
+            ap_mode2:{
+                id:"ap-mode2",
+                text:"AP Mode",
+                 style:{
+                }
+            },
+            ap_set:{
+                id:"ap-set",
+                text:"AP Setting",
+                 style:{
+                }
+            },
+            ap_set_success_text:{
+                id:"ap-set-success-text",
+                text:"AP mode set success, you can access the Internet normally after accessing the network cable",
+                 style:{
+                }
+            },
+            th_network_name_5g:{
+                id:"th-network-name-5g",
+                text:"Network Name(SSID)",
+                 style:{
+                }
+            },
+            th_band_5g:{
+                id:"th-band-5g",
+                text:"Band",
+                 style:{
+                }
+            },
+            th_signal_5g:{
+                id:"th-signal-5g",
+                text:"Signal",
+                 style:{
+                }
+            },
+            th_network_name_24g:{
+                id:"th-network-name-24g",
+                text:"Network Name(SSID)",
+                 style:{
+                }
+            },
+            th_band_24g:{
+                id:"th-band-24g",
+                text:"Band",
+                 style:{
+                }
+            },
+            th_signal_24g:{
+                id:"th-signal-24g",
+                text:"Signal",
+                 style:{
+                }
+            },
+            software_upgrade:{
+                id:"software-upgrade",
+                text:"Software Upgrade",
+                 style:{
+                }
+            },
+            software_upgrade_top:{
+                id:"software-upgrade-top",
+                text:"Software Upgrade",
+                 style:{
+                }
+            },
+            select_file:{
+                id:"select-file",
+                text:"Select file:",
+                 style:{
+                }
+            },
+            browser:{
+                id:"browser",
+                text:"Browser",
+                 style:{
+                }
+            },
+            upgrade_back:{
+                id:"upgrade-back",
+                text:"Back",
+                 style:{
+                }
+            },
+            upgrade:{
+                id:"upgrade",
+                text:"Upgrade",
+                 style:{
+                }
+            },
+            upgrade_tip_text:{
+                id:"upgrade-tip-text",
+                text:"Please confirm to upgarde the router, when start upgrading, please wait 3-5 minutes and please do not unplug the power.",
+                 style:{
+                }
+            },
+            upgrade_cancel:{
+                id:"upgrade-cancel",
+                text:"Cancel",
+                 style:{
+                }
+            },
+            upgrade_confirm:{
+                id:"upgrade-confirm",
+                text:"Confirm",
+                 style:{
+                }
+            },
+            yes:{
+                id:"yes",
+                text:"Yes",
+                 style:{
+                }
+            },
+            no:{
+                id:"no",
+                text:"No",
+                 style:{
+                }
+            }
+        };
+        var zh_tip = {
+            "please input pwd":"请输入密码！",
+            "pwd too short":"密码长度不能少于8位！",
+            "pwd too long":"密码过长！",
+            "please input ssid":"请输入网络名称（SSID）！",
+            "ssid too long":"网络名称（SSID）过长！",
+            "ssid can not be all spaces":"网络名称（SSID）不能全为空格！",
+            "please select upgrade image first":"请先选择升级版本镜像！",
+            "image file type illegal":"镜像文件类型非法！请重新选择！",
+            "has been configured":"中继器已经中继成功，是否重新配置？若重新配置，将断开连接。",
+            "set success":"设置成功。",
+            "setting":"设置中..."
+        };
+        var en_tip = {
+            "please input pwd":"Please input password!",
+            "pwd too short":"Password length can not less than 8 bits!",
+            "pwd too long":"Password too long!",
+            "please input ssid":"Please input Network Name(SSID)!",
+            "ssid too long":"Network Name(SSID) too long!",
+            "ssid can not be all spaces":"Network Name(SSID) can not be all spaces!",
+            "please select upgrade image first":"Please select upgrade image first !",
+            "image file type illegal":"The image file type illegal ! Please reselect !",
+            "has been configured":"The repeater has relayed successfully, is it reconfigured ? If reconfigured, it will be disconnected.",
+            "set success":"Successfully set.",
+            "setting":"In setting..."
+        };
+        var err_tip = {};
+        function setStyle(id ,style){
+            var eleStyle = document.getElementById(id).style;
+            var array = [];
+            var i;
+            for(var keys in style){
+                array.push(keys);
+            }
+            for(i=0 ;i < array.length; i++){
+                eleStyle[array[i]] = style[array[i]];
+            }
+        }
+        function languageChange(){
+            var id;
+            err_tip = zh_tip;
+            if(lang=="zh"){
+                err_tip = zh_tip;
+                for(id in zh_cn){
+                    var ele = document.getElementById(zh_cn[id]['id']);
+                    if(ele.nodeName == "INPUT"){
+                        ele.value = zh_cn[id]['text'];
+                    }else{
+                        ele.innerHTML = zh_cn[id]['text'];
+                    }
+                    if(zh_cn[id]['style']){
+                        setStyle(zh_cn[id]['id'],zh_cn[id]['style']);
+                    }
+                }
+            }else if(lang=="en"){
+                err_tip = en_tip;
+                for(id in en_cn){
+                    var ele = document.getElementById(en_cn[id]['id']);
+                    if(ele.nodeName == "INPUT"){
+                        ele.value = en_cn[id]['text'];
+                    }else{
+                        ele.innerHTML = en_cn[id]['text'];
+                    }
+                    if(en_cn[id]['style']){
+                        setStyle(en_cn[id]['id'],en_cn[id]['style']);
+                    }
+                }
+            }
+            document.body.style.display = '';
+        }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <!--<link rel="stylesheet" href="./mobile.css">-->
+</head>
+<body style="display: none;">
+    <div class="header" style="width: 100%;height: 8em;position: fixed;top: 0px;left: 0;z-index: 1000;">
+        <div class="" style="width: 100%;height: 6em;background: #e74a45;">
+            <img class="" style="height: 1.4em;margin-left: 2em;margin-top: 2.3em;" border="0" src="./img/siflower_logo.png" alt="siflower"></img>
+        </div>
+        <div class="" style="width: 100%;height: 2em;background: #eeeeee">
+            <span id="firmware-version-text2" style="margin-left: 2em;">固件版本：</span> <span id="firmware-version2">loading...</span>
+        </div>
+    </div>
+
+    <div class="leftnav" style="float: left;border: 1px solid #cccccc;position: fixed;top: 8em;left: 0;height: 85%;">
+        <ul>
+            <li>
+                <a id="repeater-set" onclick="repeaterModeCheck();">中继设置</a>
+            </li>
+            <li>
+                <a id="ap-set" onclick="apMode();">AP设置</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main">
+    <div id="initial" class="div100 redBackground">
+        <div class="center">
+            <img class="topLogo" border="0" src="./img/toplogo.png" alt="toplogo"></img>
+            <br>
+            <span id="firmware-version-text">固件版本：</span><br><span id="firmware-version">loading...</span>
+            <br>
+            <img class="wifiLogo" border="0" src="./img/wifilogo.png" alt="wifilogo"></img>
+            <br>
+            <p><button id="repeater-mode" class="initButton" onclick="repeaterModeCheck();">中继模式</button></p>
+            <br>
+            <p><button id="ap-mode" class="initButton" onclick="apMode();">AP模式</button></p>
+            <br>
+        </div>
+        <div class="bottomLogoDiv" style="top: 85%;display: block;text-align: right;padding-bottom: 1em;">
+            <a id="software-upgrade" style="margin-right: 1em;cursor: pointer;" onclick="pageUpgrade();">软件升级</a>
+        </div>
+        <div class="bottomLogoDiv center">
+            <img class="siflowerLogo" border="0" src="./img/siflower_logo.png" alt="siflower"></img>
+        </div>
+    </div>
+    <div id="expending" class="div100 redBackground" style="display: none;">
+        <div class="center">
+            <img class="expendingIcon" border="0" src="./img/wifiscan.gif" alt="waiting"></img>
+            <br>
+            <span id="expending-expending" class="expendingText center" style="display: none;">正在扩展...</span>
+            <span id="wifiScanning" class="expendingText center">正在扫描...</span>
+            <span id="is-in-setting" class="expendingText center" style="display: none;">正在设置...</span>
+            <span id="upgrading" class="expendingText center" style="display: none;">正在升级...</span>
+        </div>
+        <div class="bottomLogoDiv center">
+            <img class="siflowerLogo" border="0" src="./img/siflower_logo.png" alt="siflower"></img>
+        </div>
+    </div>
+    <div id="container" class="container" style="display: none;">
+        <h3 class="topMode">
+            <span id="repeater-mode2" name="apHide">中继模式</span>
+            <span id="ap-mode2" name="apShow" style="display: none;">AP模式</span>
+        </h3>
+        <div id="wifiScan" style="display: none;">
+            <h4 class="Title"><img class="miniIcon" src="./img/main_mini.png"></img><span id="title">选择主网络</span></h4>
+            <!--<p><span id="wifiScan-text">扩展器支持双宽带：2.4GHz和5GHz</span></p>-->
+            <p style="text-align:center;">
+                <input id="scanRadio5g" type="radio" class="inputRadio" value="5g" name="scanRadio" checked onclick="wifiTableChange('5g');">
+                <label for="scanRadio5g">5G</label>
+                <input id="scanRadio24g" type="radio" class="inputRadio" value="24g" name="scanRadio" onclick="wifiTableChange('24g');">
+                <label for="scanRadio24g">2.4G</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </p>
+            <div id="scanTable" class="scanTable">
+                <table id="wifiTable5G" class="wifiTable">
+                    <tr>
+                        <th id="th-network-name-5g"></th>
+                        <th id="th-band-5g"></th>
+                        <th id="th-signal-5g"></th>
+                    </tr>
+                </table>
+                <table id="wifiTable24G" class="wifiTable" style="display: none;">
+                    <tr>
+                        <th id="th-network-name-24g"></th>
+                        <th id="th-band-24g"></th>
+                        <th id="th-signal-24g"></th>
+                    </tr>
+                </table>
+            </div>
+            <div class="manualInput">
+                <div><span id="manualInput" class="redText" onclick="showManual();">手动输入</span></div>
+            </div>
+            <div class="center">
+                <input id="container-wifiscan-back" class="refresh back" type="button" value="返回" onclick="repeaterReturn();"/>
+                <input id="refresh" class="refresh" type="button" value="刷新" onclick="getWifiScan('5g');"/>
+                <input id="refreshing" class="refreshing" type="button" value="正在刷新" style="display: none;"/><!--maybe no use-->
+            </div>
+        </div>
+        <div id="connected" class="connected" style="display: none;">
+            <h4 name="apHide"><img class="miniIcon" src="./img/main_mini.png"></img><span id="container-MainRoute"> 主网络</span></h4>
+            <div class="connectedInfo" name="apHide">
+                <table>
+                    <tr> <td><span id="container-MainRoute-ssid">网络名称(SSID)</span> </td> </tr>
+                    <tr> <td><input id="ssid" class="grayText" type="text" disabled="disabled" /></td> </tr>
+                    <tr> <td><span id="container-MainRoute-password">密码</span></td> </tr>
+                    <tr> <td><input id="wirelessPassword" class="grayText" name="password" type="password" disabled="disabled" /><input id="wirelessPassword-text" class="grayText" name="password-text" type="text" disabled="disabled" style="display: none;" /><img class="visible" name="visible" src="./img/unvisible.png" onclick="visibleChange(this,'wirelessPassword')"></img></td> </tr>
+                    <tr id="keepsame-tr">
+                        <td>
+                            <input id="keepsame" class="inputCheckbox" type="CHECKBOX" onchange="keepSameChange();" checked>
+                            <label for="keepsame" id="container-MainRoute-keepsame">扩展器WiFi名称与密码与主网络保持一致</label>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <h4><img class="miniIcon" src="./img/repeater_mini.png"></img><span id="container-relay"> 扩展网络</span></h4>
+            <div class="connectedInfo">
+                <p name="freqHide"> 2.4G:</p>
+                <table name="freqHide" class="nowrap repTable">
+                    <tr> <td><span id="container-relay-2.4g-ssid"> 网络名称(SSID)</span> </td> </tr>
+                    <tr> <td><input id="ssid-24g" type="text" maxlength="32" /></td> </tr>
+                    <tr> <td><span id="container-relay-2.4g-password">密码</span> </td> </tr>
+                    <tr>
+                        <td>
+                            <input id="wirelessPassword-24g" name="password" type="password" maxlength="63" onKeyUp="nStrLimit(this)" onchange="pwdKeepSame(this,'wirelessPassword-24g-text');"/><input id="wirelessPassword-24g-text" name="password-text" type="text" maxlength="63" style="display: none;" onKeyUp="nStrLimit(this)" onchange="pwdKeepSame(this,'wirelessPassword-24g');"/>
+                            <img class="visible" name="visible" src="./img/unvisible.png" onclick="visibleChange(this,'wirelessPassword-24g')"></img>
+                            <input id="open-24g" class="inputCheckbox" type="CHECKBOX" onchange="isOpen('open-24g','wirelessPassword-24g')">
+                            <label for="open-24g" id="container-relay-2.4g-open" class="openLabel">不加密</label>
+                        </td>
+                    </tr>
+                </table>
+                <p name="freqHide"> 5G:</p>
+                <table class="nowrap repTable">
+                    <tr> <td><span id="container-relay-5g-ssid">网络名称(SSID)</span> </td> </tr>
+                    <tr> <td><input id="ssid-5g" type="text" maxlength="32" /></td> </tr>
+                    <tr> <td><span  id="container-relay-5g-password"> 密码</span></td> </tr>
+                    <tr>
+                        <td>
+                            <input id="wirelessPassword-5g" name="password" type="password" maxlength="63" onKeyUp="nStrLimit(this)" onchange="pwdKeepSame(this,'wirelessPassword-5g-text');"/><input id="wirelessPassword-5g-text" name="password-text" type="text" maxlength="63" style="display: none;" onKeyUp="nStrLimit(this)" onchange="pwdKeepSame(this,'wirelessPassword-5g');"/>
+                            <img class="visible" name="visible" src="./img/unvisible.png" onclick="visibleChange(this,'wirelessPassword-5g')"></img>
+                            <input id="open-5g" class="inputCheckbox" type="CHECKBOX" onchange="isOpen('open-5g','wirelessPassword-5g')">
+                            <label for="open-5g" id="container-relay-5g-open" class="openLabel">不加密</label>
+                        </td>
+                    </tr>
+                </table>
+                <p>
+                <input id="freq" class="inputCheckbox" type="CHECKBOX" onchange="freqChange();">
+                <label for="freq" id="freq-text">多频合一</label>
+                </p>
+            </div>
+            <h4  id="container-status" class="redText" name="apHide"><span> 状态：</span></h4>
+            <div class="connectedInfo" name="apHide">
+                <p id="success"> <span id="success-text">成功：Ip地址为</span> <span id="lanIp" ></span></p>
+                <p id="fail-pwd" style="display: none;"><span id="fail-text"> 失败：</span><span id="pwderror" ></span></p>
+                <p id="fail-timeout" style="display: none;"><span id="fail-text2"> 失败：</span><span id="timeout" ></span></p>
+            </div>
+            <p class="buttonP" name="apHide">
+                <input id="container-pre" class="back" type="button" value="返回" onclick="returnScan()"/>
+                <input id="buttonGoOn" type="button" value="继续" onclick="alterWifi('rep');"/>
+            </p>
+            <p class="buttonP" name="apShow" style="display: none;">
+                <input id="container-pre-ap" class="back" type="button" value="返回" onclick="apReturn();"/>
+                <input id="buttonGoOn-ap" type="button" value="继续" onclick="alterWifi('ap');"/>
+            </p>
+        </div>
+        <div id="inputPwd" class="inputPwd" style="display: none;">
+            <div class="inputPwdDiv">
+                <p ><span id="inputPwd-input">请输入</span><span id="inputPwdSSID"></span><span id="ipnutPwd-ps">的密码</span></p>
+                <p class="center nowrap"><input id="key" name="password" type="password" maxlength="63" onKeyUp="nStrLimit(this)" onchange="pwdKeepSame(this,'key-text');"><input id="key-text" name="password-text" type="text" maxlength="63" style="display: none;" onKeyUp="nStrLimit(this)" onchange="pwdKeepSame(this,'key');"><img class="visible" name="visible" src="./img/unvisible.png" onclick="visibleChange(this,'key')"></img></p>
+                <p class="buttonP">
+                <input id="inputPwdDiv-cancel"  class="back" value="取消" type="button" onclick="closeInputPwd()"></i>
+                <input id="inputPwdDiv-confirm" value="确定" class="" type="button" onclick="getKey();wifiConnect()">
+                </p>
+            </div>
+        </div>
+        <div id="manual" class="inputPwd" style="display: none;">
+            <div class="inputPwdDiv">
+                <p id="manual-input">请输入名称和密码</p>
+                <p class="radioP nowrap">
+                <input id="radio24g" type="radio" class="inputRadio" value="24g" name="radio" onchange="radioSel('radio');">
+                <label for="radio24g">2.4G</label>
+                <input id="radio5g" type="radio" class="inputRadio" value="5g" name="radio" onchange="radioSel('radio');">
+                <label for="radio5g">5G</label>
+                </p>
+                <table>
+                    <tr>
+                        <td class="leftTd"><span id="manual-ssid">名称：</span></td><td><input id="manuSSID" class="" type="text" maxlength="32" /></td>
+                    </tr>
+                    <tr>
+                        <td class="leftTd"><span id="manual-password">密码：</span></td>
+                        <td class="nowrap">
+                            <input id="manuKey" name="password" type="password" maxlength="63" onKeyUp="nStrLimit(this)" onchange="pwdKeepSame(this,'manuKey-text');"><input id="manuKey-text" name="password-text" type="text" maxlength="63" style="display: none;" onKeyUp="nStrLimit(this)" onchange="pwdKeepSame(this,'manuKey');">
+                            <img class="visible" name="visible" src="./img/unvisible.png" onclick="visibleChange(this,'manuKey')"></img>
+                            <input id="manuOpen" class="inputCheckbox" type="CHECKBOX" onchange="isOpen('manuOpen','manuKey')">
+                            <label for="manuOpen" id="manual-open" class="openLabel">不加密</label>
+                        </td>
+                    </tr>
+                </table>
+                <p class="buttonP">
+                <input id="manual-cancel" class="back" value="取消" type="button" onclick="closeManual()">
+                <input id="manual-confirm" value="确定" class="" type="button" onclick="manualInput();">
+                </p>
+            </div>
+        </div>
+    </div>
+    <div id="led" class="div100" style="display: none;">
+        <div class="redTop">
+            <div class="ledTopLeft">
+                <img class="ledIcon" border="0" src="./img/repeater_icon.png" alt=""></img>
+            </div>
+            <div class="ledTopRight">
+                <table class="ledTopTable">
+                    <tr>
+                        <td class=""><span id="mainroute-name" class="">主网络名称：</span></td>
+                    </tr>
+                    <tr>
+                        <td><span id="mainroute-name-ssid">siwifi</span></td>
+                    </tr>
+                    <tr name="freqHide">
+                        <td class=""><span id="expander-name-24g" class="">扩展器2.4G名称：</span></td>
+                    </tr>
+                    <tr name="freqHide">
+                        <td><span id="expander-name-24g-ssid">siwifi</span></td>
+                    </tr>
+                    <tr name="freqHide">
+                        <td class=""><span id="expander-name-5g" class="">扩展器5G名称：</span></td>
+                    </tr>
+                    <tr name="freqHide">
+                        <td><span id="expander-name-5g-ssid">siwifi</span></td>
+                    </tr>
+                    <tr name="freqShow">
+                        <td class=""><span id="expander-name-freq" class="">扩展器名称：</span></td>
+                    </tr>
+                    <tr name="freqShow">
+                        <td><span id="expander-name-freq-ssid">siwifi</span></td>
+                    </tr>
+                    <tr style="display:none;">
+                        <td class=""><span id="connected-number" class="">已连接设备数：</span></td>
+                    </tr>
+                    <tr style="display:none;">
+                        <td><span id="connected-number-num">*</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="whiteBottom center">
+            <table class="ledTable">
+                <tr>
+                    <td><div><img border="0" src="./img/wifi_signal_led.png"></img></div></td>
+                    <td>
+                        <h4 id="led-whiteBottom-center-wifi">Wifi指示灯</h4>
+                        <h4 id="led-whiteBottom-center-wifi-set">常亮表示设置完毕，快闪表示中继未设置</h4>
+                    </td>
+                </tr>
+                <tr>
+                    <td><div><img border="0" src="./img/wds_signal_led.png"></img></div></td>
+                    <td>
+                        <h4 id="led-whiteBottom-center-relay">中继信号灯</h4>
+                        <h4 id="led-whiteBottom-center-relay-set">常亮表示与上级设备连接信号强度好，慢闪表示信号强度差</h4>
+                    </td>
+                </tr>
+                <tr>
+                    <td><div><img border="0" src="./img/power_led.png"></img></div></td>
+                    <td>
+                        <h4   id="led-whiteBottom-center-power">电源灯</h4>
+                        <h4   id="led-whiteBottom-center-power-set">常亮表示扩展器上电成功</h4>
+                    </td>
+                </tr>
+                <tr class="noBorder">
+                    <td></td>
+                    <td>
+                        <span id="abnormal-reset">异常请恢复出厂设置</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div id="ap-mode-success" class="div100" style="display: none;">
+        <div class="redTop">
+            <div class="apSuccessIcon">
+                <img class="ledIcon" border="0" src="./img/repeater_icon.png" alt=""></img>
+            </div>
+        </div>
+        <div class="whiteBottom center">
+            <h4 id="ap-set-success-text">AP模式设置成功，接入网线后可正常上网</h4>
+        </div>
+    </div>
+    <div id="upgrade-page" class="div100" style="display: none;">
+        <h3 class="topMode">
+            <span id="software-upgrade-top">软件升级</span>
+        </h3>
+        <div class="upgradeMain" style="padding-top:1em;">
+            <form method="post" id="upgradeForm" name="upgradeForm" enctype="multipart/form-data" action="cgi-bin/uploadfile.lua" target="upgradeIframe" style="margin-left: 2em;">
+                <p style="white-space:nowrap;margin-left: 0px;">
+                <span id="select-file">选择文件：</span>
+                <br>
+                <input id="textfield" type="text" style="padding-right: 0px;">
+                <input id="browser" type="button" value="浏览" style="width:5em;background-color:#e74a45;border:0px;color:white;">
+                </p>
+                <input id="upgradeFile" type="file" name="file1" style="position: relative;opacity: 0;cursor: pointer;" onchange="setFileName(this,'textfield')">
+            </form>
+            <p class="buttonP">
+                <input id="upgrade-back" class="back" type="button" value="返回" onclick="upgradeReturn()"/>
+                <input id="upgrade" type="button" value="升级" onclick="upgradeConfirm();"/>
+            </p>
+            <br>
+            <div id="upgrade-tip" style="display: none;">
+                <p id="upgrade-tip-text">请确认是否升级，如果升级，需要等待3-5分钟，升级中请不要断开电源</p>
+                <p class="buttonP" style="text-align: right;">
+                <input id="upgrade-cancel" class="back" type="button" value="取消" onclick="upgradeCancel()"/>
+                <input id="upgrade-confirm" type="button" value="确定" onclick="uploadFile();"/>
+                </p>
+            </div>
+            <iframe name="upgradeIframe" style="width:40em;height:11em;margin-top:35em;display:none;"></iframe>
+        </div>
+    </div>
+    <div id="repeater-mode-tip" style="position: absolute;top: 10em;left: 2em;right: 2em;padding: 5px;background-color: white;border: 3px solid #e74a45;display: none;">
+        <p id="repeater-mode-tip-text">中继器已经中继成功，是否重新配置？若重新配置，将断开连接。</p>
+        <p class="buttonP" style="text-align: right;">
+        <input id="yes" type="button" value="是" onclick="resetRepMode()"/>
+        <input id="no" class="back" type="button" value="否" onclick="returnHome();"/>
+        </p>
+    </div>
+
+    </div>
+</body>
+</html>
+<script>
+    var ubusSesionID = "00000000000000000000000000000000";
+    var global_band = '5g';
+    var wifis = [];
+    var hiddenWifis = [];
+    var ssid = "";
+    var key = "";
+    var encryption= "open";
+    var bssid = "";
+    var channel = 161;
+    var checkInterval;
+    var freqStatus = false;
+    if (!window.location.origin) {
+        window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
+    }
+    languageChange();
+    logInAdmin();
+    window.console = window.console || (function () {
+        var c = {}; c.log = c.warn = c.debug = c.info = c.error = c.time = c.dir = c.profile
+            = c.clear = c.exception = c.trace = c.assert = function () { };
+        return c;
+    })();
+
+    function logInAdmin() {
+        var params = {};
+        params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ "00000000000000000000000000000000", "session", "login", { "username": "root", "password": "admin","timeout":3600  } ] };
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                if (result==null) {
+                    alert('login fail!');
+                }else if (result!=null) {
+                    var ret = result.result;
+                    ubusSesionID = ret[1] .ubus_rpc_session;
+                    getVersion();
+                }else {
+                    alert(writeObj(result));
+                }
+            });
+    }
+
+    function getVersion(){
+        var params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "lepton.network", "get_firmware_version", { }  ]  };
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                var error = result.error;
+                result = result.result;
+                if (result == null && error == null) {
+                    console.log('fail!');
+                }else if (result[0] == 0 && result[1].firmware_version != "") {
+                    console.log(result);
+                    document.getElementById('firmware-version').innerText = result[1].firmware_version;
+                    document.getElementById('firmware-version2').innerText = result[1].firmware_version;
+                }else if (result[0] == 0 && result[1].bssid == "") {
+                    console.log(result);
+                }else if(result[0] != 0){
+                    console.log(result);
+                }else{
+                    console.log(error);
+                }
+            });
+    }
+
+    function repeaterModeCheck(){
+        var params;
+        params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "uci", "get", { "config": "network","section":"stabridge" ,"option":"disabled" }  ]  };
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                var error = result.error;
+                result = result.result;
+                if (result == null && error == null) {
+                    console.log('fail!');
+                }else if (result[0] == 0 && error == null) {
+                    var value = result[1].value;
+                    console.log("value",value);
+                    // value 0 means can access baidu, 1 means not
+                    if(value == '0'){
+                        document.getElementById('repeater-mode-tip-text').innerText = err_tip["has been configured"];
+                        document.getElementById('repeater-mode-tip').style.display = '';
+                    }else{
+                        repeaterMode();
+                    }
+                }else if(result[0] != 0){
+                    console.log('result',result);
+                }else{
+                    console.log('error',error);
+                }
+            });
+    }
+
+    function returnHome(){
+        document.getElementById('repeater-mode-tip').style.display = 'none';
+    }
+
+    function resetRepMode(){
+        document.getElementById('yes').style.display = 'none';
+        document.getElementById('no').style.display = 'none';
+        document.getElementById('repeater-mode-tip-text').innerText = err_tip["setting"];
+        document.getElementById('repeater-mode-tip').style.display = '';
+
+        var params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "lepton.network", "reset_rep_mode", { }  ]  };
+        console.log(params);
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                if(result){
+                    if(result.error){
+                        var error = result.error;
+                    }
+                    if(result.result){
+                        result = result.result;
+                    }
+                }
+                if (result == null && error == null) {
+                    console.log('reset_rep_mode fail!');
+                    //alert('result is null');
+                }else if (result[0] == 0 && error == null) {
+                    document.getElementById('repeater-mode-tip-text').innerText = err_tip["set success"];
+                    document.getElementById('repeater-mode-tip').style.display = '';
+                    setTimeout(function(){
+                        window.location.href = 'about:blank';
+                        },2000);
+                }else if(result[0] != 0){
+                    console.log('result',result);
+                    alert(writeObj(result));
+                }else{
+                    console.log('error',error);
+                    alert(writeObj(error));
+                }
+            });
+    }
+
+    function repeaterMode(){
+        document.getElementById('repeater-mode-tip').style.display = 'none';
+        document.getElementById('repeater-set').onclick = function(){;};
+        document.getElementById('ap-set').onclick = function(){;};
+
+        closeInputPwd();
+        closeManual();
+        document.getElementById('led').style.display = 'none';
+        document.getElementById('ap-mode-success').style.display = 'none';
+        document.getElementById('initial').style.display = 'none';
+        document.getElementById('connected').style.display = 'none';
+        document.getElementById('upgrade-page').style.display = 'none';
+        upgradeCancel();
+
+        document.getElementById('expending').style.display = '';
+        document.getElementById('expending-expending').style.display = 'none';
+        document.getElementById('is-in-setting').style.display = 'none';
+        document.getElementById('wifiScanning').style.display = '';
+
+        document.getElementById('keepsame').checked = true;
+        setAllUnvisible();
+        var apHide = getEleByName('apHide');
+        var apShow = getEleByName('apShow');
+        for(var i=0;i<apHide.length; i++){
+            apHide[i].style.display = '';
+        }
+        for(var i=0;i<apShow.length; i++){
+            apShow[i].style.display = 'none';
+        }
+        getWifiScan('5g',"firstScan");
+    }
+
+    function apMode(){
+        closeInputPwd();
+        closeManual();
+        document.getElementById('led').style.display = 'none';
+        document.getElementById('ap-mode-success').style.display = 'none';
+        document.getElementById('initial').style.display = 'none';
+        document.getElementById('container').style.display = '';
+        document.getElementById('connected').style.display = '';
+        document.getElementById('wifiScan').style.display = 'none';
+        document.getElementById('upgrade-page').style.display = 'none';
+        upgradeCancel();
+        setAllUnvisible();
+        var apHide = getEleByName('apHide');
+        var apShow = getEleByName('apShow');
+        for(var i=0;i<apHide.length; i++){
+            apHide[i].style.display = 'none';
+        }
+        for(var i=0;i<apShow.length; i++){
+            apShow[i].style.display = '';
+        }
+        document.getElementById('keepsame').checked = false;
+        document.getElementById('wirelessPassword-24g').value = "12345678";
+        document.getElementById('wirelessPassword-24g-text').value = "12345678";
+        document.getElementById('wirelessPassword-5g').value = "12345678";
+        document.getElementById('wirelessPassword-5g-text').value = "12345678";
+        document.getElementById('open-24g').checked = false;
+        document.getElementById('open-5g').checked = false;
+
+        document.getElementById('ssid-24g').disabled = '';
+        document.getElementById('ssid-5g').disabled = '';
+        document.getElementById('wirelessPassword-24g').disabled = '';
+        document.getElementById('wirelessPassword-24g-text').disabled = '';
+        document.getElementById('wirelessPassword-5g').disabled = '';
+        document.getElementById('wirelessPassword-5g-text').disabled = '';
+        document.getElementById('open-24g').disabled = '';
+        document.getElementById('open-5g').disabled = '';
+        getRepInfo();
+    }
+    function setAllUnvisible(){
+        var img = document.getElementsByName('visible');
+        var pwd = document.getElementsByName('password');
+        var text = document.getElementsByName('password-text');
+        var i;
+        for(i = 0 ; i < img.length ; i++){
+            img[i].src = "./img/unvisible.png";
+        }
+        for(i = 0 ; i < pwd.length ; i++){
+            pwd[i].style.display = '';
+        }
+        for(i = 0 ; i < text.length ; i++){
+            text[i].style.display = 'none';
+        }
+    }
+
+//return to initial web
+    function repeaterReturn(){
+        document.getElementById('initial').style.display = '';
+        document.getElementById('container').style.display = 'none';
+        document.getElementById('wifiScan').style.display = 'none';
+    }
+    function apReturn(){
+        document.getElementById('initial').style.display = '';
+        document.getElementById('container').style.display = 'none';
+        document.getElementById('keepsame').checked = true;
+        var apHide = getEleByName('apHide');
+        var apShow = getEleByName('apShow');
+        for(var i=0;i<apHide.length; i++){
+            apHide[i].style.display = '';
+        }
+        for(var i=0;i<apShow.length; i++){
+            apShow[i].style.display = 'none';
+        }
+    }
+
+    function apSet(repSSID24g, encryption24g, repKey24g, repSSID5g, encryption5g, repKey5g){
+        document.getElementById('container').style.display = 'none';
+        document.getElementById('ap-mode-success').style.display = '';
+
+        var enable = '0';
+        if(freqStatus == true){
+            enable = '1';
+        }
+        var params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "lepton.network", "ap_mode_set", {"freq": enable, "ssid_24g": repSSID24g, "encryption_24g": encryption24g, "key_24g": repKey24g, "ssid_5g": repSSID5g, "encryption_5g": encryption5g, "key_5g": repKey5g }  ]  };
+        console.log(params);
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                if(result){
+                    if(result.error){
+                        var error = result.error;
+                    }
+                    result = result.result;
+                }
+                if (result == null && error == null) {
+                    console.log('ap set fail!');
+                    //alert('result is null');
+                }else if (result[0] == 0 && error == null) {
+                }else if(result[0] != 0){
+                    console.log('result',result);
+                    alert(writeObj(result));
+                }else{
+                    console.log('error',error);
+                    alert(writeObj(error));
+                }
+            });
+    }
+
+    function writeObj(obj){
+        var description = "";
+        for(var i in obj){
+            var property=obj[i];
+            description+=i+" = "+property+"\n";
+        }
+        return description;
+    }
+
+    function getWifiScan(band, firstScan) {
+        document.getElementById('repeater-set').onclick = function(){;};
+        document.getElementById('ap-set').onclick = function(){;};
+
+        document.getElementById('expending').style.display = '';
+        document.getElementById('container').style.display = 'none';
+
+        document.getElementById('expending-expending').style.display = 'none';
+        document.getElementById('is-in-setting').style.display = 'none';
+        document.getElementById('wifiScanning').style.display = '';
+        /*
+        document.getElementById('refreshing').style.display = '';
+        document.getElementById('refresh').style.display = 'none';
+        */
+        var params;
+        var device_name;
+        console.log(band);
+        if (band == '24g') {
+            device_name = 'wlan0';
+        }else{
+            wifis = [];
+            hiddenWifis = [];
+            device_name = 'wlan1';
+        }
+        params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "iwinfo", "scan", {"device": device_name  } ] };
+        XHR.post(location.origin + '/ubus', params,
+				function(x, result) {
+                    console.log(result);
+                    var error = result.error;
+                    result = result.result;
+                    console.log(result);
+                    if (result == null && error == null) {
+                        alert('fail!');
+                    }else if (result != null && error== null) {
+                        console.log('result[1]',result[1]);
+                        wifis = wifis.concat(result[1].results);
+                        for (var i = 0; i<wifis.length; i++) {
+                            if(band == '24g' && wifis[i].band != '5G'){
+                                wifis[i].band = '2.4G';
+                            }else if(band == '5g' && wifis[i].band != '2.4G'){
+                                wifis[i].band = '5G';
+                            }
+                            if(wifis[i].ssid == undefined){
+                                wifis[i].ssid = 'Hidden';
+                                hiddenWifis.push(wifis.splice(i, 1)[0]);
+                                i--;
+                            }
+                        }
+                        if (band == '24g') {
+                            wifis = signalSort(wifis);
+                            hiddenWifis = signalSort(hiddenWifis);
+                            console.log(hiddenWifis);
+                            wifis = wifis.concat(hiddenWifis);
+                            console.log('wifis',wifis);
+                            var html_5g = '<tr class="scanTableTh"><th id="th-network-name-5g">' + document.getElementById('th-network-name-5g').innerText + '</th><th id="th-band-5g" class="textRight">' + document.getElementById('th-band-5g').innerText + '</th><th id="th-signal-5g">' + document.getElementById('th-signal-5g').innerText + '</th></tr>'
+                            var html_24g = '<tr class="scanTableTh"><th id="th-network-name-24g">' + document.getElementById('th-network-name-24g').innerText + '</th><th id="th-band-24g" class="textRight">' + document.getElementById('th-band-24g').innerText + '</th><th id="th-signal-24g">' + document.getElementById('th-signal-24g').innerText + '</th></tr>'
+                            var html_tmp;
+                            var signalValue = 1;
+                            for (var i = 0; i<wifis.length; i++) {
+                                html_tmp = '';
+                                wifis[i].signal += 100;
+                                if(wifis[i].signal < 10){
+                                    signalValue = 1;
+                                }else if(wifis[i].signal < 20){
+                                    signalValue = 2;
+                                }else if(wifis[i].signal < 30){
+                                    signalValue = 3;
+                                }else if(wifis[i].signal < 40){
+                                    signalValue = 4;
+                                }else{
+                                    signalValue = 5;
+                                }
+                                if(wifis[i].ssid == 'Hidden'){
+                                    html_tmp += '<tr class="disableTr">';
+                                }else{
+                                    html_tmp += '<tr onclick="inputPwd('+i+');">';
+                                }
+                                if(wifis[i].encryption.enabled == true){
+                                    html_tmp += '<td>'+wifis[i].ssid+'</td><td class="textRight">'+wifis[i].band+'</td>'+'<td>'+'<img class="wifiImg" border="0" src="./img/wifi_lock'+signalValue+'.png" alt="'+wifis[i].signal+'"></img>'+'</td></tr>';
+                                }else{
+                                    html_tmp += '<td>'+wifis[i].ssid+'</td><td class="textRight">'+wifis[i].band+'</td>'+'<td>'+'<img class="wifiImg" border="0" src="./img/wifi'+signalValue+'.png" alt="'+wifis[i].signal+'"></img>'+'</td></tr>';
+                                }
+                                if(wifis[i].band == '2.4G'){
+                                    html_24g += html_tmp;
+                                }else{
+                                    html_5g += html_tmp;
+                                }
+                            }
+                            var wifiTable5G = document.getElementById('wifiTable5G');
+                            setTableInnerHTML(wifiTable5G, html_5g);
+                            var wifiTable24G = document.getElementById('wifiTable24G');
+                            setTableInnerHTML(wifiTable24G, html_24g);
+                        }else{
+                            getWifiScan('24g',firstScan);
+                        }
+                    }else {
+                        console.log('error',error);
+                        alert(writeObj(error));
+                    }
+                    if (band == '24g') {
+                        /*
+                        document.getElementById('refresh').style.display = '';
+                        document.getElementById('refreshing').style.display = 'none';
+                        */
+                        document.getElementById('repeater-set').onclick = function(){repeaterModeCheck();};
+                        document.getElementById('ap-set').onclick = function(){apMode();};
+
+                        document.getElementById('expending').style.display = 'none';
+                        document.getElementById('container').style.display = '';
+                        document.getElementById('wifiScan').style.display = '';
+                    }
+                });
+    }
+
+    function wifiTableChange(band) {
+        if (band == '24g') {
+            document.getElementById('wifiTable5G').style.display = 'none';
+            document.getElementById('wifiTable24G').style.display = '';
+        } else {
+            document.getElementById('wifiTable5G').style.display = '';
+            document.getElementById('wifiTable24G').style.display = 'none';
+        }
+        var scanTable = document.getElementById('scanTable');
+        scanTable.scrollTop = 0;
+    }
+
+    function inputPwd(i) {
+        console.log(i);
+        selectedWifiIndex = i;
+        ssid = wifis[i].ssid;
+        bssid = wifis[i].bssid;
+        channel = wifis[i].channel;
+        if ( wifis[i].band == '5G'){
+            global_band = '5g';
+        }else if(wifis[i].band == '2.4G'){
+            global_band = '24g';
+        }
+        document.getElementById('inputPwdSSID').innerText = '"'+ssid+'"';
+        if (wifis[i].encryption.enabled == false) {
+            encryption = 'open';
+            document.getElementById('key').value = '';
+            wifiConnect();
+            return;
+        } else {
+            encryption = 'psk2+ccmp';
+        }
+        document.getElementById('inputPwd').style.display = '';
+        document.getElementById('container').style.backgroundColor = '#dddddd';
+    }
+
+    function getPasswordById(inputId ) {
+        var pwdEle = document.getElementById(inputId);
+        var pwdTextEle = document.getElementById(inputId + '-text');
+        if (pwdEle.style.display != 'none'){
+            pwdKeepSame(pwdEle, inputId + '-text');
+            return pwdEle.value;
+        } else {
+            pwdKeepSame(pwdTextEle, inputId);
+            return pwdTextEle.value;
+        }
+    }
+
+    function pwdKeepSame(currentInput,inputId) {
+        var value = currentInput.value;
+        document.getElementById(inputId).value = value;
+    }
+
+    function visibleChange(img,inputId) {
+        var pwd = document.getElementById(inputId);
+        var text = document.getElementById(inputId + '-text');
+        console.log("pwd.inputstyle.display is ",pwd.style.display);
+        if (pwd.style.display == "none"){
+            pwd.style.display = '';
+            text.style.display = 'none';
+            img.src = "./img/unvisible.png";
+            pwdKeepSame(text, inputId);
+        }else{
+            pwd.style.display = 'none';
+            text.style.display = '';
+            img.src = "./img/visible.png";
+            pwdKeepSame(pwd, inputId + '-text');
+        }
+    }
+
+    function closeInputPwd() {
+        document.getElementById('inputPwd').style.display = 'none';
+        document.getElementById('container').style.backgroundColor = '';
+    }
+
+    function showManual() {
+        document.getElementById('manual').style.display = '';
+        document.getElementById('container').style.backgroundColor = '#dddddd';
+        document.getElementById('radio5g').checked = true;
+        global_band = '5g';
+    }
+
+    function radioSel(radioName) {
+        var typeRadio = document.getElementsByName(radioName);
+        for(var i=0;i<typeRadio.length; i++){
+            if(typeRadio[i].checked){
+                global_band = typeRadio[i].value;
+            }
+        }
+    }
+
+    function manualInput() {
+        var manuSSID = document.getElementById('manuSSID').value;
+        var manuKey = getPasswordById('manuKey');
+        var manuOpen = document.getElementById('manuOpen').checked;
+        if (!checkssid(manuSSID)){
+            return;
+        }
+        ssid = manuSSID;
+        bssid = undefined;
+        key = manuKey;
+        if(manuOpen == false){
+            encryption = 'psk2+ccmp';
+            if (!checkpwd(manuKey)){
+                return;
+            }
+        }else{
+            encryption = 'open';
+        }
+
+        closeManual();
+        wifiConnect();
+    }
+
+    function closeManual() {
+        document.getElementById('manual').style.display = 'none';
+        document.getElementById('container').style.backgroundColor = '';
+    }
+
+    function ssid24GJoin(ssid5G, tail) {
+        var ssid24G = ssid5G + tail;
+        if (ssid24G.length > 32) {
+            ssid24G = ssid5G.substring(0, 32 - tail.length) + tail;
+        }
+        return ssid24G;
+    }
+    function keepSameChange() {
+        var enable = document.getElementById('keepsame').checked;
+        //switch on
+        console.log("enable is ",enable);
+        if(enable){
+            if(encryption == 'open'){
+                document.getElementById('open-24g').checked = true;
+                document.getElementById('open-5g').checked = true;
+            }else{
+                document.getElementById('open-24g').checked = false;
+                document.getElementById('open-5g').checked = false;
+            }
+            document.getElementById('wirelessPassword-24g').value = key;
+            document.getElementById('wirelessPassword-24g-text').value = key;
+            document.getElementById('wirelessPassword-5g').value = key;
+            document.getElementById('wirelessPassword-5g-text').value = key;
+            document.getElementById('ssid-5g').value = ssid;
+            var tail = ssid.substring(ssid.length-3).toLowerCase();
+            if (tail == '-5g'){
+                document.getElementById('ssid-24g').value = ssid24GJoin(ssid.substring(0,ssid.length-3) , '-2.4G');
+            }else if(tail == '_5g'){
+                document.getElementById('ssid-24g').value = ssid24GJoin(ssid.substring(0,ssid.length-3) , '_2.4G');
+            }else{
+                document.getElementById('ssid-24g').value = ssid24GJoin(ssid , '-2.4G');
+            }
+
+            document.getElementById('ssid-24g').disabled = 'disabled';
+            document.getElementById('ssid-5g').disabled = 'disabled';
+            document.getElementById('wirelessPassword-24g').disabled = 'disabled';
+            document.getElementById('wirelessPassword-24g-text').disabled = 'disabled';
+            document.getElementById('wirelessPassword-5g').disabled = 'disabled';
+            document.getElementById('wirelessPassword-5g-text').disabled = 'disabled';
+            document.getElementById('open-24g').disabled = 'disabled';
+            document.getElementById('open-5g').disabled = 'disabled';
+        }else{
+            document.getElementById('ssid-24g').disabled = '';
+            document.getElementById('ssid-5g').disabled = '';
+            if(encryption == 'open'){
+                document.getElementById('wirelessPassword-24g').disabled = 'disabled';
+                document.getElementById('wirelessPassword-24g-text').disabled = 'disabled';
+                document.getElementById('wirelessPassword-5g').disabled = 'disabled';
+                document.getElementById('wirelessPassword-5g-text').disabled = 'disabled';
+            }else{
+                document.getElementById('wirelessPassword-24g').disabled = '';
+                document.getElementById('wirelessPassword-24g-text').disabled = '';
+                document.getElementById('wirelessPassword-5g').disabled = '';
+                document.getElementById('wirelessPassword-5g-text').disabled = '';
+            }
+            document.getElementById('open-24g').disabled = '';
+            document.getElementById('open-5g').disabled = '';
+        }
+    }
+
+    function freqChange() {
+        freqStatus = document.getElementById('freq').checked;
+        if(freqStatus){
+            showFreqInteg();
+        }else{
+            closeFreqInteg();
+        }
+    }
+
+    function showFreqInteg() {
+        document.getElementById('freq').checked = true;
+        var hide = getEleByName('freqHide');
+        var show = getEleByName('freqShow');
+        for(var i=0;i<hide.length; i++){
+            hide[i].style.display = 'none';
+        }
+        for(var i=0;i<show.length; i++){
+            show[i].style.display = '';
+        }
+    }
+
+    function closeFreqInteg() {
+        document.getElementById('freq').checked = false;
+        var hide = getEleByName('freqHide');
+        var show = getEleByName('freqShow');
+        for(var i=0;i<hide.length; i++){
+            hide[i].style.display = '';
+        }
+        for(var i=0;i<show.length; i++){
+            show[i].style.display = 'none';
+        }
+        var repSSID5g = document.getElementById('ssid-5g').value;
+        var open5g = document.getElementById('open-5g').checked;
+        var repKey5g = getPasswordById('wirelessPassword-5g');
+        var repSSID5gTail = repSSID5g.substring(repSSID5g.length-3).toLowerCase();
+        if (repSSID5gTail == '-5g'){
+            document.getElementById('ssid-24g').value = ssid24GJoin(repSSID5g.substring(0,repSSID5g.length-3) , '-2.4G');
+        }else if(repSSID5gTail == '_5g'){
+            document.getElementById('ssid-24g').value = ssid24GJoin(repSSID5g.substring(0,repSSID5g.length-3) , '_2.4G');
+        }else{
+            document.getElementById('ssid-24g').value = ssid24GJoin(repSSID5g , '-2.4G');
+        }
+        document.getElementById('open-24g').checked = open5g;
+        var keepsame = document.getElementById('keepsame').checked;
+        if(keepsame || open5g == true ){
+            document.getElementById('wirelessPassword-24g').disabled = 'disabled';
+            document.getElementById('wirelessPassword-24g-text').disabled = 'disabled';
+        }else{
+            document.getElementById('wirelessPassword-24g').disabled = '';
+            document.getElementById('wirelessPassword-24g-text').disabled = '';
+        }
+        document.getElementById('wirelessPassword-24g').value = repKey5g;
+        document.getElementById('wirelessPassword-24g-text').value = repKey5g;
+    }
+
+    function initFreqInteg() {
+        document.getElementById('freq').checked = false;
+        var hide = getEleByName('freqHide');
+        var show = getEleByName('freqShow');
+        for(var i=0;i<hide.length; i++){
+            hide[i].style.display = '';
+        }
+        for(var i=0;i<show.length; i++){
+            show[i].style.display = 'none';
+        }
+        var repSSID5g = document.getElementById('ssid-5g').value;
+        var open5g = document.getElementById('open-5g').checked;
+        var repKey5g = getPasswordById('wirelessPassword-5g');
+        document.getElementById('open-24g').checked = open5g;
+        var keepsame = document.getElementById('keepsame').checked;
+        if(keepsame || open5g == true ){
+            document.getElementById('wirelessPassword-24g').disabled = 'disabled';
+            document.getElementById('wirelessPassword-24g-text').disabled = 'disabled';
+        }else{
+            document.getElementById('wirelessPassword-24g').disabled = '';
+            document.getElementById('wirelessPassword-24g-text').disabled = '';
+        }
+        document.getElementById('wirelessPassword-24g').value = repKey5g;
+        document.getElementById('wirelessPassword-24g-text').value = repKey5g;
+    }
+
+    function isOpen(thisOpen,thisKey) {
+        var open = document.getElementById(thisOpen);
+        var password = document.getElementById(thisKey);
+        var pwd_text = document.getElementById(thisKey + '-text');
+        if(open.checked){
+            password.value = '';
+            password.disabled = 'disabled';
+            pwd_text.value = '';
+            pwd_text.disabled = 'disabled';
+        }else{
+            password.disabled = '';
+            password.focus();
+            pwd_text.disabled = '';
+            pwd_text.focus();
+        }
+    }
+
+    function closeInputNonePwd() {
+        document.getElementById('wifiScan').style.display = '';
+        document.getElementById('r-'+selectedWifiIndex).checked = false;
+    }
+
+    //signal sort,冒泡排序
+    function signalSort(arr) {
+        var len = arr.length;
+        for (var i = 0; i < len; i++) {
+            for (var j = 0; j < len - 1 - i; j++) {
+                if (arr[j].signal < arr[j+1].signal) {
+                    var temp = arr[j+1];
+                    arr[j+1] = arr[j];
+                    arr[j] = temp;
+                }
+            }
+        }
+        return arr;
+    }
+
+    function getKey() {
+        key = getPasswordById('key');
+    }
+
+    function wifiConnect() {
+        if (encryption != 'open' && !checkpwd(key)){
+            return;
+        }
+        document.getElementById('repeater-set').onclick = function(){;};
+        document.getElementById('ap-set').onclick = function(){;};
+
+        document.getElementById('inputPwd').style.display = 'none';
+        document.getElementById('expending').style.display = '';
+        document.getElementById('expending-expending').style.display = '';
+        document.getElementById('is-in-setting').style.display = 'none';
+        document.getElementById('wifiScanning').style.display = 'none';
+
+        document.getElementById('wifiScan').style.display = 'none';
+        document.getElementById('container').style.display = 'none';
+        document.getElementById('container').style.backgroundColor = '';
+
+        uciWirelessDisabled();
+    }
+
+    function uciWirelessDisabled(){
+        var params;
+        var sfiNum = 'sfi0';
+        if (global_band == '24g'){
+            sfiNum = 'sfi1';
+        }
+        params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "lepton.network", "set_wireless_disable", {"sfi_num":sfiNum }  ]  };
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                var error = result.error;
+                result = result.result;
+                if (result == null && error == null) {
+                    console.log('fail!');
+                }else if (result[0] == 0 && error == null) {
+                    uciWireless();
+                }else if(result[0] != 0){
+                    console.log('result',result);
+                    alert(writeObj(result));
+                }else{
+                    console.log('error',error);
+                    alert(writeObj(error));
+                }
+            });
+    }
+
+    function uciWireless(){
+        var wifiIfaceName;
+        var wifiOld5g;
+        var wifiOld24g;
+        var params;
+        var sfiNum = 'sfi1';
+        if (global_band == '24g'){
+            sfiNum = 'sfi0';
+        }
+        if (encryption == 'open'){
+            // maybe is redundant
+            key = '';
+        }
+        params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "lepton.network", "set_wireless", {"sfi_num":sfiNum,"ssid":ssid, "encryption":encryption, "key":key, "bssid":bssid ,"dis_scan_off":'0' }  ]  };
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                var error = result.error;
+                result = result.result;
+                if (result == null && error == null) {
+                    alert('fail!');
+                }else if (result[0] == 0 && error == null) {
+                    wifiReload();
+                    document.getElementById('connected').style.display = 'none';
+                    clear_wds_pwderr();
+                }else if(result[0] != 0){
+                    console.log('result',result);
+                    alert(writeObj(result));
+                }else{
+                    console.log('error',error);
+                    alert(writeObj(error));
+                }
+            });
+    }
+
+    function wifiReload(){
+        var params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "lepton.network", "wifi_reload", { }  ]  };
+        console.log(params);
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                var error = result.error;
+                result = result.result;
+                if (result == null && error == null) {
+                    alert('fail!');
+                }else if (result[0] == 0 && error == null) {
+                }else if(result[0] != 0){
+                    console.log('result',result);
+                    alert(writeObj(result));
+                }else{
+                    console.log('error',error);
+                    alert(writeObj(error));
+                }
+            });
+    }
+
+    function clear_wds_pwderr(){
+        var sfiNum = 'sfi1';
+        if (global_band == '24g'){
+            sfiNum = 'sfi0';
+        }
+        var params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ubusSesionID, "lepton.network", "check_wds", { "sfi_num":sfiNum ,"init":"1"}]};
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                if(result != null){
+                    var error = result.error;
+                    result = result.result;
+                }else{
+                    alert('connect error');
+                    return -1;
+                }
+                if(result[0] == 0){
+                    var count = 1;
+                    checkInterval = setInterval(function(){
+                        check_wds_status();
+                        count++;
+                        if(count > 30){
+                        //time out
+                            showConnectedInfo();
+                            resetWds();
+
+                            document.getElementById('fail-timeout').style.display = '';
+                            document.getElementById('success').style.display = 'none';
+                            document.getElementById('fail-pwd').style.display = 'none';
+                            document.getElementById('buttonGoOn').style.display = 'none';
+                            document.getElementById('keepsame-tr').style.display = 'none';
+                        }
+                    },1000);
+                }else{
+                    alert('clear error');
+                }
+            });
+    }
+
+    function check_wds_status(){
+        var sfiNum = 'sfi1';
+        if (global_band == '24g'){
+            sfiNum = 'sfi0';
+        }
+        var params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ubusSesionID, "lepton.network", "check_wds", { "sfi_num":sfiNum ,"init":"0"}]};
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                var error = result.error;
+                result = result.result;
+                if (result == null && error == null) {
+                    alert('fail!');
+                    document.getElementById('repeater-set').onclick = function(){repeaterModeCheck();};
+                    document.getElementById('ap-set').onclick = function(){apMode();};
+
+                    document.getElementById('expending').style.display = 'none';
+                    document.getElementById('container').style.display = '';
+                    document.getElementById('connected').style.display = '';
+                }else if (result[0] == 0 && result[1].sfi_ip != undefined && result[1].sfi_ip != "") {
+                    showConnectedInfo();
+                    document.getElementById('lanIp').innerText = result[1].sfi_ip;
+
+                    document.getElementById('buttonGoOn').style.display = '';
+                    document.getElementById('keepsame-tr').style.display = '';
+
+                    document.getElementById('success').style.display = '';
+                    document.getElementById('fail-timeout').style.display = 'none';
+                    document.getElementById('fail-pwd').style.display = 'none';
+                }else if(result[0] < 0){
+                    //password error
+                    showConnectedInfo();
+                    resetWds();
+
+                    document.getElementById('fail-pwd').style.display = '';
+                    document.getElementById('fail-timeout').style.display = 'none';
+                    document.getElementById('success').style.display = 'none';
+                    document.getElementById('buttonGoOn').style.display = 'none';
+                    document.getElementById('keepsame-tr').style.display = 'none';
+                }else if(result[0] > 0){
+                    alert('ubus error' + result[0]);
+                }
+            });
+    }
+
+    function showConnectedInfo(){
+        clearInterval(checkInterval);
+        document.getElementById('ssid').value = ssid;
+        document.getElementById('wirelessPassword').value = key;
+        document.getElementById('wirelessPassword-text').value = key;
+        document.getElementById('wirelessPassword-24g').value = key;
+        document.getElementById('wirelessPassword-24g-text').value = key;
+        document.getElementById('wirelessPassword-5g').value = key;
+        document.getElementById('wirelessPassword-5g-text').value = key;
+
+        var open24g = document.getElementById('open-24g');
+        var wirelessPassword24g = document.getElementById('wirelessPassword-24g');
+        if(encryption != 'open'){
+            open24g.checked = false;
+            wirelessPassword24g.disabled = '';
+        }else{
+            open24g.checked = 'true';
+            wirelessPassword24g.value = '';
+            wirelessPassword24g.disabled = 'disabled';
+        }
+
+        var open5g = document.getElementById('open-5g');
+        var wirelessPassword5g = document.getElementById('wirelessPassword-5g');
+        if(encryption != 'open'){
+            open5g.checked = false;
+            wirelessPassword5g.disabled = '';
+        }else{
+            open5g.checked = 'true';
+            wirelessPassword5g.value = '';
+            wirelessPassword5g.disabled = 'disabled';
+        }
+
+        document.getElementById('repeater-set').onclick = function(){repeaterModeCheck();};
+        document.getElementById('ap-set').onclick = function(){apMode();};
+
+        document.getElementById('expending').style.display = 'none';
+        document.getElementById('container').style.display = '';
+        document.getElementById('connected').style.display = '';
+
+        keepSameChange();
+
+        getFreq();
+    }
+
+    function checkpwd(pwd_check){
+        if (pwd_check == undefined || pwd_check == ""){
+            alert(err_tip["please input pwd"]);
+            return false;
+        }
+        if (strlen(pwd_check) < 8) {
+            alert(err_tip["pwd too short"]);
+            return false;
+        }
+        if (strlen(pwd_check) > 63) {
+            alert(err_tip["pwd too long"]);
+            return false;
+        }
+        return true;
+    }
+
+    function checkssid(repSSID){
+        if (repSSID == undefined || repSSID == ""){
+            alert(err_tip["please input ssid"]);
+            return false;
+        }
+        if (strlen(repSSID) > 32){
+            alert(err_tip["ssid too long"]);
+            return false;
+        }
+        if (!repSSID.match(/\S/g)){
+            console.log(repSSID.match(/\S/g));
+            alert(err_tip["ssid can not be all spaces"]);
+            return false;
+        }
+        return true;
+    }
+
+    function alterWifi(mode){
+        document.getElementById('mainroute-name-ssid').innerText = ssid;
+        var repSSID5g = document.getElementById('ssid-5g').value;
+        var open5g = document.getElementById('open-5g').checked;
+        var encryption5g;
+        var repKey5g = getPasswordById('wirelessPassword-5g');
+        if (!checkssid(repSSID5g)){
+            return;
+        }
+        if(open5g == false){
+            encryption5g = 'psk2+ccmp';
+            if (!checkpwd(repKey5g)){
+                return;
+            }
+        }else{
+            encryption5g = 'open';
+        }
+        document.getElementById('expander-name-5g-ssid').innerText = repSSID5g;
+        document.getElementById('expander-name-freq-ssid').innerText = repSSID5g;
+
+        if(freqStatus == true){
+            var repSSID24g = repSSID5g;
+            var encryption24g = encryption5g;
+            var repKey24g = repKey5g;
+        }else{
+            var repSSID24g = document.getElementById('ssid-24g').value;
+            var open24g = document.getElementById('open-24g').checked;
+            var encryption24g;
+            var repKey24g = getPasswordById('wirelessPassword-24g');
+            if (!checkssid(repSSID24g)){
+                return;
+            }
+            if(open24g == false){
+                encryption24g = 'psk2+ccmp';
+                if (!checkpwd(repKey24g)){
+                    return;
+                }
+            }else{
+                encryption24g = 'open';
+            }
+            document.getElementById('expander-name-24g-ssid').innerText = repSSID24g;
+        }
+
+        getStaNum();
+
+        document.body.style.backgroundColor = 'white';
+        document.getElementById('connected').style.display = 'none';
+        document.getElementById('container').style.display = 'none';
+
+        if(mode == "ap"){
+            apSet(repSSID24g,encryption24g,repKey24g,repSSID5g,encryption5g,repKey5g);
+        }else{
+            setConfigLast(repSSID24g,encryption24g,repKey24g,repSSID5g,encryption5g,repKey5g);
+            document.getElementById('led').style.display = '';
+        }
+    }
+
+    function setConfigLast(repSSID24g, encryption24g, repKey24g, repSSID5g, encryption5g, repKey5g){
+        var params;
+        var enable = '0';
+        if(freqStatus == true){
+            enable = '1';
+        }
+        channel = channel.toString();
+        params = {"jsonrpc":"2.0","id":1,"method":"call","params": [ ubusSesionID, "lepton.network", "set_config_last", {"freq": enable,"band": global_band,"channel": channel,"ssid_24g": repSSID24g, "encryption_24g": encryption24g, "key_24g": repKey24g, "ssid_5g": repSSID5g, "encryption_5g": encryption5g, "key_5g": repKey5g }]};
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                if(result){
+                    if(result.error){
+                        var error = result.error;
+                    }
+                    result = result.result;
+                }
+                if (result == null && error == null) {
+                    console.log('result is null!');
+                    //alert('set fail, result is null');
+                }else if (result[0] == 0 && error == null) {
+                }else if(result[0] != 0){
+                    console.log('result',result);
+                    alert(writeObj(result));
+                }else{
+                    console.log('error',error);
+                    alert(writeObj(error));
+                }
+            });
+    }
+
+    function returnScan(){
+        document.getElementById('connected').style.display = 'none';
+        document.getElementById('wifiScan').style.display = '';
+    }
+
+    function getRepInfo(){
+        var params;
+        params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "uci", "get", { "config": "wireless","type":"wifi-iface"  }  ]  };
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                var error = result.error;
+                result = result.result;
+                if (result == null && error == null) {
+                    //alert('fail!');
+                }else if (result[0] == 0 && error == null) {
+                    var values = result[1].values;
+                    console.log("values",values);
+                    for(var i in values) {
+                        console.log("i is ",i);
+                        console.log("values[i] is ",values[i]);
+                        if(values[i].ifname == 'wlan0'){
+                            var repSSID24g = values[i].ssid;
+                            document.getElementById('ssid-24g').value = repSSID24g;
+                        }else if(values[i].ifname == 'wlan1'){
+                            var repSSID5g = values[i].ssid;
+                            document.getElementById('ssid-5g').value = repSSID5g;
+                        }
+                    }
+                    getFreq();
+                }else if(result[0] != 0){
+                    console.log('result',result);
+                }else{
+                    console.log('error',error);
+                }
+            });
+    }
+
+    function getFreq(){
+        var params;
+        params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "uci", "get", { "config": "basic_setting","section":"freq" ,"option":"enable" }  ]  };
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                var error = result.error;
+                result = result.result;
+                if (result == null && error == null) {
+                    console.log('fail!');
+                }else if (result[0] == 0 && error == null) {
+                    var value = result[1].value;
+                    console.log("value",value);
+                    if(value == '1'){
+                        freqStatus = true;
+                        showFreqInteg();
+                    }else{
+                        freqStatus = false;
+                        initFreqInteg();
+                    }
+                }else if(result[0] != 0){
+                    console.log('result',result);
+                }else{
+                    console.log('error',error);
+                }
+            });
+    }
+
+    function resetWds(){
+        var params;
+        params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "lepton.network", "reset_wds", {   }  ]  };
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                var error = result.error;
+                result = result.result;
+                if (result == null && error == null) {
+                    console.log('null');
+                }else if (result[0] == 0 && error == null) {
+                    wifiReload();
+                }else if(result[0] != 0){
+                    console.log('result',result);
+                }else{
+                    console.log('error',error);
+                }
+            });
+    }
+
+    function getStaNum(){
+        var params;
+        params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "lepton.network", "get_sta_num", {}  ]  };
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                if(result){
+                    if(result.error){
+                        var error = result.error;
+                    }
+                    result = result.result;
+                }
+                if (result == null && error == null) {
+                    console.log('null');
+                }else if (result[0] == 0 && error == null) {
+                    var num = 0;
+                    num = parseInt(result[1].wlan0_sta_num) + parseInt(result[2].wlan1_sta_num);
+                    document.getElementById('connected-number-num').innerText = num;
+                }else if(result[0] != 0){
+                    console.log('result',result);
+                }else{
+                    console.log('error',error);
+                }
+            });
+    }
+
+    function pageUpgrade(){
+        document.getElementById('initial').style.display = 'none';
+        document.getElementById('upgrade-page').style.display = '';
+    }
+    function upgradeReturn(){
+        document.getElementById('initial').style.display = '';
+        document.getElementById('upgrade-page').style.display = 'none';
+        upgradeCancel();
+    }
+
+    function setFileName(fileEle,textid) {
+        var value = fileEle.value;
+        var arr = value.split('\\');
+        var filename = arr[arr.length - 1];
+        document.getElementById(textid).value = filename;
+    }
+
+    function upgradeConfirm(){
+        document.getElementById('upgrade-tip').style.display = '';
+    }
+    function upgradeCancel(){
+        document.getElementById('upgrade-tip').style.display = 'none';
+    }
+    function uploadFile(){
+        var file = document.getElementById('upgradeFile').value;
+        console.log(file);
+        filetail = file.substring(file.length - 4);
+        console.log(filetail);
+        if(file==null||file==undefined||file==""){
+            upgradeCancel();
+            alert(err_tip['please select upgrade image first']);
+            return;
+        }else if (filetail != ".bin") {
+            upgradeCancel();
+            alert(err_tip['image file type illegal']);
+            return;
+        }
+        document.getElementById('upgrade-page').style.display = 'none';
+        upgradeCancel();
+
+        document.getElementById('expending').style.display = '';
+        document.getElementById('expending-expending').style.display = 'none';
+        document.getElementById('is-in-setting').style.display = 'none';
+        document.getElementById('wifiScanning').style.display = 'none';
+        document.getElementById('upgrading').style.display = '';
+        document.getElementById('upgradeForm').submit();
+    }
+
+    function startUpgrade(){
+        //upload file success ,start upgrade
+        console.log("upload file success ,start upgrade");
+        var params = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "lepton.network", "upgrade", {}  ]  };
+        XHR.post(location.origin + '/ubus', params,
+            function(x, result){
+                console.log(result);
+                if(result){
+                    if(result.error){
+                        var error = result.error;
+                    }
+                    result = result.result;
+                }
+                if (result == null && error == null) {
+                    console.log('null');
+                }else if (result[0] == 0 && error == null) {
+                    var params1 = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ ubusSesionID, "lepton.network", "lepton", {}  ]  };
+                    setTimeout(function(){
+                        setInterval(function(){
+                            XHR.post(location.origin + '/ubus', params,
+                                function(x, result){
+                                    if(result != null){
+                                        window.location.href = 'http://192.168.5.251/index.htm';
+                                    }
+                                });
+                            },1000);
+                        },10000);
+                }else if(result[0] != 0){
+                    alert(writeObj(result));
+                }else{
+                    alert(writeObj(error));
+                }
+            });
+    }
+
+    //input limit --num+str
+    function nStrLimit(e) {
+        e.value=check(e.value);
+        e.value=e.value.replace(/\s+/g,'');
+    }
+    //check chinese str
+    function check(str){
+        var temp="";
+        for(var i=0;i<str.length;i++)
+            if(str.charCodeAt(i)>0&&str.charCodeAt(i)<255)
+                temp+=str.charAt(i);
+        return temp
+    }
+
+    //String len include chinese
+    function strlen(str){
+        var len = 0;
+        for (var i=0; i<str.length; i++) {
+            var c = str.charCodeAt(i);
+            //chinese character + 3
+            if ((c >= 0x0001 && c <= 0x007e) || (0xff60<=c && c<=0xff9f)) {
+                len++;
+            } else {
+                len+=3;
+            }
+        }
+        return len;
+    }
+
+// for browser compatible
+    function setTableInnerHTML(table, html) {
+        if (navigator && navigator.userAgent.match(/msie/i)) {
+            var temp = table.ownerDocument.createElement('div');
+            temp.innerHTML = '<table><tbody>' + html + '</tbody></table>';
+            if (table.tBodies.length == 0) {
+                var tbody = document.createElement("tbody");
+                table.appendChild(tbody);
+            }
+            table.replaceChild(temp.firstChild.firstChild, table.tBodies[0]);
+        } else {
+            table.innerHTML = html;
+        }
+    }
+    //for ie getElementsByName is nil
+    function getEleByName(sname) {
+        var array = document.getElementsByName(sname)
+        if(array.length > 0){
+            return array;
+        }
+        var t = document.all;
+        var divs= new Array();
+        for(var i=0;i<t.length;i++) {
+            if(t[i].name == sname)  divs.push(t[i]);
+        }
+        return divs;
+    }
+</script>

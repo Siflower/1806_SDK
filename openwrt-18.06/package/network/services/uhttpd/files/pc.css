@@ -1,0 +1,398 @@
+html {
+	height: 100%;
+	width: 100%;
+}
+body {
+	height: 100%;
+	width: 100%;
+	margin: 0px;
+}
+table {
+	border-collapse :collapse;
+}
+h4 {
+	margin: 0.5rem;
+}
+p {
+	margin: 5px;
+}
+p span{
+	color: gray;
+}
+#inputPwdSSID{
+	color: black;
+}
+
+/*usual*/
+.left{
+	float: left;
+}
+.nowrap{
+	white-space: nowrap;
+}
+.redText{
+	color: #E74A45;
+}
+.whiteText{
+	color: white;
+}
+.grayText{
+	color: gray;
+}
+.center{
+	text-align: center;
+}
+.div100{
+	width: 100%;
+	height: 100%;
+}
+.redBackground{
+	background: #E74A45;
+	color: white;
+}
+.topMode{
+	text-align: center;
+}
+
+/*pc owner*/
+/*start*/
+button,input[type="button"]{
+	cursor: pointer;
+}
+.main{
+	float: left;
+	position: relative;
+	margin-top: 8em;
+	margin-left: 30%;
+	width: 50%;
+	max-width: 700px;
+	min-width: 30em;
+	font-size: 20px;
+}
+.leftnav>ul{
+	padding-left: 0px;
+	margin: 0;
+}
+.leftnav>ul>li{
+	list-style: none;
+	width: 12em;
+	white-space: nowrap;
+}
+.leftnav>ul>li>a{
+	padding: 0.5em 0 0.5em 2em;
+	width: 10em;
+	float: left;
+	border: 1px solid #999;
+	margin-bottom: 1px;
+	cursor: pointer;
+	font-weight: bold;
+}
+.leftnav>ul>li>a:hover{
+	background: gray;
+	color: white;
+}
+#container-wifiscan-back{
+	display: none;
+}
+#refresh{
+	font-size: 16px;
+	position: absolute;
+	left: 30em;
+	top: 0em;
+	margin: 0em;
+}
+#wifiScan{
+	width: 30em;
+	margin: auto;
+	position: relative;
+}
+.wifiTable{
+	min-width: 30em;
+	width: 30em;
+}
+/*end*/
+
+.scanTable{
+	border-top: solid 1px;
+	border-bottom: solid 1px;
+	border-color: #cccccc;
+}
+.scanTable tr {
+	border-bottom: solid 1px;
+	border-color: #aaaaaa;
+	height: 2em;
+	cursor: pointer;
+}
+.scanTable td {
+	border-bottom: solid 1px;
+	border-color: #aaaaaa;
+}
+.scanTable tr:link {background-color:#000000;}      /* 未访问链接*/
+.scanTable tr:visited {background-color:#000000;}  /* 已访问链接 */
+.scanTable tr:hover {background-color:#aaaaaa;}  /* 鼠标移动到链接上 */
+.scanTable tr:active {background-color:#888888;}  /* 鼠标点击时 */
+.scanTable tr.disableTr {background-color:white;cursor:not-allowed}  /* 禁用时*/
+.scanTable td {
+	max-width: 12em;
+	/*
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+   */
+	word-break: break-all;
+	padding-left: 1em;
+}
+.scanTableTh{
+	background: #8f8f8f;
+	color: white;
+}
+.scanTableTh th{
+	text-align: left;
+	padding-left: 15px;
+	cursor: initial;
+}
+.manualInput{
+	border-top: solid 1px;
+	border-bottom: solid 1px;
+	border-color: #cccccc;
+	margin-bottom: 1em;
+}
+.manualInput>div{
+	display: flex;
+	padding-left: 15px;
+}
+#manualInput{
+	border: 1px solid;
+	cursor: pointer;
+}
+.buttonP{
+	margin: auto;
+	text-align: center;
+}
+.buttonP input, .refresh{
+	width: 6em;
+	margin: 1em;
+	color: white;
+	background-color: #E74A45;
+	border: 1px solid #E74A45;
+	padding: 6px 12px;
+	/*border-radius: 10px;*/
+	-webkit-appearance: none;
+}
+.buttonP .back,.back{
+	background-color: transparent;
+	color: #e74a45;
+}
+.refreshing{
+	width: 80px;
+	margin: auto;
+	color: white;
+	background-color: gray;
+	/*border-radius: 10px;*/
+}
+
+.wifiImg{
+	width: 1.6em;
+}
+.bottomLogoDiv{
+	display: none;
+}
+
+.redTop{
+	display: none;
+}
+.whiteBottom{
+	width: 100%;
+	height: 70%;
+	position: relative;
+}
+#expending{
+	border: 3px solid #999999;
+	position: relative;
+	left: 10em;
+	top: 10em;
+	width: 10em;
+}
+.expendingIcon{
+	width: 10em;
+}
+.expendingText{
+	width: 10em;
+	color: white;
+	font-size: 1em;
+}
+.ledTable {
+	margin: auto;
+}
+.ledTable tr{
+	border-bottom: 1px solid #dddddd;
+}
+.ledTable td{
+	/*width: 50%;*/
+}
+.ledTable div{
+	margin: auto;
+	height: 80px;
+	width: 80px;
+}
+.ledTable img{
+	height: 100%;
+}
+.noBorder{
+	border: none;
+}
+#abnormal-reset{
+	color: #0a9FCD;
+}
+.container {
+	margin: auto;
+	position: relative;
+}
+.connected{
+	width: 65%;
+	margin: auto;
+}
+.connectedInfo{
+	border:solid 1px;
+	border-color: #dddddd;
+	/*border-radius: 5px;*/
+	padding:10px;
+}
+.repTable{
+	white-space: nowrap;
+	border: 1px solid #dddddd;
+	/*border-radius: 5px;*/
+	border-collapse: separate;
+	width: 100%;
+}
+.inputPwd{
+	position: fixed;
+	top: 17em;
+	left: 35%;
+	z-index: 10;
+	background-color: white;
+	/*border-radius: 10px;*/
+}
+.inputPwdDiv{
+	padding: 1em;
+}
+.inputPwd p{
+	margin-bottom: 20px;
+}
+.inputPwd .radioP{
+	margin: 0;
+}
+.visible{
+	width: 20px;
+	position: relative;
+	top: 4px;
+	right: 30px;
+}
+.inputRadio{
+	width: 13px;
+	margin-left: 3em;
+}
+.inputCheckbox{
+	width: 13px;
+	margin: 3px;
+	margin-left: 10px;
+	position: relative;
+	top: 1px;
+	right: 30px;
+}
+#freq,#keepsame{
+	position: static;
+}
+.topLogo{
+	width: 5em;
+	margin-top: 1em;
+}
+.wifiLogo{
+	width: 8em;
+	margin-top: 0em;
+	margin-bottom: 1em;
+}
+.initButton{
+	width: 12em;
+	background: #E74A45;
+	/*border-radius: 5px;*/
+	border: white solid 1px;
+	color: white;
+	padding: 0.5em 2em;
+	font-size: 1em;
+}
+.leftTd{
+	text-align: right;
+	white-space: nowrap;
+}
+.miniIcon{
+	vertical-align: middle;
+	height: 2em;
+	margin-right: 1em;
+}
+input[type="text"],input[type="password"]{
+	padding-right: 30px;
+}
+.openLabel{
+	position: relative;
+	right: 30px;
+	top: 1px;
+}
+/*
+input[type="radio"] + label::before {
+	content: "\a0";
+	display: inline-block;
+	vertical-align: middle;
+	width: 0.5em;
+	height: 0.5em;
+	margin-right: 0.5em;
+	border-radius: 50%;
+	border: 1px solid gray;
+	line-height: 1;
+	padding: 0.1em;
+}
+input[type="radio"]:checked + label::before {
+	background-color: #e74a45;
+	background-clip: content-box;
+	border: 1px solid #e74a45;
+	padding: 0.1em;
+}
+input[type="checkbox"] + label::before {
+	content: "\a0";
+	display: inline-block;
+	vertical-align: 0.2em;
+	width: 0.8em;
+	height: 0.8em;
+	margin-right: 0.2em;
+	border: #e74a45 1px solid;
+	border-radius: 0.2em;
+	text-indent: 0.15em;
+	line-height: 0.65;
+}
+input[type="checkbox"]:checked + label::before {
+	background-color: #e74a45;
+	background: url(./img/checkbox_tick.png) no-repeat;
+	background-size: 0.8em 0.8em;
+}
+*/
+input[disabled]{
+	cursor: not-allowed;
+}
+.upgradeMain{
+	width: 20em;
+	margin: auto;
+}
+#upgradeFile{
+	bottom: 2em;
+	width: 19em;
+}
+#textfield{
+	width: 13em;
+}
+#upgrade-tip{
+	width: 18em;
+	padding: 1em;
+	background-color: white;
+    position: fixed;
+    top: 12em;
+}

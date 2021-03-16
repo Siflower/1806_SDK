@@ -72,6 +72,16 @@ define Package/uhttpd-mod-ubus/description
  session.* namespace and procedures.
 endef
 
+define Package/uhttpd-mod-repeater
+  $(Package/uhttpd/default)
+  TITLE+= (repeater plugin)
+  DEPENDS:=uhttpd
+endef
+
+define Package/uhttpd-mod-repeater/description
+  Add repeater webpage files
+endef
+
 define Package/uhttpd/conffiles
 /etc/config/uhttpd
 /etc/uhttpd.crt
@@ -110,7 +120,19 @@ define Package/uhttpd-mod-ubus/install
 	$(INSTALL_DATA) ./files/ubus.default $(1)/etc/uci-defaults/00_uhttpd_ubus
 endef
 
+define Package/uhttpd-mod-repeater/install
+	$(INSTALL_DIR) $(1)/www
+	$(INSTALL_BIN) ./files/index.htm $(1)/www/index.htm
+	$(INSTALL_DIR) $(1)/www
+	$(INSTALL_BIN) ./files/xhr.js $(1)/www/xhr.js
+	$(INSTALL_BIN) ./files/json2.js $(1)/www/json2.js
+	$(INSTALL_BIN) ./files/mobile.css $(1)/www/mobile.css
+	$(INSTALL_BIN) ./files/pc.css $(1)/www/pc.css
+	$(INSTALL_DIR) $(1)/www/img
+	$(INSTALL_BIN) ./files/img/* $(1)/www/img/
+endef
 
 $(eval $(call BuildPackage,uhttpd))
 $(eval $(call BuildPackage,uhttpd-mod-lua))
 $(eval $(call BuildPackage,uhttpd-mod-ubus))
+$(eval $(call BuildPackage,uhttpd-mod-repeater))

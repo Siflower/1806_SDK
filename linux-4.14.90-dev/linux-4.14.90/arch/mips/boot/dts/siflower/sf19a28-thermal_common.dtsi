@@ -1,0 +1,86 @@
+/*
+ * Device Tree Source for Siflower A18 SoC thermal
+ *
+ * Copyright (C) 2017 Shanghai Siflower Communication Technology Co., Ltd.
+ * Author: Qi Zhang <qi.zhang@siflower.com.cn>
+ *
+ * This file is licensed under the terms of the GNU General Public License
+ * version 2.  This program is licensed "as is" without any warranty of any
+ * kind, whether express or implied.
+ */
+
+#include <dt-bindings/thermal/thermal.h>
+
+&wifi_rf {
+	#thermal-sensor-cells = <1>;
+};
+
+&wifi_rf {
+	#cooling-cells = <2>;
+};
+/*
+&cpu0 {
+	#cooling-cells = <2>;
+};
+*/
+/ {
+	thermal-zones {
+		rf_zone: rf_zone {
+			polling-delay-passive = <2000>; /* milliseconds */
+			polling-delay = <4000>; /* milliseconds */
+
+					/* sensor	ID */
+		        thermal-sensors = <&wifi_rf	0>;
+
+		        trips {
+						/*
+						cpu_alert0: cpu_alert {
+		                        temperature = <90000>; /* millicelsius */
+		                /*        hysteresis = <2000>; /* millicelsius */
+		                /*        type = "passive";
+						}; */
+						rf_alert0: rf-alert0 {
+								temperature = <15000>; /* millicelsius */
+								hysteresis = <1000>; /* millicelsius */
+								type = "passive";
+						};
+						rf_alert1: rf-alert1 {
+								temperature = <55000>; /* millicelsius */
+								hysteresis = <1000>; /* millicelsius */
+								type = "passive";
+						};
+						rf_crit: rf-crit {
+								temperature = <80000>; /* millicelsius */
+								hysteresis = <1000>; /* millicelsius */
+								type = "passive";
+						};
+						/*
+						cpu_crit: cpu_crit {
+		                        temperature = <125000>; /* millicelsius */
+		                /*        hysteresis = <2000>; /* millicelsius */
+		                /*        type = "critical";
+		                };*/
+				};
+
+			cooling-maps {
+				/*
+				cpu0 {
+					trip = <&cpu_alert0>;
+					cooling-device = <&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+				};*/
+				map0 {
+					trip = <&rf_alert0>;
+					cooling-device = <&wifi_rf 0 1>;
+				};
+				map1 {
+					trip = <&rf_alert1>;
+					cooling-device = <&wifi_rf 1 2>;
+				};
+				map3 {
+					trip = <&rf_crit>;
+					cooling-device = <&wifi_rf 2 3>;
+				};
+			};
+		};
+	};
+};

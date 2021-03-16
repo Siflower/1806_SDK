@@ -1,0 +1,14 @@
+Index: netifd-2018-12-16-2750ce2e/scripts/netifd-wireless.sh
+===================================================================
+--- netifd-2018-12-16-2750ce2e.orig/scripts/netifd-wireless.sh	2021-03-09 19:56:30.991823919 +0800
++++ netifd-2018-12-16-2750ce2e/scripts/netifd-wireless.sh	2021-03-09 19:59:55.359813758 +0800
+@@ -143,7 +143,8 @@
+ 	local name="$1"; shift
+ 	local ifname="$1"; shift
+ 
+-	_wdev_notify_init $CMD_SET_DATA "$name"
++	_wdev_notify_init $CMD_SET_DATA "$ifname"
++	#_wdev_notify_init $CMD_SET_DATA "$name"
+ 	json_add_string "ifname" "$ifname"
+ 	_wdev_add_variables "$@"
+ 	_wdev_notify

@@ -51,6 +51,14 @@ define Package/rpcd/conffiles
 /etc/config/rpcd
 endef
 
+define Package/rpcd-mod-lepton/config
+	if PACKAGE_rpcd-mod-lepton
+		config PACKAGE_rpcd-mod-lepton-superuser
+		bool "add superuser in ubus for repeater"
+		default "n"
+	endif
+endef
+
 TARGET_LDFLAGS += -lcrypt
 
 define Package/rpcd/install
@@ -60,6 +68,9 @@ define Package/rpcd/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/rpcd $(1)/sbin/rpcd
 	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/unauthenticated.json $(1)/usr/share/rpcd/acl.d/unauthenticated.json
+ifdef CONFIG_PACKAGE_rpcd-mod-lepton-superuser
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/superuser.json $(1)/usr/share/rpcd/acl.d/superuser.json
+endif
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) ./files/rpcd.config $(1)/etc/config/rpcd
 endef
@@ -92,6 +103,7 @@ define BuildPlugin
 endef
 
 $(eval $(call BuildPackage,rpcd))
+$(eval $(call BuildPlugin,lepton,,lepton test.))
 $(eval $(call BuildPlugin,file,,Provides ubus calls for file and directory operations.))
 $(eval $(call BuildPlugin,rpcsys,,Provides ubus calls for sysupgrade and password changing.))
 $(eval $(call BuildPlugin,iwinfo,+libiwinfo,Provides ubus calls for accessing iwinfo data.))

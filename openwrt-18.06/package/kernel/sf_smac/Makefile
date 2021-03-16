@@ -9,15 +9,16 @@ include $(INCLUDE_DIR)/package.mk
 define KernelPackage/sf_smac
   SUBMENU:=Wireless Drivers
   TITLE:=SIFLOWER sf16a18 wireless driver
-  DEPENDS:=+kmod-mac80211 +@DRIVER_11N_SUPPORT +@DRIVER_11AC_SUPPORT
-  FILES:=\
+  DEPENDS:=+kmod-sfax8-factory-read +kmod-cfg80211 +@DRIVER_11N_SUPPORT +@DRIVER_11AC_SUPPORT
+  FILES:= \
 	$(PKG_BUILD_DIR)/sf16a18_rf.ko \
-	$(PKG_BUILD_DIR)/sf16a18_smac.ko \
 	$(PKG_BUILD_DIR)/startcore.ko
 ifdef CONFIG_PACKAGE_SFUMAC_FMAC
 ifndef CONFIG_FLASH_OPTIMIZE
 	FILES += $(PKG_BUILD_DIR)/sf16a18_fmac.ko
 endif
+else
+	FILES += $(PKG_BUILD_DIR)/sf16a18_smac.ko
 endif
 endef
 
@@ -201,6 +202,7 @@ EXTRA_KCONFIG += CONFIG_SF16A18_COOLING_TEMP=y
 endif
 ifeq ($(CONFIG_NEW_LEDS),y)
 EXTRA_KCONFIG += CONFIG_SF16A18_WIFI_LED=y
+EXTRA_KCONFIG += CONFIG_SF19A28_WIFI_LED=y
 endif
 
 ifdef CONFIG_SFAX8_FACTORY_READ
@@ -239,7 +241,11 @@ ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
 	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/dig_gaintable.ini $(1)/lib/firmware
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/dig_gaintable_expa.ini $(1)/lib/firmware
 	cp $(PKG_BUILD_DIR)/config/cali_table/default_txpower_calibrate_table.bin $(1)/lib/firmware
+
+#ifndef CONFIG_TARGET_siflower_sf19a28_fullmask_SF19A28-REP
 	cp $(PKG_BUILD_DIR)/config/cali_table/default_txpower_calibrate_expa_table.bin $(1)/lib/firmware
+#endif
+
 	cp $(PKG_BUILD_DIR)/config/cali_table/txp_offset_sleepmode_low.ini $(1)/lib/firmware
 	$(INSTALL_DIR) $(1)/usr/bin
 	cp $(PKG_BUILD_DIR)/config/cali_table/txpower_calibrate_table.sh $(1)/usr/bin
@@ -260,14 +266,15 @@ endif
 	cp $(PKG_BUILD_DIR)/config/rfcmd_err $(1)/bin/
 	cp $(PKG_BUILD_DIR)/config/reload_wifi.sh $(1)/bin/
 ifeq ($(CONFIG_SF16A18_LMAC_USE_M_SFDSP), y)
+ifdef CONFIG_PACKAGE_SFUMAC_FMAC
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf1688_lb_fmac.bin $(1)/lib/firmware/
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf1688_hb_fmac.bin $(1)/lib/firmware/
+else
 ifdef CONFIG_FLASH_OPTIMIZE
 	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/flash-opt/sf1688_smac.bin $(1)/lib/firmware/
 else
 	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf1688_lb_smac.bin $(1)/lib/firmware/
 	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf1688_hb_smac.bin $(1)/lib/firmware/
-ifdef CONFIG_PACKAGE_SFUMAC_FMAC
-	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf1688_lb_fmac.bin $(1)/lib/firmware/
-	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf1688_hb_fmac.bin $(1)/lib/firmware/
 endif
 endif
 else
@@ -306,6 +313,11 @@ ifdef CONFIG_PACKAGE_SFUMAC_WIFI_TEST_SCRIPTS
 	cp -r $(PKG_BUILD_DIR)/test/. $(1)/bin/
 	cp -r $(PKG_BUILD_DIR)/test/rf_test/. $(1)/bin/
 endif
+
+ifndef CONFIG_PACKAGE_siwifitools
+	cp $(PKG_BUILD_DIR)/config/siwifi_umh_nothing.sh  $(1)/bin/siwifi_umh.sh
+endif
+
 endef
 
 $(eval $(call KernelPackage,sf_smac))
