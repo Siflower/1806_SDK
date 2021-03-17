@@ -1,0 +1,527 @@
+html {
+	height: 100%;
+	width: 100%;
+}
+body {
+	height: 100%;
+	width: 100%;
+	margin: 0px;
+}
+table {
+	width: 100%;
+	margin: auto;
+	margin-bottom: 10px;
+	border-collapse :collapse;
+}
+h4 {
+	margin: 0.5rem;
+}
+p {
+	margin: 5px;
+}
+#wifiScan{
+	height: 85%;
+	padding: 15px;
+}
+#inputPwdSSID{
+	color: black;
+}
+p span{
+	color: gray;
+}
+.scanTable{
+	width: 100%;
+	height: 70%;
+	margin: auto;
+	overflow: auto;
+	border-top: solid 1px;
+	border-bottom: solid 1px;
+	border-color: #cccccc;
+}
+
+/*scrollbar*/
+.scanTable::-webkit-scrollbar{
+	width: 16px;
+	background-color: #F5F5F5;
+}
+.scanTable::-webkit-scrollbar-track
+{
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+	/*border-radius:10px;*/
+	background-color: #F5F5F5;
+}
+.scanTable::-webkit-scrollbar-thumb
+{
+	/*border-radius:10px;*/
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+	background-color: #888;
+}
+
+.scanTable tr {
+	border-bottom: solid 1px;
+	border-color: #aaaaaa;
+	height: 2rem;
+}
+.scanTable tr:link {background-color:#000000;}      /* 未访问链接*/
+.scanTable tr:visited {background-color:#000000;}  /* 已访问链接 */
+.scanTable tr:hover {background-color:#aaaaaa;}  /* 鼠标移动到链接上 */
+.scanTable tr:active {background-color:#888888;}  /* 鼠标点击时 */
+.scanTable tr.disableTr {background-color:white;cursor:not-allowed}  /* 禁用时*/
+.scanTable td {
+	max-width: 12rem;
+	/*
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	 */
+	word-break: break-all;
+	padding-left: 1rem;
+}
+.scanTableTh{
+	background: #8f8f8f;
+	color: white;
+}
+.scanTableTh th{
+	text-align: left;
+	padding-left: 15px;
+}
+
+.manualInput{
+	border-top: solid 1px;
+	border-bottom: solid 1px;
+	border-color: #cccccc;
+}
+.manualInput>div{
+	display: flex;
+	padding-left: 15px;
+}
+#manualInput{
+	border: 1px solid;
+}
+.connected{
+	padding: 10px;
+}
+/*
+.hide{
+	display: none;
+}
+.hideTip{
+	position: fixed;
+	top: 30%;
+	left: 10%;
+	z-index: 10;
+	width: 200px;
+	height: 100px;
+	padding: 15px;
+	background-color: #E74A45;
+}
+.floatRight{
+	float: right;
+}
+ */
+.textRight{
+	text-align: right;
+	padding-right: 5px;
+}
+.buttonP{
+	margin: auto;
+	text-align: center;
+}
+.buttonP input, .refresh{
+	width: 35%;
+	margin: 15px;
+	color: white;
+	background-color: #E74A45;
+	border: 1px solid #E74A45;
+	padding: 6px 12px;
+	/*border-radius: 10px;*/
+	-webkit-appearance: none;
+}
+.buttonP .back,.back{
+	background-color: transparent;
+	color: #e74a45;
+}
+.refreshing{
+	width: 80px;
+	margin: auto;
+	color: white;
+	background-color: gray;
+	/*border-radius: 10px;*/
+}
+.left{
+	float: left;
+}
+.nowrap{
+	white-space: nowrap;
+}
+.wifiImg{
+	width: 7vw;
+}
+.redText{
+	color: #E74A45;
+}
+.whiteText{
+	color: white;
+}
+.grayText{
+	color: gray;
+}
+.center{
+	text-align: center;
+}
+.div100{
+	width: 100%;
+	height: 100%;
+}
+.redBackground{
+	background: #E74A45;
+	color: white;
+}
+#initial{
+	overflow: hidden;
+}
+.siflowerLogo{
+	height: 1rem;
+}
+.redTop{
+	width: 100%;
+	height: 30%;
+	background-color: #E74A45;
+}
+/*
+.redTopLeft{
+	width: 40%;
+	height: 100%;
+	float: left;
+}
+.redTopRight{
+	width: 60%;
+	height: 100%;
+	float: left;
+	position: relative;
+}
+.redTopRightText{
+	color: white;
+	position: absolute;
+	bottom: 4rem;
+}
+*/
+.whiteBottom{
+	width: 100%;
+	height: 70%;
+	position: relative;
+}
+.expendingIcon{
+	width: 75vw;
+	padding-top: 15%;
+	margin-bottom: 2rem;
+}
+/*
+.expendingGif{
+	width: 90%;
+	margin-left: 5%;
+	margin-right: 5%;
+	margin-top: 15%;
+}
+*/
+.expendingText{
+	width: 100%;
+	color: white;
+	font-size: 1rem;
+	/*position: absolute;
+	top: 42%;*/
+}
+.ledIcon{
+	height: 50%;
+	margin: auto;
+}
+/*
+.ledIconText{
+	color: white;
+}
+*/
+.ledTable tr{
+	border-bottom: 1px solid #dddddd;
+}
+.ledTable td{
+	width: 50%;
+}
+.ledTable div{
+	margin: auto;
+	height: 80px;
+	width: 80px;
+}
+.ledTable img{
+	height: 100%;
+}
+.noBorder{
+	border:none;
+}
+#abnormal-reset{
+	color: #0a9FCD;
+}
+.apSuccessIcon{
+	width: 100%;
+	height: 100%;
+	float: left;
+	display: flex;
+}
+
+.container {
+	width: 100%;
+	height: 100%;
+	margin: auto;
+	overflow: auto;
+	background: white;
+}
+.topMode{
+	background: #E74A45;
+	color: white;
+	text-align: center;
+	margin: 0;
+	padding: 0.5em 0;
+}
+.Title{
+	color: black;
+	margin: 0;
+	padding: 0.5em;
+}
+
+.connectedInfo{
+	border:solid 1px;
+	border-color: #dddddd;
+	/*border-radius: 5px;*/
+	padding:10px;
+}
+.repTable{
+	white-space: nowrap;
+	border: 1px solid #dddddd;
+	/*border-radius: 5px;*/
+	border-collapse: separate;
+}
+.inputPwd{
+	width: 90%;
+	position: fixed;
+	top: 26%;
+	left: 5%;
+	z-index: 10;
+	background-color: white;
+	/*border-radius: 10px;*/
+}
+.visible{
+	width: 20px;
+	position: relative;
+	top: 4px;
+	right: 30px;
+}
+.inputPwdDiv{
+	padding: 5%;
+}
+.inputPwd p{
+	margin-bottom: 20px;
+}
+.inputPwd .radioP{
+	margin: 0;
+}
+.inputRadio{
+	margin-right: 2rem;
+	width: 0px;
+}
+#manuKey,#manuKey-text{
+	width: 40%;
+}
+.inputCheckbox{
+	width: 0px;
+	margin: 0px;
+}
+.ledTopLeft{
+	width: 40%;
+	height: 100%;
+	float: left;
+	display: flex;
+}
+.ledTopRight{
+	width: 60%;
+	height: 100%;
+	float: right;
+	display: flex;
+}
+.ledTopTable{
+	color: white;
+	margin-top: auto;
+	margin-bottom: auto;
+	margin-left: -1rem;
+	font-size: 0.9rem;
+	word-break: break-all;
+}
+
+
+.topLogo{
+	width: 15vw;
+	margin-top: 5%;
+}
+.wifiLogo{
+	width: 25vw;
+	margin-top: 0rem;
+	margin-bottom: 1rem;
+}
+.initButton{
+	width: 12em;
+	background: #E74A45;
+	/*border-radius: 5px;*/
+	border: white solid 1px;
+	color: white;
+	padding: 0.5rem 2rem;
+	font-size: 1rem;
+}
+.bottomLogoDiv{
+	position: fixed;
+	top: 90%;
+	width: 100%
+}
+.leftTd{
+	text-align: right;
+	white-space: nowrap;
+}
+.miniIcon{
+	vertical-align: middle;
+	height: 2em;
+	margin-right: 1em;
+}
+input[type="text"],input[type="password"]{
+	width: 50%;
+	padding-right: 30px;
+}
+.openLabel{
+	position: relative;
+	right: 30px;
+	top: 1px;
+}
+/*for ipad*/
+@media screen and (min-width: 600px) {
+	body{
+		width: 55vw;
+		margin: 0 auto;
+	}
+	.wifiImg{
+		width: 4vw;
+	}
+	.inputPwd{
+		width: 50vw;
+		left: 25%;
+	}
+	.expendingIcon{
+		width: 40vw;
+	}
+	/*
+	.redTopRightText{
+		top: 14vw;
+	}
+	*/
+	.expendingText{
+		/*top: 30vw;*/
+	}
+	.topLogo{
+		width: 7vw;
+	}
+	.wifiLogo{
+		width: 12vw;
+	}
+	.bottomLogoDiv{
+		width: 55vw;
+	}
+}
+/*for PC*/
+@media screen and (min-width: 1080px) {
+	body{
+		width: 30vw;
+		margin: 0 auto;
+	}
+	.wifiImg{
+		width: 2vw;
+	}
+	.inputPwd{
+		width: 25vw;
+		left: 37.5%;
+	}
+	.expendingIcon{
+		width: 23vw;
+	}
+	/*
+	.redTopRightText{
+		top: 10vw;
+	}
+	*/
+	.expendingText{
+		/*top: 16vw;*/
+	}
+	.topLogo{
+		width: 4.5vw;
+	}
+	.wifiLogo{
+		width: 7vw;
+	}
+	.bottomLogoDiv{
+		width: 30vw;
+	}
+}
+input[type="radio"] + label::before {
+	content: "\a0";/*is a space*/
+	display: inline-block;
+	vertical-align: middle;
+	width: 0.5rem;
+	height: 0.5rem;
+	margin-right: 0.5rem;
+	border-radius: 50%;
+	border: 1px solid gray;
+	line-height: 1;
+	padding: 0.1rem;
+}
+input[type="radio"]:checked + label::before {
+	background-color: #e74a45;
+	background-clip: content-box;
+	border: 1px solid #e74a45;
+	padding: 0.1rem;
+}
+input[type="checkbox"] + label::before {
+	content: "\a0";/*is a space*/
+	display: inline-block;
+	vertical-align: 0.2rem;
+	width: 0.8rem;
+	height: 0.8rem;
+	margin-right: 0.2rem;
+	border: #e74a45 1px solid;
+	border-radius: 0.2rem;
+	text-indent: 0.15rem;
+	line-height: 0.65;
+}
+input[type="checkbox"]:checked + label::before {
+	background-color: #e74a45;
+	background: url(./img/checkbox_tick.png) no-repeat;
+	background-size: 0.8rem 0.8rem;
+}
+input[disabled]{
+	cursor: not-allowed;
+}
+.header, .leftnav {
+    display: none;
+}
+.main{
+    height: 100%;
+}
+#upgradeFile{
+	bottom: 2em;
+	width: 17em;
+}
+#textfield{
+	width: 11em;
+}
+#upgrade-tip{
+	padding: 1em;
+	background-color: white;
+	position: fixed;
+	top: 4em;
+}
+.upgradeMain .buttonP input{
+	width: 6em;
+}

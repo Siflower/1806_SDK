@@ -1,7 +1,7 @@
 /dts-v1/;
 
 #include "sf19a28_fullmask.dtsi"
-
+#include "sf19a28-thermal_common.dtsi"
 
 / {
 	#address-cells = <1>;
@@ -82,6 +82,7 @@
 &wifi_rf {
 	status = "okay";
     /*only support ext pa for 5G*/
+	force_expa = <1>;
 };
 
 &gpio_keys {

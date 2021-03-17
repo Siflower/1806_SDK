@@ -84,6 +84,7 @@ detect_mac80211() {
 		noscan="0"
 		band="2.4G"
 		htcodex="0"
+		txpower="20"
 
 
 		iw phy "$dev" info | grep -q 'Capabilities:' && htmode=HT20
@@ -93,6 +94,7 @@ detect_mac80211() {
 			channel="161"
 			ssidprefix=""
 			band="5G"
+			txpower="25"
 			iw phy "$dev" info | grep -q 'VHT Capabilities' && htmode="VHT80"
 		}
 
@@ -130,6 +132,7 @@ detect_mac80211() {
 			set wireless.radio${devidx}.type=mac80211
 			set wireless.radio${devidx}.country=${country}
 			set wireless.radio${devidx}.txpower_lvl=${txpower_lvl}
+			set wireless.radio${devidx}.txpower=${txpower}
 			set wireless.radio${devidx}.channel=${channel}
 			set wireless.radio${devidx}.band=${band}
 			set wireless.radio${devidx}.hwmode=11${mode_band}

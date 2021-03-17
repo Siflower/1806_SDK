@@ -97,6 +97,67 @@ hostapd_common_add_device_config() {
 	config_add_array hostapd_options
 
 	hostapd_add_log_config
+
+	config_add_boolean prohibit_weak_sig_sta_enable disassociate_weak_sig_sta_enable sf_mm
+	config_add_int sta_min_dbm weak_sta_signal
+	config_add_boolean acs_chan_dynamic_select_enable switch_channel_even_have_sta_enable
+	config_add_int acs_chan_dynamic_select_period acs_chan_busy_per acs_chan_bet_per
+}
+
+hostapd_set_sf_options() {
+	local var="$1"
+	json_get_vars \
+		prohibit_weak_sig_sta_enable sta_min_dbm disassociate_weak_sig_sta_enable weak_sta_signal \
+		acs_chan_dynamic_select_enable acs_chan_dynamic_select_period \
+		switch_channel_even_have_sta_enable acs_chan_busy_per acs_chan_bet_per sf_mm
+
+	set_default prohibit_weak_sig_sta_enable 0
+	set_default sta_min_dbm 1
+	set_default disassociate_weak_sig_sta_enable 0
+	set_default weak_sta_signal 1
+	set_default sf_mm 0
+
+	set_default acs_chan_dynamic_select_enable 0
+	set_default acs_chan_dynamic_select_period 0
+	set_default switch_channel_even_have_sta_enable 0
+	set_default acs_chan_busy_per 0
+	set_default acs_chan_bet_per 0
+
+	if [ "$sf_mm" -gt 0 ]; then
+		sf_mm_wl_config_file="wldevlist"
+		append "$var" "whitelist_config=$sf_mm_wl_config_file" "$N"
+		append "$var" "sf_mm=$sf_mm" "$N"
+	fi
+	#for weak signal
+	if [ "$prohibit_weak_sig_sta_enable" -gt 0 ]; then
+		append "$var" "prohibit_weak_sig_sta_enable=$prohibit_weak_sig_sta_enable" "$N"
+	fi
+	if [ "$sta_min_dbm" -ne 1 ]; then
+		append "$var" "sta_min_dbm=$sta_min_dbm" "$N"
+	fi
+	if [ "$disassociate_weak_sig_sta_enable" -gt 0 ]; then
+		append "$var" "disassociate_weak_sig_sta_enable=$disassociate_weak_sig_sta_enable" "$N"
+	fi
+	if [ "$weak_sta_signal" -ne 1 ]; then
+		append "$var" "weak_sta_signal=$weak_sta_signal" "$N"
+	fi
+	#for dynamic channel
+	if [ "$acs_chan_dynamic_select_enable" -gt 0 ]; then
+		append "$var" "acs_chan_dynamic_select_enable=$acs_chan_dynamic_select_enable" "$N"
+	fi
+	if [ "$acs_chan_dynamic_select_period" -gt 0 ]; then
+		append "$var" "acs_chan_dynamic_select_period=$acs_chan_dynamic_select_period" "$N"
+	fi
+	if [ "$switch_channel_even_have_sta_enable" -gt 0 ]; then
+		append "$var" "switch_channel_even_have_sta_enable=$switch_channel_even_have_sta_enable" "$N"
+	fi
+	if [ "$acs_chan_busy_per" -gt 0 ]; then
+		append "$var" "acs_chan_busy_per=$acs_chan_busy_per" "$N"
+	fi
+	if [ "$acs_chan_bet_per" -gt 0 ]; then
+		append "$var" "acs_chan_bet_per=$acs_chan_bet_per" "$N"
+	fi
+	return 0
 }
 
 hostapd_prepare_device_config() {
@@ -109,6 +170,7 @@ hostapd_prepare_device_config() {
 	json_get_vars country country_ie beacon_int:100 doth require_mode legacy_rates acs_chan_bias rd_disabled
 
 	hostapd_set_log_options base_cfg
+	hostapd_set_sf_options base_cfg
 
 	set_default country_ie 1
 	set_default doth 1
@@ -123,6 +185,7 @@ hostapd_prepare_device_config() {
 		[ "$hwmode" = "a" -a "$doth" -gt 0 ] && append base_cfg "ieee80211h=1" "$N"
 	}
 
+	[ -n "$rd_disabled" ] && append base_cfg "rd_disabled=$rd_disabled" "$N"
 	[ -n "$acs_chan_bias" ] && append base_cfg "acs_chan_bias=$acs_chan_bias" "$N"
 
 	local brlist= br
@@ -169,20 +232,21 @@ EOF
 
 hostapd_common_add_bss_config() {
 	config_add_string 'bssid:macaddr' 'ssid:string'
-	config_add_boolean wds wmm uapsd hidden utf8_ssid
+	config_add_boolean wds wmm uapsd hidden utf8_ssid cond_hidden
 
 	config_add_int maxassoc max_inactivity
 	config_add_boolean disassoc_low_ack isolate short_preamble
 
 	config_add_int \
 		wep_rekey eap_reauth_period \
-		wpa_group_rekey wpa_pair_rekey wpa_master_rekey
+		wpa_group_rekey wpa_pair_rekey wpa_master_rekey \
+		wpa_group_update_count
 	config_add_boolean wpa_disable_eapol_key_retries
 
 	config_add_boolean tdls_prohibit
 
 	config_add_boolean rsn_preauth auth_cache
-	config_add_int ieee80211w
+	config_add_int ieee80211w disable_network
 	config_add_int eapol_version
 
 	config_add_string 'auth_server:host' 'server:host'
@@ -229,7 +293,7 @@ hostapd_common_add_bss_config() {
 	config_add_boolean ieee80211r pmk_r1_push ft_psk_generate_local ft_over_ds
 	config_add_int r0_key_lifetime reassociation_deadline
 	config_add_string mobility_domain r1_key_holder
-	config_add_array r0kh r1kh
+	config_add_array r0kh r1kh r1mac
 
 	config_add_int ieee80211w_max_timeout ieee80211w_retry_timeout
 
@@ -242,6 +306,9 @@ hostapd_common_add_bss_config() {
 	config_add_int mcast_rate
 	config_add_array basic_rate
 	config_add_array supported_rates
+
+	config_add_boolean vlan_id_enable
+	config_add_int vlan_id
 
 	config_add_boolean sae_require_mfp
 
@@ -256,7 +323,8 @@ hostapd_set_bss_options() {
 	wireless_vif_parse_encryption
 
 	local bss_conf
-	local wep_rekey wpa_group_rekey wpa_pair_rekey wpa_master_rekey wpa_key_mgmt
+	local wep_rekey wpa_group_rekey wpa_pair_rekey wpa_master_rekey wpa_key_mgmt \
+		wpa_group_update_count
 
 	json_get_vars \
 		wep_rekey wpa_group_rekey wpa_pair_rekey wpa_master_rekey \
@@ -265,10 +333,11 @@ hostapd_set_bss_options() {
 		wps_pushbutton wps_label ext_registrar wps_pbc_in_m1 wps_ap_setup_locked \
 		wps_independent wps_device_type wps_device_name wps_manufacturer wps_pin \
 		macfilter ssid utf8_ssid wmm uapsd hidden short_preamble rsn_preauth \
-		iapp_interface eapol_version dynamic_vlan ieee80211w nasid \
+		iapp_interface eapol_version dynamic_vlan ieee80211w nasid vlan_id_enable vlan_id cond_hidden \
 		acct_server acct_secret acct_port acct_interval \
 		bss_load_update_period chan_util_avg_period sae_require_mfp \
-		multi_ap multi_ap_backhaul_ssid multi_ap_backhaul_key
+		multi_ap multi_ap_backhaul_ssid multi_ap_backhaul_key \
+		wpa_group_update_count
 
 	set_default isolate 0
 	set_default maxassoc 0
@@ -276,8 +345,12 @@ hostapd_set_bss_options() {
 	set_default short_preamble 1
 	set_default disassoc_low_ack 1
 	set_default hidden 0
+	set_default cond_hidden 0
 	set_default wmm 1
 	set_default uapsd 1
+	set_default rsn_preauth 1
+	set_default vlan_id_enable 0
+	set_default vlan_id 1
 	set_default wpa_disable_eapol_key_retries 0
 	set_default tdls_prohibit 0
 	set_default eapol_version 0
@@ -304,6 +377,7 @@ hostapd_set_bss_options() {
 	append bss_conf "preamble=$short_preamble" "$N"
 	append bss_conf "wmm_enabled=$wmm" "$N"
 	append bss_conf "ignore_broadcast_ssid=$hidden" "$N"
+	append bss_conf "conditionally_ignore_bcast_ssid=$cond_hidden" "$N"
 	append bss_conf "uapsd_advertisement_enabled=$uapsd" "$N"
 	append bss_conf "utf8_ssid=$utf8_ssid" "$N"
 	append bss_conf "multi_ap=$multi_ap" "$N"
@@ -314,6 +388,7 @@ hostapd_set_bss_options() {
 		[ -n "$wpa_group_rekey"  ] && append bss_conf "wpa_group_rekey=$wpa_group_rekey" "$N"
 		[ -n "$wpa_pair_rekey"   ] && append bss_conf "wpa_ptk_rekey=$wpa_pair_rekey"    "$N"
 		[ -n "$wpa_master_rekey" ] && append bss_conf "wpa_gmk_rekey=$wpa_master_rekey"  "$N"
+		[ -n "$wpa_group_update_count" ] && append bss_conf "wpa_group_update_count=$wpa_group_update_count"  "$N"
 	}
 
 	[ -n "$nasid" ] && append bss_conf "nas_identifier=$nasid" "$N"
@@ -510,6 +585,7 @@ hostapd_set_bss_options() {
 		if [ "$ieee80211r" -gt "0" ]; then
 			json_get_vars mobility_domain ft_psk_generate_local ft_over_ds reassociation_deadline
 
+
 			set_default mobility_domain "$(echo "$ssid" | md5sum | head -c 4)"
 			set_default ft_psk_generate_local 1
 			set_default ft_over_ds 1
@@ -525,6 +601,7 @@ hostapd_set_bss_options() {
 				json_get_vars r0_key_lifetime r1_key_holder pmk_r1_push
 				json_get_values r0kh r0kh
 				json_get_values r1kh r1kh
+				json_get_values r1mac r1mac
 
 				set_default r0_key_lifetime 10000
 				set_default pmk_r1_push 0
@@ -538,6 +615,9 @@ hostapd_set_bss_options() {
 				done
 				for kh in $r1kh; do
 					append bss_conf "r1kh=${kh//,/ }" "$N"
+				done
+				for kh in $r1mac; do
+					append bss_conf "r1mac=${kh//,/ }" "$N"
 				done
 			fi
 		fi
@@ -629,6 +709,18 @@ hostapd_set_bss_options() {
 	}
 
 	append "$var" "$bss_conf" "$N"
+	if [ "$vlan_id_enable" -gt 0 ]; then
+		if [ "$vlan_id" -ne 0 ]; then
+			append "$var" "vlan_file=/etc/hostapd-$ifname.vlan" "$N"
+			append "$var" "vlan_tagged_interface=$(uci get network.lan.ifname)" "$N"
+			append "$var" "vlan_bridge=brvlan" "$N"
+			append "$var" "vlan_naming=1" "$N"
+			append "$var" "bridge=brvlan$vlan_id" "$N"
+			echo "$vlan_id vlan$vlan_id" >> /etc/hostapd-$ifname.vlan
+		fi
+	else
+		[ -n "$network_bridge" ] && append "$var" "bridge=$network_bridge" "$N"
+	fi
 	return 0
 }
 
@@ -691,7 +783,7 @@ wpa_supplicant_prepare_interface() {
 			adhoc)
 				fail=1
 			;;
-			sta)
+			sta|wds-sta)
 				[ "$wds" = 1 -o "$multi_ap" = 1 ] || fail=1
 			;;
 		esac
@@ -703,6 +795,10 @@ wpa_supplicant_prepare_interface() {
 	}
 
 	local ap_scan=
+	local country_str=
+	[ -n "$country" ] && {
+	        country_str="country=$country"
+	}
 
 	_w_mode="$mode"
 
@@ -764,7 +860,7 @@ wpa_supplicant_add_network() {
 	json_get_vars \
 		ssid bssid key \
 		basic_rate mcast_rate \
-		ieee80211w ieee80211r \
+		ieee80211w ieee80211r disable_network \
 		multi_ap
 
 	case "$auth_type" in
@@ -899,7 +995,7 @@ wpa_supplicant_add_network() {
 				append network_data "proto=WPA" "$N$T"
 			;;
 			2)
-				append network_data "proto=RSN" "$N$T"
+				append network_data "proto=WPA2" "$N$T"
 			;;
 		esac
 
@@ -932,6 +1028,8 @@ wpa_supplicant_add_network() {
 		wpa_supplicant_add_rate mc_rate "$mcast_rate"
 		append network_data "mcast_rate=$mc_rate" "$N$T"
 	}
+
+	[ "${disable_network}" = 1 ] && append network_data "disabled=1" "$N$T"
 
 	if [ "$key_mgnt" = "WPS" ]; then
 		echo "wps_cred_processing=1" >> "$_config"
@@ -969,6 +1067,8 @@ wpa_supplicant_run() {
 
 	#set wds connect/disconnect status
 	[ -e /usr/bin/wpa_cli_event.sh ] && /usr/sbin/wpa_cli -a "/usr/bin/wpa_cli_event.sh" -i "$ifname"&
+	# check current status
+	[ -e /usr/bin/check_connection.sh ] && /usr/bin/check_connection.sh "$ifname"&
 
 	return $ret
 }

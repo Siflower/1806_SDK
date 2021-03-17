@@ -18,7 +18,8 @@ else
 		exit 1
 	fi
 
-	branch=`git branch -vv |grep "*" | awk -F "[][]" '{print $2}'| awk -F "[/:]" '{print $2}'`
+#	branch=`git branch -vv |grep "*" | awk -F "[][]" '{print $2}'| awk -F "[/:]" '{print $2}'`
+	branch="SDK"
 	echo "branch is $branch"
 
 	tag=`git tag  |  grep "${branch}-" | sort -V | awk 'END{print}'`

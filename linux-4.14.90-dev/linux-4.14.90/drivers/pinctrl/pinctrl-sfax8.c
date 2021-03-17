@@ -1436,7 +1436,7 @@ static struct siflower_pin_ctrl *siflower_pinctrl_get_soc_data(
 	struct device_node *np;
 	struct siflower_pin_ctrl *ctrl;
 	struct siflower_pin_bank *bank;
-	int grf_offs, pmu_offs, i, j;
+	int grf_offs = 0, pmu_offs = 0, i, j;
 
 	match = of_match_node(sfax8_pinctrl_match, node);
 	ctrl = (struct siflower_pin_ctrl *)match->data;

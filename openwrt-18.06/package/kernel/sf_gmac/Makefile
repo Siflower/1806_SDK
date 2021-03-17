@@ -43,6 +43,9 @@ define KernelPackage/sf_gmac/config
 			depends on SFAX8_HNAT_DRIVER
 			default "n"
 
+		config SFAX8_IFG_ENABLE
+			bool "gmac/eswitch IFG setting enable"
+			default "n"
 	endif
 endef
 
@@ -76,6 +79,12 @@ NOSTDINC_FLAGS += -DCONFIG_SFAX8_HNAT_TEST_TOOL
 endif
 endif
 
+ifdef CONFIG_SFAX8_FACTORY_READ
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_FACTORY_READ
+endif
+
+
+
 ifdef CONFIG_SFAX8_ESWITCH_DRIVER
 EXTRA_KCONFIG += CONFIG_SFAX8_ESWITCH_DRIVER=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_ESWITCH_DRIVER
@@ -86,9 +95,15 @@ EXTRA_KCONFIG += CONFIG_SFAX8_GENL=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_GENL
 endif
 
+ifdef CONFIG_SFAX8_IFG_ENABLE
+EXTRA_KCONFIG += CONFIG_SFAX8_IFG_ENABLE=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_IFG_ENABLE
+endif
+
 define KernelPackage/sf_gmac
   SUBMENU:=Network Devices
   TITLE:=Siflower SFA18 gmac support
+  DEPENDS:=+kmod-sfax8-factory-read
   FILES:=$(PKG_BUILD_DIR)/sgmac.ko
   AUTOLOAD:=$(call AutoLoad,60,sgmac,1)
   KCONFIG:=
@@ -101,10 +116,6 @@ endif
 
 ifdef CONFIG_SFAX8_FPGA_GMAC
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_FPGA_GMAC
-endif
-
-ifdef CONFIG_SFAX8_FACTORY_READ
-NOSTDINC_FLAGS += -DCONFIG_SFAX8_FACTORY_READ
 endif
 
 SFAX8_KO_NAME="a28_sgmac.ko"

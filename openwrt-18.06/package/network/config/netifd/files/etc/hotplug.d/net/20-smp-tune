@@ -54,19 +54,19 @@ for dev in /sys/class/net/*; do
 
 	for q in ${dev}/queues/rx-*; do
 		# RM#8294 fix interrupt (wifi->gmac) on cpu2
-		gmac_interrupt="$(echo $device | grep gmac)"
-		if [ $gmac_interrupt ];then
-			set_hex_val "$q/rps_cpus" "4"
+		gmacinterrupt="$(echo $device | grep gmac)"
+		if [ $gmacinterrupt ];then
+			set_hex_val "$q/rps_cpus" "2"
 		else
-		set_hex_val "$q/rps_cpus" "$(($PROC_MASK & ~$irq_cpu_mask))"
+			set_hex_val "$q/rps_cpus" "$(($PROC_MASK & ~$irq_cpu_mask))"
 		fi
-		wifi-lb_interrupt="$(echo $device | grep wifi-lb)"
-		if [ $wifi-lb_interrupt ];then
-			set_hex_val "$q/rps_cpus" "3"
+		wifilbinterrupt="$(echo $device | grep wifi-lb)"
+		if [ $wifilbinterrupt ];then
+			set_hex_val "$q/rps_cpus" "1"
 		fi
-		wifi-hb_interrupt="$(echo $device | grep wifi-hb)"
-		if [ $wifi-hb_interrupt ];then
-			set_hex_val "$q/rps_cpus" "3"
+		wifihbinterrupt="$(echo $device | grep wifi-hb)"
+		if [ $wifihbinterrupt ];then
+			set_hex_val "$q/rps_cpus" "1"
 		fi
 	done
 

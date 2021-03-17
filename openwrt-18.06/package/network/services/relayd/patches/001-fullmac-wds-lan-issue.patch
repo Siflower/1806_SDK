@@ -1,7 +1,7 @@
 Index: relayd-2016-02-07-ad0b25ad/dhcp.c
 ===================================================================
 --- relayd-2016-02-07-ad0b25ad.orig/dhcp.c	2016-02-08 04:34:33.000000000 +0800
-+++ relayd-2016-02-07-ad0b25ad/dhcp.c	2020-12-08 12:18:12.477173247 +0800
++++ relayd-2016-02-07-ad0b25ad/dhcp.c	2021-03-12 11:39:57.792418136 +0800
 @@ -155,6 +155,9 @@
  			parse_dhcp_options(host, dhcp, udplen - sizeof(struct udphdr));
  	}
@@ -15,13 +15,8 @@ Index: relayd-2016-02-07-ad0b25ad/dhcp.c
 Index: relayd-2016-02-07-ad0b25ad/main.c
 ===================================================================
 --- relayd-2016-02-07-ad0b25ad.orig/main.c	2016-02-08 04:34:33.000000000 +0800
-+++ relayd-2016-02-07-ad0b25ad/main.c	2020-12-08 12:20:48.105177836 +0800
-@@ -387,12 +387,18 @@
- 		IP_BUF(pkt->arp.arp_spa),
- 		MAC_BUF(pkt->eth.ether_shost));
- 
--	if (!memcmp(pkt->arp.arp_spa, "\x00\x00\x00\x00", 4))
-+	if (!memcmp(pkt->arp.arp_spa, "\x00\x00\x00\x00", ETH_ALEN))
++++ relayd-2016-02-07-ad0b25ad/main.c	2021-03-12 11:40:35.032416285 +0800
+@@ -391,8 +391,14 @@
  		return;
  
  	host = find_host_by_ipaddr(NULL, pkt->arp.arp_spa);
@@ -41,7 +36,7 @@ Index: relayd-2016-02-07-ad0b25ad/main.c
  	if (host->rif == rif)
  		return;
  
-+	if (!memcmp(pkt->arp.arp_tpa, pkt->arp.arp_spa, ETH_ALEN))
++	if (!memcmp(pkt->arp.arp_tpa, pkt->arp.arp_spa, 4))
 +		return;
 +
  	send_arp_reply(host->rif, pkt->arp.arp_spa, host->lladdr, host->ipaddr);
