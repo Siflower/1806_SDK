@@ -240,6 +240,10 @@ endif
 ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
 	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/dig_gaintable.ini $(1)/lib/firmware
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/dig_gaintable_expa.ini $(1)/lib/firmware
+	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_hb_txpower_table.ini $(1)/lib/firmware
+	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_lb_txpower_table.ini $(1)/lib/firmware
+	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_hb_txpower_table_expa.ini $(1)/lib/firmware
+	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_lb_txpower_table_expa.ini $(1)/lib/firmware
 	cp $(PKG_BUILD_DIR)/config/cali_table/default_txpower_calibrate_table.bin $(1)/lib/firmware
 
 #ifndef CONFIG_TARGET_siflower_sf19a28_fullmask_SF19A28-REP
