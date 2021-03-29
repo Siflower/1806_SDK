@@ -1,7 +1,7 @@
 /dts-v1/;
 
 #include "sf19a28_fullmask.dtsi"
-
+#include "sf19a28-thermal_common.dtsi"
 
 / {
 	#address-cells = <1>;

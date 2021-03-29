@@ -56,17 +56,17 @@ for dev in /sys/class/net/*; do
 		# RM#8294 fix interrupt (wifi->gmac) on cpu2
 		gmacinterrupt="$(echo $device | grep gmac)"
 		if [ $gmacinterrupt ];then
-			set_hex_val "$q/rps_cpus" "2"
+			set_hex_val "$q/rps_cpus" "4"
 		else
 			set_hex_val "$q/rps_cpus" "$(($PROC_MASK & ~$irq_cpu_mask))"
 		fi
 		wifilbinterrupt="$(echo $device | grep wifi-lb)"
 		if [ $wifilbinterrupt ];then
-			set_hex_val "$q/rps_cpus" "1"
+			set_hex_val "$q/rps_cpus" "2"
 		fi
 		wifihbinterrupt="$(echo $device | grep wifi-hb)"
 		if [ $wifihbinterrupt ];then
-			set_hex_val "$q/rps_cpus" "1"
+			set_hex_val "$q/rps_cpus" "2"
 		fi
 	done
 
