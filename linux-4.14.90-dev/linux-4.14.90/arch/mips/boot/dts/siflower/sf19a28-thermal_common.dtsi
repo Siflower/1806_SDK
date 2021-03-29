@@ -22,65 +22,136 @@
 &cpu0 {
 	#cooling-cells = <2>;
 };
-*/
+ */
 / {
 	thermal-zones {
-		rf_zone: rf_zone {
-			polling-delay-passive = <2000>; /* milliseconds */
-			polling-delay = <4000>; /* milliseconds */
+rf_zone: rf_zone {
+			 polling-delay-passive = <2000>; /* milliseconds */
+			 polling-delay = <4000>; /* milliseconds */
+			 /* sensor	ID */
+			 thermal-sensors = <&wifi_rf	0>;
 
-					/* sensor	ID */
-		        thermal-sensors = <&wifi_rf	0>;
+			 trips {
+ /*#cpu_alert0: cpu_alert {
+				#temperature = <90000>; /* millicelsius */
+				 /*        hysteresis = <2000>; /* millicelsius */
+				 /*        type = "passive";
+						   }; */
+rf_alert0: rf-alert0 {
+			   temperature = <00000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert1: rf-alert1 {
+			   temperature = <10000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
 
-		        trips {
-						/*
-						cpu_alert0: cpu_alert {
-		                        temperature = <90000>; /* millicelsius */
-		                /*        hysteresis = <2000>; /* millicelsius */
-		                /*        type = "passive";
-						}; */
-						rf_alert0: rf-alert0 {
-								temperature = <15000>; /* millicelsius */
-								hysteresis = <1000>; /* millicelsius */
-								type = "passive";
-						};
-						rf_alert1: rf-alert1 {
-								temperature = <55000>; /* millicelsius */
-								hysteresis = <1000>; /* millicelsius */
-								type = "passive";
-						};
-						rf_crit: rf-crit {
-								temperature = <80000>; /* millicelsius */
-								hysteresis = <1000>; /* millicelsius */
-								type = "passive";
-						};
-						/*
-						cpu_crit: cpu_crit {
-		                        temperature = <125000>; /* millicelsius */
-		                /*        hysteresis = <2000>; /* millicelsius */
-		                /*        type = "critical";
-		                };*/
-				};
+rf_alert2: rf-alert2 {
+			   temperature = <20000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert3: rf-alert3 {
+			   temperature = <30000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert4: rf-alert4 {
+			   temperature = <40000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert5: rf-alert5 {
+			   temperature = <50000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert6: rf-alert6 {
+			   temperature = <60000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert7: rf-alert7 {
+			   temperature = <70000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert8: rf-alert8 {
+			   temperature = <80000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert9: rf-alert9 {
+			   temperature = <90000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_crit: rf-crit {
+			 temperature = <100000>; /* millicelsius */
+			 hysteresis = <1000>; /* millicelsius */
+			 type = "passive";
+		 };
+		 /*
+cpu_crit: cpu_crit {
+temperature = <125000>; /* millicelsius */
+		 /*        hysteresis = <2000>; /* millicelsius */
+		 /*        type = "critical";
+				   };*/
+			 };
 
-			cooling-maps {
-				/*
-				cpu0 {
+			 cooling-maps {
+				 /*
+					cpu0 {
 					trip = <&cpu_alert0>;
 					cooling-device = <&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
-				};*/
-				map0 {
-					trip = <&rf_alert0>;
-					cooling-device = <&wifi_rf 0 1>;
-				};
-				map1 {
-					trip = <&rf_alert1>;
-					cooling-device = <&wifi_rf 1 2>;
-				};
-				map3 {
-					trip = <&rf_crit>;
-					cooling-device = <&wifi_rf 2 3>;
-				};
-			};
-		};
+					};*/
+				 map0 {
+					 trip = <&rf_alert0>;
+					 cooling-device = <&wifi_rf 0 1>;
+				 };
+				 map1 {
+					 trip = <&rf_alert1>;
+					 cooling-device = <&wifi_rf 1 2>;
+				 };
+				 map2 {
+					 trip = <&rf_alert2>;
+					 cooling-device = <&wifi_rf 2 3>;
+				 };
+				 map3 {
+					 trip = <&rf_alert3>;
+					 cooling-device = <&wifi_rf 3 4>;
+				 };
+				 map4 {
+					 trip = <&rf_alert4>;
+					 cooling-device = <&wifi_rf 4 5>;
+				 };
+				 map5 {
+					 trip = <&rf_alert5>;
+					 cooling-device = <&wifi_rf 5 6>;
+				 };
+				 map6 {
+					 trip = <&rf_alert6>;
+					 cooling-device = <&wifi_rf 6 7>;
+				 };
+				 map7 {
+					 trip = <&rf_alert7>;
+					 cooling-device = <&wifi_rf 7 8>;
+				 };
+				 map8 {
+					 trip = <&rf_alert8>;
+					 cooling-device = <&wifi_rf 8 9>;
+				 };
+				map9 {
+					 trip = <&rf_alert9>;
+					 cooling-device = <&wifi_rf 9 10>;
+				 };
+				 map10 {
+					 trip = <&rf_crit>;
+					 cooling-device = <&wifi_rf 10 11>;
+				 };
+			 };
+		 };
 	};
 };
