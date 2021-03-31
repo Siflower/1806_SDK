@@ -41,6 +41,10 @@ define KernelPackage/sf_smac/config
 			bool "enable test shell scripts"
 			default "y"
 
+		config SF16A18_COOLING_TEMP
+			bool "enable openwrt themal control"
+			default "n"
+
 		config PACKAGE_SFUMAC_WIFI_ATE_TOOLS
 			bool "enable wifi ate tool"
 			default "y"
@@ -200,7 +204,10 @@ ifdef CONFIG_POWER_OPTIMIZE
 #that must be sync with lmac binaries if defined,here defined 8 to save power
 EXTRA_KCONFIG += CONFIG_SF16A18_COOLING_TEMP=y
 endif
+ifdef CONFIG_SF16A18_COOLING_TEMP
 EXTRA_KCONFIG += CONFIG_SF16A18_COOLING_TEMP=y
+NOSTDINC_FLAGS += -DCONFIG_SF16A18_COOLING_TEMP
+endif
 ifeq ($(CONFIG_NEW_LEDS),y)
 EXTRA_KCONFIG += CONFIG_SF16A18_WIFI_LED=y
 EXTRA_KCONFIG += CONFIG_SF19A28_WIFI_LED=y

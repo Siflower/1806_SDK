@@ -44,22 +44,22 @@
 
 		partition@20000 {
 			label = "u-boot";
-			reg = <0x20000 0x60000>; /* 384k */
+			reg = <0x20000 0x50000>; /* 384k */
 		};
 
 		partition@80000 {
 			label = "u-boot-env";
-			reg = <0x80000 0x10000>; /* 64k */
+			reg = <0x70000 0x10000>; /* 64k */
 		};
 
 		factory:partition@90000 {
 			label = "factory";
-			reg = <0x90000 0x10000>; /* 64k */
+			reg = <0x80000 0x10000>; /* 64k */
 		};
 
 		partition@a0000 {
 			label = "firmware";
-			reg = <0xa0000 0xf60000>; /* 640k-16M */
+			reg = <0x90000 0xf70000>; /* 640k-16M */
 		};
 	};
 };
