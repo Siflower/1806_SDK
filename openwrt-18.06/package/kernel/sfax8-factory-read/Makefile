@@ -41,22 +41,22 @@ EXTRA_CFLAGS:= \
 	$(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \
 	$(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=y,%,$(filter %=y,$(EXTRA_KCONFIG)))) \
 
+NOSTDINC_FLAGS = \
+	-I$(PKG_BUILD_DIR)
+
 MAKE_OPTS:= \
 	ARCH="$(LINUX_KARCH)" \
 	CROSS_COMPILE="$(TARGET_CROSS)" \
 	SUBDIRS="$(PKG_BUILD_DIR)" \
 	EXTRA_CFLAGS="$(EXTRA_CFLAGS)" \
+	NOSTDINC_FLAGS="$(NOSTDINC_FLAGS)" \
 	$(EXTRA_KCONFIG)
 
 define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)
-	$(CP) ./src/* $(PKG_BUILD_DIR)/
+	$(CP) ./src/sfax8_factory_read.ko $(PKG_BUILD_DIR)/
 endef
 
 define Build/Compile
-	$(MAKE) -C "$(LINUX_DIR)" \
-		$(MAKE_OPTS) \
-		modules
 endef
 
 $(eval $(call KernelPackage,sfax8-factory-read))
