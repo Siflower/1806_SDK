@@ -28,6 +28,10 @@ define KernelPackage/sf_smac/config
 			bool "enable dbginfo alloc memory"
 			default "y"
 
+		config PACKAGE_SFSMAC_SMALL_RXBUF
+			bool "use smaller rxbuf"
+			default "n"
+
 		config PACKAGE_SFSMAC_LB_LA_ENABLE
 			bool "enable LA function for low band"
 			default "n"
@@ -131,6 +135,10 @@ endif
 
 ifndef CONFIG_PACKAGE_SFSMAC_DBGINFO_ALLOCS
 EXTRA_KCONFIG += CONFIG_DBG_DUMP=n
+endif
+
+ifdef CONFIG_PACKAGE_SFSMAC_SMALL_RXBUF
+NOSTDINC_FLAGS += -DCONFIG_SF19A28_SMALL_RXBUF
 endif
 
 ifdef CONFIG_PACKAGE_SFSMAC_LB_LA_ENABLE
