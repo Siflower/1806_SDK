@@ -1612,6 +1612,14 @@ config RALINK_WDT
 	depends on RALINK
 	help
 	  Hardware driver for the Ralink SoC Watchdog Timer.
+config SFAX8_WDT
+	tristate "Siflower watchdog"
+	select WATCHDOG_CORE
+	depends on HAS_IOMEM
+	help
+	  Say Y here if to include support for the Siflower watchdog timer.
+	  To compile this driver as a module, choose M here: the module will
+	  be called sfax8_wdt.
 
 config MT7621_WDT
 	tristate "Mediatek SoC watchdog"
