@@ -28,6 +28,10 @@ define KernelPackage/sf_eswitch/config
 			bool "Generic netlink support"
 			depends on PACKAGE_kmod-sf_netlink
 			default "n"
+
+		config ESWITCH_LIGHT
+			bool "use light eswitch"
+			default "n"
 	endif
 endef
 
@@ -47,6 +51,11 @@ endif
 ifdef CONFIG_SFAX8_GENL
 EXTRA_KCONFIG += CONFIG_SFAX8_GENL=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_GENL
+endif
+
+ifdef CONFIG_ESWITCH_LIGHT
+EXTRA_KCONFIG += CONFIG_ESWITCH_LIGHT=y
+NOSTDINC_FLAGS += -DCONFIG_ESWITCH_LIGHT
 endif
 
 define Build/Prepare

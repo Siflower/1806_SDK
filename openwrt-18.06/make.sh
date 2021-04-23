@@ -18,14 +18,13 @@ else
 		exit 1
 	fi
 
-#	branch=`git branch -vv |grep "*" | awk -F "[][]" '{print $2}'| awk -F "[/:]" '{print $2}'`
-	branch="SDK"
+	branch=`git branch -vv |grep "*" | awk -F "[][]" '{print $2}'| awk -F "[/:]" '{print $2}'`
 	echo "branch is $branch"
 
 	tag=`git tag  |  grep "${branch}-" | sort -V | awk 'END{print}'`
 	if [ ! -n "$tag" ] ;then
 		#compatible with old version
-		tag=`git tag  |  grep -v "v"  | sort -V | awk 'END{print}'`
+		tag=`git tag  |  grep -v "v" | grep -v "rep" | sort -V | awk 'END{print}'`
 		version=$tag
 	else
 		# version=`printf "$tag" | awk -F "[-]" '{print $2}'`

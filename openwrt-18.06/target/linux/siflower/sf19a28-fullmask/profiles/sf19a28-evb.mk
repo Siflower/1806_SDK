@@ -7,6 +7,7 @@
 
 define Profile/SF19A28-EVB
  NAME:= SF19A28 EVB
+ DEPENDS:=+@DRIVER_11W_SUPPORT
  PACKAGES:=\
 	block-mount fstools badblocks
 endef
