@@ -878,13 +878,13 @@ drv_mac80211_setup() {
 	[ -n "$txpower_lvl" ] && {
 		if [ "$band" == "2.4G" ]; then
 			if [ -d  "/sys/module/sf16a18_lb_smac" ]; then
-			echo $txpower_lvl > /sys/module/sf16a18_lb_smac/parameters/txpower_lvl
-		else
+				echo $txpower_lvl > /sys/module/sf16a18_lb_smac/parameters/txpower_lvl
+			else
 				echo $txpower_lvl > /sys/module/sf16a18_lb_fmac/parameters/txpower_lvl
 			fi
 		else
 			if [ -d  "/sys/module/sf16a18_hb_smac" ]; then
-			echo $txpower_lvl > /sys/module/sf16a18_hb_smac/parameters/txpower_lvl
+				echo $txpower_lvl > /sys/module/sf16a18_hb_smac/parameters/txpower_lvl
 			else
 				echo $txpower_lvl > /sys/module/sf16a18_hb_fmac/parameters/txpower_lvl
 			fi

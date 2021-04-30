@@ -1,23 +1,21 @@
 /dts-v1/;
 
-#include "sf19a28_fullmask.dtsi"
+/memreserve/ 0x04000000 0x03ffffff;
 
+#include "sf19a28_fullmask.dtsi"
+#include "sf19a28-thermal_common.dtsi"
 
 / {
 	#address-cells = <1>;
 	#size-cells = <1>;
 	compatible = "siflower,sf19a28-soc";
-	model = "sf19a28-rep";
+	model = "sf19a28-ac28s";
 
 };
 
 &gmac {
 	status = "okay";
 	delay = <0x40 0x20>;
-	phy = <&phy0>;
-	phy0: ethernet-phy@0 {
-		  max-speed = <1000>;
-	};
 };
 
 &spi2 {
@@ -63,7 +61,7 @@
 
 		partition@a0000 {
 			label = "firmware";
-			reg = <0xa0000 0xf60000>; /* 640k-16M */
+			reg = <0xa0000 0x760000>; /* 640k-16M */
 		};
 	};
 };
@@ -75,10 +73,18 @@
 	status = "okay";
 };
 
+&usb_phy {
+       status = "okay";
+};
+
+&usb {
+       status = "okay";
+};
+
 &wifi_rf {
 	status = "okay";
     /*only support ext pa for 5G*/
-	/* force_expa = <1>; */
+	force_expa = <1>;
 };
 
 &gpio_keys {
@@ -108,18 +114,4 @@
 	#size-cells = <0>;
 	gpio-leds = <&gpio 12 0>;
 	smp-affinity = <3>;
-};
-
-&leds {
-	status = "okay";
-	repeater-green {
-		label = "repeater-green";
-		gpios = <&gpio 0 1>;
-		linux,default-trigger = "timer";
-	};
-	repeater-red {
-		label = "repeater-red";
-		gpios = <&gpio 1 1>;
-		linux,default-trigger = "none";
-	};
 };

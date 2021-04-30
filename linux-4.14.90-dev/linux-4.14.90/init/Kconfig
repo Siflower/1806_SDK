@@ -38,6 +38,13 @@ config THREAD_INFO_IN_TASK
 
 menu "General setup"
 
+config MEMORY_OPTIMIZE
+    bool "optimization for lite memory platform(<=64MB) by siflower"
+    default n
+    help
+        When this option is enabled, system will try to use the memory as minimum as it can,
+        which will have side-effect on the whole system performance.
+
 config BROKEN
 	bool
 
