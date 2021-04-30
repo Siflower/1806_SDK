@@ -137,7 +137,6 @@ detect_mac80211() {
 			set wireless.radio${devidx}.band=${band}
 			set wireless.radio${devidx}.hwmode=11${mode_band}
 			set wireless.radio${devidx}.noscan=${noscan}
-			set wireless.radio${devidx}.netisolate=0
 			set wireless.radio${devidx}.max_all_num_sta=64
 			set wireless.radio${devidx}.ht_coex=${ht_coex}
 			${dev_id}

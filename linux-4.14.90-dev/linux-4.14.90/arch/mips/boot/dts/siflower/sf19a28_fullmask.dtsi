@@ -422,6 +422,7 @@
 			mtd-rom-type = <&factory 161>;
 			mtd-wifi-version = <&factory 2048>;
 			mtd-wifi-info = <&factory 2050>;
+			mtd-cooling-temp = <&factory 174>;
 			status = "okay";
 	};
 

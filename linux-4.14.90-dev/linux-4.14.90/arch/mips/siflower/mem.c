@@ -123,7 +123,12 @@ fw_memblock_t * __init fw_getmdesc(int eva)
 
 	mdesc[1].type = fw_dontuse;
 	mdesc[1].base = mdesc[0].base + mdesc[0].size;
+#ifdef CONFIG_MEMORY_OPTIMIZE
 	mdesc[1].size = CONFIG_FIRMWARE_SIZE * 1024;
+#else
+    // Just a workaround to make sure lmac can work even on platform with low memory
+    mdesc[1].size = 2048 * 1024;
+#endif
 
 	mdesc[2].type = fw_free;
 	mdesc[2].base = mdesc[1].base + mdesc[1].size;

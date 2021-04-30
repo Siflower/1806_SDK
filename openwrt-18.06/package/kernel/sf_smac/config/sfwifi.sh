@@ -81,6 +81,7 @@ insmod_umac(){
     "
     fmac_modparams="
     ant_div=${ant_div-1}
+    tx_queue_num=${tx_queue_num-4}
     "
     if [ sf16a18_smac == "$1" ]; then
         if [ lb == $2 ];then

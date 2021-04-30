@@ -3124,7 +3124,7 @@ out_null:
 
 struct sk_buff *validate_xmit_skb_list(struct sk_buff *skb, struct net_device *dev)
 {
-	struct sk_buff *next, *head = NULL, *tail;
+	struct sk_buff *next, *head = NULL, *tail = NULL;
 
 	for (; skb != NULL; skb = next) {
 		next = skb->next;
@@ -3479,13 +3479,13 @@ static int __dev_queue_xmit(struct sk_buff *skb, void *accel_priv)
 	qdisc_pkt_len_init(skb);
 #ifdef CONFIG_NET_CLS_ACT
 	skb->tc_at_ingress = 0;
-# ifdef CONFIG_NET_EGRESS
+#ifdef CONFIG_NET_EGRESS
 	if (static_key_false(&egress_needed)) {
 		skb = sch_handle_egress(skb, &rc, dev);
 		if (!skb)
 			goto out;
 	}
-# endif
+#endif
 #endif
 	/* If device/qdisc don't need skb->dst, release it right now while
 	 * its hot in this cpu cache.
@@ -3580,8 +3580,12 @@ EXPORT_SYMBOL(dev_queue_xmit_accel);
  *			Receiver routines
  *************************************************************************/
 
+#ifdef CONFIG_MEMORY_OPTIMIZE
+int netdev_max_backlog __read_mostly = 1000;
+#else
 //modify to 3000 to avoid pkt drop when wifi>gmac rx path
 int netdev_max_backlog __read_mostly = 3000;
+#endif
 EXPORT_SYMBOL(netdev_max_backlog);
 
 int netdev_tstamp_prequeue __read_mostly = 1;
@@ -5213,9 +5217,9 @@ EXPORT_SYMBOL_GPL(backlog_skb_handler_unregister);
 static int hook_dev_xmit_path(struct sk_buff *skb)
 {
     int ret = NET_RX_DROP;
-    if(!g_wlan_hook_fn){
+    if (!g_wlan_hook_fn) {
         ret = NET_RX_DROP;
-    }else{
+    } else {
         spin_lock(&backlog_hook_lock);
         ret = g_wlan_hook_fn(skb);
 	    spin_unlock(&backlog_hook_lock);
@@ -5245,23 +5249,29 @@ static int process_backlog(struct napi_struct *napi, int quota)
 #define SF_HNAT_FLAG                   40 // skb hw hnat finish flag
 #define SF_CB_HNAT_FORWARD             22 // skb need xmit directly
 
-			if (skb->cb[SF_HNAT_FLAG] == SF_CB_HNAT_FORWARD)
-			{
-				skb_push(skb, ETH_HLEN);
-				dev_queue_xmit(skb);
+			if (skb->cb[SF_HNAT_FLAG] == SF_CB_HNAT_FORWARD) {
+				if(skb->protocol == cpu_to_be16(ETH_P_8021Q)){
+					u8 *eth_header = skb->data - ETH_HLEN;
+					memmove(eth_header + VLAN_HLEN, eth_header, 2 * ETH_ALEN);
+					skb_push(skb, ETH_HLEN - VLAN_HLEN);
+					skb->dev->netdev_ops->ndo_start_xmit(skb, skb->dev);
+				}else{
+					skb_push(skb, ETH_HLEN);
+					dev_queue_xmit(skb);
+				}
 			}
 			else
 			{
-                if(hook_dev_xmit_path(skb) != NET_RX_SUCCESS){
-                    rcu_read_lock();
-                    __netif_receive_skb(skb);
-                    rcu_read_unlock();
-                }
-            }
+				if (hook_dev_xmit_path(skb) != NET_RX_SUCCESS) {
+					rcu_read_lock();
+					__netif_receive_skb(skb);
+					rcu_read_unlock();
+				}
+			}
 
 			input_queue_head_incr(sd);
 			if (++work >= quota)
-				return work;
+			  return work;
 		}
 
 		local_irq_disable();
@@ -5279,7 +5289,7 @@ static int process_backlog(struct napi_struct *napi, int quota)
 			again = false;
 		} else {
 			skb_queue_splice_tail_init(&sd->input_pkt_queue,
-						   &sd->process_queue);
+						&sd->process_queue);
 		}
 		rps_unlock(sd);
 		local_irq_enable();
