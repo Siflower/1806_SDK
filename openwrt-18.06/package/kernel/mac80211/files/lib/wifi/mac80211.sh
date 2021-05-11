@@ -137,6 +137,7 @@ detect_mac80211() {
 			set wireless.radio${devidx}.band=${band}
 			set wireless.radio${devidx}.hwmode=11${mode_band}
 			set wireless.radio${devidx}.noscan=${noscan}
+			set wireless.radio${devidx}.netisolate=0
 			set wireless.radio${devidx}.max_all_num_sta=64
 			set wireless.radio${devidx}.ht_coex=${ht_coex}
 			${dev_id}
@@ -155,7 +156,6 @@ detect_mac80211() {
 			set wireless.default_radio${devidx}.wpa_group_rekey=3600
 			set wireless.default_radio${devidx}.isolate=0
 			set wireless.default_radio${devidx}.group=1
-			set wireless.default_radio${devidx}.netisolate=0
 			set wireless.default_radio${devidx}.disable_input=0
 			set wireless.default_radio${devidx}.wps_pushbutton=1
 			set wireless.default_radio${devidx}.wps_label=0
