@@ -9,6 +9,10 @@
 #include <linux/netfilter/nf_conntrack_tuple_common.h>
 #include <net/dst.h>
 
+// XC ADD
+#define FLOWOFFLOAD_HW_MAX	  1024
+#define FLOWOFFLOAD_HW_UDP_THRES 600
+
 struct nf_flowtable;
 
 struct nf_flowtable_type {
@@ -23,6 +27,17 @@ struct nf_flowtable_type {
 enum nf_flowtable_flags {
 	NF_FLOWTABLE_F_HW		= 0x1,
 };
+//XC ADD
+struct nf_flowtable_count {
+	unsigned short	total_count;
+	unsigned short	tcp_count;
+	unsigned short	udp_count;
+	unsigned short	hw_total_count;
+	unsigned short	hw_tcp_count;
+	unsigned short	hw_udp_count;
+	unsigned int udp_age_count;
+	unsigned int full_age_count;
+};
 
 struct nf_flowtable {
 	struct list_head		list;
@@ -31,6 +46,8 @@ struct nf_flowtable {
 	u32				flags;
 	struct delayed_work		gc_work;
 	possible_net_t			ft_net;
+//XC ADD
+	struct nf_flowtable_count nf_count;
 };
 
 enum flow_offload_tuple_dir {
@@ -108,7 +125,6 @@ struct flow_offload_hw_path {
 struct nf_flow_route {
 	struct {
 		struct dst_entry	*dst;
-		int			ifindex;
 	} tuple[FLOW_OFFLOAD_DIR_MAX];
 };
 
@@ -121,6 +137,10 @@ struct flow_offload_tuple_rhash *flow_offload_lookup(struct nf_flowtable *flow_t
 						     struct flow_offload_tuple *tuple);
 int nf_flow_table_iterate(struct nf_flowtable *flow_table,
 			  void (*iter)(struct flow_offload *flow, void *data),
+			  void *data);
+
+int nf_flow_table_iterate_ret(struct nf_flowtable *flow_table,
+			  int (*iter)(struct flow_offload *flow, void *data),
 			  void *data);
 
 void nf_flow_table_cleanup(struct net *net, struct net_device *dev);
@@ -151,14 +171,14 @@ unsigned int nf_flow_offload_ipv6_hook(void *priv, struct sk_buff *skb,
 				       const struct nf_hook_state *state);
 
 void nf_flow_offload_hw_add(struct net *net, struct flow_offload *flow,
-			    struct nf_conn *ct);
-void nf_flow_offload_hw_del(struct net *net, struct flow_offload *flow);
+			    struct nf_conn *ct, struct nf_flowtable_count * nf_count);
+void nf_flow_offload_hw_del(struct net *net, struct flow_offload *flow, struct nf_flowtable_count * nf_count);
 
 struct nf_flow_table_hw {
 	struct module	*owner;
 	void		(*add)(struct net *net, struct flow_offload *flow,
-			       struct nf_conn *ct);
-	void		(*del)(struct net *net, struct flow_offload *flow);
+			       struct nf_conn *ct, struct nf_flowtable_count * nf_count);
+	void		(*del)(struct net *net, struct flow_offload *flow, struct nf_flowtable_count * nf_count);
 };
 
 int nf_flow_table_hw_register(const struct nf_flow_table_hw *offload);

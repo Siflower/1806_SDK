@@ -9,21 +9,28 @@
 #include <net/netfilter/nf_conntrack_core.h>
 #include <net/netfilter/nf_conntrack_tuple.h>
 
-// static DEFINE_SPINLOCK(flow_offload_hw_pending_list_lock);
-// static LIST_HEAD(flow_offload_hw_pending_list);
-// static DEFINE_MUTEX(nf_flow_offload_hw_mutex);
+#ifdef NF_FLOW_TABLE_HW_ASYNC
+static DEFINE_SPINLOCK(flow_offload_hw_pending_list_lock);
+static LIST_HEAD(flow_offload_hw_pending_list);
+
+static DEFINE_MUTEX(nf_flow_offload_hw_mutex);
+#endif
 
 struct flow_offload_hw {
 	struct list_head	list;
 	enum flow_offload_type	type;
 	struct flow_offload	*flow;
 	struct nf_conn		*ct;
+#ifdef NF_FLOW_TABLE_HW_ASYNC
+	struct nf_flowtable_count * nf_count;
+#endif
 
 	struct flow_offload_hw_path src;
 	struct flow_offload_hw_path dest;
 };
 
 static void flow_offload_check_ethernet(struct flow_offload_tuple *tuple,
+					struct dst_entry *dst,
 					struct flow_offload_hw_path *path)
 {
 	struct net_device *dev = path->dev;
@@ -33,7 +40,7 @@ static void flow_offload_check_ethernet(struct flow_offload_tuple *tuple,
 		return;
 
 	memcpy(path->eth_src, path->dev->dev_addr, ETH_ALEN);
-	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
+	n = dst_neigh_lookup(dst, &tuple->src_v4);
 	if (!n)
 		return;
 
@@ -44,6 +51,7 @@ static void flow_offload_check_ethernet(struct flow_offload_tuple *tuple,
 
 static int flow_offload_check_path(struct net *net,
 				   struct flow_offload_tuple *tuple,
+				   struct dst_entry *dst,
 				   struct flow_offload_hw_path *path)
 {
 	struct net_device *dev;
@@ -53,7 +61,7 @@ static int flow_offload_check_path(struct net *net,
 		return -ENOENT;
 
 	path->dev = dev;
-	flow_offload_check_ethernet(tuple, path);
+	flow_offload_check_ethernet(tuple, dst, path);
 
 	if (dev->netdev_ops->ndo_flow_offload_check)
 		return dev->netdev_ops->ndo_flow_offload_check(path);
@@ -85,12 +93,13 @@ static void flow_offload_hw_free(struct flow_offload_hw *offload)
 	dev_put(offload->dest.dev);
 	if (offload->ct)
 		nf_conntrack_put(&offload->ct->ct_general);
-	// list_del(&offload->list);
+#ifdef NF_FLOW_TABLE_HW_ASYNC
+	list_del(&offload->list);
+#endif
 	kfree(offload);
 }
 
-//RM#8396 use sync method make sure add - del  in order
-#if 0
+#ifdef NF_FLOW_TABLE_HW_ASYNC
 static void flow_offload_hw_work(struct work_struct *work)
 {
 	struct flow_offload_hw *offload, *next;
@@ -107,13 +116,18 @@ static void flow_offload_hw_work(struct work_struct *work)
 				if (nf_ct_is_dying(offload->ct))
 				  break;
 
-				if (do_flow_offload_hw(offload) >= 0)
+				if (do_flow_offload_hw(offload) >= 0){
 				  offload->flow->flags |= FLOW_OFFLOAD_HW;
+				  offload->nf_count->hw_total_count++;
+				  if(offload->flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
+					offload->nf_count->hw_udp_count++;
+				  else if(offload->flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_TCP)
+					offload->nf_count->hw_tcp_count++;
+
+				}
 				break;
 			case FLOW_OFFLOAD_DEL:
 				do_flow_offload_hw(offload);
-				break;
-			case FLOW_OFFLOAD_FLOW_NULL:
 				break;
 		}
 		mutex_unlock(&nf_flow_offload_hw_mutex);
@@ -131,22 +145,24 @@ static void flow_offload_queue_work(struct flow_offload_hw *offload)
 	schedule_work(&nf_flow_offload_hw_work);
 }
 #endif
+
 static struct flow_offload_hw *
 flow_offload_hw_prepare(struct net *net, struct flow_offload *flow)
 {
 	struct flow_offload_hw_path src = {};
 	struct flow_offload_hw_path dest = {};
-	struct flow_offload_tuple *tuple;
+	struct flow_offload_tuple *tuple_s, *tuple_d;
 	struct flow_offload_hw *offload = NULL;
 
 	rcu_read_lock_bh();
 
-	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple;
-	if (flow_offload_check_path(net, tuple, &src))
+	tuple_s = &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple;
+	tuple_d = &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple;
+
+	if (flow_offload_check_path(net, tuple_s, tuple_d->dst_cache, &src))
 		goto out;
 
-	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple;
-	if (flow_offload_check_path(net, tuple, &dest))
+	if (flow_offload_check_path(net, tuple_d, tuple_s->dst_cache, &dest))
 		goto out;
 
 	if (!src.dev->netdev_ops->ndo_flow_offload)
@@ -169,57 +185,73 @@ out:
 }
 
 static void flow_offload_hw_add(struct net *net, struct flow_offload *flow,
-				struct nf_conn *ct)
+				struct nf_conn *ct, struct nf_flowtable_count * nf_count)
 {
 	struct flow_offload_hw *offload;
 
 	offload = flow_offload_hw_prepare(net, flow);
-	if (!offload){
-		// printk("offload check\n");
+	if (!offload)
 		return;
-	}
 
 	nf_conntrack_get(&ct->ct_general);
 	offload->type = FLOW_OFFLOAD_ADD;
 	offload->ct = ct;
-
+#ifdef NF_FLOW_TABLE_HW_ASYNC
+	offload->nf_count = nf_count;
+	// not safe if core free flow before dequeue
+	flow_offload_queue_work(offload);
+#else
 	if (nf_ct_is_dying(offload->ct)){
 		// printk("ct dyin\n");
 		goto err_free;
 	}
 
-	if (do_flow_offload_hw(offload) >= 0)
-	  offload->flow->flags |= FLOW_OFFLOAD_HW;
+	if (do_flow_offload_hw(offload) >= 0){
+		offload->flow->flags |= FLOW_OFFLOAD_HW;
+		offload->flow->flags |= FLOW_OFFLOAD_KEEP;
+		nf_count->hw_total_count++;
+		if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
+		  nf_count->hw_udp_count++;
+		else if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_TCP)
+		  nf_count->hw_tcp_count++;
+	}
 
 err_free:
 	flow_offload_hw_free(offload);
 	return;
-	// flow_offload_queue_work(offload);
+#endif
 }
 
-static void flow_offload_hw_del(struct net *net, struct flow_offload *flow)
+static void flow_offload_hw_del(struct net *net, struct flow_offload *flow, struct nf_flowtable_count * nf_count)
 {
 	struct flow_offload_hw *offload;
 
 	offload = flow_offload_hw_prepare(net, flow);
-	if (!offload){
-		// printk("offload check\n");
+	if (!offload)
 		return;
-	}
-	// offload->type = FLOW_OFFLOAD_FLOW_NULL;
-	// mutex_lock(&nf_flow_offload_hw_mutex);
-	// do_flow_offload_hw(offload);
-	// mutex_unlock(&nf_flow_offload_hw_mutex);
 
 	offload->type = FLOW_OFFLOAD_DEL;
+
+	nf_count->hw_total_count--;
+	if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
+	  nf_count->hw_udp_count--;
+	else if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_TCP)
+	  nf_count->hw_tcp_count--;
+
+// use index replace flow
+	offload->flow = (struct flow_offload *)(flow->priv);
+
+#ifdef NF_FLOW_TABLE_HW_ASYNC
+// XC ADD
+	// not safe if core free flow before dequeue
+	flow_offload_queue_work(offload);
+#else
 	do_flow_offload_hw(offload);
 
-	// flow_offload_queue_work(offload);
-
-	offload->flow->flags &= ~(FLOW_OFFLOAD_HW);
 	flow_offload_hw_free(offload);
 
 	return;
+#endif
 }
 
 static const struct nf_flow_table_hw flow_offload_hw = {
@@ -230,7 +262,10 @@ static const struct nf_flow_table_hw flow_offload_hw = {
 
 static int __init nf_flow_table_hw_module_init(void)
 {
-	// INIT_WORK(&nf_flow_offload_hw_work, flow_offload_hw_work);
+
+#ifdef NF_FLOW_TABLE_HW_ASYNC
+	INIT_WORK(&nf_flow_offload_hw_work, flow_offload_hw_work);
+#endif
 	nf_flow_table_hw_register(&flow_offload_hw);
 
 	return 0;
@@ -238,14 +273,19 @@ static int __init nf_flow_table_hw_module_init(void)
 
 static void __exit nf_flow_table_hw_module_exit(void)
 {
-	// struct flow_offload_hw *offload, *next;
-	// LIST_HEAD(hw_offload_pending);
+#ifdef NF_FLOW_TABLE_HW_ASYNC
+	struct flow_offload_hw *offload, *next;
+	LIST_HEAD(hw_offload_pending);
+#endif
 
 	nf_flow_table_hw_unregister(&flow_offload_hw);
-	// cancel_work_sync(&nf_flow_offload_hw_work);
 
-	// list_for_each_entry_safe(offload, next, &hw_offload_pending, list)
-	// 	flow_offload_hw_free(offload);
+#ifdef NF_FLOW_TABLE_HW_ASYNC
+	cancel_work_sync(&nf_flow_offload_hw_work);
+
+	list_for_each_entry_safe(offload, next, &hw_offload_pending, list)
+		flow_offload_hw_free(offload);
+#endif
 }
 
 module_init(nf_flow_table_hw_module_init);

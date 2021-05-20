@@ -28,9 +28,11 @@ nft_flow_dst(const struct nf_conn *ct, enum ip_conntrack_dir dir,
 	switch (nft_pf(pkt)) {
 	case NFPROTO_IPV4:
 		fl.u.ip4.daddr = ct->tuplehash[dir].tuple.src.u3.ip;
+		fl.u.ip4.flowi4_oif = nft_in(pkt)->ifindex;
 		break;
 	case NFPROTO_IPV6:
 		fl.u.ip6.daddr = ct->tuplehash[dir].tuple.src.u3.in6;
+		fl.u.ip6.flowi6_oif = nft_in(pkt)->ifindex;
 		break;
 	}
 
@@ -52,9 +54,7 @@ static int nft_flow_route(const struct nft_pktinfo *pkt,
 		return -ENOENT;
 
 	route->tuple[dir].dst		= this_dst;
-	route->tuple[dir].ifindex	= nft_in(pkt)->ifindex;
 	route->tuple[!dir].dst		= other_dst;
-	route->tuple[!dir].ifindex	= nft_out(pkt)->ifindex;
 
 	return 0;
 }
@@ -122,7 +122,7 @@ static void nft_flow_offload_eval(const struct nft_expr *expr,
 		goto err_flow_add;
 
 	if (flowtable->flags & NF_FLOWTABLE_F_HW)
-		nf_flow_offload_hw_add(nft_net(pkt), flow, ct);
+		nf_flow_offload_hw_add(nft_net(pkt), flow, ct, &flowtable->nf_count );
 
 	return;
 

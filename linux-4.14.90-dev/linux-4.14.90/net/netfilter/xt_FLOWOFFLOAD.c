@@ -12,7 +12,13 @@
 #include <linux/etherdevice.h>
 #include <net/ip.h>
 #include <net/netfilter/nf_conntrack.h>
+#include <net/netfilter/nf_conntrack_extend.h>
+#include <net/netfilter/nf_conntrack_helper.h>
 #include <net/netfilter/nf_flow_table.h>
+#include <linux/inetdevice.h>
+
+#include <linux/rtnetlink.h>
+#include <linux/socket.h>
 
 static struct nf_flowtable nf_flowtable;
 static HLIST_HEAD(hooks);
@@ -185,21 +191,24 @@ out:
 }
 
 static bool
-xt_flowoffload_skip(struct sk_buff *skb)
+xt_flowoffload_skip(struct sk_buff *skb, int family)
 {
-	struct ip_options *opt = &(IPCB(skb)->opt);
-
-	if (unlikely(opt->optlen))
-		return true;
 	if (skb_sec_path(skb))
 		return true;
+
+	const struct ip_options *opt = &(IPCB(skb)->opt);
+
+	if (family == NFPROTO_IPV4) {
+		if (unlikely(opt->optlen))
+		  return true;
+	}
 
 	return false;
 }
 
 static struct dst_entry *
 xt_flowoffload_dst(const struct nf_conn *ct, enum ip_conntrack_dir dir,
-		   const struct xt_action_param *par)
+		   const struct xt_action_param *par, int ifindex)
 {
 	struct dst_entry *dst = NULL;
 	struct flowi fl;
@@ -208,10 +217,12 @@ xt_flowoffload_dst(const struct nf_conn *ct, enum ip_conntrack_dir dir,
 	switch (xt_family(par)) {
 	case NFPROTO_IPV4:
 		fl.u.ip4.daddr = ct->tuplehash[dir].tuple.src.u3.ip;
+		fl.u.ip4.flowi4_oif = ifindex;
 		break;
 	case NFPROTO_IPV6:
 		fl.u.ip6.saddr = ct->tuplehash[dir].tuple.dst.u3.in6;
 		fl.u.ip6.daddr = ct->tuplehash[dir].tuple.src.u3.in6;
+		fl.u.ip6.flowi6_oif = ifindex;
 		break;
 	}
 
@@ -227,18 +238,18 @@ xt_flowoffload_route(struct sk_buff *skb, const struct nf_conn *ct,
 {
 	struct dst_entry *this_dst, *other_dst;
 
-	this_dst = xt_flowoffload_dst(ct, dir, par);
-	other_dst = xt_flowoffload_dst(ct, !dir, par);
+	this_dst = xt_flowoffload_dst(ct, !dir, par, xt_out(par)->ifindex);
+	other_dst = xt_flowoffload_dst(ct, dir, par, xt_in(par)->ifindex);
+
+	route->tuple[dir].dst		= this_dst;
+	route->tuple[!dir].dst		= other_dst;
+
 	if (!this_dst || !other_dst)
 		return -ENOENT;
 
 	if (dst_xfrm(this_dst) || dst_xfrm(other_dst))
 		return -EINVAL;
 
-	route->tuple[dir].dst		= this_dst;
-	route->tuple[dir].ifindex	= xt_in(par)->ifindex;
-	route->tuple[!dir].dst		= other_dst;
-	route->tuple[!dir].ifindex	= xt_out(par)->ifindex;
 
 	return 0;
 }
@@ -270,6 +281,7 @@ static int check_flow_in_blacklist(struct net *net, struct flow_offload *flow)
 
 	if (n)
 		neigh_release(n);
+
 	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple;
 	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
 	if (n && check_dev_in_blacklist(n->ha)) {
@@ -279,8 +291,27 @@ static int check_flow_in_blacklist(struct net *net, struct flow_offload *flow)
 
 	if (n)
 		neigh_release(n);
+
 	return 0;
 }
+
+static int sf_offload_hw_clean_flow_cb(struct flow_offload *flow, void *data)
+{
+	struct flow_offload * hw_flow = (struct flow_offload *)data;
+	if(hw_flow == flow){
+		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
+		flow->timeout = jiffies + 30*HZ;
+		return 0;
+	}
+	return -1;
+}
+
+void sf_offload_hw_clean_flow(struct flow_offload *flow)
+{
+	struct nf_flowtable *table = &nf_flowtable;
+	nf_flow_table_iterate_ret(table, sf_offload_hw_clean_flow_cb, flow);
+}
+EXPORT_SYMBOL(sf_offload_hw_clean_flow);
 
 static void sf_flow_table_do_delete(struct flow_offload *flow, void *data)
 {
@@ -288,7 +319,6 @@ static void sf_flow_table_do_delete(struct flow_offload *flow, void *data)
 	struct neighbour *n;
 	u8 *mac = data;
 
-	rcu_read_lock_bh();
 	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple;
 	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
 	if (n && ether_addr_equal(mac, n->ha))
@@ -303,18 +333,13 @@ static void sf_flow_table_do_delete(struct flow_offload *flow, void *data)
 
 	if (n)
 		neigh_release(n);
-	rcu_read_unlock_bh();
 }
 
-extern void nf_flow_offload_work_gc(struct work_struct *work);
+
 static void sf_free_exist_flow(u8 *mac_addr)
 {
 	struct nf_flowtable *table = &nf_flowtable;
-
-	cancel_delayed_work_sync(&table->gc_work);
 	nf_flow_table_iterate(table, sf_flow_table_do_delete, mac_addr);
-	INIT_DEFERRABLE_WORK(&table->gc_work, nf_flow_offload_work_gc);
-	nf_flow_offload_work_gc(&table->gc_work.work);
 }
 
 int sf_add_dev_to_blacklist(u8 *mac)
@@ -364,14 +389,17 @@ static unsigned int
 flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct xt_flowoffload_target_info *info = par->targinfo;
+	struct tcphdr _tcph, *tcph = NULL;
 	enum ip_conntrack_info ctinfo;
 	enum ip_conntrack_dir dir;
 	struct nf_flow_route route;
-	struct flow_offload *flow;
+	struct flow_offload *flow = NULL;
 	struct nf_conn *ct;
+	struct net *net;
 
-	if (xt_flowoffload_skip(skb))
+	if (xt_flowoffload_skip(skb, xt_family(par)))
 		return XT_CONTINUE;
+
 
 	ct = nf_ct_get(skb, &ctinfo);
 	if (ct == NULL)
@@ -381,6 +409,11 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 	case IPPROTO_TCP:
 		if (ct->proto.tcp.state != TCP_CONNTRACK_ESTABLISHED)
 			return XT_CONTINUE;
+
+		tcph = skb_header_pointer(skb, par->thoff,
+					  sizeof(_tcph), &_tcph);
+		if (unlikely(!tcph || tcph->fin || tcph->rst))
+			return XT_CONTINUE;
 		break;
 	case IPPROTO_UDP:
 		break;
@@ -388,14 +421,15 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 		return XT_CONTINUE;
 	}
 
-	if (test_bit(IPS_HELPER_BIT, &ct->status))
+	if (nf_ct_ext_exist(ct, NF_CT_EXT_HELPER) ||
+	    ct->status & IPS_SEQ_ADJUST)
 		return XT_CONTINUE;
 
-	if (ctinfo == IP_CT_NEW && atomic_read(&ct->ct_general.use) == 1){
-		return XT_CONTINUE;
-	}//RM6897,first pkt of udp conntrack without reply can't go on,other pkts can go on
-
-	if (ctinfo == IP_CT_RELATED)
+	// if (ctinfo == IP_CT_NEW && atomic_read(&ct->ct_general.use) == 1){
+	// 	return XT_CONTINUE;
+	// }//RM6897,first pkt of udp conntrack without reply can't go on,other pkts can go on
+//TODO: test udp here
+	if (!nf_ct_is_confirmed(ct))
 		return XT_CONTINUE;
 
 	if (!xt_in(par) || !xt_out(par))
@@ -406,34 +440,39 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 
 	dir = CTINFO2DIR(ctinfo);
 
-	if (xt_flowoffload_route(skb, ct, par, &route, dir) < 0)
+	if (xt_flowoffload_route(skb, ct, par, &route, dir) == 0)
+		flow = flow_offload_alloc(ct, &route);
+
+	dst_release(route.tuple[dir].dst);
+	dst_release(route.tuple[!dir].dst);
+
+	if (!flow)
 		goto err_flow_route;
 
-	flow = flow_offload_alloc(ct, &route);
-	if (!flow)
-		goto err_flow_alloc;
+	if (tcph) {
+		ct->proto.tcp.seen[0].flags |= IP_CT_TCP_FLAG_BE_LIBERAL;
+		ct->proto.tcp.seen[1].flags |= IP_CT_TCP_FLAG_BE_LIBERAL;
+	}
 
-//RM#8396  avoid delete flow offload called before hw add
 	xt_flowoffload_check_device(xt_in(par));
 	xt_flowoffload_check_device(xt_out(par));
 
-	if (info->flags & XT_FLOWOFFLOAD_HW) {
-		if (!check_flow_in_blacklist(xt_net(par), flow))
-			nf_flow_offload_hw_add(xt_net(par), flow, ct);
-	}
+	net = read_pnet(&nf_flowtable.ft_net);
+	if (!net)
+	  write_pnet(&nf_flowtable.ft_net, xt_net(par));
 
 	if (flow_offload_add(&nf_flowtable, flow) < 0)
 		goto err_flow_add;
 
+	if ((info->flags & XT_FLOWOFFLOAD_HW) && (nf_flowtable.nf_count.hw_total_count < FLOWOFFLOAD_HW_MAX)) {
+		if (!check_flow_in_blacklist(xt_net(par), flow))
+			nf_flow_offload_hw_add(xt_net(par), flow, ct, &nf_flowtable.nf_count);
+	}
 
 	return XT_CONTINUE;
 
 err_flow_add:
-	if (flow->flags & FLOW_OFFLOAD_HW)
-		nf_flow_offload_hw_del(xt_net(par), flow);
 	flow_offload_free(flow);
-err_flow_alloc:
-	dst_release(route.tuple[!dir].dst);
 err_flow_route:
 	clear_bit(IPS_OFFLOAD_BIT, &ct->status);
 	return XT_CONTINUE;
@@ -473,14 +512,18 @@ static void xt_flowoffload_table_cleanup(struct nf_flowtable *table)
 	nf_flow_table_free(table);
 }
 
+
 static int flow_offload_netdev_event(struct notifier_block *this,
 				     unsigned long event, void *ptr)
 {
 	struct xt_flowoffload_hook *hook = NULL;
 	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
-
-	if (event != NETDEV_UNREGISTER)
+    struct in_ifaddr        **ifap;
+    struct in_ifaddr        *ifa;
+	struct in_device		*in_dev;
+	if (event != NETDEV_UNREGISTER){
 		return NOTIFY_DONE;
+	}
 
 	spin_lock_bh(&hooks_lock);
 	hook = flow_offload_lookup_hook(dev);
@@ -502,21 +545,109 @@ static struct notifier_block flow_offload_netdev_notifier = {
 	.notifier_call	= flow_offload_netdev_event,
 };
 
+static const struct nla_policy ifa_ipv4_policy[IFA_MAX+1] = {
+	[IFA_LOCAL]     	= { .type = NLA_U32 },
+	[IFA_ADDRESS]   	= { .type = NLA_U32 },
+	[IFA_BROADCAST] 	= { .type = NLA_U32 },
+	[IFA_LABEL]     	= { .type = NLA_STRING, .len = IFNAMSIZ - 1 },
+	[IFA_CACHEINFO]		= { .len = sizeof(struct ifa_cacheinfo) },
+	[IFA_FLAGS]		= { .type = NLA_U32 },
+};
+
+extern int inet_rtm_deladdr(struct sk_buff *skb, struct nlmsghdr *nlh,
+			struct netlink_ext_ack *extack);
+static int sf_deladdr(struct sk_buff *skb, struct nlmsghdr *nlh,
+			struct netlink_ext_ack *extack)
+{
+	struct net *net = sock_net(skb->sk);
+	struct nlattr *tb[IFA_MAX+1];
+	struct net_device *dev;
+	struct ifaddrmsg *ifm;
+	int err = 0;
+	int ret = 0;
+	ret = inet_rtm_deladdr(skb, nlh, extack);
+	if(ret)
+	  return ret;
+
+	err = nlmsg_parse(nlh, sizeof(*ifm), tb, IFA_MAX, ifa_ipv4_policy,
+				extack);
+	if (err < 0)
+	  return ret;
+
+	ifm = nlmsg_data(nlh);
+	if (ifm->ifa_prefixlen > 32 || !tb[IFA_LOCAL])
+	  return ret;
+
+	dev = __dev_get_by_index(net, ifm->ifa_index);
+	if (!dev)
+	  return err;
+
+	if (!tb[IFA_ADDRESS])
+	  tb[IFA_ADDRESS] = tb[IFA_LOCAL];
+
+	printk("dev:%s del ip 0x%08x lip 0x%08x, prefix len %d \n", dev->name, nla_get_in_addr(tb[IFA_ADDRESS]), nla_get_in_addr(tb[IFA_LOCAL]), ifm->ifa_prefixlen);
+	return ret;
+
+}
+
+
+extern int inet_rtm_newaddr(struct sk_buff *skb, struct nlmsghdr *nlh,
+			struct netlink_ext_ack *extack);
+static int sf_newaddr(struct sk_buff *skb, struct nlmsghdr *nlh,
+			struct netlink_ext_ack *extack)
+{
+	struct net *net = sock_net(skb->sk);
+	struct nlattr *tb[IFA_MAX+1];
+	struct ifaddrmsg *ifm;
+	struct net_device *dev;
+	int err = 0;
+	int ret = 0;
+
+	ret = inet_rtm_newaddr(skb, nlh, extack);
+	if(ret)
+	  return ret;
+
+	err = nlmsg_parse(nlh, sizeof(*ifm), tb, IFA_MAX, ifa_ipv4_policy,
+				NULL);
+	if (err < 0)
+	  return ret;
+
+	ifm = nlmsg_data(nlh);
+	if (ifm->ifa_prefixlen > 32 || !tb[IFA_LOCAL])
+	  return ret;
+
+	dev = __dev_get_by_index(net, ifm->ifa_index);
+	if (!dev)
+	  return ret;
+
+	if (!tb[IFA_ADDRESS])
+	  tb[IFA_ADDRESS] = tb[IFA_LOCAL];
+
+	printk("dev:%s new ip 0x%08x lip 0x%08x, prefix len %d \n", dev->name, nla_get_in_addr(tb[IFA_ADDRESS]), nla_get_in_addr(tb[IFA_LOCAL]), ifm->ifa_prefixlen);
+
+	return ret;
+}
+
+
 static int __init xt_flowoffload_tg_init(void)
 {
 	int ret;
 
 	register_netdevice_notifier(&flow_offload_netdev_notifier);
 
+	// rtnl_register(PF_INET, RTM_NEWADDR, sf_newaddr, NULL, 0);
+	// rtnl_register(PF_INET, RTM_DELADDR, sf_deladdr, NULL, 0);
+
+
 	INIT_DELAYED_WORK(&hook_work, xt_flowoffload_hook_work);
 
 	ret = xt_flowoffload_table_init(&nf_flowtable);
 	if (ret)
-		return ret;
+	  return ret;
 
 	ret = xt_register_target(&offload_tg_reg);
 	if (ret)
-		xt_flowoffload_table_cleanup(&nf_flowtable);
+	  xt_flowoffload_table_cleanup(&nf_flowtable);
 
 	INIT_HLIST_HEAD(&ts_blacklist);
 	return ret;

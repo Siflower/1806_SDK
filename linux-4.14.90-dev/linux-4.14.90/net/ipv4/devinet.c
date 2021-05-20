@@ -591,7 +591,7 @@ static int ip_mc_config(struct sock *sk, bool join, const struct in_ifaddr *ifa)
 	return ret;
 }
 
-static int inet_rtm_deladdr(struct sk_buff *skb, struct nlmsghdr *nlh,
+int inet_rtm_deladdr(struct sk_buff *skb, struct nlmsghdr *nlh,
 			    struct netlink_ext_ack *extack)
 {
 	struct net *net = sock_net(skb->sk);
@@ -639,6 +639,7 @@ static int inet_rtm_deladdr(struct sk_buff *skb, struct nlmsghdr *nlh,
 errout:
 	return err;
 }
+EXPORT_SYMBOL(inet_rtm_deladdr);
 
 #define INFINITY_LIFE_TIME	0xFFFFFFFF
 
@@ -866,7 +867,7 @@ static struct in_ifaddr *find_matching_ifa(struct in_ifaddr *ifa)
 	return NULL;
 }
 
-static int inet_rtm_newaddr(struct sk_buff *skb, struct nlmsghdr *nlh,
+int inet_rtm_newaddr(struct sk_buff *skb, struct nlmsghdr *nlh,
 			    struct netlink_ext_ack *extack)
 {
 	struct net *net = sock_net(skb->sk);
@@ -912,6 +913,7 @@ static int inet_rtm_newaddr(struct sk_buff *skb, struct nlmsghdr *nlh,
 	}
 	return 0;
 }
+EXPORT_SYMBOL(inet_rtm_newaddr);
 
 /*
  *	Determine a default network mask, based on the IP address.
