@@ -46,6 +46,12 @@ define KernelPackage/sf_gmac/config
 		config SFAX8_IFG_ENABLE
 			bool "gmac/eswitch IFG setting enable"
 			default "n"
+
+		config GMAC_DELAY_AUTOCALI
+			bool "gmac delay auto calibration"
+			depends on PACKAGE_kmod-sf_eswitch
+			default "n"
+
 	endif
 endef
 
@@ -98,6 +104,11 @@ endif
 ifdef CONFIG_SFAX8_IFG_ENABLE
 EXTRA_KCONFIG += CONFIG_SFAX8_IFG_ENABLE=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_IFG_ENABLE
+endif
+
+ifdef CONFIG_GMAC_DELAY_AUTOCALI
+EXTRA_KCONFIG += CONFIG_GMAC_DELAY_AUTOCALI=y
+NOSTDINC_FLAGS += -DCONFIG_GMAC_DELAY_AUTOCALI
 endif
 
 define KernelPackage/sf_gmac

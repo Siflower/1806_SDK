@@ -314,6 +314,12 @@ static struct nf_ct_ext_type rtcache_extend __read_mostly = {
 	.destroy = nf_conn_rtcache_destroy,
 };
 
+static int __net_init rtcache_net_init(struct net *net)
+{
+	return nf_register_net_hooks(net, rtcache_ops, ARRAY_SIZE(rtcache_ops));
+}
+
+
 static void __net_exit rtcache_net_exit(struct net *net)
 {
 	/* remove hooks so no new connections get rtcache extension */
@@ -321,6 +327,7 @@ static void __net_exit rtcache_net_exit(struct net *net)
 }
 
 static struct pernet_operations rtcache_ops_net_ops = {
+	.init	= rtcache_net_init,
 	.exit	= rtcache_net_exit,
 };
 
@@ -339,18 +346,8 @@ static int __init nf_conntrack_rtcache_init(void)
 		return ret;
 	}
 
-	ret = nf_register_net_hooks(&init_net, rtcache_ops,
-				    ARRAY_SIZE(rtcache_ops));
-	if (ret < 0) {
-		nf_ct_extend_unregister(&rtcache_extend);
-		unregister_pernet_subsys(&rtcache_ops_net_ops);
-		return ret;
-	}
-
 	ret = register_netdevice_notifier(&nf_rtcache_notifier);
 	if (ret) {
-		nf_unregister_net_hooks(&init_net, rtcache_ops,
-					ARRAY_SIZE(rtcache_ops));
 		nf_ct_extend_unregister(&rtcache_extend);
 		unregister_pernet_subsys(&rtcache_ops_net_ops);
 	}
@@ -401,6 +398,10 @@ static void __exit nf_conntrack_rtcache_fini(void)
 	synchronize_net();
 
 	unregister_netdevice_notifier(&nf_rtcache_notifier);
+
+	unregister_pernet_subsys(&rtcache_ops_net_ops);
+
+	synchronize_net();
 
 	rtnl_lock();
 

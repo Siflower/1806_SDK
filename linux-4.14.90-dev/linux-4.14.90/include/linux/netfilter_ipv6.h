@@ -1,7 +1,7 @@
-/* IPv6-specific defines for netfilter. 
+/* IPv6-specific defines for netfilter.
  * (C)1998 Rusty Russell -- This code is GPL.
  * (C)1999 David Jeffery
- *   this header was blatantly ripped from netfilter_ipv4.h 
+ *   this header was blatantly ripped from netfilter_ipv4.h
  *   it's amazing what adding a bunch of 6s can do =8^)
  */
 #ifndef __LINUX_IP6_NETFILTER_H
@@ -41,7 +41,7 @@ struct nf_ipv6_ops {
 };
 
 #ifdef CONFIG_NETFILTER
-int ip6_route_me_harder(struct net *net, struct sk_buff *skb);
+int ip6_route_me_harder(struct net *net, struct sock *sk_partial, struct sk_buff *skb);
 __sum16 nf_ip6_checksum(struct sk_buff *skb, unsigned int hook,
 			unsigned int dataoff, u_int8_t protocol);
 
