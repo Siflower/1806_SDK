@@ -268,13 +268,14 @@ void nf_flow_dump_count(struct nf_flowtable_count *nf_count){
 // }
 // EXPORT_SYMBOL(nf_flow_offload_delete_by_index)
 // XC ADD
+static int nf_flow_offload_hw_aging(struct nf_flowtable *flow_table, unsigned char is_udp) {
 	struct flow_offload_tuple_rhash *tuplehash;
-	static int nf_flow_offload_hw_aging(struct nf_flowtable *flow_table, unsigned char is_udp) {
 	struct rhashtable_iter hti;
 	struct flow_offload *flow;
 	int err;
 	unsigned short count = FLOWOFFLOAD_HW_MAX/2;
 
+	nf_flow_dump_count(&flow_table->nf_count);
 	if(is_udp){
 		count = flow_table->nf_count.hw_udp_count/2;
 		printk("%s udp ageing start count %d\n", __FUNCTION__, flow_table->nf_count.udp_age_count++);
@@ -334,7 +335,6 @@ int flow_offload_add(struct nf_flowtable *flow_table, struct flow_offload *flow)
 {
 	nf_ct_offload_timeout(flow);
 	flow->timeout = (u32)jiffies;
-	// nf_flow_dump_count(&flow_table->nf_count);
 // XC ADD
 	if(flow_table->nf_count.hw_total_count == FLOWOFFLOAD_HW_MAX){
 		if(((jiffies - last_flush_time) > (600*HZ)) || (last_flush_time == 0)){
@@ -743,7 +743,7 @@ int nf_flow_table_init(struct nf_flowtable *flowtable)
 	list_add(&flowtable->list, &flowtables);
 	mutex_unlock(&flowtable_lock);
 // XC ADD:
-	memset(&flowtable->nf_count, 0,sizeof(struct nf_flowtable_count));
+	memset(&flowtable->nf_count, 0, sizeof(struct nf_flowtable_count));
 	return 0;
 }
 EXPORT_SYMBOL_GPL(nf_flow_table_init);

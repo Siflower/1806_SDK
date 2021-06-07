@@ -117,13 +117,13 @@ static void flow_offload_hw_work(struct work_struct *work)
 				  break;
 
 				if (do_flow_offload_hw(offload) >= 0){
-				  offload->flow->flags |= FLOW_OFFLOAD_HW;
-				  offload->nf_count->hw_total_count++;
-				  if(offload->flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
-					offload->nf_count->hw_udp_count++;
-				  else if(offload->flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_TCP)
-					offload->nf_count->hw_tcp_count++;
-
+					offload->flow->flags |= FLOW_OFFLOAD_HW;
+					offload->flow->flags |= FLOW_OFFLOAD_KEEP;
+					offload->nf_count->hw_total_count++;
+					if(offload->flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
+					  offload->nf_count->hw_udp_count++;
+					else if(offload->flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_TCP)
+					  offload->nf_count->hw_tcp_count++;
 				}
 				break;
 			case FLOW_OFFLOAD_DEL:
@@ -207,8 +207,7 @@ static void flow_offload_hw_add(struct net *net, struct flow_offload *flow,
 	}
 
 	if (do_flow_offload_hw(offload) >= 0){
-		offload->flow->flags |= FLOW_OFFLOAD_HW;
-		offload->flow->flags |= FLOW_OFFLOAD_KEEP;
+		offload->flow->flags |= (FLOW_OFFLOAD_HW | FLOW_OFFLOAD_KEEP);
 		nf_count->hw_total_count++;
 		if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
 		  nf_count->hw_udp_count++;
@@ -238,8 +237,8 @@ static void flow_offload_hw_del(struct net *net, struct flow_offload *flow, stru
 	else if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_TCP)
 	  nf_count->hw_tcp_count--;
 
-// use index replace flow
-	offload->flow = (struct flow_offload *)(flow->priv);
+// // use index replace flow
+// 	offload->flow = (struct flow_offload *)(flow->priv);
 
 #ifdef NF_FLOW_TABLE_HW_ASYNC
 // XC ADD
@@ -247,9 +246,9 @@ static void flow_offload_hw_del(struct net *net, struct flow_offload *flow, stru
 	flow_offload_queue_work(offload);
 #else
 	do_flow_offload_hw(offload);
+	flow->flags &= ~(FLOW_OFFLOAD_KEEP|FLOW_OFFLOAD_HW);
 
 	flow_offload_hw_free(offload);
-
 	return;
 #endif
 }

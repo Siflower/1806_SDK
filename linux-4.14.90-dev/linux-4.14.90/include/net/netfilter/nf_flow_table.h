@@ -95,6 +95,24 @@ struct flow_offload_tuple_rhash {
 #define FLOW_OFFLOAD_HW		0x10
 #define FLOW_OFFLOAD_KEEP	0x20
 
+#define FLOW_OFFLOAD_LAN1		0x100
+#define FLOW_OFFLOAD_LAN2		0x200
+#define FLOW_OFFLOAD_LAN3		0x400
+#define FLOW_OFFLOAD_LAN4		0x800
+#define FLOW_OFFLOAD_LAN5		0x1000
+#define FLOW_OFFLOAD_LAN6		0x2000
+#define FLOW_OFFLOAD_LAN7		0x4000
+#define FLOW_OFFLOAD_LAN8		0x8000
+
+#define FLOW_OFFLOAD_WAN1		0x10000
+#define FLOW_OFFLOAD_WAN2		0x20000
+#define FLOW_OFFLOAD_WAN3		0x40000
+#define FLOW_OFFLOAD_WAN4		0x80000
+#define FLOW_OFFLOAD_WAN5		0x100000
+#define FLOW_OFFLOAD_WAN6		0x200000
+#define FLOW_OFFLOAD_WAN7		0x400000
+#define FLOW_OFFLOAD_WAN8		0x800000
+
 struct flow_offload {
 	struct flow_offload_tuple_rhash		tuplehash[FLOW_OFFLOAD_DIR_MAX];
 	u32					flags;

@@ -295,23 +295,104 @@ static int check_flow_in_blacklist(struct net *net, struct flow_offload *flow)
 	return 0;
 }
 
+// #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
+#if 1
 static int sf_offload_hw_clean_flow_cb(struct flow_offload *flow, void *data)
 {
 	struct flow_offload * hw_flow = (struct flow_offload *)data;
 	if(hw_flow == flow){
 		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
+
+		nf_flowtable.nf_count.hw_total_count--;
+		if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
+		  nf_flowtable.nf_count.hw_udp_count--;
+		else if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_TCP)
+		  nf_flowtable.nf_count.hw_tcp_count--;
+
 		flow->timeout = jiffies + 30*HZ;
 		return 0;
 	}
 	return -1;
 }
 
-void sf_offload_hw_clean_flow(struct flow_offload *flow)
+static int sf_offload_hw_clean_all_cb(struct flow_offload *flow, void *data)
+{
+	if(flow->flags | FLOW_OFFLOAD_HW){
+		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
+		flow->timeout = jiffies;
+
+		nf_flowtable.nf_count.hw_total_count--;
+		if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
+		  nf_flowtable.nf_count.hw_udp_count--;
+		else if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_TCP)
+		  nf_flowtable.nf_count.hw_tcp_count--;
+
+		return 0;
+	}
+	return -1;
+}
+static int sf_offload_hw_clean_lan_cb(struct flow_offload *flow, void *data)
+{
+	unsigned char lan_subnet_index = (unsigned char)data;
+	if((flow->flags | FLOW_OFFLOAD_HW) && (flow->flags | 0x1 << (lan_subnet_index + 8))){
+		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
+		flow->timeout = jiffies;
+
+		nf_flowtable.nf_count.hw_total_count--;
+		if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
+		  nf_flowtable.nf_count.hw_udp_count--;
+		else if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_TCP)
+		  nf_flowtable.nf_count.hw_tcp_count--;
+
+		return 0;
+	}
+	return -1;
+}
+
+static int sf_offload_hw_clean_wan_cb(struct flow_offload *flow, void *data)
+{
+	unsigned char wan_subnet_index = (unsigned char)data;
+	if((flow->flags | FLOW_OFFLOAD_HW) && (flow->flags | 0x1 << (wan_subnet_index + 16))){
+		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
+		flow->timeout = jiffies;
+
+		nf_flowtable.nf_count.hw_total_count--;
+		if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
+		  nf_flowtable.nf_count.hw_udp_count--;
+		else if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_TCP)
+		  nf_flowtable.nf_count.hw_tcp_count--;
+
+		return 0;
+	}
+	return -1;
+}
+// mode 0  clean with flow ptr
+// mode 1  clean with lan  index
+// mode 2  clean with wan  index
+// mode 3  clean  all
+void sf_offload_hw_clean_flow(void *pclean, unsigned char clean_mode)
 {
 	struct nf_flowtable *table = &nf_flowtable;
-	nf_flow_table_iterate_ret(table, sf_offload_hw_clean_flow_cb, flow);
+	switch (clean_mode) {
+		case 0:
+			nf_flow_table_iterate_ret(table, sf_offload_hw_clean_flow_cb, pclean);
+			break;
+		case 1:
+			nf_flow_table_iterate_ret(table, sf_offload_hw_clean_lan_cb, pclean);
+			break;
+		case 2:
+			nf_flow_table_iterate_ret(table, sf_offload_hw_clean_wan_cb, pclean);
+			break;
+		case 3:
+			nf_flow_table_iterate_ret(table, sf_offload_hw_clean_all_cb, pclean);
+			break;
+		default:
+			printk("%s %d mode error %d\n",__FUNCTION__,__LINE__, clean_mode);
+	}
+	return;
 }
 EXPORT_SYMBOL(sf_offload_hw_clean_flow);
+#endif
 
 static void sf_flow_table_do_delete(struct flow_offload *flow, void *data)
 {
@@ -322,17 +403,17 @@ static void sf_flow_table_do_delete(struct flow_offload *flow, void *data)
 	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple;
 	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
 	if (n && ether_addr_equal(mac, n->ha))
-		flow_offload_dead(flow);
+	  flow_offload_dead(flow);
 
 	if (n)
-		neigh_release(n);
+	  neigh_release(n);
 	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple;
 	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
 	if (n && ether_addr_equal(mac, n->ha))
-		flow_offload_dead(flow);
+	  flow_offload_dead(flow);
 
 	if (n)
-		neigh_release(n);
+	  neigh_release(n);
 }
 
 
@@ -390,6 +471,7 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct xt_flowoffload_target_info *info = par->targinfo;
 	struct tcphdr _tcph, *tcph = NULL;
+	struct udphdr _udph, *udph = NULL;
 	enum ip_conntrack_info ctinfo;
 	enum ip_conntrack_dir dir;
 	struct nf_flow_route route;
@@ -416,6 +498,12 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 			return XT_CONTINUE;
 		break;
 	case IPPROTO_UDP:
+		udph = skb_header_pointer(skb, par->thoff,
+					  sizeof(_udph), &_udph);
+// RM#9391 filter dhcp offer and dns packet
+		if (ntohs(udph->source) == 0x43 || ntohs(udph->source) == 0x44 || ntohs(udph->dest) == 0x35){
+			return XT_CONTINUE;
+		}
 		break;
 	default:
 		return XT_CONTINUE;
@@ -428,7 +516,7 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 	// if (ctinfo == IP_CT_NEW && atomic_read(&ct->ct_general.use) == 1){
 	// 	return XT_CONTINUE;
 	// }//RM6897,first pkt of udp conntrack without reply can't go on,other pkts can go on
-//TODO: test udp here
+//TODO: test udp here  iperf 2.1.1 verify ok
 	if (!nf_ct_is_confirmed(ct))
 		return XT_CONTINUE;
 
@@ -518,9 +606,6 @@ static int flow_offload_netdev_event(struct notifier_block *this,
 {
 	struct xt_flowoffload_hook *hook = NULL;
 	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
-    struct in_ifaddr        **ifap;
-    struct in_ifaddr        *ifa;
-	struct in_device		*in_dev;
 	if (event != NETDEV_UNREGISTER){
 		return NOTIFY_DONE;
 	}
@@ -545,99 +630,11 @@ static struct notifier_block flow_offload_netdev_notifier = {
 	.notifier_call	= flow_offload_netdev_event,
 };
 
-static const struct nla_policy ifa_ipv4_policy[IFA_MAX+1] = {
-	[IFA_LOCAL]     	= { .type = NLA_U32 },
-	[IFA_ADDRESS]   	= { .type = NLA_U32 },
-	[IFA_BROADCAST] 	= { .type = NLA_U32 },
-	[IFA_LABEL]     	= { .type = NLA_STRING, .len = IFNAMSIZ - 1 },
-	[IFA_CACHEINFO]		= { .len = sizeof(struct ifa_cacheinfo) },
-	[IFA_FLAGS]		= { .type = NLA_U32 },
-};
-
-extern int inet_rtm_deladdr(struct sk_buff *skb, struct nlmsghdr *nlh,
-			struct netlink_ext_ack *extack);
-static int sf_deladdr(struct sk_buff *skb, struct nlmsghdr *nlh,
-			struct netlink_ext_ack *extack)
-{
-	struct net *net = sock_net(skb->sk);
-	struct nlattr *tb[IFA_MAX+1];
-	struct net_device *dev;
-	struct ifaddrmsg *ifm;
-	int err = 0;
-	int ret = 0;
-	ret = inet_rtm_deladdr(skb, nlh, extack);
-	if(ret)
-	  return ret;
-
-	err = nlmsg_parse(nlh, sizeof(*ifm), tb, IFA_MAX, ifa_ipv4_policy,
-				extack);
-	if (err < 0)
-	  return ret;
-
-	ifm = nlmsg_data(nlh);
-	if (ifm->ifa_prefixlen > 32 || !tb[IFA_LOCAL])
-	  return ret;
-
-	dev = __dev_get_by_index(net, ifm->ifa_index);
-	if (!dev)
-	  return err;
-
-	if (!tb[IFA_ADDRESS])
-	  tb[IFA_ADDRESS] = tb[IFA_LOCAL];
-
-	printk("dev:%s del ip 0x%08x lip 0x%08x, prefix len %d \n", dev->name, nla_get_in_addr(tb[IFA_ADDRESS]), nla_get_in_addr(tb[IFA_LOCAL]), ifm->ifa_prefixlen);
-	return ret;
-
-}
-
-
-extern int inet_rtm_newaddr(struct sk_buff *skb, struct nlmsghdr *nlh,
-			struct netlink_ext_ack *extack);
-static int sf_newaddr(struct sk_buff *skb, struct nlmsghdr *nlh,
-			struct netlink_ext_ack *extack)
-{
-	struct net *net = sock_net(skb->sk);
-	struct nlattr *tb[IFA_MAX+1];
-	struct ifaddrmsg *ifm;
-	struct net_device *dev;
-	int err = 0;
-	int ret = 0;
-
-	ret = inet_rtm_newaddr(skb, nlh, extack);
-	if(ret)
-	  return ret;
-
-	err = nlmsg_parse(nlh, sizeof(*ifm), tb, IFA_MAX, ifa_ipv4_policy,
-				NULL);
-	if (err < 0)
-	  return ret;
-
-	ifm = nlmsg_data(nlh);
-	if (ifm->ifa_prefixlen > 32 || !tb[IFA_LOCAL])
-	  return ret;
-
-	dev = __dev_get_by_index(net, ifm->ifa_index);
-	if (!dev)
-	  return ret;
-
-	if (!tb[IFA_ADDRESS])
-	  tb[IFA_ADDRESS] = tb[IFA_LOCAL];
-
-	printk("dev:%s new ip 0x%08x lip 0x%08x, prefix len %d \n", dev->name, nla_get_in_addr(tb[IFA_ADDRESS]), nla_get_in_addr(tb[IFA_LOCAL]), ifm->ifa_prefixlen);
-
-	return ret;
-}
-
-
 static int __init xt_flowoffload_tg_init(void)
 {
 	int ret;
 
 	register_netdevice_notifier(&flow_offload_netdev_notifier);
-
-	// rtnl_register(PF_INET, RTM_NEWADDR, sf_newaddr, NULL, 0);
-	// rtnl_register(PF_INET, RTM_DELADDR, sf_deladdr, NULL, 0);
-
 
 	INIT_DELAYED_WORK(&hook_work, xt_flowoffload_hook_work);
 
@@ -664,3 +661,5 @@ static void __exit xt_flowoffload_tg_exit(void)
 MODULE_LICENSE("GPL");
 module_init(xt_flowoffload_tg_init);
 module_exit(xt_flowoffload_tg_exit);
+MODULE_ALIAS("ipt_FLOWOFFLOAD");
+MODULE_ALIAS("ip6t_FLOWOFFLOAD");
