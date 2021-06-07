@@ -52,6 +52,36 @@ sed -i "/TRX*/d" /tmp/rf_trx_path.ini
 echo "TRX_PATH_CFG=0xCF" > /tmp/rf_trx_path.ini
 fi
 
+if [ $1 == "hb2lb1" ]
+then
+modify=1
+sed -i "/TRX*/d" /tmp/rf_trx_path.ini
+echo "TRX_PATH_CFG=0xC3" > /tmp/rf_trx_path.ini
+fi
+
+if [ $1 == "hb2lb2" ]
+then
+modify=1
+sed -i "/TRX*/d" /tmp/rf_trx_path.ini
+echo "TRX_PATH_CFG=0xCC" > /tmp/rf_trx_path.ini
+fi
+
+if [ $1 == "hb1lb1" ]
+then
+modify=1
+sed -i "/TRX*/d" /tmp/rf_trx_path.ini
+echo "TRX_PATH_CFG=0x33" > /tmp/rf_trx_path.ini
+fi
+
+if [ $1 == "hb1lb2" ]
+then
+modify=1
+sed -i "/TRX*/d" /tmp/rf_trx_path.ini
+echo "TRX_PATH_CFG=0x3C" > /tmp/rf_trx_path.ini
+fi
+
+
+
 if [ "$modify" == "0" ]
 then
 sed -i "/TRX*/d" /tmp/rf_trx_path.ini

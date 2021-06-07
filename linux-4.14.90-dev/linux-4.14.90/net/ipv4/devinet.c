@@ -591,6 +591,29 @@ static int ip_mc_config(struct sock *sk, bool join, const struct in_ifaddr *ifa)
 	return ret;
 }
 
+// #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
+#if 1
+static void sf_hnat_notify_ip_change(const unsigned int ipaddr, const char *ifname, const unsigned char pf_len,unsigned  char is_new){
+	const struct kernel_symbol *sym;
+	void (*notify_hnat)(const unsigned int ipaddr, const char *ifname, const unsigned char pf_len) = NULL;
+
+	preempt_disable();
+	if(is_new)
+	  sym = find_symbol("sf_hnat_monitor_newaddr", NULL, NULL, true, true);
+	else
+	  sym = find_symbol("sf_hnat_monitor_deladdr", NULL, NULL, true, true);
+
+	if (sym) {
+		notify_hnat = (void *)sym->value;
+	}
+	preempt_enable();
+
+	if(notify_hnat){
+		notify_hnat(ipaddr,ifname, pf_len);
+	}
+}
+
+#endif
 int inet_rtm_deladdr(struct sk_buff *skb, struct nlmsghdr *nlh,
 			    struct netlink_ext_ack *extack)
 {
@@ -600,6 +623,10 @@ int inet_rtm_deladdr(struct sk_buff *skb, struct nlmsghdr *nlh,
 	struct ifaddrmsg *ifm;
 	struct in_ifaddr *ifa, **ifap;
 	int err = -EINVAL;
+// #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
+#if 1
+		struct net_device *dev = NULL;
+#endif
 
 	ASSERT_RTNL();
 
@@ -631,6 +658,12 @@ int inet_rtm_deladdr(struct sk_buff *skb, struct nlmsghdr *nlh,
 
 		if (ipv4_is_multicast(ifa->ifa_address))
 			ip_mc_config(net->ipv4.mc_autojoin_sk, false, ifa);
+
+// #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
+#if 1
+		dev = dev_get_by_index_rcu(net, ifm->ifa_index);
+		sf_hnat_notify_ip_change(ntohl(nla_get_in_addr(tb[IFA_LOCAL])), dev->name, ifm->ifa_prefixlen , 0);
+#endif
 		__inet_del_ifa(in_dev, ifap, 1, nlh, NETLINK_CB(skb).portid);
 		return 0;
 	}
@@ -639,7 +672,6 @@ int inet_rtm_deladdr(struct sk_buff *skb, struct nlmsghdr *nlh,
 errout:
 	return err;
 }
-EXPORT_SYMBOL(inet_rtm_deladdr);
 
 #define INFINITY_LIFE_TIME	0xFFFFFFFF
 
@@ -841,6 +873,10 @@ static struct in_ifaddr *rtm_to_ifaddr(struct net *net, struct nlmsghdr *nlh,
 		*pprefered_lft = ci->ifa_prefered;
 	}
 
+// #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
+#if 1
+	sf_hnat_notify_ip_change(ntohl(nla_get_in_addr(tb[IFA_LOCAL])),dev->name, ifm->ifa_prefixlen, 1);
+#endif
 	return ifa;
 
 errout_free:
@@ -913,7 +949,6 @@ int inet_rtm_newaddr(struct sk_buff *skb, struct nlmsghdr *nlh,
 	}
 	return 0;
 }
-EXPORT_SYMBOL(inet_rtm_newaddr);
 
 /*
  *	Determine a default network mask, based on the IP address.
@@ -1072,8 +1107,15 @@ int devinet_ioctl(struct net *net, unsigned int cmd, void __user *arg)
 			if (!ifa)
 				break;
 			ret = 0;
-			if (!(ifr.ifr_flags & IFF_UP))
+			if (!(ifr.ifr_flags & IFF_UP)){
+
+// #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
+#if 1
+				sf_hnat_notify_ip_change(ntohl(ifa->ifa_local), dev->name, inet_mask_len(ifa->ifa_mask), 0);
+#endif
+				// monitor del addr
 				inet_del_ifa(in_dev, ifap, 1);
+			}
 			break;
 		}
 		ret = dev_change_flags(dev, ifr.ifr_flags);
@@ -1098,7 +1140,13 @@ int devinet_ioctl(struct net *net, unsigned int cmd, void __user *arg)
 			ret = 0;
 			if (ifa->ifa_local == sin->sin_addr.s_addr)
 				break;
+
+// #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
+#if 1
+			sf_hnat_notify_ip_change(ntohl(ifa->ifa_local), dev->name, inet_mask_len(ifa->ifa_mask), 0);
+#endif
 			inet_del_ifa(in_dev, ifap, 0);
+
 			ifa->ifa_broadcast = 0;
 			ifa->ifa_scope = 0;
 		}
@@ -1117,6 +1165,11 @@ int devinet_ioctl(struct net *net, unsigned int cmd, void __user *arg)
 			ifa->ifa_mask = inet_make_mask(32);
 		}
 		set_ifa_lifetime(ifa, INFINITY_LIFE_TIME, INFINITY_LIFE_TIME);
+
+// #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
+#if 1
+		sf_hnat_notify_ip_change(ntohl(ifa->ifa_local), dev->name, ifa->ifa_prefixlen, 1);
+#endif
 		ret = inet_set_ifa(dev, ifa);
 		break;
 
@@ -1153,7 +1206,13 @@ int devinet_ioctl(struct net *net, unsigned int cmd, void __user *arg)
 		ret = 0;
 		if (ifa->ifa_mask != sin->sin_addr.s_addr) {
 			__be32 old_mask = ifa->ifa_mask;
+
+// #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
+#if 1
+			sf_hnat_notify_ip_change(ntohl((*ifap)->ifa_local), dev->name, inet_mask_len((*ifap)->ifa_mask), 0);
+#endif
 			inet_del_ifa(in_dev, ifap, 0);
+
 			ifa->ifa_mask = sin->sin_addr.s_addr;
 			ifa->ifa_prefixlen = inet_mask_len(ifa->ifa_mask);
 
@@ -1170,6 +1229,11 @@ int devinet_ioctl(struct net *net, unsigned int cmd, void __user *arg)
 				ifa->ifa_broadcast = (ifa->ifa_local |
 						      ~sin->sin_addr.s_addr);
 			}
+
+// #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
+#if 1
+			sf_hnat_notify_ip_change(ntohl(ifa->ifa_local), dev->name, ifa->ifa_prefixlen, 1);
+#endif
 			inet_insert_ifa(ifa);
 		}
 		break;
