@@ -153,7 +153,7 @@ detect_mac80211() {
 			set wireless.default_radio${devidx}.key=12345678
 			set wireless.default_radio${devidx}.hidden=0
 			set wireless.default_radio${devidx}.ifname=wlan${devidx}
-			set wireless.default_radio${devidx}.wpa_group_rekey=3600
+			set wireless.default_radio${devidx}.wpa_group_rekey=36000
 			set wireless.default_radio${devidx}.isolate=0
 			set wireless.default_radio${devidx}.group=1
 			set wireless.default_radio${devidx}.disable_input=0
