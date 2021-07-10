@@ -1,7 +1,9 @@
 /dts-v1/;
 
-#include "sf19a28_fullmask.dtsi"
+/memreserve/ 0x04000000 0x03ffffff;
 
+#include "sf19a28_fullmask.dtsi"
+#include "sf19a28-thermal_common.dtsi"
 
 / {
 	#address-cells = <1>;
@@ -33,7 +35,7 @@
 	w25q128@0 {
 		compatible = "w25q128";
 		reg = <0>;	/* chip select */
-		spi-max-frequency = <33000000>;
+		spi-max-frequency = <10000000>;
 
 		bank-width = <2>;
 		device-width = <2>;
@@ -63,7 +65,7 @@
 
 		partition@a0000 {
 			label = "firmware";
-			reg = <0xa0000 0xf60000>; /* 640k-16M */
+			reg = <0xa0000 0x760000>; /* 640k-16M */
 		};
 	};
 };
@@ -78,7 +80,7 @@
 &wifi_rf {
 	status = "okay";
     /*only support ext pa for 5G*/
-	/* force_expa = <1>; */
+	/*force_expa = <1>;*/
 };
 
 &gpio_keys {

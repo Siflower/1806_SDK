@@ -222,130 +222,28 @@ static void nf_ct_offload_timeout(struct flow_offload *flow)
 		ct->timeout = nfct_time_stamp + DAY;
 }
 
-
-//XC ADD
-void nf_flow_dump_count(struct nf_flowtable_count *nf_count){
-	printk("nf dump total %d tcp %d udp %d \n", nf_count->total_count,
-				nf_count->tcp_count, nf_count->udp_count);
-
-	printk("nf dump hw total %d hw tcp %d hw udp %d\n", nf_count->hw_total_count,
-				nf_count->hw_tcp_count, nf_count->hw_udp_count);
-}
-
-// void nf_flow_offload_delete_by_index(unsigned int index){
-// 	struct flow_offload_tuple_rhash *tuplehash;
-// 	struct rhashtable_iter hti;
-// 	struct flow_offload *flow;
-// 	int err;
-
-// 	err = rhashtable_walk_init(&flow_table->rhashtable, &hti, GFP_KERNEL);
-// 	if (err)
-// 		return;
-
-// 	rhashtable_walk_start(&hti);
-
-// 	while ((tuplehash = rhashtable_walk_next(&hti))) {
-
-// 		if (IS_ERR(tuplehash)) {
-// 			err = PTR_ERR(tuplehash);
-// 			if (err != -EAGAIN)
-// 				goto out;
-
-// 			continue;
-// 		}
-// 		if (tuplehash->tuple.dir)
-// 			continue;
-
-// 		flow = container_of(tuplehash, struct flow_offload, tuplehash[0]);
-// 		if((unsigned int)(flow->priv) == index){
-// 			flow->flags &= ~FLOW_OFFLOAD_KEEP;
-// 			goto out;
-// 		}
-// 	}
-// out:
-// 	rhashtable_walk_stop(&hti);
-// 	rhashtable_walk_exit(&hti);
-// }
-// EXPORT_SYMBOL(nf_flow_offload_delete_by_index)
-// XC ADD
-static int nf_flow_offload_hw_aging(struct nf_flowtable *flow_table, unsigned char is_udp) {
-	struct flow_offload_tuple_rhash *tuplehash;
-	struct rhashtable_iter hti;
-	struct flow_offload *flow;
-	int err;
-	unsigned short count = FLOWOFFLOAD_HW_MAX/2;
-
-	nf_flow_dump_count(&flow_table->nf_count);
-	if(is_udp){
-		count = flow_table->nf_count.hw_udp_count/2;
-		printk("%s udp ageing start count %d\n", __FUNCTION__, flow_table->nf_count.udp_age_count++);
-	}else {
-		printk("%s full ageing start count %d\n", __FUNCTION__,flow_table->nf_count.full_age_count++);
-	}
-
-	err = rhashtable_walk_init(&flow_table->rhashtable, &hti, GFP_KERNEL);
-	if (err)
-		return 0;
-
-	rhashtable_walk_start(&hti);
-
-	while ((tuplehash = rhashtable_walk_next(&hti))) {
-		if(count < 0)
-			goto out;
-
-		if (IS_ERR(tuplehash)) {
-			err = PTR_ERR(tuplehash);
-			if (err != -EAGAIN)
-				goto out;
-
-			continue;
-		}
-		if (tuplehash->tuple.dir)
-			continue;
-
-		flow = container_of(tuplehash, struct flow_offload, tuplehash[0]);
-		if(is_udp){
-			// 5s for data go through software flow offload  count for to make delete not concurrent
-			if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP){
-				flow->flags &= ~FLOW_OFFLOAD_KEEP;
-				flow->timeout = jiffies + 5*HZ + count*3;
-				count--;
-			}
-			else
-			  continue;
-		}
-		else{
-			flow->flags &= ~FLOW_OFFLOAD_KEEP;
-			flow->timeout = jiffies + 5*HZ + count*3;
-			count--;
-		// nf_flow_offload_hw_del(net, flow, &flow_table->nf_count);
-		}
-	}
-out:
-	rhashtable_walk_stop(&hti);
-	rhashtable_walk_exit(&hti);
-
-	return 1;
-}
-
-
 unsigned long last_flush_time = 0;
 unsigned long last_age_time = 0;
+unsigned char need_udp_aging = 0;
+unsigned char need_all_aging = 0;
+
 int flow_offload_add(struct nf_flowtable *flow_table, struct flow_offload *flow)
 {
 	nf_ct_offload_timeout(flow);
 	flow->timeout = (u32)jiffies;
 // XC ADD
-	if(flow_table->nf_count.hw_total_count == FLOWOFFLOAD_HW_MAX){
-		if(((jiffies - last_flush_time) > (600*HZ)) || (last_flush_time == 0)){
-			nf_flow_offload_hw_aging(flow_table, 0);
+	if((atomic_read(&(flow_table->nf_count.hw_total_count)) == FLOWOFFLOAD_HW_MAX)
+				&& (need_all_aging != 1)){
+		if(((jiffies - last_flush_time) > (300*HZ)) || (last_flush_time == 0)){
+			need_all_aging = 1;
 			last_flush_time = jiffies;
 		}
 	}
 
-	if(flow_table->nf_count.hw_udp_count > FLOWOFFLOAD_HW_UDP_THRES){
-		if(((jiffies - last_age_time) > (120*HZ)) || (last_age_time == 0)){
-			nf_flow_offload_hw_aging(flow_table, 1);
+	if((atomic_read(&(flow_table->nf_count.hw_udp_count)) >= FLOWOFFLOAD_HW_UDP_THRES)
+				&& (need_udp_aging != 1)){
+		if(((jiffies - last_age_time) > (60*HZ)) || (last_age_time == 0)){
+			need_udp_aging = 1;
 			last_age_time = jiffies;
 		}
 	}
@@ -358,11 +256,11 @@ int flow_offload_add(struct nf_flowtable *flow_table, struct flow_offload *flow)
 			       nf_flow_offload_rhash_params);
 
 
-	flow_table->nf_count.total_count++;
+	atomic_inc(&(flow_table->nf_count.total_count));
 	if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
-	  flow_table->nf_count.udp_count++;
+	  atomic_inc(&(flow_table->nf_count.udp_count));
 	else if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_TCP)
-	  flow_table->nf_count.tcp_count++;
+	  atomic_inc(&(flow_table->nf_count.tcp_count));
 
 	return 0;
 }
@@ -397,11 +295,11 @@ static void flow_offload_del(struct nf_flowtable *flow_table,
 
 	flow_offload_free(flow);
 // XC ADD
-	flow_table->nf_count.total_count--;
+	atomic_dec(&(flow_table->nf_count.total_count));
 	if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
-	  flow_table->nf_count.udp_count--;
+	 atomic_dec(&( flow_table->nf_count.udp_count));
 	else if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_TCP)
-	  flow_table->nf_count.tcp_count--;
+	  atomic_dec(&(flow_table->nf_count.tcp_count));
 }
 
 void flow_offload_teardown(struct flow_offload *flow)
@@ -526,6 +424,12 @@ static int nf_flow_offload_gc_step(struct nf_flowtable *flow_table)
 	struct flow_offload *flow;
 	int err;
 
+#if  1
+	unsigned cycle = jiffies % 2;
+	unsigned short all_count = FLOWOFFLOAD_HW_MAX/2;
+	unsigned short udp_count = atomic_read(&(flow_table->nf_count.hw_udp_count))/2;
+#endif
+
 	err = rhashtable_walk_init(&flow_table->rhashtable, &hti, GFP_KERNEL);
 	if (err)
 		return 0;
@@ -538,31 +442,60 @@ static int nf_flow_offload_gc_step(struct nf_flowtable *flow_table)
 		if (IS_ERR(tuplehash)) {
 			err = PTR_ERR(tuplehash);
 			if (err != -EAGAIN)
-				goto out;
+			  goto out;
 
 			continue;
 		}
 		if (tuplehash->tuple.dir)
-			continue;
+		  continue;
 
 		flow = container_of(tuplehash, struct flow_offload, tuplehash[0]);
 
+#if 1
+		if(flow->flags & (FLOW_OFFLOAD_HW | FLOW_OFFLOAD_KEEP)){
+			if(need_all_aging && (cycle%2) && (all_count > 0)){
+				flow->flags &= ~FLOW_OFFLOAD_KEEP;
+				flow->timeout = jiffies + all_count*5;
+				all_count--;
+			}
+
+			if(need_udp_aging && (cycle%2) && (udp_count > 0)){
+				if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP){
+					flow->flags &= ~FLOW_OFFLOAD_KEEP;
+					flow->timeout = jiffies + udp_count*5;
+					udp_count--;
+				}
+			}
+		}
+#endif
 		teardown = flow->flags & (FLOW_OFFLOAD_DYING |
-					  FLOW_OFFLOAD_TEARDOWN);
+					FLOW_OFFLOAD_TEARDOWN);
 
 		if (!teardown)
-			nf_ct_offload_timeout(flow);
+		  nf_ct_offload_timeout(flow);
 
 		if ((flow->flags & FLOW_OFFLOAD_KEEP) && !teardown)
-			continue;
+		  continue;
 
 		if (nf_flow_has_expired(flow) || teardown)
-			flow_offload_del(flow_table, flow);
+		  flow_offload_del(flow_table, flow);
+		cycle++;
 	}
 out:
 	rhashtable_walk_stop(&hti);
 	rhashtable_walk_exit(&hti);
 
+#if 1
+	if(need_all_aging){
+		atomic_inc(&(flow_table->nf_count.full_age_count));
+		need_all_aging = 0;
+	}
+	if(need_udp_aging){
+		atomic_inc(&(flow_table->nf_count.udp_age_count));
+		need_udp_aging = 0;
+	}
+
+#endif
 	return 1;
 }
 
@@ -577,13 +510,13 @@ void nf_flow_offload_work_gc(struct work_struct *work)
 EXPORT_SYMBOL(nf_flow_offload_work_gc);
 
 static int nf_flow_nat_port_tcp(struct sk_buff *skb, unsigned int thoff,
-				__be16 port, __be16 new_port)
+			__be16 port, __be16 new_port)
 {
 	struct tcphdr *tcph;
 
 	if (!pskb_may_pull(skb, thoff + sizeof(*tcph)) ||
-	    skb_try_make_writable(skb, thoff + sizeof(*tcph)))
-		return -1;
+				skb_try_make_writable(skb, thoff + sizeof(*tcph)))
+	  return -1;
 
 	tcph = (void *)(skb_network_header(skb) + thoff);
 	inet_proto_csum_replace2(&tcph->check, skb, port, new_port, true);
@@ -592,37 +525,37 @@ static int nf_flow_nat_port_tcp(struct sk_buff *skb, unsigned int thoff,
 }
 
 static int nf_flow_nat_port_udp(struct sk_buff *skb, unsigned int thoff,
-				__be16 port, __be16 new_port)
+			__be16 port, __be16 new_port)
 {
 	struct udphdr *udph;
 
 	if (!pskb_may_pull(skb, thoff + sizeof(*udph)) ||
-	    skb_try_make_writable(skb, thoff + sizeof(*udph)))
-		return -1;
+				skb_try_make_writable(skb, thoff + sizeof(*udph)))
+	  return -1;
 
 	udph = (void *)(skb_network_header(skb) + thoff);
 	if (udph->check || skb->ip_summed == CHECKSUM_PARTIAL) {
 		inet_proto_csum_replace2(&udph->check, skb, port,
-					 new_port, true);
+					new_port, true);
 		if (!udph->check)
-			udph->check = CSUM_MANGLED_0;
+		  udph->check = CSUM_MANGLED_0;
 	}
 
 	return 0;
 }
 
 static int nf_flow_nat_port(struct sk_buff *skb, unsigned int thoff,
-			    u8 protocol, __be16 port, __be16 new_port)
+			u8 protocol, __be16 port, __be16 new_port)
 {
 	switch (protocol) {
-	case IPPROTO_TCP:
-		if (nf_flow_nat_port_tcp(skb, thoff, port, new_port) < 0)
-			return NF_DROP;
-		break;
-	case IPPROTO_UDP:
-		if (nf_flow_nat_port_udp(skb, thoff, port, new_port) < 0)
-			return NF_DROP;
-		break;
+		case IPPROTO_TCP:
+			if (nf_flow_nat_port_tcp(skb, thoff, port, new_port) < 0)
+			  return NF_DROP;
+			break;
+		case IPPROTO_UDP:
+			if (nf_flow_nat_port_udp(skb, thoff, port, new_port) < 0)
+			  return NF_DROP;
+			break;
 	}
 
 	return 0;

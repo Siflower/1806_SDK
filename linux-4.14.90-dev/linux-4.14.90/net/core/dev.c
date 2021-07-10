@@ -3581,7 +3581,7 @@ EXPORT_SYMBOL(dev_queue_xmit_accel);
  *************************************************************************/
 
 #ifdef CONFIG_MEMORY_OPTIMIZE
-int netdev_max_backlog __read_mostly = 1000;
+int netdev_max_backlog __read_mostly = 512;
 #else
 //modify to 3000 to avoid pkt drop when wifi>gmac rx path
 int netdev_max_backlog __read_mostly = 3000;
@@ -4507,9 +4507,32 @@ out:
 	return ret;
 }
 
+#if 1
+#define SF_HNAT_DEV_OFFSET             0 // skb->dev pointer offset
+#define SF_HNAT_FLAG                   47 // skb hw hnat finish flag
+#define SF_CB_HNAT_FORWARD             22 // skb need xmit directly
+#endif
+
 static int __netif_receive_skb(struct sk_buff *skb)
 {
 	int ret;
+//#if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
+// add here avoid rps not enable
+#if 1
+	if (skb->cb[SF_HNAT_FLAG] == SF_CB_HNAT_FORWARD) {
+	        skb->dev = (struct net_device *)(*((unsigned int*)(skb->cb + SF_HNAT_DEV_OFFSET)));
+		if(skb->protocol == cpu_to_be16(ETH_P_8021Q)){
+			u8 *eth_header = skb->data - ETH_HLEN;
+			memmove(eth_header + VLAN_HLEN, eth_header, 2 * ETH_ALEN);
+			skb_push(skb, ETH_HLEN - VLAN_HLEN);
+			skb->dev->netdev_ops->ndo_start_xmit(skb, skb->dev);
+		}else{
+			skb_push(skb, ETH_HLEN);
+			dev_queue_xmit(skb);
+		}
+		return NET_RX_SUCCESS;
+	}
+#endif
 
 	if (sk_memalloc_socks() && skb_pfmemalloc(skb)) {
 		unsigned int noreclaim_flag;
@@ -5246,11 +5269,11 @@ static int process_backlog(struct napi_struct *napi, int quota)
 		struct sk_buff *skb;
 
 		while ((skb = __skb_dequeue(&sd->process_queue))) {
-#define SF_HNAT_FLAG                   40 // skb hw hnat finish flag
-#define SF_CB_HNAT_FORWARD             22 // skb need xmit directly
-
+//#if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
+#if 1
 			if (skb->cb[SF_HNAT_FLAG] == SF_CB_HNAT_FORWARD) {
-				if(skb->protocol == cpu_to_be16(ETH_P_8021Q)){
+                                skb->dev = (struct net_device *)(*((unsigned int*)(skb->cb + SF_HNAT_DEV_OFFSET)));
+ 				if(skb->protocol == cpu_to_be16(ETH_P_8021Q)){
 					u8 *eth_header = skb->data - ETH_HLEN;
 					memmove(eth_header + VLAN_HLEN, eth_header, 2 * ETH_ALEN);
 					skb_push(skb, ETH_HLEN - VLAN_HLEN);
@@ -5261,6 +5284,7 @@ static int process_backlog(struct napi_struct *napi, int quota)
 				}
 			}
 			else
+#endif
 			{
 				if (hook_dev_xmit_path(skb) != NET_RX_SUCCESS) {
 					rcu_read_lock();
