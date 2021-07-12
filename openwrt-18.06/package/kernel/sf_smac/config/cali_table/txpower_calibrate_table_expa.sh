@@ -9,13 +9,13 @@
 txpower_calibrate_table_version="XO"
 
 #.txt table for human reading
-cali_first_file="/usr/bin/txpower_calibrate_table.txt"
+cali_first_file="./txpower_calibrate_table_expa.txt"
 if [ ! -e $cali_first_file ];then
 	echo "the file $cali_first_file is not exist" && exit
 fi
 
 #.bin will be created
-cali_last_file="/usr/bin/txpower_calibrate_table.bin"
+cali_last_file="./default_txpower_calibrate_expa_table.bin"
 if [ -e $cali_last_file ];then
 	rm $cali_last_file
 fi
@@ -76,13 +76,13 @@ echo "Successfully generated calibration table(bin), size is $total"
 }
 
 enter_cali(){
-if [ "$1" -lt "256" ];then
+if [ "$1" -lt "32" ];then
 	hex_num=`printf "%x" $1`
 	/usr/bin/printf "\x$hex_num" >> $cali_last_file
 	total=$(($total+1))
 else
 	hex_num=`printf "%x" 31`
-	echo "the value($total) is out of range,use 31 instead"
+	echo "the value($tatal) is out of range,use 31 instead"
 	/usr/bin/printf "\x$hex_num" >> $cali_last_file
 	total=$(($total+1))
 fi
@@ -101,7 +101,7 @@ done
 #the number(ranged 0-31) after "(gain)" will be put in $cali_last_file
 transform(){
 is_data=`echo $1 | grep "gain"`
-if [ "$is_data"x != x ] ; then 
+if [ "$is_data"x != x ] ; then
 	gain_num_line=${1#*(gain)}
 	_transform $gain_num_line
 fi

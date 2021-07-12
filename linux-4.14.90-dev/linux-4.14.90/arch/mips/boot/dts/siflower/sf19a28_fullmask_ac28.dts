@@ -14,6 +14,7 @@
 &gmac {
 	status = "okay";
 	delay = <0x40 0x20>;
+	esw-rst-gpio = <11>;
 };
 
 &spi2 {
@@ -29,7 +30,7 @@
 	w25q128@0 {
 		compatible = "w25q128";
 		reg = <0>;	/* chip select */
-		spi-max-frequency = <33000000>;
+		spi-max-frequency = <10000000>;
 
 		bank-width = <2>;
 		device-width = <2>;

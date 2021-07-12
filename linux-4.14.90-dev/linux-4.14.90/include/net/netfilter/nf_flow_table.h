@@ -29,14 +29,14 @@ enum nf_flowtable_flags {
 };
 //XC ADD
 struct nf_flowtable_count {
-	unsigned short	total_count;
-	unsigned short	tcp_count;
-	unsigned short	udp_count;
-	unsigned short	hw_total_count;
-	unsigned short	hw_tcp_count;
-	unsigned short	hw_udp_count;
-	unsigned int udp_age_count;
-	unsigned int full_age_count;
+	atomic_t total_count;
+	atomic_t tcp_count;
+	atomic_t udp_count;
+	atomic_t hw_total_count;
+	atomic_t hw_tcp_count;
+	atomic_t hw_udp_count;
+	atomic_t udp_age_count;
+	atomic_t full_age_count;
 };
 
 struct nf_flowtable {
@@ -46,7 +46,7 @@ struct nf_flowtable {
 	u32				flags;
 	struct delayed_work		gc_work;
 	possible_net_t			ft_net;
-//XC ADD
+	//XC ADD
 	struct nf_flowtable_count nf_count;
 };
 

@@ -1,0 +1,192 @@
+CHANNEL  MODE    BW        MCS0  MCS1  MCS2  MCS3  MCS4  MCS5  MCS6  MCS7  MCS8  MCS9  MCS10  MCS11
+   1     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2412)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+         __HT   40M  (gain)  31    31    31    28    27    26    25    25
+   2     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2417)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+         __HT   40M  (gain)  31    31    31    28    27    26    25    25
+   3     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2422)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+         __HT   40M  (gain)  31    31    31    28    27    26    25    25
+   4     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2427)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+         __HT   40M  (gain)  31    31    31    28    27    26    25    25
+   5     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2432)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+         __HT   40M  (gain)  31    31    31    28    27    26    25    25
+   6     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2437)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+         __HT   40M  (gain)  31    31    31    28    27    26    25    25
+   7     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2442)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+           HT   40M  (gain)  31    31    31    28    27    26    25    25
+   8     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2447)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+         __HT   40M  (gain)  31    31    31    28    27    26    25    25
+   9     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2452)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+         __HT   40M  (gain)  31    31    31    28    27    26    25    25
+  10     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2457)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+         __HT   40M  (gain)  31    31    31    28    27    26    25    25
+  11     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2462)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+         __HT   40M  (gain)  31    31    31    28    27    26    25    25
+  12     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2467)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+         __HT   40M  (gain)  31    31    31    28    27    26    25    25
+  13     NOHT   20M  (gain)  31    31    31    28    31    31    31    28    27	   26    25    25
+ (2472)  __HT   20M  (gain)  31    31    31    28    27    26    25    25
+         __HT   40M  (gain)  31    31    31    28    27    26    25    25
+
+CHANNEL  MODE    BW        MCS0  MCS1  MCS2  MCS3  MCS4  MCS5  MCS6  MCS7  MCS8  MCS9
+   36    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5180)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+   40    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5200)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+   44    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5220)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+   48    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5240)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+   52    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5260)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+   56    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5280)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+   60    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5300)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+   64    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5320)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  100    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5500)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  104    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5520)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  108    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5540)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  112    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5560)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  116    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5580)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  120    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5600)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  124    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5620)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  128    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5640)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  132    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5660)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  136    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5680)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  140    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5700)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  144    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5720)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  149    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5745)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  153    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5765)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  157    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5785)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  161    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5805)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5
+  165    NOHT   20M  (gain)  5     5     5     5     5     5     5     5
+ (5825)  __HT   20M  (gain)  5     5     5     5     5     5     5     5
+         __HT   40M  (gain)  5     5     5     5     5     5     5     5
+         _VHT   20M  (gain)  5	   5     5     5     5     5     5     5     5
+         _VHT   40M  (gain)  5     5     5     5     5     5     5     5     5     5
+         _VHT   80M  (gain)  5     5     5     5     5     5     5     5     5     5

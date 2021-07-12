@@ -38,53 +38,124 @@ rf_zone: rf_zone {
 				 /*        type = "passive";
 						   }; */
 rf_alert0: rf-alert0 {
-			   temperature = <00000>; /* millicelsius */
+			   temperature = <0xffffb1e0>; /* millicelsius */
 			   hysteresis = <1000>; /* millicelsius */
 			   type = "passive";
 		   };
 rf_alert1: rf-alert1 {
-			   temperature = <10000>; /* millicelsius */
+			   temperature = <0xffffc568>; /* millicelsius */
 			   hysteresis = <1000>; /* millicelsius */
 			   type = "passive";
 		   };
 
 rf_alert2: rf-alert2 {
-			   temperature = <20000>; /* millicelsius */
+			   temperature = <0xffffd8f0>; /* millicelsius */
 			   hysteresis = <1000>; /* millicelsius */
 			   type = "passive";
 		   };
 rf_alert3: rf-alert3 {
-			   temperature = <30000>; /* millicelsius */
+			   temperature = <0xffffec78>; /* millicelsius */
 			   hysteresis = <1000>; /* millicelsius */
 			   type = "passive";
 		   };
 rf_alert4: rf-alert4 {
-			   temperature = <40000>; /* millicelsius */
+			   temperature = <1000>; /* millicelsius */
 			   hysteresis = <1000>; /* millicelsius */
 			   type = "passive";
 		   };
 rf_alert5: rf-alert5 {
-			   temperature = <50000>; /* millicelsius */
+			   temperature = <5000>; /* millicelsius */
 			   hysteresis = <1000>; /* millicelsius */
 			   type = "passive";
 		   };
 rf_alert6: rf-alert6 {
-			   temperature = <60000>; /* millicelsius */
+			   temperature = <10000>; /* millicelsius */
 			   hysteresis = <1000>; /* millicelsius */
 			   type = "passive";
 		   };
 rf_alert7: rf-alert7 {
-			   temperature = <70000>; /* millicelsius */
+			   temperature = <15000>; /* millicelsius */
 			   hysteresis = <1000>; /* millicelsius */
 			   type = "passive";
 		   };
 rf_alert8: rf-alert8 {
-			   temperature = <80000>; /* millicelsius */
+			   temperature = <20000>; /* millicelsius */
 			   hysteresis = <1000>; /* millicelsius */
 			   type = "passive";
 		   };
 rf_alert9: rf-alert9 {
+			   temperature = <25000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert10: rf-alert10 {
+			   temperature = <30000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert11: rf-alert11 {
+			   temperature = <35000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+
+rf_alert12: rf-alert12 {
+			   temperature = <40000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert13: rf-alert13 {
+			   temperature = <45000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert14: rf-alert14 {
+			   temperature = <50000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert15: rf-alert15 {
+			   temperature = <55000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert16: rf-alert16 {
+			   temperature = <60000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert17: rf-alert17 {
+			   temperature = <65000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert18: rf-alert18 {
+			   temperature = <70000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert19: rf-alert19 {
+			   temperature = <75000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert20: rf-alert20 {
+			   temperature = <80000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert21: rf-alert21 {
+			   temperature = <85000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert22: rf-alert22 {
 			   temperature = <90000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert23: rf-alert23 {
+			   temperature = <95000>; /* millicelsius */
 			   hysteresis = <1000>; /* millicelsius */
 			   type = "passive";
 		   };
@@ -147,9 +218,65 @@ temperature = <125000>; /* millicelsius */
 					 trip = <&rf_alert9>;
 					 cooling-device = <&wifi_rf 9 10>;
 				 };
-				 map10 {
-					 trip = <&rf_crit>;
+             	map10 {
+					 trip = <&rf_alert10>;
 					 cooling-device = <&wifi_rf 10 11>;
+				 };
+				map11 {
+					 trip = <&rf_alert11>;
+					 cooling-device = <&wifi_rf 11 12>;
+				 };
+				 map12 {
+					 trip = <&rf_alert12>;
+					 cooling-device = <&wifi_rf 12 13>;
+				 };
+				 map13 {
+					 trip = <&rf_alert13>;
+					 cooling-device = <&wifi_rf 13 14>;
+				 };
+				 map14 {
+					 trip = <&rf_alert14>;
+					 cooling-device = <&wifi_rf 14 15>;
+				 };
+				 map15 {
+					 trip = <&rf_alert15>;
+					 cooling-device = <&wifi_rf 15 16>;
+				 };
+				 map16 {
+					 trip = <&rf_alert16>;
+					 cooling-device = <&wifi_rf 16 17>;
+				 };
+				 map17 {
+					 trip = <&rf_alert17>;
+					 cooling-device = <&wifi_rf 17 18>;
+				 };
+				 map18 {
+					 trip = <&rf_alert18>;
+					 cooling-device = <&wifi_rf 18 19>;
+				 };
+				 map19 {
+					 trip = <&rf_alert19>;
+					 cooling-device = <&wifi_rf 19 20>;
+				 };
+   				 map20 {
+					 trip = <&rf_alert20>;
+					 cooling-device = <&wifi_rf 20 21>;
+				 };
+				 map21 {
+					 trip = <&rf_alert21>;
+					 cooling-device = <&wifi_rf 21 22>;
+				 };
+				 map22 {
+					 trip = <&rf_alert22>;
+					 cooling-device = <&wifi_rf 22 23>;
+				 };
+				 map23 {
+					 trip = <&rf_alert23>;
+					 cooling-device = <&wifi_rf 23 24>;
+				 };
+				 map24 {
+					 trip = <&rf_crit>;
+					 cooling-device = <&wifi_rf 24 25>;
 				 };
 			 };
 		 };
