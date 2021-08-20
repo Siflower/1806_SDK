@@ -960,6 +960,9 @@ static const struct flash_info spi_nor_ids[] = {
 	{ "en25qh128",  INFO(0x1c7018, 0, 64 * 1024,  256, 0) },
 	{ "en25qh256",  INFO(0x1c7019, 0, 64 * 1024,  512, 0) },
 	{ "en25s64",	INFO(0x1c3817, 0, 64 * 1024,  128, SECT_4K) },
+	{ "en25s64",	INFO(0x1c3817, 0, 64 * 1024,  128, SECT_4K) },
+	{ "en25qx64a",	INFO(0x1c7117, 0, 64 * 1024,  128, SECT_4K) },
+	{ "en25qx128a",	INFO(0x1c7118, 0, 64 * 1024,  256, SECT_4K) },
 
 	/* ESMT */
 	{ "f25l32pa", INFO(0x8c2016, 0, 64 * 1024, 64, SECT_4K | SPI_NOR_HAS_LOCK) },
@@ -1212,7 +1215,9 @@ static const struct flash_info spi_nor_ids[] = {
 	{ "XM25QH64A", INFO(0x207017, 0, 64 * 1024, 128, SECT_4K | SPI_NOR_DUAL_READ | SPI_NOR_QUAD_READ) },
 	{ "XM25QH128A", INFO(0x207018, 0, 64 * 1024, 256, SECT_4K | SPI_NOR_DUAL_READ | SPI_NOR_QUAD_READ) },
 
-	{"ZB25VQ64A",    INFO(0x5e4017, 0x0, 64 * 1024, 128, SECT_4K)},
+	{ "ZB25VQ64A",    INFO(0x5e4017, 0x0, 64 * 1024, 128, SECT_4K)},
+	{ "ZB25VQ128A",   INFO(0x5e4018, 0x0, 64 * 1024, 256, SECT_4K)},
+	{ "XT25F128B",    INFO(0x0b4018, 0x0, 64 * 1024, 256, SECT_4K)},
 	{ },
 };
 
