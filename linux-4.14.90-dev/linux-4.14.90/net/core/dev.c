@@ -3699,12 +3699,16 @@ static int get_rps_cpu(struct net_device *dev, struct sk_buff *skb,
 	if (!flow_table && !map)
 		goto done;
 
+	sock_flow_table = rcu_dereference(rps_sock_flow_table);
+    if ((!flow_table || !sock_flow_table) &&
+            map && (map->len == 1))
+        return map->cpus[0];
+
 	skb_reset_network_header(skb);
 	hash = skb_get_hash(skb);
 	if (!hash)
 		goto done;
 
-	sock_flow_table = rcu_dereference(rps_sock_flow_table);
 	if (flow_table && sock_flow_table) {
 		struct rps_dev_flow *rflow;
 		u32 next_cpu;

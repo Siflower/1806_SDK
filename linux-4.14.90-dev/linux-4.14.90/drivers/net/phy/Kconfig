@@ -385,6 +385,11 @@ config ICPLUS_PHY
 	---help---
 	  Currently supports the IP175C and IP1001 PHYs.
 
+config MOTORCOMM_PHY
+	tristate "Motorcomm PHYs"
+	---help---
+	  Supports the YT8010, YT8510, YT8511, YT8512 PHYs.
+
 config INTEL_XWAY_PHY
 	tristate "Intel XWAY PHYs"
 	---help---

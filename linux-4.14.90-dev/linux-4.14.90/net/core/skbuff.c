@@ -567,15 +567,22 @@ static void skb_free_head(struct sk_buff *skb)
 		kfree(head);
 }
 
+static bool vendor_priv_pool_check_magic(struct sk_buff *skb)
+{
+    if (skb->head && skb->vendor_free)
+        return true;
+    return false;
+}
+
 static void skb_release_data(struct sk_buff *skb)
 {
 	struct skb_shared_info *shinfo = skb_shinfo(skb);
 	int i;
 
 	if (skb->cloned &&
-	    atomic_sub_return(skb->nohdr ? (1 << SKB_DATAREF_SHIFT) + 1 : 1,
-			      &shinfo->dataref))
-		return;
+            atomic_sub_return(skb->nohdr ? (1 << SKB_DATAREF_SHIFT) + 1 : 1,
+                &shinfo->dataref))
+        return ;
 
 	for (i = 0; i < shinfo->nr_frags; i++)
 		__skb_frag_unref(&shinfo->frags[i]);
@@ -637,11 +644,18 @@ void skb_release_head_state(struct sk_buff *skb)
 }
 
 /* Free everything but the sk_buff shell. */
-static void skb_release_all(struct sk_buff *skb)
+static bool skb_release_all(struct sk_buff *skb, bool force_release)
 {
 	skb_release_head_state(skb);
+
+    if (vendor_priv_pool_check_magic(skb) &&
+            skb->vendor_free(skb, force_release)) {
+        return false;
+    }
+
 	if (likely(skb->head))
 		skb_release_data(skb);
+    return true;
 }
 
 /**
@@ -655,8 +669,8 @@ static void skb_release_all(struct sk_buff *skb)
 
 void __kfree_skb(struct sk_buff *skb)
 {
-	skb_release_all(skb);
-	kfree_skbmem(skb);
+	if (skb_release_all(skb, false))
+	    kfree_skbmem(skb);
 }
 EXPORT_SYMBOL(__kfree_skb);
 
@@ -729,6 +743,13 @@ EXPORT_SYMBOL(consume_skb);
 void __consume_stateless_skb(struct sk_buff *skb)
 {
 	trace_consume_skb(skb);
+
+    // If the vendor priv pool consume this skb
+    // return it , do not free the memory and skb shell
+    if (vendor_priv_pool_check_magic(skb) &&
+            skb->vendor_free(skb, false)) {
+        return;
+    }
 	skb_release_data(skb);
 	kfree_skbmem(skb);
 }
@@ -750,7 +771,9 @@ static inline void _kfree_skb_defer(struct sk_buff *skb)
 	struct napi_alloc_cache *nc = this_cpu_ptr(&napi_alloc_cache);
 
 	/* drop skb->head and call any destructors for packet */
-	skb_release_all(skb);
+    // Release the skb totally, because skb shell will be freed in kmem_cache_free_bulk
+    // vendor private skb pool can not hold that skb, otherwise it will casue use after free
+	skb_release_all(skb, true);
 
 	/* record skb to CPU local list */
 	nc->skb_cache[nc->skb_count++] = skb;
@@ -877,6 +900,7 @@ static struct sk_buff *__skb_clone(struct sk_buff *n, struct sk_buff *skb)
 	n->peeked = 0;
 	C(pfmemalloc);
 	n->destructor = NULL;
+    n->vendor_free = NULL;
 	C(tail);
 	C(end);
 	C(head);
@@ -904,7 +928,7 @@ static struct sk_buff *__skb_clone(struct sk_buff *n, struct sk_buff *skb)
  */
 struct sk_buff *skb_morph(struct sk_buff *dst, struct sk_buff *src)
 {
-	skb_release_all(dst);
+	skb_release_all(dst, true);
 	return __skb_clone(dst, src);
 }
 EXPORT_SYMBOL_GPL(skb_morph);
@@ -1370,6 +1394,7 @@ struct sk_buff *skb_copy(const struct sk_buff *skb, gfp_t gfp_mask)
 		BUG();
 
 	copy_skb_header(n, skb);
+
 	return n;
 }
 EXPORT_SYMBOL(skb_copy);
