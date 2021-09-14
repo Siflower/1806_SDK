@@ -4515,6 +4515,8 @@ out:
 #define SF_HNAT_DEV_OFFSET             0 // skb->dev pointer offset
 #define SF_HNAT_FLAG                   47 // skb hw hnat finish flag
 #define SF_CB_HNAT_FORWARD             22 // skb need xmit directly
+unsigned char go_direct_xmit = 1;
+EXPORT_SYMBOL(go_direct_xmit );
 #endif
 
 static int __netif_receive_skb(struct sk_buff *skb)
@@ -4529,9 +4531,13 @@ static int __netif_receive_skb(struct sk_buff *skb)
 			u8 *eth_header = skb->data - ETH_HLEN;
 			memmove(eth_header + VLAN_HLEN, eth_header, 2 * ETH_ALEN);
 			skb_push(skb, ETH_HLEN - VLAN_HLEN);
+			// dev_queue_xmit(skb);
 			skb->dev->netdev_ops->ndo_start_xmit(skb, skb->dev);
 		}else{
 			skb_push(skb, ETH_HLEN);
+			if(go_direct_xmit)
+			  skb->dev->netdev_ops->ndo_start_xmit(skb, skb->dev);
+			else
 			dev_queue_xmit(skb);
 		}
 		return NET_RX_SUCCESS;
@@ -5281,9 +5287,13 @@ static int process_backlog(struct napi_struct *napi, int quota)
 					u8 *eth_header = skb->data - ETH_HLEN;
 					memmove(eth_header + VLAN_HLEN, eth_header, 2 * ETH_ALEN);
 					skb_push(skb, ETH_HLEN - VLAN_HLEN);
+				// dev_queue_xmit(skb);
 					skb->dev->netdev_ops->ndo_start_xmit(skb, skb->dev);
 				}else{
 					skb_push(skb, ETH_HLEN);
+				if(go_direct_xmit)
+				  skb->dev->netdev_ops->ndo_start_xmit(skb, skb->dev);
+				else
 					dev_queue_xmit(skb);
 				}
 			}
