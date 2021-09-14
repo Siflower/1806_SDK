@@ -14,6 +14,8 @@ static DEFINE_SPINLOCK(flow_offload_hw_pending_list_lock);
 static LIST_HEAD(flow_offload_hw_pending_list);
 
 static DEFINE_MUTEX(nf_flow_offload_hw_mutex);
+#else
+// static DEFINE_SPINLOCK(flow_offload_hw_sync_lock);
 #endif
 
 struct flow_offload_hw {
@@ -187,6 +189,7 @@ static void flow_offload_hw_add(struct net *net, struct flow_offload *flow,
 				struct nf_conn *ct, struct nf_flowtable_count * nf_count)
 {
 	struct flow_offload_hw *offload;
+	int  ret = -1;
 
 	offload = flow_offload_hw_prepare(net, flow);
 	if (!offload)
@@ -205,14 +208,20 @@ static void flow_offload_hw_add(struct net *net, struct flow_offload *flow,
 		goto err_free;
 	}
 
-	if (do_flow_offload_hw(offload) > 0){
-		offload->flow->flags |= (FLOW_OFFLOAD_HW | FLOW_OFFLOAD_KEEP);
+	// spin_lock_bh(&flow_offload_hw_sync_lock);
+	ret = do_flow_offload_hw(offload);
+	if ( ret > 0 ){
 		atomic_inc(&(nf_count->hw_total_count));
 		if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
 		  atomic_inc(&(nf_count->hw_udp_count));
 		else
 		  atomic_inc(&(nf_count->hw_tcp_count));
 	}
+
+	if ( ret >= 0 )
+		offload->flow->flags |= (FLOW_OFFLOAD_HW | FLOW_OFFLOAD_KEEP);
+
+	// spin_unlock_bh(&flow_offload_hw_sync_lock);
 
 err_free:
 	flow_offload_hw_free(offload);
@@ -238,6 +247,8 @@ static void flow_offload_hw_del(struct net *net, struct flow_offload *flow, stru
 	// not safe if core free flow before dequeue
 	flow_offload_queue_work(offload);
 #else
+
+	// spin_lock_bh(&flow_offload_hw_sync_lock);
 	if(do_flow_offload_hw(offload)  >= 0 ){
 		atomic_dec(&(nf_count->hw_total_count));
 		if(flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto == IPPROTO_UDP)
@@ -246,6 +257,7 @@ static void flow_offload_hw_del(struct net *net, struct flow_offload *flow, stru
 		  atomic_dec(&(nf_count->hw_tcp_count));
 	}
 	flow->flags &= ~(FLOW_OFFLOAD_KEEP|FLOW_OFFLOAD_HW);
+	// spin_unlock_bh(&flow_offload_hw_sync_lock);
 
 	flow_offload_hw_free(offload);
 	return;

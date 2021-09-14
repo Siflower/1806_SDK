@@ -37,6 +37,7 @@ struct nf_flowtable_count {
 	atomic_t hw_udp_count;
 	atomic_t udp_age_count;
 	atomic_t full_age_count;
+	unsigned int  clean_flow_count;
 };
 
 struct nf_flowtable {
@@ -121,6 +122,9 @@ struct flow_offload {
 		/* Your private driver data here. */
 		void *priv;
 	};
+#if 1
+	short  hnat_idx;
+#endif
 };
 
 #define FLOW_OFFLOAD_PATH_ETHERNET	BIT(0)

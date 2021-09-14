@@ -70,5 +70,5 @@ void __init device_tree_init(void)
 
 const char *get_system_type(void)
 {
-	return "MIPS sf16a18";
+	return "MIPS sf19a28";
 }

@@ -299,12 +299,15 @@ static int check_flow_in_blacklist(struct net *net, struct flow_offload *flow)
 #if 1
 static int sf_offload_hw_clean_flow_cb(struct flow_offload *flow, void *data)
 {
+	struct nf_flowtable *table = &nf_flowtable;
 	struct flow_offload * hw_flow = (struct flow_offload *)data;
 	unsigned char proto = 0;
 	char ret = -1;
 	if((hw_flow == flow) && (flow->flags & FLOW_OFFLOAD_HW)){
+
+		flow->timeout = jiffies + 30*HZ;
 		proto = flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto;
-		flow->priv = (void *) 1025;
+		flow->hnat_idx = -1;
 		flow->flags &= 0xff0000ff;
 		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
 
@@ -314,7 +317,7 @@ static int sf_offload_hw_clean_flow_cb(struct flow_offload *flow, void *data)
 		else
 		  atomic_dec(&(nf_flowtable.nf_count.hw_tcp_count));
 
-		flow->timeout = jiffies + 30*HZ;
+		table->nf_count.clean_flow_count++;
 		ret = 0;
 	}
 	return  ret;
@@ -325,10 +328,10 @@ static int sf_offload_hw_clean_flow_cb_no_dec(struct flow_offload *flow, void *d
 	struct flow_offload * hw_flow = (struct flow_offload *)data;
 	char ret = -1;
 	if((hw_flow == flow) && (flow->flags & FLOW_OFFLOAD_HW)){
-		flow->priv = (void *) 1025;
+		flow->timeout = jiffies + 30*HZ;
+		flow->hnat_idx = -1;
 		flow->flags &= 0xff0000ff;
 		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
-		// flow->timeout = jiffies;
 		ret = 0;
 	}
 	return  ret;
@@ -337,7 +340,7 @@ static int sf_offload_hw_clean_flow_cb_no_dec(struct flow_offload *flow, void *d
 static void sf_offload_hw_clean_all_cb(struct flow_offload *flow, void *data)
 {
 	if(flow->flags & FLOW_OFFLOAD_HW){
-		flow->priv = (void *) 1025;
+		flow->hnat_idx = -1;
 		flow->flags &= 0xff0000ff;
 		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
 		// flow->timeout = jiffies;
@@ -351,7 +354,7 @@ static void sf_offload_hw_clean_lan_cb(struct flow_offload *flow, void *data)
 	if((flow->flags & FLOW_OFFLOAD_HW) && (flow->flags & (0x1 << (lan_subnet_index + 8)))){
 
 		proto = flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto;
-		flow->priv = (void *) 1025;
+		flow->hnat_idx = -1;
 		flow->flags &= 0xff0000ff;
 		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
 		flow_offload_teardown(flow);
@@ -373,7 +376,7 @@ static void sf_offload_hw_clean_wan_cb(struct flow_offload *flow, void *data)
 	unsigned char proto = 0;
 	if((flow->flags & FLOW_OFFLOAD_HW) && (flow->flags & (0x1 << (wan_subnet_index + 16)))){
 		proto = flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto;
-		flow->priv = (void *) 1025;
+		flow->hnat_idx = -1;
 		flow->flags &= 0xff0000ff;
 		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
 		flow_offload_teardown(flow);
@@ -396,6 +399,7 @@ void sf_offload_hw_clean_flow(void *pclean, unsigned char clean_mode)
 	struct nf_flowtable *table = &nf_flowtable;
 	switch (clean_mode) {
 		case 0:
+			// under hight concurrency   flow maybe del from table not  del form  hw  yet. so  force del
 			nf_flow_table_iterate_ret(table, sf_offload_hw_clean_flow_cb, pclean);
 			break;
 		case 1:
@@ -425,12 +429,10 @@ void sf_flow_dump_count(void){
 	printk("nf dump total %d tcp %d udp %d \n", atomic_read(&nf_count->total_count),
 				atomic_read(&nf_count->tcp_count), atomic_read(&nf_count->udp_count));
 
-	printk("nf dump hw total %d hw tcp %d hw udp %d\n", atomic_read(&nf_count->hw_total_count),
-				atomic_read(&nf_count->hw_tcp_count), atomic_read(&nf_count->hw_udp_count));
+	printk(" hw total %d hw tcp %d hw udp %d crc clean flow %d\n", atomic_read(&nf_count->hw_total_count),
+				atomic_read(&nf_count->hw_tcp_count), atomic_read(&nf_count->hw_udp_count), nf_count->clean_flow_count);
 
-	printk("udp ageing start count %d\n", atomic_read(&nf_count->udp_age_count));
-
-	printk("full ageing start count %d\n", atomic_read(&nf_count->full_age_count));
+	printk("udp ageing  %d  full ageing %d\n", atomic_read(&nf_count->udp_age_count), atomic_read(&nf_count->full_age_count));
 }
 EXPORT_SYMBOL(sf_flow_dump_count);
 #endif
@@ -589,6 +591,7 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 	net = read_pnet(&nf_flowtable.ft_net);
 	if (!net)
 	  write_pnet(&nf_flowtable.ft_net, xt_net(par));
+
 
 	if (flow_offload_add(&nf_flowtable, flow) < 0)
 		goto err_flow_add;
