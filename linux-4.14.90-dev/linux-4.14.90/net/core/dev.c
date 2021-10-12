@@ -3700,9 +3700,9 @@ static int get_rps_cpu(struct net_device *dev, struct sk_buff *skb,
 		goto done;
 
 	sock_flow_table = rcu_dereference(rps_sock_flow_table);
-    if ((!flow_table || !sock_flow_table) &&
-            map && (map->len == 1))
-        return map->cpus[0];
+	if ((!flow_table || !sock_flow_table) &&
+	    map && (map->len == 1))
+		return map->cpus[0];
 
 	skb_reset_network_header(skb);
 	hash = skb_get_hash(skb);

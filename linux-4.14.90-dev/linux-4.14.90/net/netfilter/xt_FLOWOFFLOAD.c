@@ -269,11 +269,13 @@ static struct blacklist_dev* check_dev_in_blacklist(u8 *mac)
 
 static int check_flow_in_blacklist(struct net *net, struct flow_offload *flow)
 {
-	struct flow_offload_tuple *tuple;
+	struct flow_offload_tuple *tuple_s, *tuple_d;
 	struct neighbour *n;
 
-	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple;
-	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
+	tuple_s = &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple;
+	tuple_d = &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple;
+
+	n = dst_neigh_lookup(tuple_d->dst_cache, &tuple_s->src_v4);
 	if (n && check_dev_in_blacklist(n->ha)) {
 		neigh_release(n);
 		return 1;
@@ -282,8 +284,7 @@ static int check_flow_in_blacklist(struct net *net, struct flow_offload *flow)
 	if (n)
 		neigh_release(n);
 
-	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple;
-	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
+	n = dst_neigh_lookup(tuple_s->dst_cache, &tuple_d->src_v4);
 	if (n && check_dev_in_blacklist(n->ha)) {
 		neigh_release(n);
 		return 1;
@@ -439,19 +440,21 @@ EXPORT_SYMBOL(sf_flow_dump_count);
 
 static void sf_flow_table_do_delete(struct flow_offload *flow, void *data)
 {
-	struct flow_offload_tuple *tuple;
+	struct flow_offload_tuple *tuple_s, *tuple_d;
 	struct neighbour *n;
 	u8 *mac = data;
 
-	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple;
-	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
+	tuple_s = &flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple;
+	tuple_d = &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple;
+
+	n = dst_neigh_lookup(tuple_d->dst_cache, &tuple_s->src_v4);
 	if (n && ether_addr_equal(mac, n->ha))
 	  flow_offload_teardown(flow);
 
 	if (n)
 	  neigh_release(n);
-	tuple = &flow->tuplehash[FLOW_OFFLOAD_DIR_REPLY].tuple;
-	n = dst_neigh_lookup(tuple->dst_cache, &tuple->src_v4);
+
+	n = dst_neigh_lookup(tuple_s->dst_cache, &tuple_d->src_v4);
 	if (n && ether_addr_equal(mac, n->ha))
 	  flow_offload_teardown(flow);
 

@@ -191,11 +191,12 @@ static int flow_offload_hash_cmp(struct rhashtable_compare_arg *arg,
 {
 	const struct flow_offload_tuple *tuple = arg->key;
 	const struct flow_offload_tuple_rhash *x = ptr;
-	//RM#9848 get null ptr
+	//RM#9848  get null ptr
 	if(x != NULL){
 		if (memcmp(&x->tuple, tuple, offsetof(struct flow_offload_tuple, dir)))
-			return 1;
+		  return 1;
 	}
+
 	return 0;
 }
 
