@@ -108,6 +108,11 @@ ifdef CONFIG_TARGET_siflower_sf16a18_fullmask
 SF_ARCH=fullmask
 endif
 
+KO_FILE_NAME="src"
+ifneq ($(findstring NF,$(PROFILE)),)
+KO_FILE_NAME="nf_src"
+endif
+
 define KernelPackage/sf_smac/description
  Kernel module to sf16a18 smac && rf.
 endef
@@ -224,7 +229,7 @@ endif
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
-	$(CP) ./src/* $(PKG_BUILD_DIR)/
+	$(CP) ./$(KO_FILE_NAME)/* $(PKG_BUILD_DIR)/
 	$(CP) -r ./config $(PKG_BUILD_DIR)/
 	$(CP) -r ./test $(PKG_BUILD_DIR)/
 endef
