@@ -34,6 +34,11 @@ define KernelPackage/sfax8-factory-read/config
 	endif
 endef
 
+SFAX8_KO_NAME="sfax8_factory_read.ko"
+ifneq ($(findstring NF,$(PROFILE)),)
+SFAX8_KO_NAME="nf_sfax8_factory_read.ko"
+endif
+
 EXTRA_KCONFIG:= \
 	CONFIG_SFAX8_FACTORY_READ=m
 
@@ -57,6 +62,7 @@ define Build/Prepare
 endef
 
 define Build/Compile
+$(CP) ./src/$(SFAX8_KO_NAME) $(PKG_BUILD_DIR)/sfax8_factory_read.ko
 endef
 
 $(eval $(call KernelPackage,sfax8-factory-read))

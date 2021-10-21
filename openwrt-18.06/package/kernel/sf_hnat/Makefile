@@ -40,6 +40,10 @@ ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
 NOSTDINC_FLAGS += -DCONFIG_SF19A28_FULLMASK
 endif
 
+SFAX8_KO_NAME="sfhnat.ko"
+ifneq ($(findstring NF,$(PROFILE)),)
+SFAX8_KO_NAME="nf_sfhnat.ko"
+endif
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
@@ -47,6 +51,7 @@ define Build/Prepare
 endef
 
 define Build/Compile
+	$(CP) ./$(SFAX8_KO_NAME) $(PKG_BUILD_DIR)/sfhnat.ko
 endef
 
 $(eval $(call KernelPackage,sf_hnat))

@@ -30,6 +30,10 @@ NOSTDINC_FLAGS += -DCONFIG_SEND_ERR
 EXTRA_KCONFIG += CONFIG_SEND_ERR=y
 endif
 
+SFAX8_KO_NAME="sfax8_netlink.ko"
+ifneq ($(findstring NF,$(PROFILE)),)
+SFAX8_KO_NAME="nf_sfax8_netlink.ko"
+endif
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
@@ -37,6 +41,7 @@ define Build/Prepare
 endef
 
 define Build/Compile
+$(CP) ./$(SFAX8_KO_NAME) $(PKG_BUILD_DIR)/sfax8_netlink.ko
 endef
 
 $(eval $(call KernelPackage,sf_netlink))

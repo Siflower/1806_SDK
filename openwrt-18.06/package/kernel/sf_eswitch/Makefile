@@ -58,12 +58,19 @@ EXTRA_KCONFIG += CONFIG_ESWITCH_LIGHT=y
 NOSTDINC_FLAGS += -DCONFIG_ESWITCH_LIGHT
 endif
 
+SFAX8_KO_NAME="sf_eswitch.ko"
+ifneq ($(findstring NF,$(PROFILE)),)
+SFAX8_KO_NAME="nf_sf_eswitch.ko"
+endif
+
+
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	$(CP) ./* $(PKG_BUILD_DIR)/
 endef
 
 define Build/Compile
+$(CP) ./$(SFAX8_KO_NAME) $(PKG_BUILD_DIR)/sf_eswitch.ko
 endef
 
 $(eval $(call KernelPackage,sf_eswitch))

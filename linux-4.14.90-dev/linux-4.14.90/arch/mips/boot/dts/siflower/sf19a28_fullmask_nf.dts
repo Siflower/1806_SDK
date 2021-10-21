@@ -1,0 +1,116 @@
+/dts-v1/;
+
+#include "sf19a28_fullmask.dtsi"
+#include "sf19a28-thermal_common.dtsi"
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "siflower,sf19a28-soc";
+	model = "sf19a28-nf";
+
+};
+
+&gmac {
+	status = "okay";
+	delay = <0x34 0x0>;
+	esw-rst-gpio = <0xff>;
+};
+
+&spi2 {
+	status = "okay";
+	//use-dma;
+	dmas = <&gdma 10
+	&gdma 11>;
+	dma-names = "tx", "rx";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	w25q128@0 {
+		compatible = "w25q128";
+		reg = <0>;	/* chip select */
+		spi-max-frequency = <10000000>;
+
+		bank-width = <2>;
+		device-width = <2>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "spl-loader";
+			reg = <0x0 0x20000>; /* 128k */
+			read-only;
+		};
+
+		partition@20000 {
+			label = "u-boot";
+			reg = <0x20000 0x60000>; /* 384k */
+		};
+
+		partition@80000 {
+			label = "u-boot-env";
+			reg = <0x80000 0x10000>; /* 64k */
+		};
+
+		factory:partition@90000 {
+			label = "factory";
+			reg = <0x90000 0x10000>; /* 64k */
+		};
+
+		partition@a0000 {
+			label = "firmware";
+			reg = <0xa0000 0xf60000>; /* 640k-16M */
+		};
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+&timer0 {
+	status = "okay";
+};
+
+&usb_phy {
+       status = "okay";
+};
+
+&usb {
+       status = "okay";
+};
+
+&wifi_rf {
+	status = "okay";
+    /*only support ext pa for 5G*/
+	/*force_expa = <1>;*/
+};
+
+&gpio_keys {
+	status = "okay";
+	restart@27 {
+		label = "Key Restart";
+		linux,code = <0x198>;
+		gpios = <&gpio 27 0>;
+		poll-interval = <10>;
+		debounce-interval = <20>;
+	};
+};
+
+&wifi_lb {
+	status = "okay";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+	gpio-leds = <&gpio 12 0>;
+	smp-affinity = <2>;
+};
+
+&wifi_hb {
+	status = "okay";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+	gpio-leds = <&gpio 12 0>;
+	smp-affinity = <3>;
+};

@@ -33,6 +33,7 @@
 		watchdog = &watchdog;
 		leds = &leds;
 		gpio_keys = &gpio_keys;
+		mdio-gpio0 = &mdio0;
 	};
 
 	cpus{
@@ -458,6 +459,13 @@
 
 	};
 
+	mdio0: mdio {
+		compatible = "virtual,mdio-gpio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		gpios = <&gpio 28 0>, <&gpio 29 0>;
+		status = "okay";
+	};
 
 	gdma: dma@11800000 {
 		compatible = "siflower,sfax8-gdma";

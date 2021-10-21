@@ -135,6 +135,11 @@ ifneq ($(findstring EVB-V5,$(PROFILE)),)
 SFAX8_KO_NAME="evb_v5_sgmac.ko"
 endif
 
+ifneq ($(findstring NF,$(PROFILE)),)
+SFAX8_KO_NAME="nf_sgmac.ko"
+endif
+
+
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	$(CP) ./Makefile $(PKG_BUILD_DIR)/
