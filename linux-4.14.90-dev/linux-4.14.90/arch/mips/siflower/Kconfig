@@ -30,6 +30,14 @@ endchoice
 
 if SF16A18_FULL_MASK
 
+config DT_SF16A18_FULLMASK_P20
+	bool "Built-in device tree for sf16a18 full mask p20 boards"
+	default n
+	select BUILTIN_DTB
+	help
+	  The corresponding DTS file is at
+	  arch/mips/boot/dts/sf16a18_fullmask_p20.dts
+
 config DT_SF16A18_FULLMASK_EVB_V5
 	bool "Built-in device tree for sf16a18 full mask evb_v5 boards"
 	default n
@@ -37,6 +45,39 @@ config DT_SF16A18_FULLMASK_EVB_V5
 	help
 	  The corresponding DTS file is at
 	  arch/mips/boot/dts/sf16a18_fullmask_p20.dts
+
+config DT_SF16A18_FULLMASK_86V
+	bool "Built-in device tree for sf16a18 86v boards"
+	default n
+	select BUILTIN_DTB
+	help
+	  The corresponding DTS file is at
+	  arch/mips/boot/dts/sf16a18_fullmask_86v.dts
+
+config DT_SF16A18_FULLMASK_AC20_SJBY
+      bool "Built-in device tree for sf16a18 full mask ac20 boards"
+      default n
+      select BUILTIN_DTB
+      help
+      The corresponding DTS file is at
+      arch/mips/boot/dts/sf16a18_fullmask_ac20_sjby.dts
+
+config DT_SF16A18_FULLMASK_AC20
+      bool "Built-in device tree for sf16a18 full mask ac20 boards"
+      default n
+      select BUILTIN_DTB
+      help
+      The corresponding DTS file is at
+      arch/mips/boot/dts/sf16a18_fullmask_ac20.dts
+
+config DT_SF16A18_FULLMASK_P10H
+      bool "Built-in device tree for sf16a18 full mask p10h boards"
+      default n
+      select BUILTIN_DTB
+      help
+      The corresponding DTS file is at
+      arch/mips/boot/dts/sf16a18_fullmask_p10h.dts
+
 
 endif #SF16A18_FULL_MASK
 
@@ -76,6 +117,14 @@ config DT_SF19A28_FULLMASK_EVB
 	  The corresponding DTS file is at
 	  arch/mips/boot/dts/sf19a28_fullmask_evb.dts
 
+config DT_SF19A28_FULLMASK_NF
+	bool "Built-in device tree for sf19a28 fullmask nf"
+	default n
+	select BUILTIN_DTB
+	help
+	  The corresponding DTS file is at
+	  arch/mips/boot/dts/sf19a28_fullmask_nf.dts
+
 config DT_SF19A28_FULLMASK_AC28
 	bool "Built-in device tree for sf19a28 fullmask ac28"
 	default n
@@ -83,6 +132,14 @@ config DT_SF19A28_FULLMASK_AC28
 	help
 	  The corresponding DTS file is at
 	  arch/mips/boot/dts/sf19a28_fullmask_ac28.dts
+
+config DT_SF19A28_FULLMASK_A28_HWA
+	bool "Built-in device tree for sf19a28 fullmask a28 hwa board"
+	default n
+	select BUILTIN_DTB
+	help
+	  The corresponding DTS file is at
+	  arch/mips/boot/dts/sf19a28_fullmask_a28-hwa.dts
 
 config DT_SF19A28_FULLMASK_REP
 	bool "Built-in device tree for sf19a28 fullmask repeater"
@@ -92,23 +149,52 @@ config DT_SF19A28_FULLMASK_REP
 	  The corresponding DTS file is at
 	  arch/mips/boot/dts/sf19a28_fullmask_rep.dts
 
-config DT_SF19A28_FULLMASK_NF
-    bool "Built-in device tree for sf19a28 fullmask nf"
-    default n
-    select BUILTIN_DTB
-    help
-      The corresponding DTS file is at
-      arch/mips/boot/dts/sf19a28_fullmask_nf.dts
-
 config DT_SF19A28_FULLMASK_AC28S
-       bool "Built-in device tree for sf19a28 fullmask ac28s"
-       default n
-       select BUILTIN_DTB
-       help
-         The corresponding DTS file is at
-		 arch/mips/boot/dts/sf19a28_fullmask_ac28s.dts
+	bool "Built-in device tree for sf19a28 fullmask ac28s"
+	default n
+	select BUILTIN_DTB
+	help
+	  The corresponding DTS file is at
+	  arch/mips/boot/dts/sf19a28_fullmask_ac28s.dts
+
+
 
 endif #SF19A28_FULLMASK
+
+if SF19A28_MPW1
+
+config DT_SF19A28_MPW1_AC28
+	bool "Built-in device tree for sf19a28 mpw1 ac28"
+	default n
+	select BUILTIN_DTB
+	help
+	  The corresponding DTS file is at
+	  arch/mips/boot/dts/sf19a28_mpw1_ac28.dts
+
+config DT_SF19A28_MPW1_HWA
+	bool "Built-in device tree for sf19a28 mpw1 hwa"
+	default n
+	select BUILTIN_DTB
+	help
+	  Add an FDT blob for XLP EVP boards into the kernel.
+	  arch/mips/boot/dts/sf19a28_mpw1_hwa.dts
+
+config DT_SF19A28_MPW1_EVB
+	bool "Built-in device tree for sf19a28 mpw1 evb"
+	default n
+	select BUILTIN_DTB
+	help
+	  The corresponding DTS file is at
+	  arch/mips/boot/dts/sf19a28_mpw1_evb.dts
+
+config DT_SF19A28_MPW1_AC22
+	bool "Built-in device tree for sf19a28 mpw1 ac22"
+	default n
+	select BUILTIN_DTB
+	help
+	  The corresponding DTS file is at
+	  arch/mips/boot/dts/sf19a28_mpw1_ac22.dts
+endif #SF19A28_MPW1
 
 
 endif #SOC_SF19A28

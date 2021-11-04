@@ -160,8 +160,41 @@ detect_mac80211() {
 			set wireless.default_radio${devidx}.wps_pushbutton=1
 			set wireless.default_radio${devidx}.wps_label=0
 
+			set wireless.guest_radio${devidx}=wifi-iface
+			set wireless.guest_radio${devidx}.device=radio${devidx}
+			set wireless.guest_radio${devidx}.network=guest
+			set wireless.guest_radio${devidx}.mode=ap
+			set wireless.guest_radio${devidx}.ssid=${ssid}-guest
+			set wireless.guest_radio${devidx}.encryption=none
+			set wireless.guest_radio${devidx}.hidden=0
+			set wireless.guest_radio${devidx}.ifname=wlan${devidx}-guest
+			set wireless.guest_radio${devidx}.isolate=1
+			set wireless.guest_radio${devidx}.group=1
+			set wireless.guest_radio${devidx}.netisolate=0
+			set wireless.guest_radio${devidx}.disable_input=0
+			set wireless.guest_radio${devidx}.disabled=1
 EOF
 		uci -q commit wireless
+
+			if [ "$devidx" == "0" ]; then
+				uci -q batch <<-EOF
+				set wireless.lease_radio${devidx}=wifi-iface
+				set wireless.lease_radio${devidx}.device=radio${devidx}
+				set wireless.lease_radio${devidx}.network=lease
+				set wireless.lease_radio${devidx}.mode=ap
+				set wireless.lease_radio${devidx}.ssid=${ssid_lease}
+				set wireless.lease_radio${devidx}.encryption=none
+				set wireless.lease_radio${devidx}.hidden=0
+				set wireless.lease_radio${devidx}.ifname=wlan${devidx}-lease
+				set wireless.lease_radio${devidx}.isolate=1
+				set wireless.lease_radio${devidx}.group=1
+				set wireless.lease_radio${devidx}.netisolate=0
+				set wireless.lease_radio${devidx}.disable_input=0
+				set wireless.lease_radio${devidx}.maxassoc=64
+				set wireless.lease_radio${devidx}.disabled=1
+				EOF
+				uci -q commit wireless
+			fi
 
 		devidx=$(($devidx + 1))
 	done

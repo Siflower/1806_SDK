@@ -244,6 +244,7 @@ define KernelPackage/sf_smac/install
 		$(PKG_BUILD_DIR)/config/siwifi_settings.ini \
 		$(PKG_BUILD_DIR)/config/tx_adjust_gain_table.bin \
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/agcram.bin \
+		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/agcram_24g.bin \
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/ldpcram.bin \
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_pmem.bin \
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_default_reg.bin \

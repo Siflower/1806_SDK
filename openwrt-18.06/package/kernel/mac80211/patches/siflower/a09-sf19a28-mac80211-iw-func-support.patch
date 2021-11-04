@@ -1,0 +1,127 @@
+Index: backports-4.19.7-1/net/wireless/nl80211.c
+===================================================================
+--- backports-4.19.7-1.orig/net/wireless/nl80211.c
++++ backports-4.19.7-1/net/wireless/nl80211.c
+@@ -2810,6 +2810,11 @@ static int nl80211_send_iface(struct sk_
+ 	struct net_device *dev = wdev->netdev;
+ 	u8 cmd = NL80211_CMD_NEW_INTERFACE;
+ 	void *hdr;
++    struct nlattr *infoattr;
++    struct ieee80211_supported_band *sband;
++    int ch, survey_idx = 0;
++    bool survey_tag = 0;
++    struct cfg80211_chan_def chandef;
+ 
+ 	if (removal)
+ 		cmd = NL80211_CMD_DEL_INTERFACE;
+@@ -2836,12 +2841,25 @@ static int nl80211_send_iface(struct sk_
+ 
+ 	if (rdev->ops->get_channel) {
+ 		int ret;
+-		struct cfg80211_chan_def chandef;
+ 
+ 		ret = rdev_get_channel(rdev, wdev, &chandef);
+ 		if (ret == 0) {
+ 			if (nl80211_send_chandef(msg, &chandef))
+ 				goto nla_put_failure;
++            // get survey_idx
++            if (wdev->wiphy) {
++                sband = wdev->wiphy->bands[chandef.chan->band];
++                if (!sband)
++                    goto nla_put_failure;
++                for (ch = 0; ch < sband->n_channels; ch++, survey_idx++) {
++                    if (sband->channels[ch].center_freq == chandef.chan->center_freq) {
++                        survey_tag = 1;
++                        break;
++                    }
++                }
++                if (!survey_tag)
++                    goto nla_put_failure;
++            }
+ 		}
+ 	}
+ 
+@@ -2855,6 +2873,29 @@ static int nl80211_send_iface(struct sk_
+ 			goto nla_put_failure;
+ 	}
+ 
++    if (rdev->ops->dump_station) {
++        int bitrate = 0, err = 0;
++        struct station_info sinfo;
++        u8 mac_addr[ETH_ALEN];
++        int sta_idx = 0;
++
++        if (wdev->netdev) {
++            while (1) {
++                memset(&sinfo, 0, sizeof(sinfo));
++                err = rdev_dump_station(rdev, wdev->netdev, sta_idx,
++                        mac_addr, &sinfo);
++                if (err)
++                    break;
++                if (bitrate < sinfo.txrate.legacy)
++                    bitrate = sinfo.txrate.legacy;
++
++                sta_idx++;
++            }
++        }
++        if (nla_put_u16(msg, NL80211_STA_INFO_TX_BITRATE, bitrate))
++            goto nla_put_failure;
++    }
++
+ 	wdev_lock(wdev);
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_AP:
+@@ -2893,6 +2934,33 @@ static int nl80211_send_iface(struct sk_
+ 			goto nla_put_failure;
+ 	}
+ 
++    // put noise & utilization to msg
++    infoattr = nla_nest_start(msg, NL80211_ATTR_SURVEY_INFO);
++    if (!infoattr) {
++        printk("--fialed !--\n");
++        goto nla_put_failure;
++    }
++    if (rdev->ops->dump_survey) {
++        int ret;
++        struct survey_info info;
++        memset(&info, 0, sizeof(info));
++        ret = rdev->ops->dump_survey(&rdev->wiphy, wdev->netdev, survey_idx, &info);
++        if (ret != 0)
++            goto nla_put_failure;
++        if ((info.filled & SURVEY_INFO_NOISE_DBM) &&
++                nla_put_u32(msg, NL80211_SURVEY_INFO_NOISE, info.noise))
++            goto nla_put_failure;
++        if ((info.filled & SURVEY_INFO_TIME) &&
++                nla_put_u64_64bit(msg, NL80211_SURVEY_INFO_TIME,
++                    info.time, NL80211_SURVEY_INFO_PAD))
++            goto nla_put_failure;
++        if ((info.filled & SURVEY_INFO_TIME_BUSY) &&
++                nla_put_u64_64bit(msg, NL80211_SURVEY_INFO_TIME_BUSY,
++                    info.time_busy, NL80211_SURVEY_INFO_PAD))
++            goto nla_put_failure;
++    }
++    nla_nest_end(msg, infoattr);
++
+ 	genlmsg_end(msg, hdr);
+ 	return 0;
+ 
+@@ -8325,9 +8393,6 @@ static int nl80211_send_survey(struct sk
+ 	if ((survey->filled & SURVEY_INFO_NOISE_DBM) &&
+ 	    nla_put_u8(msg, NL80211_SURVEY_INFO_NOISE, survey->noise))
+ 		goto nla_put_failure;
+-	if ((survey->filled & SURVEY_INFO_IN_USE) &&
+-	    nla_put_flag(msg, NL80211_SURVEY_INFO_IN_USE))
+-		goto nla_put_failure;
+ 	if ((survey->filled & SURVEY_INFO_TIME) &&
+ 	    nla_put_u64_64bit(msg, NL80211_SURVEY_INFO_TIME,
+ 			survey->time, NL80211_SURVEY_INFO_PAD))
+@@ -8336,6 +8401,9 @@ static int nl80211_send_survey(struct sk
+ 	    nla_put_u64_64bit(msg, NL80211_SURVEY_INFO_TIME_BUSY,
+ 			      survey->time_busy, NL80211_SURVEY_INFO_PAD))
+ 		goto nla_put_failure;
++	if ((survey->filled & SURVEY_INFO_IN_USE) &&
++	    nla_put_flag(msg, NL80211_SURVEY_INFO_IN_USE))
++		goto nla_put_failure;
+ 	if ((survey->filled & SURVEY_INFO_TIME_EXT_BUSY) &&
+ 	    nla_put_u64_64bit(msg, NL80211_SURVEY_INFO_TIME_EXT_BUSY,
+ 			      survey->time_ext_busy, NL80211_SURVEY_INFO_PAD))

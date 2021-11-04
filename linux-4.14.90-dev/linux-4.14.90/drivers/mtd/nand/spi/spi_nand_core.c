@@ -797,12 +797,20 @@ static const struct nand_ops spinand_ops = {
 };
 
 static const struct spinand_manufacturer *spinand_manufacturers[] = {
-	&esmt_spinand_manufacturer,
 	&icmax_spinand_manufacturer,
 	&macronix_spinand_manufacturer,
 	&micron_spinand_manufacturer,
 	&winbond_spinand_manufacturer,
 	&toshiba_spinand_manufacturer,
+	&fudanmicro_spinand_manufacturer,
+	&gigadevice_spinand_manufacturer,
+	/*
+	 * Note:
+	 * esmt_spinand_manufacturer has the same mfr id 0xc8 as
+	 * gigadevice_spinand_manufacturer. So we ignore it becase
+	 * it doesn't use.
+	 * */
+	&esmt_spinand_manufacturer,
 };
 
 static int spinand_manufacturer_detect(struct spinand_device *spinand)

@@ -352,7 +352,7 @@ static const struct spi_device_id m25p_ids[] = {
 	{"en25q64"},	{"en25qh64"},	{"en25qh128"},	{"en25qh256"},
 	{"f25l32pa"},
 	{"mr25h256"},	{"mr25h10"},
-	{"gd25q32"},	{"gd25q64"},    {"gd25q127c"},  {"gd25q64c"},
+	{"gd25q32"},	{"gd25q64"},    {"gd25q127c"},  {"gd25q64c"},	{"gd25q256e"},
 	{"160s33b"},	{"320s33b"},	{"640s33b"},
 	{"mx25l2005a"},	{"mx25l4005a"},	{"mx25l8005"},	{"mx25l1606e"},
 	{"mx25l3205d"},	{"mx25l3255e"},	{"mx25l6405d"},	{"mx25l12805d"},
@@ -396,6 +396,7 @@ static const struct spi_device_id m25p_ids[] = {
 	{ "mr25h40" },  /*   4 Mib, 40 MHz */
 
 	{"zb25vq64a"}, {"zb25vq128a"}, {"xt25f128b"}, {"en25qx64a"}, {"en25qx128a"},
+	{"kh25l12833f"}, {"kh25l6433f"}, {"w25q64jvsiq"},
 	{ },
 };
 MODULE_DEVICE_TABLE(spi, m25p_ids);
