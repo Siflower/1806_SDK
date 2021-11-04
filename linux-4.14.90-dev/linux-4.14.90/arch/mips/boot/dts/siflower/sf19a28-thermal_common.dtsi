@@ -159,8 +159,38 @@ rf_alert23: rf-alert23 {
 			   hysteresis = <1000>; /* millicelsius */
 			   type = "passive";
 		   };
+rf_alert24: rf-alert24 {
+			   temperature = <100000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert25: rf-alert25 {
+			   temperature = <105000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert26: rf-alert26 {
+			   temperature = <110000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert27: rf-alert27 {
+			   temperature = <115000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert28: rf-alert28 {
+			   temperature = <120000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
+rf_alert29: rf-alert29 {
+			   temperature = <125000>; /* millicelsius */
+			   hysteresis = <1000>; /* millicelsius */
+			   type = "passive";
+		   };
 rf_crit: rf-crit {
-			 temperature = <100000>; /* millicelsius */
+			 temperature = <130000>; /* millicelsius */
 			 hysteresis = <1000>; /* millicelsius */
 			 type = "passive";
 		 };
@@ -275,8 +305,32 @@ temperature = <125000>; /* millicelsius */
 					 cooling-device = <&wifi_rf 23 24>;
 				 };
 				 map24 {
-					 trip = <&rf_crit>;
+					 trip = <&rf_alert24>;
 					 cooling-device = <&wifi_rf 24 25>;
+				 };
+				 map25 {
+					 trip = <&rf_alert25>;
+					 cooling-device = <&wifi_rf 25 26>;
+				 };
+				 map26 {
+					 trip = <&rf_alert26>;
+					 cooling-device = <&wifi_rf 26 27>;
+				 };
+				 map27 {
+					 trip = <&rf_alert27>;
+					 cooling-device = <&wifi_rf 27 28>;
+				 };
+				 map28 {
+					 trip = <&rf_alert28>;
+					 cooling-device = <&wifi_rf 28 29>;
+				 };
+				 map29 {
+					 trip = <&rf_alert29>;
+					 cooling-device = <&wifi_rf 29 30>;
+				 };
+				 map30 {
+					 trip = <&rf_crit>;
+					 cooling-device = <&wifi_rf 30 31>;
 				 };
 			 };
 		 };

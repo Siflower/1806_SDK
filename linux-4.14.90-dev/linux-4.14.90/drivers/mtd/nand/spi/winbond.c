@@ -110,6 +110,50 @@ static const struct mtd_ooblayout_ops w25m02gv_ooblayout = {
 };
 
 static int w25m02gv_select_target(struct spinand_device *spinand,
+                  unsigned int target)
+{
+    struct spi_mem_op op = SPI_MEM_OP(SPI_MEM_OP_CMD(0xc2, 1), 
+                      SPI_MEM_OP_NO_ADDR,
+                      SPI_MEM_OP_NO_DUMMY,
+                      SPI_MEM_OP_DATA_OUT(1,
+                            spinand->scratchbuf,
+                            1));
+
+    *spinand->scratchbuf = target;
+    return spi_mem_exec_op(spinand->spimem, &op);
+}
+
+static int w25n02kv_ooblayout_ecc(struct mtd_info *mtd, int section,
+                  struct mtd_oob_region *region)
+{
+    if (section > 3)
+        return -ERANGE;
+
+    region->offset = (16 * section) + 8;
+    region->length = 8;
+
+    return 0;
+}
+
+static int w25n02kv_ooblayout_free(struct mtd_info *mtd, int section,
+                   struct mtd_oob_region *region)
+{
+    if (section > 3)
+        return -ERANGE;
+
+    region->offset = (16 * section) + 2;
+    region->length = 6;
+
+    return 0;
+}
+
+static const struct mtd_ooblayout_ops w25n02kv_ooblayout = {
+    .ecc = w25n02kv_ooblayout_ecc,
+    .free = w25n02kv_ooblayout_free,
+};
+
+
+static int w25n02kv_select_target(struct spinand_device *spinand,
 				  unsigned int target)
 {
 	struct spi_mem_op op = SPI_MEM_OP(SPI_MEM_OP_CMD(0xc2, 1),
@@ -133,6 +177,15 @@ static const struct spinand_info winbond_spinand_table[] = {
 		     0,
 		     SPINAND_ECCINFO(&w25m02gv_ooblayout, NULL),
 		     SPINAND_SELECT_TARGET(w25m02gv_select_target)),
+	SPINAND_INFO("W25N02KV", 0xAA,
+			NAND_MEMORG(1, 2048, 64, 64, 1024, 1, 1, 2),
+			NAND_ECCREQ(1, 512),
+			SPINAND_INFO_OP_VARIANTS(&read_cache_variants,
+						&write_cache_variants,
+						&update_cache_variants),
+			0,
+			SPINAND_ECCINFO(&w25n02kv_ooblayout, NULL),
+			SPINAND_SELECT_TARGET(w25n02kv_select_target)),
 
 	SPINAND_INFO("W25N01GV", 0xAA,
 		     NAND_MEMORG(1, 2048, 64, 64, 1024, 1, 1, 1),

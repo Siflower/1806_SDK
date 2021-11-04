@@ -1003,6 +1003,11 @@ static const struct flash_info spi_nor_ids[] = {
 			SECT_4K | SPI_NOR_DUAL_READ | SPI_NOR_QUAD_READ |
 			SPI_NOR_HAS_LOCK | SPI_NOR_HAS_TB)
 	},
+	{
+		"gd25q256e", INFO(0xc84019, 0, 64 * 1024, 512,
+			SECT_4K | SPI_NOR_DUAL_READ | SPI_NOR_QUAD_READ |
+			SPI_NOR_HAS_LOCK | SPI_NOR_HAS_TB | SPI_NOR_4B_OPCODES)
+	},
 
 	/* Intel/Numonyx -- xxxs33b */
 	{ "160s33b",  INFO(0x898911, 0, 64 * 1024,  32, 0) },
@@ -1182,6 +1187,7 @@ static const struct flash_info spi_nor_ids[] = {
 	{ "w25q128", INFO(0xef4018, 0, 64 * 1024, 256, SECT_4K) },
     { "w25m512jv", INFO(0xef7119, 0, 64 * 1024, 1024,
             SECT_4K | SPI_NOR_QUAD_READ | SPI_NOR_DUAL_READ) },
+	{ "w25q64jvsiq", INFO(0xef4017, 0, 64 * 1024, 128, SECT_4K) },
 	{ "w25q128jv", INFO(0xef7018, 0, 64 * 1024, 256, SECT_4K) },
 	{ "w25q256", INFO(0xef4019, 0, 64 * 1024, 512, SECT_4K) },
 
@@ -1195,6 +1201,8 @@ static const struct flash_info spi_nor_ids[] = {
 	{ "xt25q64b", INFO(0x0b6017, 0, 64 * 1024, 128, SECT_4K) },
 	{ "p25q64h", INFO(0x856017, 0, 64 * 1024, 128, SECT_4K) },
 	{ "gd25q64c", INFO(0xc84017, 0, 64 * 1024, 128, SECT_4K) },
+	{ "kh25l6433f", INFO(0xc22017, 0, 64 * 1024, 128, SECT_4K) },
+	{ "kh25l12833f", INFO(0xc22018, 0, 64 * 1024, 256, SECT_4K) },
 	{ "mx25l25645g", INFO(0xc22019, 0, 64 * 1024, 512, SECT_4K) },
 
 	/* Catalyst / On Semiconductor -- non-JEDEC */

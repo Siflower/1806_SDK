@@ -36,12 +36,12 @@
 /* Minimum MDC period is 400 ns, plus some margin for error.  MDIO_DELAY
  * is done twice per period.
  */
-#define MDIO_DELAY 250
+#define MDIO_DELAY 450
 
 /* The PHY may take up to 300 ns to produce data, plus some margin
  * for error.
  */
-#define MDIO_READ_DELAY 350
+#define MDIO_READ_DELAY 650
 
 /* MDIO must already be configured as output. */
 static void mdiobb_send_bit(struct mdiobb_ctrl *ctrl, int val)
