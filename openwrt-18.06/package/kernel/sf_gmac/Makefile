@@ -28,30 +28,36 @@ define KernelPackage/sf_gmac/config
 			bool "select FPGA mode gmac"
 			default "n"
 
-		config SFAX8_HNAT_DRIVER
-			bool "hnat driver support"
-			depends on PACKAGE_kmod-sf_hnat
-			default "n"
-
-		config SFAX8_ESWITCH_DRIVER
-			bool "eswitch driver support"
-			depends on PACKAGE_kmod-sf_eswitch
-			default "n"
-
 		config SFAX8_HNAT_TEST_TOOL
 			bool "set test tool"
-			depends on SFAX8_HNAT_DRIVER
+			depends on PACKAGE_kmod-sf_hnat
 			default "n"
 
 		config SFAX8_IFG_ENABLE
 			bool "gmac/eswitch IFG setting enable"
 			default "n"
 
-		config GMAC_DELAY_AUTOCALI
+		config SFAX8_HW_RESET
+			bool "eswitch hardware reset"
+			depends on PACKAGE_kmod-sf_eswitch
+			default "n"
+
+		config SFAX8_GMAC_DELAY_AUTOCALI
 			bool "gmac delay auto calibration"
 			depends on PACKAGE_kmod-sf_eswitch
 			default "n"
 
+		config SFAX8_GMAC_TCLKCHOOSE
+			bool "choose tclk to use for gmac."
+			default "n"
+
+		config SFAX8_GMAC_RX_BUFFER_POOL
+			bool "enable  gmac rx pool"
+			default "n"
+
+		config SFAX8_GMAC_RX_BUFFER_POOL_LIMIT
+			bool "enable  gmac rx pool limit, allock skb fail when pool full"
+			default "n"
 	endif
 endef
 
@@ -76,29 +82,20 @@ ifdef CONFIG_SFAX8_RGMII_GMAC
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_RGMII_GMAC
 endif
 
-ifdef CONFIG_SFAX8_HNAT_DRIVER
-EXTRA_KCONFIG += CONFIG_SFAX8_HNAT_DRIVER=y
+ifdef CONFIG_PACKAGE_kmod-sf_hnat
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_HNAT_DRIVER
 ifdef CONFIG_SFAX8_HNAT_TEST_TOOL
-EXTRA_KCONFIG += CONFIG_SFAX8_HNAT_TEST_TOOL=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_HNAT_TEST_TOOL
 endif
 endif
 
-ifdef CONFIG_SFAX8_FACTORY_READ
+ifdef CONFIG_PACKAGE_kmod-sfax8-factory-read
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_FACTORY_READ
 endif
 
-
-
-ifdef CONFIG_SFAX8_ESWITCH_DRIVER
+ifdef CONFIG_PACKAGE_kmod-sf_eswitch
 EXTRA_KCONFIG += CONFIG_SFAX8_ESWITCH_DRIVER=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_ESWITCH_DRIVER
-endif
-
-ifdef CONFIG_SFAX8_GENL
-EXTRA_KCONFIG += CONFIG_SFAX8_GENL=y
-NOSTDINC_FLAGS += -DCONFIG_SFAX8_GENL
 endif
 
 ifdef CONFIG_SFAX8_IFG_ENABLE
@@ -106,9 +103,24 @@ EXTRA_KCONFIG += CONFIG_SFAX8_IFG_ENABLE=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_IFG_ENABLE
 endif
 
-ifdef CONFIG_GMAC_DELAY_AUTOCALI
-EXTRA_KCONFIG += CONFIG_GMAC_DELAY_AUTOCALI=y
-NOSTDINC_FLAGS += -DCONFIG_GMAC_DELAY_AUTOCALI
+ifdef CONFIG_SFAX8_GMAC_DELAY_AUTOCALI
+EXTRA_KCONFIG += CONFIG_SFAX8_GMAC_DELAY_AUTOCALI=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_GMAC_DELAY_AUTOCALI
+endif
+
+ifdef CONFIG_SFAX8_GMAC_TCLKCHOOSE
+EXTRA_KCONFIG += CONFIG_SFAX8_GMAC_TCLKCHOOSE=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_GMAC_TCLKCHOOSE
+endif
+
+ifdef CONFIG_SFAX8_GMAC_RX_BUFFER_POOL
+EXTRA_KCONFIG += CONFIG_SFAX8_GMAC_RX_BUFFER_POOL=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_GMAC_RX_BUFFER_POOL
+endif
+
+ifdef CONFIG_SFAX8_GMAC_RX_BUFFER_POOL_LIMIT
+EXTRA_KCONFIG += CONFIG_SFAX8_GMAC_RX_BUFFER_POOL_LIMIT=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_GMAC_RX_BUFFER_POOL_LIMIT
 endif
 
 define KernelPackage/sf_gmac

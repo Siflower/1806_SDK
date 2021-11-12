@@ -1,0 +1,195 @@
+Index: libiwinfo-2019-11-03-31dcef31/include/iwinfo.h
+===================================================================
+--- libiwinfo-2019-11-03-31dcef31.orig/include/iwinfo.h
++++ libiwinfo-2019-11-03-31dcef31/include/iwinfo.h
+@@ -227,6 +227,7 @@ struct iwinfo_ops {
+ 	int (*bitrate)(const char *, int *);
+ 	int (*signal)(const char *, int *);
+ 	int (*noise)(const char *, int *);
++    int (*utilization)(const char *, int16_t *);
+ 	int (*quality)(const char *, int *);
+ 	int (*quality_max)(const char *, int *);
+ 	int (*mbssid_support)(const char *, int *);
+Index: libiwinfo-2019-11-03-31dcef31/iwinfo_cli.c
+===================================================================
+--- libiwinfo-2019-11-03-31dcef31.orig/iwinfo_cli.c
++++ libiwinfo-2019-11-03-31dcef31/iwinfo_cli.c
+@@ -134,6 +134,17 @@ static char * format_noise(int noise)
+ 	return buf;
+ }
+ 
++static char * format_utilization(int16_t utilization)
++{
++    static char buf[20];
++    if (!utilization)
++        snprintf(buf, sizeof(buf), "unknown");
++    else
++        snprintf(buf, sizeof(buf), "%d.%d%%", utilization / 10, utilization % 10);
++
++    return buf;
++}
++
+ static char * format_rate(int rate)
+ {
+ 	static char buf[18];
+@@ -496,6 +507,15 @@ static char * print_noise(const struct i
+ 	return format_noise(noise);
+ }
+ 
++static char * print_utilization(const struct iwinfo_ops *iw, const char *ifname)
++{
++    int16_t utilization;
++    if (iw->utilization(ifname, &utilization))
++        utilization = 0;
++
++    return format_utilization(utilization);
++}
++
+ static char * print_rate(const struct iwinfo_ops *iw, const char *ifname)
+ {
+ 	int rate;
+@@ -562,9 +582,10 @@ static void print_info(const struct iwin
+ 		print_txpower(iw, ifname),
+ 		print_quality(iw, ifname),
+ 		print_quality_max(iw, ifname));
+-	printf("          Signal: %s  Noise: %s\n",
++	printf("          Signal: %s  Noise: %s\n          Channel Utilization: %s\n",
+ 		print_signal(iw, ifname),
+-		print_noise(iw, ifname));
++		print_noise(iw, ifname),
++        print_utilization(iw, ifname));
+ 	printf("          Bit Rate: %s\n",
+ 		print_rate(iw, ifname));
+ 	printf("          Encryption: %s\n",
+Index: libiwinfo-2019-11-03-31dcef31/iwinfo_nl80211.c
+===================================================================
+--- libiwinfo-2019-11-03-31dcef31.orig/iwinfo_nl80211.c
++++ libiwinfo-2019-11-03-31dcef31/iwinfo_nl80211.c
+@@ -1303,6 +1303,7 @@ static int nl80211_fill_signal_cb(struct
+ {
+ 	int8_t dbm;
+ 	int16_t mbit;
++
+ 	struct nl80211_rssi_rate *rr = arg;
+ 	struct nlattr **attr = nl80211_parse(msg);
+ 	struct nlattr *sinfo[NL80211_STA_INFO_MAX + 1];
+@@ -1349,7 +1350,8 @@ static int nl80211_fill_signal_cb(struct
+ 					if (rinfo[NL80211_RATE_INFO_BITRATE])
+ 					{
+ 						mbit = nla_get_u16(rinfo[NL80211_RATE_INFO_BITRATE]);
+-						rr->rate = (rr->rate * rr->rate_samples + mbit) / (rr->rate_samples + 1);
++						if (rr->rate < mbit)
++                            rr->rate = mbit;
+ 						rr->rate_samples++;
+ 					}
+ 				}
+@@ -1414,48 +1416,72 @@ static int nl80211_get_signal(const char
+ 	return -1;
+ }
+ 
+-static int nl80211_get_noise_cb(struct nl_msg *msg, void *arg)
++static int nl80211_fill_noise_cb(struct nl_msg *msg, void *arg)
+ {
+-	int8_t *noise = arg;
+-	struct nlattr **tb = nl80211_parse(msg);
+-	struct nlattr *si[NL80211_SURVEY_INFO_MAX + 1];
++    struct iwinfo_survey_entry *info = arg;
++    struct nlattr **tb = nl80211_parse(msg);
++    struct nlattr *si[NL80211_SURVEY_INFO_MAX + 1];
++
++    static struct nla_policy sp[NL80211_SURVEY_INFO_MAX + 1] = {
++        [NL80211_SURVEY_INFO_FREQUENCY] = { .type = NLA_U32 },
++        [NL80211_SURVEY_INFO_NOISE]     = { .type = NLA_U8  },
++        [NL80211_SURVEY_INFO_TIME] = { .type = NLA_U64  },
++        [NL80211_SURVEY_INFO_TIME_BUSY] = { .type = NLA_U64 },
++    };
++
++    if (!tb[NL80211_ATTR_SURVEY_INFO])
++        return NL_SKIP;
++
++    if (nla_parse_nested(si, NL80211_SURVEY_INFO_MAX, tb[NL80211_ATTR_SURVEY_INFO], sp))
++        return NL_SKIP;
++    if (si[NL80211_SURVEY_INFO_IN_USE]) {
++        if (nla_get_u8(si[NL80211_SURVEY_INFO_NOISE]))
++            info->noise = (int8_t)nla_get_u8(si[NL80211_SURVEY_INFO_NOISE]);
++        if (nla_get_u64(si[NL80211_SURVEY_INFO_TIME_BUSY]))
++            info->busy_time = nla_get_u64(si[NL80211_SURVEY_INFO_TIME_BUSY]);
++        if (nla_get_u64(si[NL80211_SURVEY_INFO_TIME]))
++            info->active_time = nla_get_u64(si[NL80211_SURVEY_INFO_TIME]);
++    }
++
++    return 0;
++}
+ 
+-	static struct nla_policy sp[NL80211_SURVEY_INFO_MAX + 1] = {
+-		[NL80211_SURVEY_INFO_FREQUENCY] = { .type = NLA_U32 },
+-		[NL80211_SURVEY_INFO_NOISE]     = { .type = NLA_U8  },
+-	};
++static void nl80211_fill_noise(const char *ifname, struct iwinfo_survey_entry *info)
++{
++    memset(info, 0, sizeof(*info));
+ 
+-	if (!tb[NL80211_ATTR_SURVEY_INFO])
+-		return NL_SKIP;
++    nl80211_request(ifname, NL80211_CMD_GET_SURVEY, NLM_F_DUMP,
++                    nl80211_fill_noise_cb, info);
++}
+ 
+-	if (nla_parse_nested(si, NL80211_SURVEY_INFO_MAX,
+-	                     tb[NL80211_ATTR_SURVEY_INFO], sp))
+-		return NL_SKIP;
++static int nl80211_get_noise(const char *ifname, int *buf)
++{
++    struct iwinfo_survey_entry info;
+ 
+-	if (!si[NL80211_SURVEY_INFO_NOISE])
+-		return NL_SKIP;
++    nl80211_fill_noise(ifname, &info);
+ 
+-	if (!*noise || si[NL80211_SURVEY_INFO_IN_USE])
+-		*noise = (int8_t)nla_get_u8(si[NL80211_SURVEY_INFO_NOISE]);
++    if (info.noise)
++    {
++        *buf = (int8_t)info.noise;
++        return 0;
++    }
+ 
+-	return NL_SKIP;
++    return -1;
+ }
+ 
+-
+-static int nl80211_get_noise(const char *ifname, int *buf)
++static int nl80211_get_utilization(const char *ifname, int16_t *buf)
+ {
+-	int8_t noise = 0;
++    struct iwinfo_survey_entry info;
+ 
+-	if (nl80211_request(ifname, NL80211_CMD_GET_SURVEY, NLM_F_DUMP,
+-	                    nl80211_get_noise_cb, &noise))
+-		goto out;
++    nl80211_fill_noise(ifname, &info);
+ 
+-	*buf = noise;
+-	return 0;
++    if (info.active_time && info.busy_time)
++    {
++        *buf = (info.busy_time * 1000) / info.active_time;
++        return 0;
++    }
+ 
+-out:
+-	*buf = 0;
+-	return -1;
++    return -1;
+ }
+ 
+ static int nl80211_get_quality(const char *ifname, int *buf)
+@@ -3146,6 +3172,7 @@ const struct iwinfo_ops nl80211_ops = {
+ 	.bitrate          = nl80211_get_bitrate,
+ 	.signal           = nl80211_get_signal,
+ 	.noise            = nl80211_get_noise,
++    .utilization      = nl80211_get_utilization,
+ 	.quality          = nl80211_get_quality,
+ 	.quality_max      = nl80211_get_quality_max,
+ 	.mbssid_support   = nl80211_get_mbssid_support,

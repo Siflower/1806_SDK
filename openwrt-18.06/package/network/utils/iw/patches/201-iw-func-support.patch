@@ -1,0 +1,55 @@
+Index: iw-4.14/interface.c
+===================================================================
+--- iw-4.14.orig/interface.c
++++ iw-4.14/interface.c
+@@ -373,6 +373,12 @@ static int print_iface_handler(struct nl
+ 	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+ 	unsigned int *wiphy = arg;
+ 	const char *indent = "";
++    struct nlattr *si[NL80211_SURVEY_INFO_MAX + 1];
++    static struct nla_policy sp[NL80211_SURVEY_INFO_MAX + 1] = {
++        [NL80211_SURVEY_INFO_NOISE]     = { .type = NLA_U32  },
++        [NL80211_SURVEY_INFO_TIME] = { .type = NLA_U64   },
++        [NL80211_SURVEY_INFO_TIME_BUSY] = { .type = NLA_U64   },
++    };
+ 
+ 	nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+ 		  genlmsg_attrlen(gnlh, 0), NULL);
+@@ -441,6 +447,37 @@ static int print_iface_handler(struct nl
+ 		       indent, txp / 100, txp % 100);
+ 	}
+ 
++    if (tb_msg[NL80211_STA_INFO_TX_BITRATE]) {
++        uint16_t bitrate;
++        bitrate = nla_get_u16(tb_msg[NL80211_STA_INFO_TX_BITRATE]);
++
++        printf("%s\tbitrate %d.%d MBit/s\n", indent, bitrate/10, bitrate % 10);
++    }
++
++    if (!tb_msg[NL80211_ATTR_SURVEY_INFO])
++        return 0;
++    if (nla_parse_nested(si, NL80211_SURVEY_INFO_MAX,
++                tb_msg[NL80211_ATTR_SURVEY_INFO], sp))
++        return 0;
++    if (!si[NL80211_SURVEY_INFO_TIME] || !si[NL80211_SURVEY_INFO_TIME_BUSY])
++        return 0;
++
++    if (si[NL80211_SURVEY_INFO_NOISE]){
++        uint32_t noise_dbm = nla_get_u32(si[NL80211_SURVEY_INFO_NOISE]);
++
++        printf("%s\tnoise %d dbm\n", indent, noise_dbm);
++    }
++
++    if (si[NL80211_SURVEY_INFO_TIME_BUSY]){
++        unsigned long long time = (unsigned long long)nla_get_u64(si[NL80211_SURVEY_INFO_TIME]);
++        unsigned long long time_busy = (unsigned long long)nla_get_u64(si[NL80211_SURVEY_INFO_TIME_BUSY]);
++        uint64_t utilization = 0;
++
++        if (time != 0)
++            utilization = (time_busy * 1000) / time;
++        printf("%s\tchannel utilization %llu.%llu%%\n", indent, utilization / 10, utilization % 10);
++    }
++
+ 	return NL_SKIP;
+ }
+ 
