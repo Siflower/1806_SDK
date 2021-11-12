@@ -24,12 +24,7 @@ endef
 
 define KernelPackage/sf_eswitch/config
 	if PACKAGE_kmod-sf_eswitch
-		config SFAX8_GENL
-			bool "Generic netlink support"
-			depends on PACKAGE_kmod-sf_netlink
-			default "n"
-
-		config ESWITCH_LIGHT
+		config SFAX8_ESWITCH_LIGHT
 			bool "use light eswitch"
 			default "n"
 	endif
@@ -48,8 +43,7 @@ ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
 NOSTDINC_FLAGS += -DCONFIG_SF19A28_FULLMASK
 endif
 
-ifdef CONFIG_SFAX8_GENL
-EXTRA_KCONFIG += CONFIG_SFAX8_GENL=y
+ifdef CONFIG_PACKAGE_kmod-sf_netlink
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_GENL
 endif
 

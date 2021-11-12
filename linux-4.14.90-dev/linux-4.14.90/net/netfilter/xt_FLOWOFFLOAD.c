@@ -203,6 +203,9 @@ xt_flowoffload_skip(struct sk_buff *skb, int family)
 		  return true;
 	}
 
+	if (family == NFPROTO_IPV6) {
+		  return true;
+	}
 	return false;
 }
 
