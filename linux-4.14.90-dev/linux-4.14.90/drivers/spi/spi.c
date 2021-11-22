@@ -1016,11 +1016,9 @@ static int spi_transfer_one_message(struct spi_controller *ctlr,
 	bool keep_cs = false;
 	int ret = 0;
 	unsigned long long ms = 1;
-	int tries = 5;
 	struct spi_statistics *statm = &ctlr->statistics;
 	struct spi_statistics *stats = &msg->spi->statistics;
 
-retry:
 	spi_set_cs(msg->spi, true);
 
 	SPI_STATISTICS_INCREMENT_FIELD(statm, messages);
@@ -1050,7 +1048,7 @@ retry:
 				ret = 0;
 				ms = 8LL * 1000LL * xfer->len;
 				do_div(ms, xfer->speed_hz);
-				ms += ms + 200; /* some tolerance */
+				ms += ms + 1000; /* some tolerance */
 
 				if (ms > UINT_MAX)
 					ms = UINT_MAX;
@@ -1115,13 +1113,8 @@ out:
 	 * message for a max of 5 times. This is OK for nor-flash
 	 * writes because the data is exactly the same.
 	 */
-	if (msg->status && ctlr->handle_err && tries) {
-		tries--;
-		msg->actual_length = 0;
-		msg->status = -EINPROGRESS;
-		ms = 1;
+	if (msg->status && ctlr->handle_err) {
 		ctlr->handle_err(ctlr, msg);
-		goto retry;
 	}
 
 	spi_res_release(ctlr, msg);
