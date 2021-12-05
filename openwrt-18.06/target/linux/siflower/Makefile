@@ -21,4 +21,6 @@ define Target/Description
 	Build firmware images for Siflower based boards.
 endef
 
+DEFAULT_PACKAGES += kmod-fuse
+	
 $(eval $(call BuildTarget))
