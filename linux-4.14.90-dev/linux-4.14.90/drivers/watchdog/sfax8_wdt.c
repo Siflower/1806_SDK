@@ -36,6 +36,9 @@
 #include <linux/watchdog.h>
 #include <sf19a28.h>
 
+static DEFINE_PER_CPU(struct timer_list, sfax8_wdt_timer);
+atomic_t g_last_jiffies[4];
+
 #define WDOG_CONTROL_REG_OFFSET		    0x00
 #define WDOG_CONTROL_REG_WDT_EN_MASK	    0x01
 #define WDOG_TIMEOUT_RANGE_REG_OFFSET	    0x04
@@ -62,7 +65,6 @@ struct sfax8_wdt {
 	void __iomem		*regs;
 	void __iomem		*sys_event;
 	struct clk		*clk;
-	struct timer_list	timer;
 	unsigned long		rate;
 	struct notifier_block	restart_handler;
 	struct watchdog_device	wdd;
@@ -117,18 +119,60 @@ static void sfax8_wdt_clk_gate(int on)
 
 }
 
+static void sfax8_wdt_ping_cpu(void * iwdd){
+	struct watchdog_device *wdd = (struct watchdog_device*) iwdd;
+	struct timer_list *t = this_cpu_ptr(&sfax8_wdt_timer);
+	int cpu = smp_processor_id();
+
+	unsigned char feed =1;
+	unsigned char cpu_index = 0;
+	struct sfax8_wdt *sfax8_wdt = to_sfax8_wdt(wdd);
+
+	atomic_set(&(g_last_jiffies[cpu]),jiffies);
+
+	if (cpu == 0) {
+		for (cpu_index = 0; cpu_index < 4; cpu_index++) {
+			if (jiffies - atomic_read(&(g_last_jiffies[cpu_index])) > (wdd->timeout*HZ*2/3)) {
+				feed = 0;
+				printk("[wdt_error] cpu:%d not feed wdt\n", cpu_index);
+			}
+		}
+		if (feed) {
+			writel(WDOG_COUNTER_RESTART_KICK_VALUE, sfax8_wdt->regs +
+			       WDOG_COUNTER_RESTART_REG_OFFSET);
+		}
+	}
+
+	mod_timer(t, jiffies + (wdd->timeout * HZ - HZ/2 )/ 2);
+
+	// printk("[wdt_info]  cpu%d set jiffies %08x now %08x\n", cpu,atomic_read(&(g_last_jiffies[cpu])), jiffies);
+}
+
 static int sfax8_wdt_ping(struct watchdog_device *wdd)
 {
 	struct sfax8_wdt *sfax8_wdt = to_sfax8_wdt(wdd);
-
-	writel(WDOG_COUNTER_RESTART_KICK_VALUE, sfax8_wdt->regs +
-	       WDOG_COUNTER_RESTART_REG_OFFSET);
+	unsigned char  feed = 1;
+	unsigned char  cpu_index = 0;
 
 	/*
 	 *  Modify timer here or we won't know when to ping after close
 	 *  /dev/watchdog
 	 */
-	mod_timer(&sfax8_wdt->timer, jiffies + wdd->timeout * HZ / 2);
+	on_each_cpu(sfax8_wdt_ping_cpu,wdd,1);
+
+	for(cpu_index = 0;cpu_index < 4;cpu_index++){
+		if((jiffies - atomic_read(&(g_last_jiffies[cpu_index]))) > (wdd->timeout * HZ)) {
+			feed = 0;
+			printk("[wdt_error]  cpu%d not feed wdt\n",cpu_index);
+		}
+	}
+	if(feed){
+		writel(WDOG_COUNTER_RESTART_KICK_VALUE, sfax8_wdt->regs +
+				  WDOG_COUNTER_RESTART_REG_OFFSET);
+	  // printk("[wdt_info]  feed here\n");
+	}
+
+	// printk("[wdt_info]  start timer\n");
 	return 0;
 }
 
@@ -141,8 +185,8 @@ static void sfax8_wdt_timer_ping(unsigned long arg)
 	 * every wdog->timeout / 2 seconds to prevent reboot
 	 */
 	if (test_bit(WDOG_ACTIVE, &wdd->status) &&
-			(!test_bit(WDOG_DEV_OPEN, &wdd->status)))
-		sfax8_wdt_ping(wdd);
+	    (!test_bit(WDOG_DEV_OPEN, &wdd->status)))
+		sfax8_wdt_ping_cpu(wdd);
 }
 
 static int sfax8_wdt_set_timeout(struct watchdog_device *wdd, unsigned int top_s)
@@ -182,6 +226,11 @@ static int sfax8_wdt_start(struct watchdog_device *wdd)
 	struct sfax8_wdt *sfax8_wdt = to_sfax8_wdt(wdd);
 
 	sfax8_wdt_clk_gate(1);
+
+	atomic_set(&(g_last_jiffies[0]),jiffies);
+	atomic_set(&(g_last_jiffies[1]),jiffies);
+	atomic_set(&(g_last_jiffies[2]),jiffies);
+	atomic_set(&(g_last_jiffies[3]),jiffies);
 
 	sfax8_wdt_set_timeout(wdd, wdd->timeout);
 
@@ -278,6 +327,17 @@ static int sfax8_wdt_resume(struct device *dev)
 
 static SIMPLE_DEV_PM_OPS(sfax8_wdt_pm_ops, sfax8_wdt_suspend, sfax8_wdt_resume);
 
+
+static void sfax8_init_timer(void *wdd){
+	struct timer_list *t = this_cpu_ptr(&sfax8_wdt_timer);
+	setup_timer(t, sfax8_wdt_timer_ping, (unsigned long)wdd);
+}
+
+static void sfax8_deinit_timer(void *wdd){
+	struct timer_list *t = this_cpu_ptr(&sfax8_wdt_timer);
+	del_timer_sync(t);
+}
+
 static int sfax8_wdt_drv_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -333,7 +393,7 @@ static int sfax8_wdt_drv_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, sfax8_wdt);
 
-	setup_timer(&sfax8_wdt->timer, sfax8_wdt_timer_ping, (unsigned long)wdd);
+	on_each_cpu(sfax8_init_timer, wdd, 1);
 	/* Always start watchdog */
 	sfax8_wdt_start(wdd);
 	set_bit(WDOG_ACTIVE, &wdd->status);
@@ -364,7 +424,7 @@ static int sfax8_wdt_drv_remove(struct platform_device *pdev)
 	sfax8_wdt_stop(&sfax8_wdt->wdd);
 	iounmap(sfax8_wdt->sys_event);
 	clk_disable_unprepare(sfax8_wdt->clk);
-	del_timer_sync(&sfax8_wdt->timer);
+	on_each_cpu(sfax8_deinit_timer, NULL, 1);
 
 	if(hold_reset(SF_WDT_SOFT_RESET))
 		return -EFAULT;
