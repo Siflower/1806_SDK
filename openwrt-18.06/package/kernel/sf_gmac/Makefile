@@ -59,6 +59,7 @@ define KernelPackage/sf_gmac/config
 			bool "enable  gmac rx pool limit, allock skb fail when pool full"
 			default "n"
 	endif
+
 endef
 
 EXTRA_KCONFIG:= \
@@ -80,6 +81,11 @@ endif
 
 ifdef CONFIG_SFAX8_RGMII_GMAC
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_RGMII_GMAC
+endif
+
+ifdef CONFIG_SFAX8_HW_RESET
+EXTRA_KCONFIG += CONFIG_SFAX8_HW_RESET=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_HW_RESET
 endif
 
 ifdef CONFIG_PACKAGE_kmod-sf_hnat
@@ -108,10 +114,10 @@ EXTRA_KCONFIG += CONFIG_SFAX8_GMAC_DELAY_AUTOCALI=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_GMAC_DELAY_AUTOCALI
 endif
 
-ifdef CONFIG_SFAX8_GMAC_TCLKCHOOSE
+#ifdef CONFIG_SFAX8_GMAC_TCLKCHOOSE
 EXTRA_KCONFIG += CONFIG_SFAX8_GMAC_TCLKCHOOSE=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_GMAC_TCLKCHOOSE
-endif
+#endif
 
 ifdef CONFIG_SFAX8_GMAC_RX_BUFFER_POOL
 EXTRA_KCONFIG += CONFIG_SFAX8_GMAC_RX_BUFFER_POOL=y
@@ -150,7 +156,6 @@ endif
 ifneq ($(findstring NF,$(PROFILE)),)
 SFAX8_KO_NAME="nf_sgmac.ko"
 endif
-
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)

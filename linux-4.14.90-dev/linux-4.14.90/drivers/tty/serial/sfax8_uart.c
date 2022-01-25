@@ -2171,6 +2171,10 @@ static int sfax8_probe(struct platform_device *dev)
 	void __iomem *base;
 	int i, ret;
 	struct resource *res;
+#ifdef CONFIG_SMP
+	struct cpumask serial_irq_affi;
+#define SERIAL_CPU_IRQ	1
+#endif
 
 	for (i = 0; i < ARRAY_SIZE(sfax8_ports); i++)
 		if (sfax8_ports[i] == NULL)
@@ -2220,6 +2224,18 @@ static int sfax8_probe(struct platform_device *dev)
 	uap->port.line = i;
 	uap->port.uartclk = clk_get_rate(uap->clk);
 	sfax8_dma_probe(&dev->dev, uap);
+
+#ifdef CONFIG_SMP
+	memset(&serial_irq_affi, 0, sizeof(struct cpumask));
+	cpumask_set_cpu(SERIAL_CPU_IRQ, &serial_irq_affi);
+
+	ret = irq_set_affinity(uap->port.irq, &serial_irq_affi);
+	if(ret){
+		printk("can not set the affinity for irq : %d\n", uap->port.irq);
+		return ret;
+	}
+#endif
+
 
 	/* Ensure interrupts from this UART are masked and cleared */
 	writew(0, uap->port.membase + UART_IMSC);

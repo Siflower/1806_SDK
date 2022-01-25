@@ -11,8 +11,8 @@ define KernelPackage/sf_smac
   TITLE:=SIFLOWER sf16a18 wireless driver
   DEPENDS:=+kmod-sfax8-factory-read +kmod-cfg80211 +@DRIVER_11N_SUPPORT +@DRIVER_11AC_SUPPORT
   FILES:= \
-	$(PKG_BUILD_DIR)/sf16a18_rf.ko \
-	$(PKG_BUILD_DIR)/startcore.ko
+	  	$(PKG_BUILD_DIR)/sf16a18_rf.ko \
+		$(PKG_BUILD_DIR)/startcore.ko
 ifdef CONFIG_PACKAGE_SFUMAC_FMAC
 ifndef CONFIG_FLASH_OPTIMIZE
 	FILES += $(PKG_BUILD_DIR)/sf16a18_fmac.ko
@@ -55,6 +55,14 @@ define KernelPackage/sf_smac/config
 
 		config PACKAGE_SFUMAC_HB_EXT_PA_SUPPORT
 			bool "enable support hb ext pa detect"
+			default "y"
+
+		config SFFMAC_ENABLE_TOKEN
+			bool "enable token for fmac"
+			default "n"
+
+		config SFFMAC_ENABLE_RX_MEM_POOL
+			bool "enable rx memery pool for fmac"
 			default "y"
 
 		menu "softmac/fullmac Configuration"
@@ -156,6 +164,16 @@ ifdef CONFIG_PACKAGE_SFUMAC_HB_EXT_PA_SUPPORT
 NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_HB_EXT_PA_ENABLE
 endif
 
+ifdef CONFIG_SFFMAC_ENABLE_TOKEN
+EXTRA_KCONFIG += CONFIG_SFFMAC_ENABLE_TOKEN=y
+NOSTDINC_FLAGS += -DCONFIG_SFFMAC_ENABLE_TOKEN
+endif
+
+ifdef CONFIG_SFFMAC_ENABLE_RX_MEM_POOL
+EXTRA_KCONFIG += CONFIG_SFFMAC_ENABLE_RX_MEM_POOL=y
+NOSTDINC_FLAGS += -DCONFIG_SFFMAC_ENABLE_RX_MEM_POOL
+endif
+
 ifdef CONFIG_PACKAGE_SFUMAC_WIFI_ATE_TOOLS
 EXTRA_KCONFIG += CONFIG_SF16A18_WIFI_ATE_TOOLS=y
 NOSTDINC_FLAGS += -DCONFIG_SF16A18_WIFI_ATE_TOOLS
@@ -223,7 +241,7 @@ EXTRA_KCONFIG += CONFIG_SF16A18_WIFI_LED=y
 EXTRA_KCONFIG += CONFIG_SF19A28_WIFI_LED=y
 endif
 #EXTRA_KCONFIG += CONFIG_SIWIFI_IGMP=y
-CONFIG_SIWIFI_TEMPERATURE_CONTROL=y
+#CONFIG_SIWIFI_TEMPERATURE_CONTROL=y
 ifdef CONFIG_SIWIFI_TEMPERATURE_CONTROL
 EXTRA_KCONFIG += CONFIG_SIWIFI_TEMPERATURE_CONTROL=y
 endif
@@ -269,9 +287,6 @@ ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_hb_txpower_table_expa.ini $(1)/lib/firmware
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_lb_txpower_table_expa.ini $(1)/lib/firmware
 	cp $(PKG_BUILD_DIR)/config/cali_table/default_txpower_calibrate_table.bin $(1)/lib/firmware
-ifdef CONFIG_SIWIFI_TEMPERATURE_CONTROL
-	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/temperature_control.ini $(1)/lib/firmware
-endif
 
 #ifndef CONFIG_TARGET_siflower_sf19a28_fullmask_SF19A28-REP
 	cp $(PKG_BUILD_DIR)/config/cali_table/default_txpower_calibrate_expa_table.bin $(1)/lib/firmware

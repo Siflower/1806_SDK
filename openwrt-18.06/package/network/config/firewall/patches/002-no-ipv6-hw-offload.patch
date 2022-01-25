@@ -1,0 +1,11 @@
+--- a/defaults.c
++++ b/defaults.c
+@@ -272,7 +272,7 @@ fw3_print_default_head_rules(struct fw3_
+ 			fw3_ipt_rule_comment(r, "Traffic offloading");
+ 			fw3_ipt_rule_extra(r, "-m conntrack --ctstate NEW,RELATED,ESTABLISHED");
+ 			fw3_ipt_rule_target(r, "FLOWOFFLOAD");
+-			if (defs->flow_offloading_hw)
++			if (handle->family == FW3_FAMILY_V4 && defs->flow_offloading_hw)
+ 				fw3_ipt_rule_addarg(r, false, "--hw", NULL);
+ 			fw3_ipt_rule_append(r, "FORWARD");
+ 		}

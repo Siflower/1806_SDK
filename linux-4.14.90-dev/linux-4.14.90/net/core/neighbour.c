@@ -30,6 +30,7 @@
 #include <linux/times.h>
 #include <net/net_namespace.h>
 #include <net/neighbour.h>
+#include <net/ip.h>
 #include <net/dst.h>
 #include <net/sock.h>
 #include <net/netevent.h>
@@ -997,6 +998,57 @@ out:
 	neigh_release(neigh);
 }
 
+static int sf_check_optlen_valid(struct sk_buff *skb)
+{
+	struct ip_options *sopt = &IPCB(skb)->opt;
+	struct iphdr *iph = ip_hdr(skb);
+	unsigned char *sptr = skb_network_header(skb);
+	int     optlen = 0;
+
+	if (skb->pkt_type != PACKET_HOST)
+		return 0;
+
+	if (iph->frag_off & htons(IP_OFFSET))
+		return 0;
+
+	if (sopt->optlen == 0)
+		return 0;
+
+	if (sopt->rr) {
+		optlen = sptr[sopt->rr+1];
+		if (optlen > 40) {
+			printk(KERN_ERR "###ERROE<%s>[%d]: optlen was too large:%d\n", __func__, __LINE__, optlen);
+			return -EINVAL;
+		}
+	}
+
+	if (sopt->ts) {
+		optlen = sptr[sopt->ts+1];
+		if (optlen > 40) {
+			printk(KERN_ERR "###ERROE<%s>[%d]: optlen was too large:%d\n", __func__, __LINE__, optlen);
+			return -EINVAL;
+		}
+	}
+
+	if (sopt->srr) {
+		optlen = sptr[sopt->srr+1];
+		if (optlen > 36) {
+			printk(KERN_ERR "###ERROE<%s>[%d]: optlen was too large:%d\n", __func__, __LINE__, optlen);
+			return -EINVAL;
+		}
+	}
+
+	if (sopt->cipso) {
+		optlen  = sptr[sopt->cipso+1];
+		if (optlen > 40) {
+			printk(KERN_ERR "###ERROE<%s>[%d]: optlen was too large:%d\n", __func__, __LINE__, optlen);
+			return -EINVAL;
+		}
+	}
+
+	return 0;
+}
+
 int __neigh_event_send(struct neighbour *neigh, struct sk_buff *skb)
 {
 	int rc;
@@ -1052,6 +1104,9 @@ int __neigh_event_send(struct neighbour *neigh, struct sk_buff *skb)
 				kfree_skb(buff);
 				NEIGH_CACHE_STAT_INC(neigh->tbl, unres_discards);
 			}
+
+			if (sf_check_optlen_valid(skb) != 0)
+				goto out_dead;
 			skb_dst_force(skb);
 			__skb_queue_tail(&neigh->arp_queue, skb);
 			neigh->arp_queue_len_bytes += skb->truesize;
@@ -3288,4 +3343,3 @@ static int __init neigh_init(void)
 }
 
 subsys_initcall(neigh_init);
-
