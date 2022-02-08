@@ -203,9 +203,6 @@ xt_flowoffload_skip(struct sk_buff *skb, int family)
 		  return true;
 	}
 
-	if (family == NFPROTO_IPV6) {
-		  return true;
-	}
 	return false;
 }
 
@@ -553,6 +550,40 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 		if (ntohs(udph->source) == 0x43 || ntohs(udph->source) == 0x44 || ntohs(udph->dest) == 0x35){
 			return XT_CONTINUE;
 		}
+//RM#10724 If UDP checksum is not zero,hardware acceleration will be entered.Open 5001 port for iperf.
+#if 1
+		if (ntohs(udph->source) == 5001 || ntohs(udph->dest) == 5001){
+			//printk("============bypass port is 5001 sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
+			break;
+		}
+		if(ct->status & IPS_SRC_NAT){
+			if((ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.udp.port == udph->source) && (udph->check != 0)){
+				//printk("============bypass ORIGINAL client snat sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
+				ct->udp_checksum_stat |= 0x1;
+			}
+			if((ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.udp.port == udph->source) && (udph->check != 0)){
+				//printk("============bypass ORIGINAL server dnat sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
+				ct->udp_checksum_stat |= 0x2;
+			}
+		}else if(ct->status & IPS_DST_NAT){
+			if((ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u.udp.port == udph->source) && (udph->check != 0)){
+					//printk("============bypass REPLY client snat sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
+					ct->udp_checksum_stat |= 0x1;
+			}
+			if((ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.udp.port == udph->source) && (udph->check != 0)){
+				//printk("============bypass REPLY server dnat sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
+				ct->udp_checksum_stat |= 0x2;
+			}
+		}else{
+			return XT_CONTINUE;
+		}
+		if (ct->udp_checksum_stat != 0x3){
+			//printk("============bypass checksum!=3  sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
+			return XT_CONTINUE;
+		}else{
+			//printk("============bypass checksum=3  sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
+		}
+#endif
 		break;
 	default:
 		return XT_CONTINUE;

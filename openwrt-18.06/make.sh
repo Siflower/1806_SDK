@@ -1,8 +1,19 @@
 #!/bin/bash
 #$1 should be p10 or p20
 
-board=ac28
+board=a28_evb
 imgtype=rel
+
+#$1 p10 p10m p20 86v clean default p10m
+if [ -n "$1" ]; then
+	board=$1
+fi
+
+#$2 shoule be auto/flash/rel  default rel
+if [ -n "$2" ]; then
+	imgtype=$2
+fi
+
 
 git branch > /dev/null 2>&1
 if [ ! $? -eq 0 ] ; then
@@ -21,14 +32,32 @@ else
 	branch=`git branch -vv |grep "*" | awk -F "[][]" '{print $2}'| awk -F "[/:]" '{print $2}'`
 	echo "branch is $branch"
 
-	tag=`git tag  |  grep "${branch}-" | sort -V | awk 'END{print}'`
+	# handle release branch case release branch name is not release!!!
+	is_rep_release=$(echo $branch | grep "release.rep")
+	isrelease=$(echo $branch | grep "release")
+
+	if [ "$is_rep_release" != "" ];then
+		branch="release.rep"
+	elif [ "$isrelease" != "" ];then
+		branch="release"
+	fi
+# need to use tag for rep
+	is_rep_board=$(echo $board | grep "rep")
+
+	if [ "$is_rep_board" != "" ];then
+		tag=`git tag  |  grep "${branch}.rep-" | sort -V | awk 'END{print}'`
+	else
+# ${branch}-1 is specailly for release-1.0.0 branch
+		tag=`git tag  |  grep "${branch}-1" | sort -V | awk 'END{print}'`
+	fi
+
+
 	if [ ! -n "$tag" ] ;then
 		#compatible with old version
-		tag=`git tag  |  grep -v "v" | grep -v "rep" | sort -V | awk 'END{print}'`
+		tag=`git tag  |  grep -v "-"  | sort -V | awk 'END{print}'`
 		version=$tag
 	else
-		# version=`printf "$tag" | awk -F "[-]" '{print $2}'`
-		 version=`echo ${tag##*-}`
+		version=`printf "$tag" | awk -F "[-]" '{print $2}'`
 	fi
 	echo "version is $version"
 	tag_commit=`git show $tag|grep ^commit | awk '{print substr($2,0,7)}'`
@@ -36,40 +65,66 @@ else
 	last_commit=`git rev-parse --short HEAD`
 	echo "last commit $last_commit"
 
-	if [ $tag_commit != $last_commit ]; then
+	if [ $tag_commit != ${last_commit:0:7} ]; then
 		commit_suffix=$last_commit
 	fi
 fi
 
 
-#$1 p10 p10m p20 86v clean default p10m
-if [ -n "$1" ]; then
-	board=$1
-fi
-
-#$2 shoule be auto/flash/rel  default rel
-if [ -n "$2" ]; then
-	imgtype=$2
-fi
-
 case ${board} in
+	p20)
+		target_board=target/linux/siflower/sf16a18_p20_fullmask_def.config
+		;;
+	86v)
+		target_board=target/linux/siflower/sf16a18_86v_fullmask_def.config
+		;;
+	p10h)
+		target_board=target/linux/siflower/sf16a18_p10h_fullmask_def.config
+		;;
+	tool)
+		target_board=target/linux/siflower/sf16a18_p10h_fullmask_def.config_tool
+		;;
+	ac20)
+		target_board=target/linux/siflower/sf16a18_ac20_fullmask_def.config
+		;;
+	ac20_sjby)
+		target_board=target/linux/siflower/sf16a18_ac20_fullmask_gmac_sjby.config
+		;;
 	evb_v5)
 		target_board=target/linux/siflower/sf16a18_evb_v5_fullmask_def.config
+		;;
+	fpga)
+		target_board=target/linux/siflower/sf19a28_fpga_fullmask_def.config
+		;;
+	ac28)
+		target_board=target/linux/siflower/sf19a28_ac28_mpw1_def.config
+		;;
+	evb)
+		target_board=target/linux/siflower/sf19a28_evb_mpw1_def.config
+		;;
+	hwa)
+		target_board=target/linux/siflower/sf19a28_hwa_mpw1_def.config
+		;;
+	ac22)
+		target_board=target/linux/siflower/sf19a28_ac22_mpw1_def.config
 		;;
 	a28_evb)
 		target_board=target/linux/siflower/sf19a28_evb_fullmask_def.config
 		;;
-	a28_ac28)
-		target_board=target/linux/siflower/sf19a28_ac28_fullmask_def.config
-		;;
 	a28_nf)
 		target_board=target/linux/siflower/sf19a28_nf_fullmask_def.config
 		;;
-	a28_evb_luci)
-		target_board=target/linux/siflower/sf19a28_evb_luci_fullmask_def.config
+	a28_ac28)
+		target_board=target/linux/siflower/sf19a28_ac28_fullmask_def.config
 		;;
-	a28_ac28_luci)
-		target_board=target/linux/siflower/sf19a28_ac28_luci_fullmask_def.config
+	a28_ac28s)
+		target_board=target/linux/siflower/sf19a28_ac28s_fullmask_def.config
+		;;
+	a28_hwa)
+		target_board=target/linux/siflower/sf19a28_a28_hwa_fullmask_def.config
+		;;
+	a28_rep)
+		target_board=target/linux/siflower/sf19a28_rep_fullmask_def.config
 		;;
 	clean)
 		echo "clean build enviroment"
@@ -155,6 +210,7 @@ case ${imgtype} in
 esac
 
 make package/base-files/clean
+make package/network/services/hostapd/clean
 make -j32 V=s
 
 if [ -f $target_bin ]; then

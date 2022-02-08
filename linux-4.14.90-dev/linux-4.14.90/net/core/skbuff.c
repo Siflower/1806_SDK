@@ -4812,6 +4812,10 @@ void kfree_skb_partial(struct sk_buff *skb, bool head_stolen)
 {
 	if (head_stolen) {
 		skb_release_head_state(skb);
+		//XC:9754 if skb from rx buffer pool, remove it from pool
+		if (vendor_priv_pool_check_magic(skb))
+		  skb->vendor_free(skb, 1);
+
 		kmem_cache_free(skbuff_head_cache, skb);
 	} else {
 		__kfree_skb(skb);

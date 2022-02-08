@@ -1,0 +1,64 @@
+Index: hostapd-2019-08-08-ca8c2bd2/hostapd/config_file.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/hostapd/config_file.c
++++ hostapd-2019-08-08-ca8c2bd2/hostapd/config_file.c
+@@ -3237,6 +3237,8 @@ static int hostapd_config_fill(struct ho
+ 			return 1;
+ 		}
+ 		conf->acs_num_scans = val;
++    } else if (os_strcmp(buf, "acs_noradar") == 0) {
++        conf->acs_noradar = atoi(pos);
+ 	} else if (os_strcmp(buf, "acs_chan_bias") == 0) {
+ 		if (hostapd_config_parse_acs_chan_bias(conf, pos)) {
+ 			wpa_printf(MSG_ERROR, "Line %d: invalid acs_chan_bias",
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/acs.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/acs.c
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/acs.c
+@@ -527,7 +527,7 @@ static struct hostapd_channel_data *acs_
+ 	return NULL;
+ }
+ 
+-static int acs_radar_chan(const struct hostapd_channel_data *chan)
++static int acs_radar_chan(const struct hostapd_channel_data *chan, struct hostapd_iface *iface)
+ {
+ 	const int allowed[] = { 52, 56, 60, 64 };
+ 	unsigned int i;
+@@ -645,8 +645,11 @@ acs_find_ideal_chan(struct hostapd_iface
+ 		if (!chan_pri_allowed(chan))
+ 			continue;
+ 
+-		if (acs_radar_chan(chan))
+-			continue;
++        if (iface->conf->acs_noradar) {
++		    wpa_printf(MSG_INFO,"acs_noradar = %d means that the radar channels will be avoided under acs", iface->conf->acs_noradar);
++		    if (acs_radar_chan(chan, iface))
++			    continue;
++        }
+ 
+ 		if (!is_in_chanlist(iface, chan))
+ 			continue;
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ap_config.c
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.c
+@@ -245,6 +245,7 @@ struct hostapd_config * hostapd_config_d
+ #ifdef CONFIG_ACS
+ 	conf->acs_num_scans = 5;
+ 	conf->acs_chan_dynamic_select_enable = 0;
++    conf->acs_noradar = 0;
+ 	conf->acs_chan_dynamic_select_period = 8;
+ 	conf->switch_channel_even_have_sta_enable = 0;
+ 	conf->acs_chan_busy_per = 50;
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.h
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ap_config.h
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.h
+@@ -981,6 +981,7 @@ struct hostapd_config {
+ 	} *acs_chan_bias;
+ 	unsigned int num_acs_chan_bias;
+ 	int acs_chan_dynamic_select_enable;
++    int acs_noradar;
+ 	unsigned int acs_chan_dynamic_select_period;
+ 	int switch_channel_even_have_sta_enable;
+ 	unsigned int acs_chan_busy_per;

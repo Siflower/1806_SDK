@@ -4990,6 +4990,11 @@ static void napi_skb_free_stolen_head(struct sk_buff *skb)
 {
 	skb_dst_drop(skb);
 	secpath_reset(skb);
+
+	//XC:9754 if skb from rx buffer pool, remove it from pool
+    if (skb->head && skb->vendor_free)
+	  skb->vendor_free(skb, 1);
+
 	kmem_cache_free(skbuff_head_cache, skb);
 }
 

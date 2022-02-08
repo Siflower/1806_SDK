@@ -181,6 +181,7 @@ static void mips_machine_restart(char *command)
 	pr_info("MPW0 soft reboot workaround done!\n");
 #endif
 
+	dump_stack();
 	__raw_writel(SIFLOWER_SW_TRIG_RESET, (void *)SIFLOWER_SW_RESET);
 }
 

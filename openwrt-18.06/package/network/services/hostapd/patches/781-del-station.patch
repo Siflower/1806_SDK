@@ -1,0 +1,25 @@
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ieee802_11.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ieee802_11.c
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ieee802_11.c
+@@ -5263,7 +5263,10 @@ void ieee802_11_rx_from_unknown(struct h
+ 	if (sta &&
+ 	    ((sta->flags & WLAN_STA_ASSOC) ||
+ 	     ((sta->flags & WLAN_STA_ASSOC_REQ_OK) && wds))) {
+-		if (!hapd->conf->wds_sta)
++		if (!wds)
++            goto tag;
++
++        if (!hapd->conf->wds_sta)
+ 			return;
+ 
+ 		if ((sta->flags & (WLAN_STA_ASSOC | WLAN_STA_ASSOC_REQ_OK)) ==
+@@ -5292,7 +5295,7 @@ void ieee802_11_rx_from_unknown(struct h
+ 		}
+ 		return;
+ 	}
+-
++tag:
+ 	wpa_printf(MSG_DEBUG, "Data/PS-poll frame from not associated STA "
+ 		   MACSTR, MAC2STR(src));
+ 	if (is_multicast_ether_addr(src)) {

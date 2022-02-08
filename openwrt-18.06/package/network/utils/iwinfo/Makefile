@@ -82,6 +82,10 @@ TARGET_CFLAGS += \
 	-I$(STAGING_DIR)/usr/include \
 	-D_GNU_SOURCE
 
+ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
+TARGET_CFLAGS += -DCONFIG_TARGET_siflower_sf19a28_fullmask
+endif
+
 MAKE_FLAGS += \
 	FPIC="$(FPIC)" \
 	CFLAGS="$(TARGET_CFLAGS)" \
