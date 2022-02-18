@@ -1,0 +1,19 @@
+#
+# Siflower DDR infrastructure and drivers
+#
+
+menu "Siflower SFAX8 DDR Support"
+
+config SFAX8_DDR2
+	bool "Enable Siflower SFAX8 DDR2 drivers"
+	depends on MACH_SFAX8
+	help
+	  Enable Siflower DDR2 drivers.
+
+config SFAX8_DDR3
+	bool "Enable Siflower SFAX8 DDR3 drivers"
+	depends on MACH_SFAX8
+	help
+	  Enable Siflower DDR2 drivers.
+
+endmenu

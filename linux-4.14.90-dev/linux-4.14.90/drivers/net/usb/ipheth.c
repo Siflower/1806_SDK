@@ -70,7 +70,7 @@
 #define IPHETH_USBINTF_SUBCLASS 253
 #define IPHETH_USBINTF_PROTO    1
 
-#define IPHETH_BUF_SIZE         1516
+#define IPHETH_BUF_SIZE         1514
 #define IPHETH_IP_ALIGN		2	/* padding at front of URB */
 #define IPHETH_TX_TIMEOUT       (5 * HZ)
 
@@ -148,6 +148,8 @@ struct ipheth_device {
 	u8 bulk_in;
 	u8 bulk_out;
 	struct delayed_work carrier_work;
+	bool confirmed_pairing;
+	int tx_in_use;
 };
 
 static int ipheth_rx_submit(struct ipheth_device *dev, gfp_t mem_flags);
@@ -259,7 +261,7 @@ static void ipheth_rcvbulk_callback(struct urb *urb)
 
 	dev->net->stats.rx_packets++;
 	dev->net->stats.rx_bytes += len;
-
+	dev->confirmed_pairing = true;
 	netif_rx(skb);
 	ipheth_rx_submit(dev, GFP_ATOMIC);
 }
@@ -280,14 +282,26 @@ static void ipheth_sndbulk_callback(struct urb *urb)
 		dev_err(&dev->intf->dev, "%s: urb status: %d\n",
 		__func__, status);
 
-	netif_wake_queue(dev->net);
+	dev->tx_in_use = false;
+
+	if (status == 0)
+		netif_wake_queue(dev->net);
+	else
+		// on URB error, trigger immediate poll
+		schedule_delayed_work(&dev->carrier_work, 0);
 }
 
 static int ipheth_carrier_set(struct ipheth_device *dev)
 {
-	struct usb_device *udev = dev->udev;
+	struct usb_device *udev;
 	int retval;
 
+	if (!dev)
+		return 0;
+	if (!dev->confirmed_pairing)
+		return 0;
+
+	udev = dev->udev;
 	retval = usb_control_msg(udev,
 			usb_rcvctrlpipe(udev, IPHETH_CTRL_ENDP),
 			IPHETH_CMD_CARRIER_CHECK, /* request */
@@ -302,11 +316,14 @@ static int ipheth_carrier_set(struct ipheth_device *dev)
 		return retval;
 	}
 
-	if (dev->ctrl_buf[0] == IPHETH_CARRIER_ON)
+	if (dev->ctrl_buf[0] == IPHETH_CARRIER_ON) {
 		netif_carrier_on(dev->net);
-	else
+		if (dev->tx_urb->status != -EINPROGRESS && dev->tx_in_use == false)
+			netif_wake_queue(dev->net);
+	} else {
 		netif_carrier_off(dev->net);
-
+		netif_stop_queue(dev->net);
+	}
 	return 0;
 }
 
@@ -375,6 +392,8 @@ static int ipheth_open(struct net_device *net)
 	struct usb_device *udev = dev->udev;
 	int retval = 0;
 
+	dev->tx_in_use = false;
+
 	usb_set_interface(udev, IPHETH_INTFNUM, IPHETH_ALT_INTFNUM);
 
 	retval = ipheth_carrier_set(dev);
@@ -386,7 +405,6 @@ static int ipheth_open(struct net_device *net)
 		return retval;
 
 	schedule_delayed_work(&dev->carrier_work, IPHETH_CARRIER_CHECK_TIMEOUT);
-	netif_start_queue(net);
 	return retval;
 }
 
@@ -413,6 +431,14 @@ static int ipheth_tx(struct sk_buff *skb, struct net_device *net)
 		return NETDEV_TX_OK;
 	}
 
+	if (dev->tx_in_use) {
+		dev->net->stats.tx_dropped++;
+		dev_kfree_skb_any(skb);
+		return NETDEV_TX_OK;
+	}
+
+	dev->tx_in_use = true;
+
 	memcpy(dev->tx_buf, skb->data, skb->len);
 	if (skb->len < IPHETH_BUF_SIZE)
 		memset(dev->tx_buf + skb->len, 0, IPHETH_BUF_SIZE - skb->len);
@@ -424,17 +450,22 @@ static int ipheth_tx(struct sk_buff *skb, struct net_device *net)
 			  dev);
 	dev->tx_urb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
 
+	netif_stop_queue(net);
 	retval = usb_submit_urb(dev->tx_urb, GFP_ATOMIC);
 	if (retval) {
 		dev_err(&dev->intf->dev, "%s: usb_submit_urb: %d\n",
 			__func__, retval);
 		dev->net->stats.tx_errors++;
 		dev_kfree_skb_any(skb);
+		netif_wake_queue(net);
+		if (atomic_read(&dev->tx_urb->use_count) != 0) {
+			atomic_dec(&dev->tx_urb->use_count);
+		}
+		dev->tx_in_use = false;
 	} else {
 		dev->net->stats.tx_packets++;
 		dev->net->stats.tx_bytes += skb->len;
 		dev_consume_skb_any(skb);
-		netif_stop_queue(net);
 	}
 
 	return NETDEV_TX_OK;
@@ -489,7 +520,7 @@ static int ipheth_probe(struct usb_interface *intf,
 	dev->udev = udev;
 	dev->net = netdev;
 	dev->intf = intf;
-
+	dev->confirmed_pairing = false;
 	/* Set up endpoints */
 	hintf = usb_altnum_to_altsetting(intf, IPHETH_ALT_INTFNUM);
 	if (hintf == NULL) {
@@ -540,7 +571,9 @@ static int ipheth_probe(struct usb_interface *intf,
 		retval = -EIO;
 		goto err_register_netdev;
 	}
-
+	// carrier down and transmit queues stopped until packet from device
+	netif_carrier_off(netdev);
+	netif_tx_stop_all_queues(netdev);
 	dev_info(&intf->dev, "Apple iPhone USB Ethernet device attached\n");
 	return 0;
 

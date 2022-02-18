@@ -1,0 +1,21 @@
+#
+# pmu configuration.
+#
+choice
+prompt "Pmu types"
+default PMU_IP6103
+help
+	There are many kinds of pmu in sfax8 board, and  this
+	chioce help to select a used pmu.
+
+config PMU_IP6103
+	bool "pmu ip6103"
+	help
+		Say Y if the pmu type is IP6103, else say N.
+
+config PMU_RN5T567
+	bool "pmu rn5t567"
+	help
+		Say Y if the pmu type is rn5t567, else say N.
+
+endchoice

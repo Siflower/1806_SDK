@@ -1,0 +1,141 @@
+/dts-v1/;
+
+/memreserve/ 0x00000000 0x00001000;	/* Exception vectors */
+/memreserve/ 0x000f0000 0x00010000;	/* PIIX4 ISA memory */
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "sf,sfa18";
+
+	chosen {
+		stdout-path = &uart0;
+		tick-timer = &timer0;
+	};
+
+	aliases {
+		spi0 = &spi0;
+		i2c0 = &i2c0;
+	};
+
+	palmbus@b0000000 {
+		compatible = "simple-bus";
+		reg = <0xb0000000 0x10000000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0x0 0xb0000000 0xfffffff>;
+
+		u-boot,dm-pre-reloc;
+
+		gdma@1800000{
+			compatible = "gdma";
+			reg = <0x1800000 0x100>;
+		};
+
+		emmc@7600000{
+			compatible = "siflower,sfax8-mmc";
+
+			reg = <0x7600000 0x20000>;
+
+			clock-freq-min-max = <400000 5000000>;
+			freq = <150000000>;
+			fifo-depth = <0x200>;
+			bus-width = <4>;
+			read_delayline = <15>;
+			write_delayline = <15>;
+			fifo-mode;
+			non-removalbe;
+		};
+
+		sdio@7800000{
+			compatible = "siflower,sfax8-mmc";
+
+			reg = <0x7800000 0x20000>;
+			
+			clock-freq-min-max = <400000 5000000>;
+			freq = <150000000>;
+			fifo-depth = <0x200>;
+			bus-width = <4>;
+			read_delayline = <15>;
+			write_delayline = <15>;
+			fifo-mode;
+			non-removalbe;
+			u-boot,dm-pre-reloc;
+		};
+
+		i2c0: i2c@8100000 {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			compatible = "siflower,sfax8-i2c";
+			reg = <0x8100000 0x1000>;
+			clocks = <198000000>;
+			#status = "disabled";
+
+		};
+
+		spi0: spi@8200000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "siflower,armada-a18-spi";
+			reg = <0x8200000 0x1000>;
+			reg-shift = <0>;
+			clock = <198000000>;
+			spi-max-frequency = <33000000>;
+			cs0-gpios = <&gpio 5 1>;
+			u-boot,dm-pre-reloc;
+
+			spi-flash@0 {
+				compatible = "spi-flash";
+				reg = <0>;
+				spi-max-frequency = <100000000>;
+				u-boot,dm-pre-reloc;
+			};
+		};
+
+		uart0: serial@8300000 {
+			compatible = "mips,sfax8";
+			u-boot,dm-pre-reloc;
+
+			reg = <0x8300000 0x1000>;
+			reg-shift = <0>;
+
+			clock = <108000000>;
+			skip_init = <0>;
+		};
+
+		timer0: timer0@8600000{
+			compatible = "siflower,timer0";
+			clock-frequency=<198000000>;
+			reg = <0x8600000 0x1000>;
+		};
+
+
+		gpio:gpio@9d0000 {
+			compatible = "siflower,sfax8-gpio";
+			reg = <0x9d00000 0x100000>, /* gpio base*/
+				  <0x9e30000 0x100000>;/* pad base */
+			reg-names = "gpio_base","pad_base";
+
+			ranges = <0 0x9e30000 0x100000>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			status = "okay";
+			u-boot,dm-pre-reloc;
+		};
+
+		pinctrl@9e3000 {
+			compatible = "siflower,sfa18-pinctrl";
+			reg = <0x9d00000 0x100000>, /* gpio base*/
+				  <0x9e30000 0x100000>;/* pad base */
+			reg-names = "gpio_base","pad_base";
+			ranges = <0 0x9e30000 0x100000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			status = "okay";
+			u-boot,dm-pre-reloc;
+		};
+	};
+};
+

@@ -1,0 +1,9 @@
+current version:
+ot-v2016.07-rc2
+
+
+关于u-boot源代码的信息网址。
+http://www.denx.de/wiki/U-Boot/SourceCode
+
+所有版本的u-boot源代码压缩包以下网址下载。
+ftp://ftp.denx.de/pub/u-boot/

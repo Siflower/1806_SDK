@@ -1,0 +1,86 @@
+menu "Siflower SFAX8 platforms"
+	depends on MACH_SFAX8
+
+config SYS_SOC
+	default "sfax8"
+
+choice
+	prompt "SOC select"
+
+config SOC_SFA18_MPW0
+	bool "SFA18 mpw0 soc"
+	help
+	  This supports Siflower sfa18 mpw0 SOC.
+
+config SOC_SFA18_MPW1
+	bool "SFA18 mpw1 soc"
+	help
+	  This supports Siflower sfa18 mpw1 SOC.
+
+config SOC_SFA18_FULLMASK
+	bool "SFA18 fullmask soc"
+	help
+	  This supports Siflower sfa18 full mask SOC.
+
+config SOC_SFA28_MPW0
+	bool "SFA28 mpw0 soc"
+	help
+	  This supports Siflower sfa28 mpw0 SOC.
+
+config SOC_SFA28_FULLMASK
+	bool "SFA28 fullmask soc"
+	help
+	  This supports Siflower sfa28 fullmask SOC.
+endchoice
+
+choice
+	prompt "Board select"
+
+config TARGET_SFA18_P20B
+	bool "SFA18 p20b board"
+
+config TARGET_SFA18_P10M
+	bool "SFA18 p10m board"
+
+config TARGET_SFA18_X10
+	bool "SFA18 x10 board"
+
+config TARGET_SFA18_P10H
+	bool "SFA18 p10h board"
+
+config TARGET_SFA18_AC20
+	bool "SFA18 ac20 gigabit switch board"
+
+config TARGET_SFA18_P10B
+	bool "SFA18 p10b board"
+
+config TARGET_SFA18_86V
+	bool "SFA18 86V board"
+
+config TARGET_SFA18_AC
+	bool "SFA18 AC board"
+
+config TARGET_SFA18_REP
+	bool "SFA18 REP board"
+
+config TARGET_SFA18_AIR001
+	bool "SFA18 air001 board"
+
+config TARGET_SFA28_FPGA
+	bool "SFA28 FPGA board"
+
+config TARGET_SFA28_P20B
+	bool "SFA28 evb board"
+
+config TARGET_SFA28_AC28
+	bool "SFA28 ac28 board"
+
+config TARGET_SFA28_REP
+	bool "SFA28 rep board"
+
+endchoice
+
+source "board/siflower/sfax8_common/Kconfig"
+source "arch/mips/mach-sfax8/pcba-test/Kconfig"
+
+endmenu

@@ -1,0 +1,209 @@
+************************************************************************************************
+1.Packet structure
+| -----------less than 512bytes------------ |
+| --------------16bytes------------- | ---- |
+| -------struct packet_header------- | data |
+| --4-- | -4- | --4-- | -2- | --2--- | ---- |
+| magic | crc | lenth | cmd | result | data |
+(1)MAX_PACKET_LEN now is set to 512 bytes. This can be expanded to 1.5k if necessary.
+(2)"magic" is fixed to 0x38316173.
+(3)"crc" is the crc32 for *the whole packet*, including the header. When calculating crc32,
+	the "crc" value in packet should be set to *0*.
+(4)"lenth" is the packet total lenth, including packet header.
+(5)"result" is sent from board to pc only.
+(6)"cmd" and "data" is shown next.
+------------------------------------definition--------------------------------------------------
+struct packet_header {
+	unsigned int magic;
+	unsigned int crc;
+	unsigned int lenth; /* total lenth */
+	unsigned short cmd;
+	unsigned short result;
+};
+------------------------------------------------------------------------------------------------
+
+
+************************************************************************************************
+2.CMD
+(1)Commands are separated to 2 parts: simple-cmd(6) and multi-cmd(1).
+(2)Multi-cmd means a combination of simple commands, so when (pkt->cmd == CMD_MULT),
+	There are several cmds in "data", and needs a new header to show the command info.
+	The command header is defined like this:
+
+| magic | crc | lenth | CMD_MULT | result | ---------------------------------command data---------------------------- |
+| --------------------------------------- | --------one simple command------ | ... | --------one simple command------ |
+| --------------------------------------- | ----------4bytes--------- | ---- | ... | ----------4bytes--------- | ---- |
+| --------------------------------------- | -2- | --1-- | -----1----- | ---- | ... | -2- | --1-- | -----1----- | ---- |
+| --------------------------------------- | cmd | lenth | is_last = 0 | data | ... | cmd | lenth | is_last = 1 | data |
+"cmd" is a simple command.
+"lenth" is the total lenth of one command. For example, if "data" is NULL, lenth is 4.
+"is_last" indicates if the command is the last command.
+"data" is the same as the "data" region in simple command.
+(3)simple commands
+The simple commands header from pc can be either packet_header or command header,
+but board will never send a CMD_MULT to pc, so board only uses packet_header.
+
+"CMD_SYNC" is the sync command used at the first communication.
+| ----2--- | 1 | ---1--- |
+| CMD_SYNC | 4 | is_last |
+
+"GET_CHIPID" gets the chipid of board. Chipid is a 64-bit value.
+pc->board
+| ----2----- | 1 | ---1--- |
+| GET_CHIPID | 4 | is_last |
+board->pc
+| --4-- | -4- | 4- | ----2----- | --2--- | --8--- |
+| magic | crc | 24 | GET_CHIPID | result | chipid |
+
+"GET_TESTLIST" gets the testlist. Each list name is a 8 bytes string.
+pc->board
+| ------2----- | 1 | ---1--- |
+| GET_TESTLIST | 4 | is_last |
+board->pc
+| --4-- | -4- | --4-- | ------2----- | --2--- | --------lenth - 16--------- |
+| --4-- | -4- | --4-- | ------2----- | --2--- | --8-- | --8-- | ... | --8-- |
+| magic | crc | lenth | GET_TESTLIST | result | name1 | name2 | ... | namen |
+
+"DEV_ERASE" is used to erase the last result of pcba-test in dev(flash).
+pc->board
+| ----2---- | 1- | ---1--- | --4--- | --4-- |
+| DEV_ERASE | 12 | is_last | offset | lenth |
+board->pc
+| --4-- | -4- | 4- | ----2---- | --2--- |
+| magic | crc | 16 | DEV_ERASE | result |
+"offset" is the flash address, the last 4KB in flash. Command
+	"GET_CHIPINFO" can get the ddr and flash total size. For example, for
+	16MB flash, offset is 16*1024*1024-4*1024.
+"lenth" is the erase lenth.
+
+"DEV_READ" gets the last result of pcba-test in dev(flash).
+pc->board
+| ----2--- | 1- | ---1--- | --4--- | --4-- |
+| DEV_READ | 12 | is_last | offset | lenth |
+board->pc
+| --4-- | -4- | -----4---- | ----2--- | --2--- | lenth |
+| magic | crc | lenth + 16 | DEV_READ | result |  data |
+Lenth should be lenth than the max data lenth defined in CMD_MULT "lenth", 256 bytes(8 bit).
+
+"DEV_WRITE" is used to write the result of pcba-test this time into dev.
+pc->board
+| ----2---- | -----1---- | ---1--- | --4--- | --4-- | lenth |
+| DEV_WRITE | lenth + 12 | is_last | offset | lenth |  data |
+board->pc
+| --4-- | -4- | 4- | ----2---- | --2--- |
+| magic | crc | 16 | DEV_WRITE | result |
+"data" is the data writen to dev. Board will never analyze the data,
+so APP can define it in any format.
+Lenth should be lenth than the max data lenth defined in CMD_MULT "lenth", 256 bytes(8 bit).
+
+"RUN_TEST" is the command to start a pcba-test.
+pc->board
+| ----2--- | ---1-- | ---1--- | ----8---- | -n-- |
+| RUN_TEST | 12 + n | is_last | test-name | data |
+board->pc
+| --4-- | -4- | 4- | ----2--- | --2--- |
+| magic | crc | 16 | RUN_TEST | result |
+"data" is the case self-defined data.
+
+"GET_CHIPINFO" gets the device info of board. Now device info including ddr and flash size.
+pc->board
+| -----2------ | 1 | ---1--- |
+| GET_CHIPINFO | 4 | is_last |
+board->pc
+| --4-- | -4- | 4- | ------2----- | --2--- | ---4---- | ----4----- |
+| magic | crc | 24 | GET_CHIPINFO | result | ddr_size | flash_size |
+
+(4)command results
+Command results are defined in enum values.
+CMD_TIMEOUT means the command or test timed out. App can retry the command or test
+	on receiving this result.
+ERROR_CMD means that the command is not supported or the args for the command are not valid.
+CMD_CONTINUE is defined for further use(data lenth > packet max size).
+
+------------------------------------definition--------------------------------------------------
+enum cmd_t {
+	CMD_SYNC,
+	GET_CHIPID,
+	GET_TESTLIST,
+	DEV_ERASE,
+	DEV_READ,
+	DEV_WRITE,
+	RUN_TEST,
+	CMD_MULT,
+	GET_CHIPINFO,
+};
+
+struct cmd_header {
+	unsigned short cmd;
+	unsigned char lenth; /* total lenth, less than 256 bytes */
+	unsigned char is_last;
+};
+
+const struct test_module test_list[] = {
+	{ "eth", npu_test }, /* NPU */
+	{ "gmac", gmac_test }, /* GMAC */
+	{ "wifi", wifi_test }, /* WIFI */
+	{ "gpio", gpio_test }, /* GPIO */
+	{ "button", button_test }, /* GPIO */
+	{ "sd card", sd_test }, /* SDIO */
+	{ "usb", usb_test }, /* USB */
+	{ "codec", codec_test }, /* PCM/IIS */
+	{ "pmu", pmu_test }, /* IIC */
+	{ "lcd", lcd_test }, /* GDU */
+	{ "spi", spi_test }, /* SPI */
+	{ "ddr", ddr_test } /* DDR */
+};
+
+enum result_header {
+	CMD_FAIL,
+	CMD_SUCCESS,
+	CMD_CONTINUE,
+	CMD_TIMEOUT,
+	ERROR_CMD,
+};
+
+------------------------------------------------------------------------------------------------
+
+
+************************************************************************************************
+3.tests
+All tests' board -> pc packet format is the same:
+| --4-- | -4- | 4- | ----2--- | --2--- |
+| magic | crc | 16 | RUN_TEST | result |
+
+(1)eth test, wifi test, pmu test, sd test, usb test. These tests don't need "data" fields.
+pc->board
+| ----2--- | 1- | ---1--- | ----8---- |
+| RUN_TEST | 12 | is_last | test-name |
+
+(2)led test. Led test will first light all leds for 1 second, then remain only n(0 or 1) leds.
+	APP need to send n in "data" field, and the result is a sum of "result" field and the
+	tester's choose result.
+pc->board
+| ----2--- | 1- | ---1--- | ----8---- | --4--- |
+| RUN_TEST | 12 | is_last | test-name | 0 or 1 |
+
+(3)button test. Button test don't need "data" field, but the tester must push the reset button
+	during the test. APP need to tell the tester to push the button to pass the test. The
+	test will return fail after 3 seconds without input.
+pc->board
+| ----2--- | 1- | ---1--- | ----8---- |
+| RUN_TEST | 12 | is_last | test-name |
+
+(4)codec test. Codec test will play one of three sound files. APP needs to tell which file to
+	play in "data" field. The sound is the digital "0" "1" "2", corresponding 3 sound files.
+	"volume" is the volume of sound, ranges from 0 to 192.
+pc->board
+| ----2--- | 1- | ---1--- | ----8---- | ----4---- | ---4-- |
+| RUN_TEST | 12 | is_last | test-name | 0, 1 or 2 | volume |
+
+(5)lcd test. LCD test will show 3 colors, and then keep at one of them. APP needs to tell which
+	color to show and which is the last one in "data" field. The first "color2" is the final
+	color shown on lcd. "colorn" value can be 0xff(blue), 0xff00(green), 0xff0000(red).
+pc->board
+| ----2--- | 1- | ---1--- | ----8---- | --4--- | --4--- | --4--- |
+| RUN_TEST | 12 | is_last | test-name | color0 | color1 | color2 |
+
+------------------------------------definition--------------------------------------------------
+------------------------------------------------------------------------------------------------
+

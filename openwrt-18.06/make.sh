@@ -120,6 +120,9 @@ case ${board} in
 	a28_ac28s)
 		target_board=target/linux/siflower/sf19a28_ac28s_fullmask_def.config
 		;;
+	a28_ac28nand)
+		target_board=target/linux/siflower/sf19a28_ac28nand_fullmask_def.config
+		;;
 	a28_hwa)
 		target_board=target/linux/siflower/sf19a28_a28_hwa_fullmask_def.config
 		;;

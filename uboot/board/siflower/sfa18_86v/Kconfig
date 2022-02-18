@@ -1,0 +1,12 @@
+if TARGET_SFA18_86V
+
+config SYS_BOARD
+	default "sfa18_86v"
+
+config SYS_VENDOR
+	default "siflower"
+
+config SYS_CONFIG_NAME
+	default "sfa18"
+
+endif

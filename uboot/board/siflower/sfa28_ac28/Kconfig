@@ -1,0 +1,12 @@
+if TARGET_SFA28_AC28
+
+config SYS_BOARD
+	default "sfa28_ac28"
+
+config SYS_VENDOR
+	default "siflower"
+
+config SYS_CONFIG_NAME
+	default "sfa28"
+
+endif

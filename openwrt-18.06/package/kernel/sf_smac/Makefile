@@ -121,6 +121,14 @@ ifneq ($(findstring NF,$(PROFILE)),)
 KO_FILE_NAME="nf_src"
 endif
 
+ifneq ($(findstring AC28S,$(PROFILE)),)
+KO_FILE_NAME="src_s"
+endif
+
+ifneq ($(findstring NAND,$(PROFILE)),)
+KO_FILE_NAME="src_nand"
+endif
+
 define KernelPackage/sf_smac/description
  Kernel module to sf16a18 smac && rf.
 endef

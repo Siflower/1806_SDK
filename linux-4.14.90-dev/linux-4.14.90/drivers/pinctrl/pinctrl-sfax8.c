@@ -265,33 +265,21 @@ static int sfax8_pad_set_func(struct sfax8_pinctrl *info, u32 index, pad_func fu
 	{
 		// write 0,0,0 to fmux_sel_reg mode_bit1_reg mode_bit0_reg
 		case FUNC0:
-			regmap_read(info->regmap_base, PAD_INDEX_REG1(index), &tmp);
-			tmp |=(0x1 << FUNC_SW_SEL_REG);
-			regmap_write(info->regmap_base, PAD_INDEX_REG1(index), tmp);
-
-			regmap_read(info->regmap_base, PAD_INDEX_REG0(index), &tmp);
-			tmp |=(0x1 << SW_IE_REG);
-			regmap_write(info->regmap_base, PAD_INDEX_REG0(index), tmp);
-
+		case FUNC1:
+		case FUNC2:
+		case FUNC3:
 			regmap_read(info->regmap_base, PAD_INDEX_REG1(index), &tmp);
 			tmp &= ~(0x7 << 0);
+			tmp |= (func << 0) | (0x1 << FUNC_SW_SEL_REG);
 			regmap_write(info->regmap_base, PAD_INDEX_REG1(index), tmp);
-			break;
 
-			// write 0,0,1 to fmux_sel_reg mode_bit1_reg mode_bit0_reg
-		case FUNC1:
-			regmap_read(info->regmap_base, PAD_INDEX_REG1(index), &tmp);
-			tmp |=(0x1 << FUNC_SW_SEL_REG);
-			regmap_write(info->regmap_base, PAD_INDEX_REG1(index), tmp);
+			regmap_read(info->regmap_base, PAD_INDEX_REG0(index), &tmp);
+			tmp &= ~(0x1 << SW_OEN_REG);
+			regmap_write(info->regmap_base, PAD_INDEX_REG0(index), tmp);
 
 			regmap_read(info->regmap_base, PAD_INDEX_REG0(index), &tmp);
 			tmp |=(0x1 << SW_IE_REG);
 			regmap_write(info->regmap_base, PAD_INDEX_REG0(index), tmp);
-
-			regmap_read(info->regmap_base, PAD_INDEX_REG1(index), &tmp);
-			tmp &= ~(0x3 << 1);
-			tmp |=(0x1 << 0);
-			regmap_write(info->regmap_base, PAD_INDEX_REG1(index), tmp);
 			break;
 
 		case GPIO_INPUT:

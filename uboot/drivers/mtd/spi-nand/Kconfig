@@ -1,0 +1,59 @@
+menu "SPI NAND Device Support"
+
+config SPI_NAND
+	bool "Enable SPI NAND flash support"
+	depends on DM && DM_SPI
+	select SPI_FLASH
+	select DM_SPI_FLASH
+	help
+	  This option, if enabled, provides support of SPI NAND flash.
+
+config SPI_NAND_MICRON
+	bool "Support Micron SPI NAND flash"
+	depends on SPI_NAND
+	help
+	  Enable support for the Micron SPI NAND flash.
+
+config SPI_NAND_ICMAX
+	bool "Support ICMAX SPI NAND flash"
+	depends on SPI_NAND
+	help
+	  Enable support for the ICMAX SPI NAND flash.
+
+config SPI_NAND_WINBOND
+	bool "Support WINBOND SPI NAND flash"
+	depends on SPI_NAND
+	help
+	  Enable support for the WINBOND SPI NAND flash.
+
+config SPI_NAND_ESMT
+	bool "Support ESMT SPI NAND flash"
+	depends on SPI_NAND
+	help
+	  Enable support for the ESMT SPI NAND flash.
+
+config SPI_NAND_MACRONIX
+	bool "Support MACRONIX SPI NAND flash"
+	depends on SPI_NAND
+	help
+	  Enable support for the MACRONIX SPI NAND flash.
+
+config SPI_NAND_TOSHIBA
+	bool "Support TOSHIBA SPI NAND flash"
+	depends on SPI_NAND
+	help
+	  Enable support for the TOSHIBA SPI NAND flash.
+
+config SPI_NAND_FUDANMICRO
+	bool "Support FUDANMICRO SPI NAND flash"
+	depends on SPI_NAND
+	help
+	  Enable support for the FUDANMICRO SPI NAND flash.
+
+config SPI_NAND_GIGADEVICE
+	bool "Support GIGADEVICE SPI NAND flash"
+	depends on SPI_NAND
+	help
+	  Enable support for the GIGADEVICE SPI NAND flash.
+
+endmenu
