@@ -35,6 +35,14 @@ ifneq ($(findstring NF,$(PROFILE)),)
 SFAX8_KO_NAME="nf_sfax8_netlink.ko"
 endif
 
+ifneq ($(findstring AC28S,$(PROFILE)),)
+SFAX8_KO_NAME="sfax8_netlink_s.ko"
+endif
+
+ifneq ($(findstring NAND,$(PROFILE)),)
+SFAX8_KO_NAME="sfax8_netlink_nand.ko"
+endif
+
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	$(CP) ./* $(PKG_BUILD_DIR)/

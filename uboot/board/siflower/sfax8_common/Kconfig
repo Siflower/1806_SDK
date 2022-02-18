@@ -1,0 +1,110 @@
+if MACH_SFAX8
+
+config ETH_LED
+	bool "enable npu led in uboot"
+
+config BTN_HTTPD_PMU
+	bool "use pmu button to detect if run httpd"
+	default n
+	help
+	  Enable this config to detect if run httpd with pmu button
+
+config BTN_HTTPD_GPIO
+	bool "use gpio button to detect if run httpd"
+	default n
+	help
+	  Enable this config to detect if run httpd with gpio button
+
+config BTN_HTTPD_GPIO_VAL
+	int "gpio index for enter httpd when uboot booting"
+	depends on BTN_HTTPD_GPIO
+	default 60
+	help
+	  gpio index for enter httpd when uboot booting.
+
+choice
+	prompt "Siflower gmac mode choise"
+	depends on SFA18_GMAC
+	default SFA18_RGMII_GMAC
+	help
+	  Select Siflower GMAC mode.
+
+	config SFA18_RGMII_GMAC
+	bool "SFA18  ethernet rgmii mode gmac"
+
+	config SFA18_RMII_GMAC
+	bool "SFA18  ethernet rmii mode gmac"
+
+endchoice
+
+config SFAX8_SECURITY_BOOT
+	bool "Enable security boot in sfax8 boards"
+	select FIT
+	select OF_SEPARATE
+	select FIT_SIGNATURE
+	select RSA
+	help
+		Select this to enable security boot in sfax8 boards.
+
+config SYS_TEXT_BASE
+	default 0xa0000000 if 32BIT
+	default 0xffffffffa0000000 if 64BIT
+
+config SYS_MEM_SIZE
+	hex "physical ddr size"
+	default 0x10000000
+
+config SFA18_UBOOT_LITE
+	bool "Siflower SFAX8 uboot lite"
+	help
+	  Lite version for small flash.
+
+config SFA18_FLASH_SIZE_MB
+	int "Siflower SFAX8 flash size"
+	default 16
+	help
+	  Flash size.
+
+config SFA18_PCBA_TEST
+	bool "SiFlower PCBA test"
+	default n
+	help
+	  Enable this config to support siflower pcba-test.
+
+if SFA18_PCBA_TEST
+choice
+	prompt "Siflower wlan choise"
+	default SFAX8_WLAN_GMAC if SFA18_GMAC
+	default SFAX8_WLAN_NPU if SFA18_ETH
+	help
+	  Select Siflower wlan port.
+
+	config SFAX8_WLAN_GMAC
+	bool "select gmac as wlan port"
+
+	config SFAX8_WLAN_NPU
+	bool "select npu as wlan port"
+
+	config SFAX8_DEFAULT_TX_PORT
+	int "select npu default tx port"
+	depends on SFAX8_WLAN_NPU
+	default 4
+endchoice
+endif
+source "board/siflower/sfa18_p20b/Kconfig"
+source "board/siflower/sfa18_p10m/Kconfig"
+source "board/siflower/sfa18_p10b/Kconfig"
+source "board/siflower/sfa18_86v/Kconfig"
+source "board/siflower/sfa18_ac/Kconfig"
+source "board/siflower/sfa18_x10/Kconfig"
+source "board/siflower/sfa18_p10h/Kconfig"
+source "board/siflower/sfa18_ac20/Kconfig"
+source "board/siflower/sfa18_rep/Kconfig"
+source "board/siflower/sfa18_air001/Kconfig"
+source "board/siflower/sfa28_fpga/Kconfig"
+source "board/siflower/sfa28_p20b/Kconfig"
+source "board/siflower/sfa28_ac28/Kconfig"
+source "board/siflower/sfa28_ac28nand/Kconfig"
+source "board/siflower/sfa28_rep/Kconfig"
+
+endif

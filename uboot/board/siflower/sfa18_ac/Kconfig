@@ -1,0 +1,12 @@
+if TARGET_SFA18_AC
+
+config SYS_BOARD
+	default "sfa18_ac"
+
+config SYS_VENDOR
+	default "siflower"
+
+config SYS_CONFIG_NAME
+	default "sfa18"
+
+endif
