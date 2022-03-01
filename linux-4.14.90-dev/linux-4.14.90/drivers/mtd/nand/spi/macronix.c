@@ -80,7 +80,12 @@ static int mx35lf1ge4ab_ecc_get_status(struct spinand_device *spinand,
 		if (mx35lf1ge4ab_get_eccsr(spinand, &eccsr))
 			return nand->eccreq.strength;
 
-		if (WARN_ON(eccsr > nand->eccreq.strength || !eccsr))
+		/*
+		 * MX35LF1GE4AB only need cate bit[3:0]
+		 * about internal ecc status register
+		 *
+		 * */
+		if (WARN_ON((eccsr & 0xF) > nand->eccreq.strength || !eccsr))
 			return nand->eccreq.strength;
 
 		return eccsr;

@@ -1,0 +1,5 @@
+/.config
+/include/config/
+/include/generated/
+/tags
+/*.bin

@@ -39,6 +39,14 @@ ifneq ($(findstring NF,$(PROFILE)),)
 SFAX8_KO_NAME="nf_sfax8_factory_read.ko"
 endif
 
+ifneq ($(findstring AC28S,$(PROFILE)),)
+SFAX8_KO_NAME="sfax8_factory_read_s.ko"
+endif
+
+ifneq ($(findstring NAND,$(PROFILE)),)
+SFAX8_KO_NAME="sfax8_factory_read_nand.ko"
+endif
+
 EXTRA_KCONFIG:= \
 	CONFIG_SFAX8_FACTORY_READ=m
 

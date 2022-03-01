@@ -1,0 +1,6 @@
+SFA18 BOARD
+M:	Nevermore Wang <nevermore.Wang@siflower.com.cn>
+S:	Maintained
+F:	board/siflower/sfa18/
+F:	include/configs/sfa18.h
+F:	configs/sfa18_fullmask_x10_defconfig

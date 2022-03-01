@@ -1,0 +1,7 @@
+/* Generated automatically. */
+static const char configuration_arguments[] = "/home/neil/code/chaos_calmer/build_dir/toolchain-arm_cortex-a9_gcc-4.8-linaro_uClibc-0.9.33.2_eabi/gcc-linaro-4.8-2014.04/configure --with-bugurl=https://dev.openwrt.org/ --with-pkgversion='OpenWrt/Linaro GCC 4.8-2014.04 unknown' --prefix=/home/neil/code/chaos_calmer/staging_dir/toolchain-arm_cortex-a9_gcc-4.8-linaro_uClibc-0.9.33.2_eabi --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=arm-openwrt-linux-uclibcgnueabi --with-gnu-ld --enable-target-optspace --disable-libgomp --disable-libmudflap --disable-multilib --disable-nls --with-host-libstdcxx=-lstdc++ --with-float=soft --with-gmp=/home/neil/code/chaos_calmer/staging_dir/host --with-mpfr=/home/neil/code/chaos_calmer/staging_dir/host --with-mpc=/home/neil/code/chaos_calmer/staging_dir/host --disable-decimal-float --disable-libssp --disable-__cxa_atexit --with-arch=armv7-a --with-headers=/home/neil/code/chaos_calmer/staging_dir/toolchain-arm_cortex-a9_gcc-4.8-linaro_uClibc-0.9.33.2_eabi/include --disable-libsanitizer --enable-languages=c,c++ --enable-shared --enable-threads --with-slibdir=/home/neil/code/chaos_calmer/staging_dir/toolchain-arm_cortex-a9_gcc-4.8-linaro_uClibc-0.9.33.2_eabi/lib";
+static const char thread_model[] = "posix";
+
+static const struct {
+  const char *name, *value;
+} configure_default_options[] = { { "arch", "armv7-a" }, { "float", "soft" }, { "tls", "gnu" } };

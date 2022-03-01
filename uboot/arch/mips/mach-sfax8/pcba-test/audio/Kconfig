@@ -1,0 +1,18 @@
+#
+# audio codec configuration.
+#
+choice
+
+prompt "Audio codec types"
+
+default CODEC_ES8316
+help
+	There may be many kinds of codec in sfx8 boards, and this
+	choice help to select a used codec.
+
+config CODEC_ES8316
+	bool "codec es8316"
+	help 
+		Say Y if the codec type is es8316, else say N.
+
+endchoice

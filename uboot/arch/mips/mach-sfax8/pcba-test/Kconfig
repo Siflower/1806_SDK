@@ -1,0 +1,97 @@
+menu "PCBA TESTS"
+        depends on SFA18_PCBA_TEST
+
+config SFAX8_GDU_TEST
+	bool "GDU test"
+	help
+	  GDU pcba test.
+
+config SFAX8_AUDIO_TEST
+	bool "AUDIO TEST"
+	help
+	  Audio pcba test.
+
+if SFAX8_AUDIO_TEST
+	source "arch/mips/mach-sfax8/pcba-test/audio/Kconfig"
+endif
+
+config SFAX8_PMU_TEST
+	bool "PMU TEST"
+	default y
+	help
+	  PMU pcba test.
+
+if SFAX8_PMU_TEST
+	source "arch/mips/mach-sfax8/pcba-test/pmu/Kconfig"
+endif
+
+config SFAX8_USB_TEST
+	bool "USB TEST"
+	help
+	  USB pcba test.
+
+config SFAX8_SD_TEST
+	bool "SD TEST"
+	help
+	  sd card pcba test.
+
+config SFAX8_BUTTON_TEST
+	bool "BUTTON TEST"
+	default y
+	help
+	  Button pcba test.
+
+config SFAX8_SHARE_MEM_TEST
+	bool "SHARE MEMORY TEST"
+	default y
+	help
+	  share memory pcba test.
+
+config SFAX8_GPIO_TEST
+	bool "GPIO TEST"
+	default y
+	help
+	  LED pcba test.
+
+config SFAX8_WIFI_TEST
+	bool "WIFI TEST"
+	default y
+	help
+	  WIFI pcba test.
+
+config SFAX8_WIFI_EXPA
+	bool "WIFI EXPA"
+        depends on SFAX8_WIFI_TEST
+	default n
+	help
+	  WIFI use extern PA.
+
+config SFAX8_UPDATE_GAIN_TABLE
+    bool "Update tx gain table for EXPA"
+        depends on SFAX8_WIFI_EXPA
+	default y
+	help
+	  Update tx gain table for extern PA.
+
+config SFA18_PCBA_STATIC_IP
+	bool "static IP addr for WIFI test"
+        depends on SFAX8_WIFI_TEST
+	default y
+	help
+	  Use static IP addr 192.168.4.1 for WIFI ITEST device.
+
+config SFAX8_NPU_TEST
+	bool "NPU TEST"
+        depends on SFA18_ETH
+	default y
+	help
+	  NPU pcba test.
+
+config SFAX8_GMAC_TEST
+	bool "GMAC TEST"
+        depends on SFA18_GMAC
+	default y
+	help
+	  GMAC pcba test.
+
+endmenu

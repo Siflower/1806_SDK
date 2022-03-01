@@ -157,6 +157,13 @@ config DT_SF19A28_FULLMASK_AC28S
 	  The corresponding DTS file is at
 	  arch/mips/boot/dts/sf19a28_fullmask_ac28s.dts
 
+config DT_SF19A28_FULLMASK_AC28NAND
+	bool "Built-in device tree for sf19a28 fullmask ac28nand"
+	default n
+	select BUILTIN_DTB
+	help
+	  The corresponding DTS file is at
+	  arch/mips/boot/dts/sf19a28_fullmask_ac28nand.dts
 
 
 endif #SF19A28_FULLMASK
