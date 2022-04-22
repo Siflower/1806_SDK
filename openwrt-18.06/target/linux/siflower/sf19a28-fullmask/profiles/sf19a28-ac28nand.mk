@@ -6,13 +6,13 @@
 #
 
 define Profile/SF19A28-AC28NAND
- NAME:= SF19A28 AC28 NAND
+ NAME:= SF19A28 AC28NAND
  PACKAGES:=\
 	block-mount fstools badblocks
 endef
 
 define Profile/SF19A28-AC28NAND/Description
- Support for siflower ac28 nand flash boards v1.0
+ Support for siflower ac28 nand boards v1.0
 endef
 
 define Profile/SF19A28-AC28NAND/Config

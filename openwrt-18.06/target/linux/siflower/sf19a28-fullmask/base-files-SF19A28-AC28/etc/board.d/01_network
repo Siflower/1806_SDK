@@ -8,6 +8,7 @@
 siflower_setup_interfaces()
 {
     local board="$1"
+	ucidef_set_interface "eth0" "ifname" "eth0"
     ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
 	ucidef_set_interface_guest guest
     ucidef_add_switch "switch0" \

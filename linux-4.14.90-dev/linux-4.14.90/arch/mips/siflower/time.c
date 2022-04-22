@@ -14,6 +14,14 @@ unsigned int get_c0_compare_int(void)
 
 int get_c0_perfcount_int(void)
 {
+	unsigned int i;
+
+	/* Workaround: fix GIC perfctr map */
+	for_each_possible_cpu(i) {
+		write_gic_vl_other(mips_cm_vp_id(i));
+		write_gic_vo_perfctr_map(0x80000000);
+	}
+
 	return gic_get_c0_perfcount_int();
 }
 EXPORT_SYMBOL_GPL(get_c0_perfcount_int);

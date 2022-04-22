@@ -75,4 +75,5 @@ config DRIVER_11AC_SUPPORT
 
 config DRIVER_11W_SUPPORT
 	bool
-	default n
+	depends on !MEMORY_OPTIMIZE
+	default y

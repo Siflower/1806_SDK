@@ -12,12 +12,42 @@ init_switch() {
 	setup_switch
 }
 
+check_switch_port_valid() {
+	local switch_type=$1
+	local cpu_port=$2
+
+	if [ -n "$switch_type" -a -n "$cpu_port" ]; then
+		if [ "$switch_type" -eq "1" -a "$cpu_port" -eq "16" ];then
+			return 1; # realtek switch
+		fi
+
+		if [ "$switch_type" -eq "2" -a "$cpu_port" -eq "5" ];then
+			return 1; # intel switch
+		fi
+
+		if [ "$switch_type" -eq "3" -a "$cpu_port" -eq "5" ];then
+			return 1; # intel gsw141 switch
+		fi
+
+		if [ "$switch_type" -eq "3" -a "$cpu_port" -eq "17" ];then
+			return 1; # nf2507 switch
+		fi
+	fi
+
+	return 0;
+}
+
 start_service() {
 	./usr/bin/hnat_update_interface.sh
 	local lanip=$(uci get network.lan.ipaddr)
+	local switch_type=$(cat sys/kernel/debug/esw_debug |grep switch_type | cut -d ' ' -f2)
+	local cpu_port=$(uci get network.@switch_vlan[0].ports | cut -d 't' -f 1 | awk -F ' ' '{print $NF}')
 	echo ${lanip} siwifi.cn > /etc/hosts
 
-	init_switch
+	check_switch_port_valid $switch_type $cpu_port
+	if [ $? -eq 1 ]; then
+		init_switch
+	fi
 
 	procd_open_instance
 	procd_set_param command /sbin/netifd

@@ -9,7 +9,8 @@ validate_system_section()
 	uci_validate_section system system "${1}" \
 		'hostname:string:OpenWrt' \
 		'buffersize:uinteger' \
-		'timezone:string:CST-8'
+		'timezone:string:CST-8'\
+		'zonename:string'
 }
 
 system_config() {
@@ -35,6 +36,11 @@ system_config() {
 			uci commit system
 		}
 	}
+	echo "$timezone" > /tmp/TZ
+	[ -n "$zonename" ] && [ -f "/usr/share/zoneinfo/$zonename" ] && ln -s "/usr/share/zoneinfo/$zonename" /tmp/localtime
+
+	# apply timezone to kernel
+	date -k
 }
 
 reload_service() {

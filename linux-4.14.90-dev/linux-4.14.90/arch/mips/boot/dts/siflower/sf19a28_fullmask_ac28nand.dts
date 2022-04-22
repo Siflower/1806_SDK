@@ -7,7 +7,7 @@
 	#address-cells = <1>;
 	#size-cells = <1>;
 	compatible = "siflower,sf19a28-soc";
-	model = "sf19a28-ac28nand";
+	model = "sf19a28-ac28";
 
 };
 
@@ -27,7 +27,7 @@
 	#address-cells = <1>;
 	#size-cells = <0>;
 
-	spi-nand@0 {
+	spi_nand@0 {
 		compatible = "spi-nand";
 		reg = <0>;	/* chip select */
 		spi-max-frequency = <33000000>;
@@ -53,7 +53,7 @@
 			reg = <0x80000 0x20000>; /* 128k */
 		};
 
-		factory:partitiona0000 {
+		factory:partition@a0000 {
 			label = "factory";
 			reg = <0xa0000 0x20000>; /* 128k */
 		};
@@ -84,6 +84,7 @@
 	status = "okay";
     /*only support ext pa for 5G*/
 	force_expa = <1>;
+    dual-antenna-calibrate = <1>;
 };
 
 &gpio_keys {
