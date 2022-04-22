@@ -144,11 +144,11 @@ static int nf_flow_nat_ip(const struct flow_offload *flow, struct sk_buff *skb,
 {
 	struct iphdr *iph = ip_hdr(skb);
 
-	if (flow->flags & FLOW_OFFLOAD_SNAT &&
+	if (test_bit(NF_FLOW_SNAT, &flow->flags) &&
 	    (nf_flow_snat_port(flow, skb, thoff, iph->protocol, dir) < 0 ||
 	     nf_flow_snat_ip(flow, skb, iph, thoff, dir) < 0))
 		return -1;
-	if (flow->flags & FLOW_OFFLOAD_DNAT &&
+	if (test_bit(NF_FLOW_DNAT, &flow->flags) &&
 	    (nf_flow_dnat_port(flow, skb, thoff, iph->protocol, dir) < 0 ||
 	     nf_flow_dnat_ip(flow, skb, iph, thoff, dir) < 0))
 		return -1;
@@ -255,7 +255,8 @@ nf_flow_offload_ip_hook(void *priv, struct sk_buff *skb,
 	if (nf_flow_state_check(flow, ip_hdr(skb)->protocol, skb, thoff))
 		return NF_ACCEPT;
 
-	if (flow->flags & (FLOW_OFFLOAD_SNAT | FLOW_OFFLOAD_DNAT) &&
+	if ((test_bit(NF_FLOW_SNAT, &flow->flags) ||
+	     test_bit(NF_FLOW_DNAT, &flow->flags)) &&
 	    nf_flow_nat_ip(flow, skb, thoff, dir) < 0)
 		return NF_DROP;
 
@@ -386,11 +387,11 @@ static int nf_flow_nat_ipv6(const struct flow_offload *flow,
 	struct ipv6hdr *ip6h = ipv6_hdr(skb);
 	unsigned int thoff = sizeof(*ip6h);
 
-	if (flow->flags & FLOW_OFFLOAD_SNAT &&
+	if (test_bit(NF_FLOW_SNAT, &flow->flags) &&
 	    (nf_flow_snat_port(flow, skb, thoff, ip6h->nexthdr, dir) < 0 ||
 	     nf_flow_snat_ipv6(flow, skb, ip6h, thoff, dir) < 0))
 		return -1;
-	if (flow->flags & FLOW_OFFLOAD_DNAT &&
+	if (test_bit(NF_FLOW_DNAT, &flow->flags) &&
 	    (nf_flow_dnat_port(flow, skb, thoff, ip6h->nexthdr, dir) < 0 ||
 	     nf_flow_dnat_ipv6(flow, skb, ip6h, thoff, dir) < 0))
 		return -1;
@@ -473,7 +474,8 @@ nf_flow_offload_ipv6_hook(void *priv, struct sk_buff *skb,
 	if (skb_try_make_writable(skb, sizeof(*ip6h)))
 		return NF_DROP;
 
-	if (flow->flags & (FLOW_OFFLOAD_SNAT | FLOW_OFFLOAD_DNAT) &&
+	if ((test_bit(NF_FLOW_SNAT, &flow->flags) ||
+	     test_bit(NF_FLOW_DNAT, &flow->flags)) &&
 	    nf_flow_nat_ipv6(flow, skb, dir) < 0)
 		return NF_DROP;
 

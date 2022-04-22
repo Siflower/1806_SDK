@@ -24,6 +24,13 @@ insmod_rf() {
     sleep 1
 }
 
+insmod_rf_ate() {
+#   umount /sys/kernel/debug
+#   mount -t debugfs none /sys/kernel/debug
+    cmd="/sbin/insmod sf16a18_rf thermal_on=0"
+	eval $cmd
+    sleep 1
+}
 unload_rf() {
     cmd="/sbin/rmmod sf16a18_rf"
     eval $cmd

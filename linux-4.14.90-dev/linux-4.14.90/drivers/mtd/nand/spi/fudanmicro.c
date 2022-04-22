@@ -1,3 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (c) 2017 exceet electronics GmbH
+ *
+ * Authors:
+ *	Frieder Schrempf <frieder.schrempf@exceet.de>
+ *	Boris Brezillon <boris.brezillon@bootlin.com>
+ */
+
 #include <linux/device.h>
 #include <linux/kernel.h>
 #include <linux/mtd/spinand.h>

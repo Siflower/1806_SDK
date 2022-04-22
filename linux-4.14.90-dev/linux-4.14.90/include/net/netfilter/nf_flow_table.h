@@ -13,6 +13,9 @@
 #define FLOWOFFLOAD_HW_MAX	  1024
 #define FLOWOFFLOAD_HW_UDP_THRES 600
 
+extern volatile bool nf_flow_need_all_aging;
+extern volatile bool nf_flow_need_udp_aging;
+
 struct nf_flowtable;
 
 struct nf_flowtable_type {
@@ -32,12 +35,8 @@ struct nf_flowtable_count {
 	atomic_t total_count;
 	atomic_t tcp_count;
 	atomic_t udp_count;
-	atomic_t hw_total_count;
-	atomic_t hw_tcp_count;
-	atomic_t hw_udp_count;
 	atomic_t udp_age_count;
 	atomic_t full_age_count;
-	unsigned int  clean_flow_count;
 };
 
 struct nf_flowtable {
@@ -89,34 +88,19 @@ struct flow_offload_tuple_rhash {
 	struct flow_offload_tuple	tuple;
 };
 
-#define FLOW_OFFLOAD_SNAT	0x1
-#define FLOW_OFFLOAD_DNAT	0x2
-#define FLOW_OFFLOAD_DYING	0x4
-#define FLOW_OFFLOAD_TEARDOWN	0x8
-#define FLOW_OFFLOAD_HW		0x10
-#define FLOW_OFFLOAD_KEEP	0x20
-
-#define FLOW_OFFLOAD_LAN1		0x100
-#define FLOW_OFFLOAD_LAN2		0x200
-#define FLOW_OFFLOAD_LAN3		0x400
-#define FLOW_OFFLOAD_LAN4		0x800
-#define FLOW_OFFLOAD_LAN5		0x1000
-#define FLOW_OFFLOAD_LAN6		0x2000
-#define FLOW_OFFLOAD_LAN7		0x4000
-#define FLOW_OFFLOAD_LAN8		0x8000
-
-#define FLOW_OFFLOAD_WAN1		0x10000
-#define FLOW_OFFLOAD_WAN2		0x20000
-#define FLOW_OFFLOAD_WAN3		0x40000
-#define FLOW_OFFLOAD_WAN4		0x80000
-#define FLOW_OFFLOAD_WAN5		0x100000
-#define FLOW_OFFLOAD_WAN6		0x200000
-#define FLOW_OFFLOAD_WAN7		0x400000
-#define FLOW_OFFLOAD_WAN8		0x800000
+enum nf_flow_flags {
+	NF_FLOW_SNAT,
+	NF_FLOW_DNAT,
+	NF_FLOW_TEARDOWN,
+	NF_FLOW_HW,
+	NF_FLOW_HW_DYING,
+	NF_FLOW_HW_DEAD,
+	NF_FLOW_HW_PENDING,
+};
 
 struct flow_offload {
 	struct flow_offload_tuple_rhash		tuplehash[FLOW_OFFLOAD_DIR_MAX];
-	u32					flags;
+	unsigned long				flags;
 	u32					timeout;
 	union {
 		/* Your private driver data here. */
@@ -171,10 +155,6 @@ int nf_flow_table_init(struct nf_flowtable *flow_table);
 void nf_flow_table_free(struct nf_flowtable *flow_table);
 
 void flow_offload_teardown(struct flow_offload *flow);
-static inline void flow_offload_dead(struct flow_offload *flow)
-{
-	flow->flags |= FLOW_OFFLOAD_DYING;
-}
 
 int nf_flow_snat_port(const struct flow_offload *flow,
 		      struct sk_buff *skb, unsigned int thoff,

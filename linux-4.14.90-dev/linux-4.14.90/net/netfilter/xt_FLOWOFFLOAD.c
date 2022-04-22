@@ -296,147 +296,13 @@ static int check_flow_in_blacklist(struct net *net, struct flow_offload *flow)
 	return 0;
 }
 
-// #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
-#if 1
-static int sf_offload_hw_clean_flow_cb(struct flow_offload *flow, void *data)
-{
-	struct nf_flowtable *table = &nf_flowtable;
-	struct flow_offload * hw_flow = (struct flow_offload *)data;
-	unsigned char proto = 0;
-	char ret = -1;
-	if((hw_flow == flow) && (flow->flags & FLOW_OFFLOAD_HW)){
-
-		flow->timeout = jiffies + 30*HZ;
-		proto = flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto;
-		flow->hnat_idx = -1;
-		flow->flags &= 0xff0000ff;
-		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
-
-		atomic_dec(&(nf_flowtable.nf_count.hw_total_count));
-		if(proto == IPPROTO_UDP)
-		  atomic_dec(&(nf_flowtable.nf_count.hw_udp_count));
-		else
-		  atomic_dec(&(nf_flowtable.nf_count.hw_tcp_count));
-
-		table->nf_count.clean_flow_count++;
-		ret = 0;
-	}
-	return  ret;
-}
-
-static int sf_offload_hw_clean_flow_cb_no_dec(struct flow_offload *flow, void *data)
-{
-	struct flow_offload * hw_flow = (struct flow_offload *)data;
-	char ret = -1;
-	if((hw_flow == flow) && (flow->flags & FLOW_OFFLOAD_HW)){
-		flow->timeout = jiffies + 30*HZ;
-		flow->hnat_idx = -1;
-		flow->flags &= 0xff0000ff;
-		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
-		ret = 0;
-	}
-	return  ret;
-}
-
-static void sf_offload_hw_clean_all_cb(struct flow_offload *flow, void *data)
-{
-	if(flow->flags & FLOW_OFFLOAD_HW){
-		flow->hnat_idx = -1;
-		flow->flags &= 0xff0000ff;
-		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
-		// flow->timeout = jiffies;
-	}
-	return;
-}
-static void sf_offload_hw_clean_lan_cb(struct flow_offload *flow, void *data)
-{
-	unsigned char lan_subnet_index = (unsigned char)data;
-	unsigned char proto = 0;
-	if((flow->flags & FLOW_OFFLOAD_HW) && (flow->flags & (0x1 << (lan_subnet_index + 8)))){
-
-		proto = flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto;
-		flow->hnat_idx = -1;
-		flow->flags &= 0xff0000ff;
-		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
-		flow_offload_teardown(flow);
-
-		atomic_dec(&(nf_flowtable.nf_count.hw_total_count));
-		if(proto == IPPROTO_UDP)
-		  atomic_dec(&(nf_flowtable.nf_count.hw_udp_count));
-		else
-		  atomic_dec(&(nf_flowtable.nf_count.hw_tcp_count));
-
-	}
-
-	return;
-}
-
-static void sf_offload_hw_clean_wan_cb(struct flow_offload *flow, void *data)
-{
-	unsigned char wan_subnet_index = (unsigned char)data;
-	unsigned char proto = 0;
-	if((flow->flags & FLOW_OFFLOAD_HW) && (flow->flags & (0x1 << (wan_subnet_index + 16)))){
-		proto = flow->tuplehash[FLOW_OFFLOAD_DIR_ORIGINAL].tuple.l4proto;
-		flow->hnat_idx = -1;
-		flow->flags &= 0xff0000ff;
-		flow->flags &= ~(FLOW_OFFLOAD_HW| FLOW_OFFLOAD_KEEP);
-		flow_offload_teardown(flow);
-
-		atomic_dec(&(nf_flowtable.nf_count.hw_total_count));
-		if(proto == IPPROTO_UDP)
-		  atomic_dec(&(nf_flowtable.nf_count.hw_udp_count));
-		else
-		  atomic_dec(&(nf_flowtable.nf_count.hw_tcp_count));
-	}
-
-	return;
-}
-// mode 0  clean with flow ptr
-// mode 1  clean with lan  index
-// mode 2  clean with wan  index
-// mode 3  clean  all
-void sf_offload_hw_clean_flow(void *pclean, unsigned char clean_mode)
-{
-	struct nf_flowtable *table = &nf_flowtable;
-	switch (clean_mode) {
-		case 0:
-			// under hight concurrency   flow maybe del from table not  del form  hw  yet. so  force del
-			nf_flow_table_iterate_ret(table, sf_offload_hw_clean_flow_cb, pclean);
-			break;
-		case 1:
-			nf_flow_table_iterate(table, sf_offload_hw_clean_lan_cb, pclean);
-			break;
-		case 2:
-			nf_flow_table_iterate(table, sf_offload_hw_clean_wan_cb, pclean);
-			break;
-		case 3:
-			nf_flow_table_iterate(table, sf_offload_hw_clean_all_cb, pclean);
-			atomic_set(&(nf_flowtable.nf_count.hw_total_count),0);
-			atomic_set(&(nf_flowtable.nf_count.hw_tcp_count),0);
-			atomic_set(&(nf_flowtable.nf_count.hw_udp_count),0);
-			break;
-		case 4:
-			nf_flow_table_iterate_ret(table, sf_offload_hw_clean_flow_cb_no_dec, pclean);
-			break;
-		default:
-			printk("%s %d mode error %d\n",__FUNCTION__,__LINE__, clean_mode);
-	}
-	return;
-}
-EXPORT_SYMBOL(sf_offload_hw_clean_flow);
-
 void sf_flow_dump_count(void){
 	struct nf_flowtable_count *nf_count = &(nf_flowtable.nf_count);
 	printk("nf dump total %d tcp %d udp %d \n", atomic_read(&nf_count->total_count),
 				atomic_read(&nf_count->tcp_count), atomic_read(&nf_count->udp_count));
-
-	printk(" hw total %d hw tcp %d hw udp %d crc clean flow %d\n", atomic_read(&nf_count->hw_total_count),
-				atomic_read(&nf_count->hw_tcp_count), atomic_read(&nf_count->hw_udp_count), nf_count->clean_flow_count);
-
 	printk("udp ageing  %d  full ageing %d\n", atomic_read(&nf_count->udp_age_count), atomic_read(&nf_count->full_age_count));
 }
 EXPORT_SYMBOL(sf_flow_dump_count);
-#endif
 
 static void sf_flow_table_do_delete(struct flow_offload *flow, void *data)
 {
@@ -633,10 +499,9 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 	if (flow_offload_add(&nf_flowtable, flow) < 0)
 		goto err_flow_add;
 
-	if ((info->flags & XT_FLOWOFFLOAD_HW) && (atomic_read(&(nf_flowtable.nf_count.hw_total_count)) < FLOWOFFLOAD_HW_MAX)) {
+	if (info->flags & XT_FLOWOFFLOAD_HW)
 		if (!check_flow_in_blacklist(xt_net(par), flow))
 			nf_flow_offload_hw_add(xt_net(par), flow, ct, &nf_flowtable.nf_count);
-	}
 
 	return XT_CONTINUE;
 

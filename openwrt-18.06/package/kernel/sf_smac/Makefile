@@ -59,7 +59,7 @@ define KernelPackage/sf_smac/config
 
 		config SFFMAC_ENABLE_TOKEN
 			bool "enable token for fmac"
-			default "n"
+			default "y"
 
 		config SFFMAC_ENABLE_RX_MEM_POOL
 			bool "enable rx memery pool for fmac"
@@ -233,8 +233,26 @@ endif
 ifdef CONFIG_TARGET_siflower_sf19a28_fullmask_SF19A28-A28-HWA
 #CONFIG_DUAL_ANTENNA_CALIBRATE=y
 endif
+CONFIG_DUAL_ANTENNA_CALIBRATE=y
 ifdef CONFIG_DUAL_ANTENNA_CALIBRATE
 EXTRA_KCONFIG += CONFIG_DUAL_ANTENNA_CALIBRATE=y
+endif
+ifdef CONFIG_TARGET_siflower_sf19a28_fullmask_SF19A28-AC28CSD
+CONFIG_DUAL_ANTENNA_CALIBRATE_CSD=y
+else
+CONFIG_UPDATE_GAIN_TABLE=y
+endif
+ifdef CONFIG_TARGET_siflower_sf19a28_fullmask_SF19A28-AC28S-CSD
+CONFIG_DUAL_ANTENNA_CALIBRATE_CSD=y
+else
+CONFIG_UPDATE_GAIN_TABLE=y
+endif
+ifdef CONFIG_DUAL_ANTENNA_CALIBRATE_CSD
+EXTRA_KCONFIG += CONFIG_DUAL_ANTENNA_CALIBRATE_CSD=y
+endif
+ifdef CONFIG_UPDATE_GAIN_TABLE
+EXTRA_KCONFIG += CONFIG_UPDATE_GAIN_TABLE=y
+NOSTDINC_FLAGS += -DCONFIG_UPDATE_GAIN_TABLE
 endif
 ifdef CONFIG_POWER_OPTIMIZE
 #that must be sync with lmac binaries if defined,here defined 8 to save power
@@ -277,13 +295,13 @@ define KernelPackage/sf_smac/install
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/agcram.bin \
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/agcram_24g.bin \
 		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/ldpcram.bin \
-		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_pmem.bin \
-		$(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_default_reg.bin \
 		$(1)/lib/firmware
 
 ifdef CONFIG_TARGET_siflower_sf19a28_fullmask_SF19A28-A28-HWA
 	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf_rf_expa_config_hwa.ini $(1)/lib/firmware/sf_rf_expa_config.ini
 else
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_pmem.bin $(1)/lib/firmware
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_default_reg.bin $(1)/lib/firmware
 	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf_rf_expa_config.ini $(1)/lib/firmware/sf_rf_expa_config.ini
 endif
 
@@ -293,6 +311,7 @@ ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_hb_txpower_table.ini $(1)/lib/firmware
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_lb_txpower_table.ini $(1)/lib/firmware
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_hb_txpower_table_expa.ini $(1)/lib/firmware
+	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_hb_txpower_table_expa_low_power.ini $(1)/lib/firmware
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_lb_txpower_table_expa.ini $(1)/lib/firmware
 	cp $(PKG_BUILD_DIR)/config/cali_table/default_txpower_calibrate_table.bin $(1)/lib/firmware
 
@@ -300,7 +319,13 @@ ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
 	cp $(PKG_BUILD_DIR)/config/cali_table/default_txpower_calibrate_expa_table.bin $(1)/lib/firmware
 #endif
 
+ifdef CONFIG_SIWIFI_TEMPERATURE_CONTROL
+	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/temperature_control.ini $(1)/lib/firmware
+endif
 	cp $(PKG_BUILD_DIR)/config/cali_table/txp_offset_sleepmode_low.ini $(1)/lib/firmware
+ifdef CONFIG_DUAL_ANTENNA_CALIBRATE
+	cp $(PKG_BUILD_DIR)/config/cali_table/txp_offset_sleepmode_low_second.ini $(1)/lib/firmware
+endif
 	$(INSTALL_DIR) $(1)/usr/bin
 	cp $(PKG_BUILD_DIR)/config/cali_table/txpower_calibrate_table.sh $(1)/usr/bin
 	cp $(PKG_BUILD_DIR)/config/cali_table/txpower_calibrate_table.txt $(1)/usr/bin
