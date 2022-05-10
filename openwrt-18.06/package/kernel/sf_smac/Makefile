@@ -63,7 +63,7 @@ define KernelPackage/sf_smac/config
 
 		config SFFMAC_ENABLE_RX_MEM_POOL
 			bool "enable rx memery pool for fmac"
-			default "y"
+			default "n"
 
 		menu "softmac/fullmac Configuration"
 			choice

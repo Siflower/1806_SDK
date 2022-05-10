@@ -1,0 +1,41 @@
+Index: netifd-2018-12-16-2750ce2e/system-linux.c
+===================================================================
+--- netifd-2018-12-16-2750ce2e.orig/system-linux.c
++++ netifd-2018-12-16-2750ce2e/system-linux.c
+@@ -634,6 +634,7 @@ enum {
+ 	SF_ETH_CMD_ATTR_UNSPEC = 0,
+ 	SF_ETH_CMD_ATTR_DPS_PORT,            /* eth phy port*/
+ 	SF_ETH_CMD_ATTR_DPS_LINK,            /* 0---link down  1---link up */
++	SF_ETH_CMD_ATTR_DPS_MAC,
+ 	SF_ETH_CMD_ATTR_DPS_IFNAME,
+ 	__SF_ETH_CMD_ATTR_MAX,
+ };
+@@ -641,6 +642,7 @@ enum {
+ static struct nla_policy sf_eth_policy[__SF_ETH_CMD_ATTR_MAX+1] = {
+ 	[SF_ETH_CMD_ATTR_DPS_PORT]   = { .type = NLA_U32 },
+ 	[SF_ETH_CMD_ATTR_DPS_LINK]   = { .type = NLA_U32 },
++	[SF_ETH_CMD_ATTR_DPS_MAC]   = { .type = NLA_STRING },
+ 	[SF_ETH_CMD_ATTR_DPS_IFNAME]   = { .type = NLA_STRING },
+ };
+ 
+@@ -729,6 +731,7 @@ static int cb_sf_eth_event(struct nl_msg
+ 	int vlanid = 1, wan_vid = -1;
+ 	char ifname[32] = {0};
+ 	char vlan_ifame[32] = {0};
++	char macaddr[20] = {0};
+ 
+ 	if (!nlmsg_valid_hdr(nh, GENL_HDRLEN)){
+ 		netifd_log_message(L_WARNING, "sf eth event recv invalid ghr\n");
+@@ -750,6 +753,12 @@ static int cb_sf_eth_event(struct nl_msg
+ 		updown = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_LINK]);
+ 	}
+ 
++	if(updown > 0){
++		if(nla[SF_ETH_CMD_ATTR_DPS_MAC]){
++			sprintf(macaddr,"%s",nla_get_string(nla[SF_ETH_CMD_ATTR_DPS_MAC]));
++		}
++	}
++
+ 	if(nla[SF_ETH_CMD_ATTR_DPS_IFNAME]){
+ 		sprintf(ifname,"%s",nla_get_string(nla[SF_ETH_CMD_ATTR_DPS_IFNAME]));
+ 	}

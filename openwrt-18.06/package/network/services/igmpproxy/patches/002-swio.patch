@@ -1,0 +1,213 @@
+Index: igmpproxy-0.2.1/src/Makefile.am
+===================================================================
+--- igmpproxy-0.2.1.orig/src/Makefile.am	2018-02-14 03:21:42.000000000 +0800
++++ igmpproxy-0.2.1/src/Makefile.am	2020-09-25 10:15:21.819848559 +0800
+@@ -21,4 +21,6 @@
+ 	request.c \
+ 	rttable.c \
+ 	syslog.c \
+-	udpsock.c
++	udpsock.c \
++	sf_io.c \
++	sf_io.h
+Index: igmpproxy-0.2.1/src/Makefile.in
+===================================================================
+--- igmpproxy-0.2.1.orig/src/Makefile.in	2018-02-14 03:21:47.000000000 +0800
++++ igmpproxy-0.2.1/src/Makefile.in	2020-09-25 10:14:59.171847609 +0800
+@@ -105,7 +105,8 @@
+ 	confread.$(OBJEXT) ifvc.$(OBJEXT) igmp.$(OBJEXT) \
+ 	igmpproxy.$(OBJEXT) kern.$(OBJEXT) lib.$(OBJEXT) \
+ 	mcgroup.$(OBJEXT) mroute-api.$(OBJEXT) request.$(OBJEXT) \
+-	rttable.$(OBJEXT) syslog.$(OBJEXT) udpsock.$(OBJEXT)
++	rttable.$(OBJEXT) syslog.$(OBJEXT) udpsock.$(OBJEXT) \
++	sf_io.$(OBJEXT)
+ igmpproxy_OBJECTS = $(am_igmpproxy_OBJECTS)
+ igmpproxy_LDADD = $(LDADD)
+ AM_V_P = $(am__v_P_@AM_V@)
+@@ -279,7 +280,9 @@
+ 	request.c \
+ 	rttable.c \
+ 	syslog.c \
+-	udpsock.c
++	udpsock.c \
++	sf_io.c \
++	sf_io.h
+ 
+ all: all-am
+ 
+@@ -381,6 +384,7 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rttable.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/syslog.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udpsock.Po@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sf_io.Po@am__quote@
+ 
+ .c.o:
+ @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+Index: igmpproxy-0.2.1/src/rttable.c
+===================================================================
+--- igmpproxy-0.2.1.orig/src/rttable.c	2018-02-14 03:21:42.000000000 +0800
++++ igmpproxy-0.2.1/src/rttable.c	2020-09-25 10:27:19.683878685 +0800
+@@ -38,7 +38,7 @@
+ *     received request.
+ */
+ 
+-#include "igmpproxy.h"
++#include "sf_io.h"
+ 
+ #define MAX_ORIGINS 4
+ 
+@@ -74,6 +74,32 @@
+ // Socket for sending join or leave requests.
+ int mcGroupSock = 0;
+ 
++ 
++/*
++ * Siflower Function, invert RouteTable to sf_mc_route
++ * */
++int sf_rt2mt(struct RouteTable * route, struct sf_mc_route * mc_rt){
++	int vif_ix, count = 0;
++	struct   IfDesc     *Dp;
++
++	memset(mc_rt, 0, sizeof(struct sf_mc_route));
++	mc_rt->mcast_addr = route->group;
++	my_log(LOG_DEBUG, 0, ">>>sf rt vif bits 0x%x<<<<",
++			route->vifBits);
++
++	for(vif_ix = 0; vif_ix < SF_MAX_VIF; ){
++		if(BIT_TST(route->vifBits, vif_ix)){
++			vif_ix++;
++			Dp = getIfByIx(vif_ix);
++
++			memcpy(&mc_rt->ovifs[count].Name[0], &Dp->Name[0], IF_NAMESIZE);
++			mc_rt->ovifs[count].s_addr = (int)Dp->InAdr.s_addr;
++			count++;
++		}else
++			vif_ix++;
++	}
++	return 0;
++}
+ 
+ /**
+ *   Function for retrieving the Multicast Group socket.
+@@ -110,6 +136,7 @@
+             joinMcGroup( getMcGroupSock(), Dp, alligmp3_group );
+         }
+     }
++	sf_mc2sw_ioctl(SF_INIT_MC_ROUTE, NULL);
+ }
+ 
+ /**
+@@ -212,6 +239,7 @@
+     }
+     routing_table = NULL;
+ 
++	sf_mc2sw_ioctl(SF_CLEAR_MC_ROUTE, NULL);
+     // Send a notice that the routing table is empty...
+     my_log(LOG_NOTICE, 0, "All routes removed. Routing table is empty.");
+ }
+@@ -241,6 +269,7 @@
+ 
+     struct Config *conf = getCommonConfig();
+     struct RouteTable*  croute;
++	struct sf_mc_route mc_rt;
+ 
+     // Sanitycheck the group adress...
+     if( ! IN_MULTICAST( ntohl(group) )) {
+@@ -366,6 +395,9 @@
+         sendJoinLeaveUpstream(croute, 1);
+     }
+ 
++	sf_rt2mt(croute, &mc_rt);
++	sf_mc2sw_ioctl(SF_ADD_MC_ROUTE, &mc_rt);
++
+     logRouteTable("Insert Route");
+ 
+     return 1;
+@@ -533,6 +565,7 @@
+ */
+ static int removeRoute(struct RouteTable*  croute) {
+     struct Config       *conf = getCommonConfig();
++	struct sf_mc_route mc_rt;
+     int result = 1;
+ 
+     // If croute is null, no routes was found.
+@@ -573,6 +606,11 @@
+             croute->nextroute->prevroute = croute->prevroute;
+         }
+     }
++
++	BIT_ZERO(croute->vifBits);
++	sf_rt2mt(croute, &mc_rt);
++	sf_mc2sw_ioctl(SF_DEL_MC_ROUTE, &mc_rt);
++
+     // Free the memory, and set the route to NULL...
+     free(croute);
+     croute = NULL;
+@@ -589,6 +627,7 @@
+ int internAgeRoute(struct RouteTable*  croute) {
+     struct Config *conf = getCommonConfig();
+     int result = 0;
++	struct sf_mc_route mc_rt;
+ 
+     // Drop age by 1.
+     croute->ageValue--;
+@@ -621,6 +660,9 @@
+         }
+     }
+ 
++	sf_rt2mt(croute, &mc_rt);
++	sf_mc2sw_ioctl(SF_DEL_MC_ROUTE, &mc_rt);
++
+     // If the aging counter has reached zero, its time for updating...
+     if(croute->ageValue == 0) {
+         // Check for activity in the aging process,
+Index: igmpproxy-0.2.1/src/sf_io.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ igmpproxy-0.2.1/src/sf_io.c	2020-09-25 10:16:50.915852298 +0800
+@@ -0,0 +1,18 @@
++/*
++ * set route table in gswitch module
++ * */
++#include "sf_io.h"
++
++//send msg to gswitch module
++int sf_mc2sw_ioctl(int type, struct sf_mc_route * mc_rt){
++	int handle;
++
++	handle = open("/sys/kernel/debug/gsw_debug",O_RDWR);
++	if(handle == -1)
++		return 0;
++
++	ioctl(handle, type, mc_rt);
++	close(handle);
++	return 0;
++}
++
+Index: igmpproxy-0.2.1/src/sf_io.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ igmpproxy-0.2.1/src/sf_io.h	2020-09-25 10:17:40.651854385 +0800
+@@ -0,0 +1,22 @@
++#include "igmpproxy.h"
++
++#define SF_MAX_VIF 10
++
++enum sf_ioctl_type{
++	SF_INIT_MC_ROUTE,
++	SF_ADD_MC_ROUTE,
++	SF_DEL_MC_ROUTE,
++	SF_CLEAR_MC_ROUTE
++};
++
++struct sf_vif_desc{
++    char	Name[IF_NAMESIZE];
++	int		s_addr;
++};
++
++struct sf_mc_route {
++	uint32_t	mcast_addr;
++	struct sf_vif_desc	ovifs[SF_MAX_VIF];
++};
++
++extern int sf_mc2sw_ioctl(int type, struct sf_mc_route * mc_rt);
