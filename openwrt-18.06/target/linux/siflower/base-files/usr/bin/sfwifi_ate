@@ -66,7 +66,7 @@ firmware_reload(){
 	#reload firmware
 	load_firmware
 	#reload rf
-	insmod_rf
+	insmod_rf_ate
     if [ fmac = "$2" ]; then
         band_reload_fmac $1
 	elif [ fmac = "$1" ]; then
