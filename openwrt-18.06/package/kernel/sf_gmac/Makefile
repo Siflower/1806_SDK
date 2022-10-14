@@ -168,6 +168,10 @@ ifneq ($(findstring NAND,$(PROFILE)),)
 SFAX8_KO_NAME="a28_sgmac_nand.ko"
 endif
 
+ifneq ($(findstring EVB,$(PROFILE)),)
+SFAX8_KO_NAME="a28_sgmac_evb.ko"
+endif
+
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	$(CP) ./Makefile $(PKG_BUILD_DIR)/

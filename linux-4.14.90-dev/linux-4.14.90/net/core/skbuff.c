@@ -78,7 +78,20 @@
 #include <linux/capability.h>
 #include <linux/user_namespace.h>
 
+
 struct kmem_cache *skbuff_head_cache __read_mostly;
+#ifdef CONFIG_SF_SKB_POOL
+#include <linux/proc_fs.h>
+//#define SFDPRINTK(msg, args...)
+//#define FSFDPRINTK(msg, args...)
+#define SFDPRINTK(msg, args...) if(enable_log) printk(KERN_DEBUG "skbpool [PID-%d] %s:%d\t" msg, current->pid, __FUNCTION__, __LINE__, ## args);
+#define FSFDPRINTK(msg, args...) if(enable_flog) printk(KERN_CRIT "skbpool [PID-%d] %s:%d\t" msg, current->pid, __FUNCTION__, __LINE__, ## args);
+struct skb_pool_list   sf_skb_pool_list;
+struct skb_pool_param_t * sf_common_skb_pool_param;
+bool enable_log = 0;
+bool enable_flog = 0;
+
+#endif
 static struct kmem_cache *skbuff_fclone_cache __read_mostly;
 int sysctl_max_skb_frags __read_mostly = MAX_SKB_FRAGS;
 EXPORT_SYMBOL(sysctl_max_skb_frags);
@@ -371,6 +384,238 @@ void *napi_alloc_frag(unsigned int fragsz)
 }
 EXPORT_SYMBOL(napi_alloc_frag);
 
+#ifdef CONFIG_SF_SKB_POOL
+struct sk_buff * __build_pool_skb(struct sk_buff *skb, unsigned int size){
+	struct skb_shared_info *shinfo;
+	unsigned char *data;
+
+
+	SFDPRINTK("build skb[%d] 0x%p size %d\n", skb->pool->pool_id, skb, size);
+	size = SKB_WITH_OVERHEAD(size);
+	data = skb->per_data;
+	prefetchw(data + size);
+
+
+	memset(skb, 0, offsetof(struct sk_buff, tail));
+	skb->truesize = SKB_TRUESIZE(size);
+	skb->pfmemalloc = skb->per_data_pfmemalloc ;
+	refcount_set(&skb->users, 1);
+	skb->head = data;
+	skb->data = data;
+	skb_reset_tail_pointer(skb);
+	skb->end = skb->tail + size;
+	skb->mac_header = (typeof(skb->mac_header))~0U;
+	skb->transport_header = (typeof(skb->transport_header))~0U;
+
+	/* make sure we initialize shinfo sequentially */
+	shinfo = skb_shinfo(skb);
+	memset(shinfo, 0, offsetof(struct skb_shared_info, dataref));
+	atomic_set(&shinfo->dataref, 1);
+
+	shinfo->pool_id = skb->pool->pool_id;
+
+	return skb;
+}
+
+static struct sk_buff * get_skb_from_pool(struct skb_pool *pool){
+	struct sk_buff *skb = NULL;
+	struct sk_buff_head *free_list = NULL, *recycle_list = NULL;
+	struct sk_buff *skb_recycle_first = NULL,  *skb_recycle_last = NULL;
+	__u32		recycle_qlen = 0;
+	unsigned long flags;
+
+	free_list = &pool->free_list;
+	recycle_list = &pool->recycle_list;
+	pool->pool_hit++;
+
+	SFDPRINTK("skb[%d] pool 0x%p free_list 0x%p, recycle_list 0x%p\n",pool->pool_id ,pool ,free_list, recycle_list);
+//use percpu pool or device pool(device use only one softirq to recv pkt) could use __skb_dequeue
+// check  if we need to splice  recycle  list to  free list
+	if (skb_queue_empty(free_list)) {
+		// when 2 device use common pool, both  try to  splice , only one success
+		spin_lock_irqsave(&recycle_list->lock, flags);
+		if(!skb_queue_empty(recycle_list)){
+			recycle_qlen = recycle_list->qlen;
+			skb_recycle_first = recycle_list->next;
+			skb_recycle_last = recycle_list->prev;
+			__skb_queue_head_init(recycle_list);
+		}
+		spin_unlock_irqrestore(&recycle_list->lock, flags);
+		SFDPRINTK("Splice %u skbs from recycle list\n", recycle_list->qlen);
+
+		if(recycle_qlen != 0 ){
+			if(pool->pool_id == SKB_POOL_COMMON_ID)
+				spin_lock_irqsave(&free_list->lock, flags);
+			// set  first
+			skb_recycle_first->prev = free_list->prev;
+			free_list->prev->next = skb_recycle_first;
+			// set last
+			skb_recycle_last->next = (struct sk_buff *)free_list;
+			free_list->prev = skb_recycle_last;
+
+			free_list->qlen += recycle_qlen;
+
+			if(pool->pool_id == SKB_POOL_COMMON_ID)
+				spin_unlock_irqrestore(&free_list->lock, flags);
+		}
+
+	}
+
+	//mostly could dequeue success here
+	if(pool->pool_id != SKB_POOL_COMMON_ID)
+		skb = __skb_dequeue(free_list);
+	else
+		skb = skb_dequeue(free_list);
+
+	return skb;
+}
+// must be called in softirq otherwise  __skb_dequeue need lock bh
+static struct sk_buff * prepare_pool_skb(struct skb_pool_param_t *p_pool_param, unsigned int size){
+	struct sk_buff *skb = NULL;
+	struct skb_pool *pool = NULL;
+
+
+	size = SKB_DATA_ALIGN(size);
+	size += SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
+	if(!p_pool_param){
+		goto next;
+	}
+
+	if(p_pool_param->enable_skb_pool){
+		pool = p_pool_param->sf_skb_pool;
+		if(size > p_pool_param->skb_size){
+			SFDPRINTK("size too big %d can't got from pool[%d]\n",
+				  size, pool->pool_id);
+			goto next;
+		}
+		skb = get_skb_from_pool(pool);
+		if (skb) {
+			SFDPRINTK("Allocate pool skb[%d] 0x%p resuse data 0x%p size %d\n", skb->pool->pool_id,
+				  skb,skb->per_data, size);
+			prefetchw(skb);
+			goto get_success;
+		}
+		else{
+			SFDPRINTK("Allocate  skb from pool %d fail\n", pool->pool_id);
+			pool->pool_miss++;
+			goto next;
+		}
+	}
+next:
+	// try common pool here
+	// wifi pass null to net_dev_alloc_skb, so if wifi use common pool
+	// remove ndev check
+	if( sf_common_skb_pool_param && sf_common_skb_pool_param->enable_skb_pool){
+		pool = sf_common_skb_pool_param->sf_skb_pool;
+		if(size > sf_common_skb_pool_param->skb_size){
+			SFDPRINTK("size too big %d can't got from pool[%d]\n",
+				  size,SKB_POOL_COMMON_ID );
+			goto get_fail;
+		}
+		skb = get_skb_from_pool(pool);
+		if (skb) {
+			SFDPRINTK("Allocate pool skb[%d] 0x%p resuse data 0x%p size %d\n", skb->pool->pool_id,
+				  skb,skb->per_data, size);
+			prefetchw(skb);
+			goto get_success;
+		}
+		else{
+			SFDPRINTK("Allocate  skb from pool %d fail\n", SKB_POOL_COMMON_ID);
+			pool->pool_miss++;
+			goto get_fail;
+		}
+	}
+get_success:
+	if(skb){
+		if(skb->per_data != NULL)
+			__build_pool_skb(skb,size);
+		else{
+			printk(KERN_ALERT "skbpool [PID-%d] %s:%d\t got pool skb[%d] 0x%p without per_data" , current->pid, __FUNCTION__, __LINE__,skb->pool->pool_id,skb);
+			BUG();
+		}
+		return skb;
+	}
+get_fail:
+	return NULL;
+}
+
+struct sk_buff * __netdev_alloc_skb_from_pool(struct net_device *dev, unsigned int len,
+				   gfp_t gfp_mask, struct skb_pool_param_t * p_pool_param){
+	struct page_frag_cache *nc;
+	unsigned long flags;
+	struct sk_buff *skb;
+	bool pfmemalloc;
+	void *data;
+
+	if(!p_pool_param){
+		printk(KERN_ALERT "skbpool [PID-%d] %s:%d\t  p_pool_param null" , current->pid, __FUNCTION__, __LINE__);
+		return NULL;
+	}
+
+	len += NET_SKB_PAD;
+
+	if ((len > SKB_WITH_OVERHEAD(PAGE_SIZE)) ||
+	    (gfp_mask & (__GFP_DIRECT_RECLAIM | GFP_DMA))) {
+		skb = __alloc_skb(len, gfp_mask, SKB_ALLOC_RX, NUMA_NO_NODE);
+		if (!skb)
+			goto skb_fail;
+		goto skb_success;
+	}
+
+	if(likely(in_softirq()) && p_pool_param->use_skb_pool){
+		skb = prepare_pool_skb(p_pool_param, len);
+		if(skb){
+			goto skb_success;
+		}
+		else{
+			//SFDPRINTK("len %d pad %d\n",len, NET_SKB_PAD);
+			if(p_pool_param->device_skb_pool_alloc_fail){
+				if(!p_pool_param->device_skb_pool_alloc_fail(dev,len))
+					goto skb_fail;
+			}
+		}
+	}
+
+// change to sync with __alloc_skb
+	len = SKB_DATA_ALIGN(len);
+	len += SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
+
+
+	if (sk_memalloc_socks())
+		gfp_mask |= __GFP_MEMALLOC;
+
+	local_irq_save(flags);
+
+	nc = this_cpu_ptr(&netdev_alloc_cache);
+	data = page_frag_alloc(nc, len, gfp_mask);
+	pfmemalloc = nc->pfmemalloc;
+
+	local_irq_restore(flags);
+
+	if (unlikely(!data))
+		return NULL;
+
+	skb = __build_skb(data, len);
+	if (unlikely(!skb)) {
+		skb_free_frag(data);
+		return NULL;
+	}
+
+	/* use OR instead of assignment to avoid clearing of bits in mask */
+	if (pfmemalloc)
+		skb->pfmemalloc = 1;
+	skb->head_frag = 1;
+
+skb_success:
+	skb_reserve(skb, NET_SKB_PAD);
+	skb->dev = dev;
+
+skb_fail:
+	return skb;
+}
+EXPORT_SYMBOL(__netdev_alloc_skb_from_pool);
+#endif
+
 /**
  *	__netdev_alloc_skb - allocate an skbuff for rx on a specific device
  *	@dev: network device to receive on
@@ -403,8 +648,10 @@ struct sk_buff *__netdev_alloc_skb(struct net_device *dev, unsigned int len,
 		goto skb_success;
 	}
 
-	len += SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
+// change to sync with __alloc_skb
 	len = SKB_DATA_ALIGN(len);
+	len += SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
+
 
 	if (sk_memalloc_socks())
 		gfp_mask |= __GFP_MEMALLOC;
@@ -439,6 +686,8 @@ skb_fail:
 	return skb;
 }
 EXPORT_SYMBOL(__netdev_alloc_skb);
+
+
 
 /**
  *	__napi_alloc_skb - allocate skbuff for rx in a specific NAPI instance
@@ -567,13 +816,6 @@ static void skb_free_head(struct sk_buff *skb)
 		kfree(head);
 }
 
-static bool vendor_priv_pool_check_magic(struct sk_buff *skb)
-{
-    if (skb->head && skb->vendor_free)
-        return true;
-    return false;
-}
-
 static void skb_release_data(struct sk_buff *skb)
 {
 	struct skb_shared_info *shinfo = skb_shinfo(skb);
@@ -583,17 +825,48 @@ static void skb_release_data(struct sk_buff *skb)
             atomic_sub_return(skb->nohdr ? (1 << SKB_DATAREF_SHIFT) + 1 : 1,
                 &shinfo->dataref))
         return ;
-
+#ifdef  CONFIG_SF_SKB_POOL
+	if (skb->cloned){
+		SFDPRINTK("got  cloned skb free  here 0x%p  skb[%d]\n",skb, skb->pool?skb->pool->pool_id:SKB_POOL_INVALID_ID);
+	}
+	//SFDPRINTK("Release data[%d] 0x%p of skb[%d] 0x%p", skb_shinfo(skb)->pool_id, skb->head, skb->pool?skb->pool->pool_id:SKB_POOL_INVALID_ID, skb) ;
+#endif
 	for (i = 0; i < shinfo->nr_frags; i++)
 		__skb_frag_unref(&shinfo->frags[i]);
 
 	if (shinfo->frag_list)
 		kfree_skb_list(shinfo->frag_list);
 
+
 	skb_zcopy_clear(skb, true);
+#ifdef CONFIG_SF_SKB_POOL
+	if(IS_SKB_FROM_POOL(skb) && !IS_DATA_FROM_POOL(skb_shinfo(skb))){
+		FSFDPRINTK("Free reload/change cloned %d data[%d]  data 0x%p  per_data 0x%p for pool skb[%d] 0x%p from %pS in release_data\n",
+			skb->cloned,skb_shinfo(skb)->pool_id, skb->head, skb->per_data, skb->pool->pool_id, skb, __builtin_return_address(0));
+	}
+
+	if (IS_DATA_FROM_POOL(skb_shinfo(skb))) {
+		SFDPRINTK("Reserve data[%d] 0x%p for skb[%d] 0x%p\n",
+			skb_shinfo(skb)->pool_id, skb->head, skb->pool->pool_id, skb);
+		return;
+	}
+#endif
 	skb_free_head(skb);
 }
+#ifdef CONFIG_SF_SKB_POOL
+static void kfree_pool_skbmem(struct sk_buff *skb)
+{
+	struct skb_pool *pool;
 
+	pool = skb->pool;
+	skb_queue_head(&pool->recycle_list, skb);
+	SFDPRINTK("Free pool skb[%d] 0x%p per data 0x%p into recycle list\n", pool->pool_id, skb, skb->per_data);
+	if(IS_SKB_FROM_POOL(skb) && !IS_DATA_FROM_POOL(skb_shinfo(skb))){
+		FSFDPRINTK("Free reload/change -skb- clone %d  data[%d]  data 0x%p  per_data 0x%p for pool skb[%d] 0x%p from %pS in kfree_skbmem\n",
+			skb->cloned, skb_shinfo(skb)->pool_id, skb->head ,skb->per_data, pool->pool_id, skb, __builtin_return_address(0));
+	}
+}
+#endif
 /*
  *	Free an skbuff by memory without cleaning the state.
  */
@@ -603,7 +876,16 @@ static void kfree_skbmem(struct sk_buff *skb)
 
 	switch (skb->fclone) {
 	case SKB_FCLONE_UNAVAILABLE:
-		kmem_cache_free(skbuff_head_cache, skb);
+#ifdef CONFIG_SF_SKB_POOL
+			if (IS_SKB_FROM_POOL(skb)) {
+				kfree_pool_skbmem(skb);
+			} else {
+				//SFDPRINTK("Free regular skb[%d] 0x%p\n", SKB_POOL_INVALID_ID, skb);
+				kmem_cache_free(skbuff_head_cache, skb);
+			}
+#else
+			kmem_cache_free(skbuff_head_cache, skb);
+#endif
 		return;
 
 	case SKB_FCLONE_ORIG:
@@ -648,11 +930,6 @@ static bool skb_release_all(struct sk_buff *skb, bool force_release)
 {
 	skb_release_head_state(skb);
 
-    if (vendor_priv_pool_check_magic(skb) &&
-            skb->vendor_free(skb, force_release)) {
-        return false;
-    }
-
 	if (likely(skb->head))
 		skb_release_data(skb);
     return true;
@@ -670,7 +947,7 @@ static bool skb_release_all(struct sk_buff *skb, bool force_release)
 void __kfree_skb(struct sk_buff *skb)
 {
 	if (skb_release_all(skb, false))
-	    kfree_skbmem(skb);
+			kfree_skbmem(skb);
 }
 EXPORT_SYMBOL(__kfree_skb);
 
@@ -744,12 +1021,6 @@ void __consume_stateless_skb(struct sk_buff *skb)
 {
 	trace_consume_skb(skb);
 
-    // If the vendor priv pool consume this skb
-    // return it , do not free the memory and skb shell
-    if (vendor_priv_pool_check_magic(skb) &&
-            skb->vendor_free(skb, false)) {
-        return;
-    }
 	skb_release_data(skb);
 	kfree_skbmem(skb);
 }
@@ -772,9 +1043,13 @@ static inline void _kfree_skb_defer(struct sk_buff *skb)
 
 	/* drop skb->head and call any destructors for packet */
     // Release the skb totally, because skb shell will be freed in kmem_cache_free_bulk
-    // vendor private skb pool can not hold that skb, otherwise it will casue use after free
 	skb_release_all(skb, true);
-
+#ifdef CONFIG_SF_SKB_POOL
+	if(IS_SKB_FROM_POOL(skb)){
+		kfree_skbmem(skb);
+		return;
+	}
+#endif
 	/* record skb to CPU local list */
 	nc->skb_cache[nc->skb_count++] = skb;
 
@@ -900,7 +1175,6 @@ static struct sk_buff *__skb_clone(struct sk_buff *n, struct sk_buff *skb)
 	n->peeked = 0;
 	C(pfmemalloc);
 	n->destructor = NULL;
-    n->vendor_free = NULL;
 	C(tail);
 	C(end);
 	C(head);
@@ -928,7 +1202,34 @@ static struct sk_buff *__skb_clone(struct sk_buff *n, struct sk_buff *skb)
  */
 struct sk_buff *skb_morph(struct sk_buff *dst, struct sk_buff *src)
 {
+#ifdef CONFIG_SF_SKB_POOL
+	bool pfmemalloc;
+	gfp_t gfp_mask_pool;
+	unsigned char *data;
+#endif
+#ifdef CONFIG_SF_SKB_POOL
+	if (IS_DATA_FROM_POOL(skb_shinfo(src))) {
+		gfp_mask_pool = GFP_KERNEL;
+		if (skb_pfmemalloc(src))
+			gfp_mask_pool |= __GFP_MEMALLOC;
+		data = kmalloc_reserve(src->pool->pool_param.skb_size, gfp_mask_pool, NUMA_NO_NODE, &pfmemalloc);
+		if(data == NULL){
+			printk(KERN_ALERT "Reload skb 0x%p data but alloc fail in morph\n",src);
+			return NULL;
+		}
+		src->per_data_pfmemalloc = pfmemalloc;
+		/* For pool skb, after being cloned, the skb data needs to be reloaded. */
+		/* Mark the pool_id -1, therefore it would be released in skb_release_data. */
+
+		FSFDPRINTK("Reload data[%d] 0x%p  with  new per data 0x%p for old pool skb[%d] 0x%p from %pS in morph\n",
+			skb_shinfo(src)->pool_id, src->per_data,  data, src->pool->pool_id, src, __builtin_return_address(0));
+
+		skb_shinfo(src)->pool_id = SKB_POOL_INVALID_ID;
+		src->per_data = data;
+	}
+#endif
 	skb_release_all(dst, true);
+
 	return __skb_clone(dst, src);
 }
 EXPORT_SYMBOL_GPL(skb_morph);
@@ -1304,6 +1605,10 @@ struct sk_buff *skb_clone(struct sk_buff *skb, gfp_t gfp_mask)
 						       struct sk_buff_fclones,
 						       skb1);
 	struct sk_buff *n;
+#ifdef CONFIG_SF_SKB_POOL
+	bool pfmemalloc;
+	unsigned char *data;
+#endif
 
 	if (skb_orphan_frags(skb, gfp_mask))
 		return NULL;
@@ -1319,7 +1624,29 @@ struct sk_buff *skb_clone(struct sk_buff *skb, gfp_t gfp_mask)
 		n = kmem_cache_alloc(skbuff_head_cache, gfp_mask);
 		if (!n)
 			return NULL;
+#ifdef CONFIG_SF_SKB_POOL
+		if (IS_DATA_FROM_POOL(skb_shinfo(skb))) {
+			if (skb_pfmemalloc(skb))
+				gfp_mask |= __GFP_MEMALLOC;
+			data = kmalloc_reserve(skb->pool->pool_param.skb_size, gfp_mask, NUMA_NO_NODE, &pfmemalloc);
+			if(data == NULL){
+				printk(KERN_ALERT "Reload skb 0x%p data but alloc fail\n",skb);
+				kmem_cache_free(skbuff_head_cache, n);
+				return NULL;
+			}
+			skb->per_data_pfmemalloc = pfmemalloc;
 
+			FSFDPRINTK("Reload data[%d] 0x%p with  new per data 0x%p  for old pool skb[%d] 0x%p from %pS in clone\n",
+				skb_shinfo(skb)->pool_id, skb->per_data, data, skb->pool->pool_id, skb, __builtin_return_address(0));
+
+			/* For pool skb, after being cloned, the skb data needs to be reloaded. */
+			/* Mark the pool_id -1, therefore it would be released in skb_release_data. */
+			skb_shinfo(skb)->pool_id = SKB_POOL_INVALID_ID;
+			skb->per_data = data;
+		}
+
+
+#endif
 		n->fclone = SKB_FCLONE_UNAVAILABLE;
 	}
 
@@ -1511,7 +1838,9 @@ int pskb_expand_head(struct sk_buff *skb, int nhead, int ntail,
 	memcpy((struct skb_shared_info *)(data + size),
 	       skb_shinfo(skb),
 	       offsetof(struct skb_shared_info, frags[skb_shinfo(skb)->nr_frags]));
-
+#ifdef CONFIG_SF_SKB_POOL
+	((struct skb_shared_info *)(data + size))->pool_id = SKB_POOL_INVALID_ID;
+#endif
 	/*
 	 * if shinfo is shared we must drop the old head gracefully, but if it
 	 * is not we can just drop the old head and let the existing refcount
@@ -1530,7 +1859,17 @@ int pskb_expand_head(struct sk_buff *skb, int nhead, int ntail,
 
 		skb_release_data(skb);
 	} else {
+#ifdef CONFIG_SF_SKB_POOL
+			if(!IS_DATA_FROM_POOL(skb_shinfo(skb))) {
+				skb_free_head(skb);
+			}
+			else{
+				FSFDPRINTK("Change pool skb[%d] 0x%p  data 0x%p to 0x%p  perdata 0x%p %pS in expand\n",
+					skb->pool->pool_id, skb, skb->head, data, skb->per_data, __builtin_return_address(0));
+			}
+#else
 		skb_free_head(skb);
+#endif
 	}
 	off = (data + nhead) - skb->head;
 
@@ -3949,18 +4288,381 @@ done:
 }
 EXPORT_SYMBOL_GPL(skb_gro_receive);
 
+#ifdef CONFIG_SF_SKB_POOL
+static void skb_pool_decrease(struct skb_pool_param_t * pool_param, unsigned int pool_skb_num){
+	struct skb_pool *skb_pool = pool_param->sf_skb_pool;
+	struct sk_buff_head *recycle_list = &(skb_pool->recycle_list);
+	struct sk_buff *skb;
+	unsigned int i = 0;
+	unsigned int free_count = 0;
+	unsigned int adjust_num = min_t(u32, recycle_list->qlen, pool_skb_num);
+	for ( i = 0; i < adjust_num; i++){
+		skb = skb_dequeue(recycle_list);
+		if(skb){
+				//skb->pool= NULL;
+				//skb_shinfo(skb)->pool_id = SKB_POOL_INVALID_ID;
+				kfree(skb->per_data);
+				kmem_cache_free(pool_param->skbuff_pool_head_cache, skb);
+				free_count++;
+		}
+		else{
+			break;
+		}
+	}
+	pool_param->pool_skb_num -= free_count;
+}
+
+static void skb_pool_increase(struct skb_pool_param_t * pool_param, unsigned int pool_skb_num){
+	struct skb_pool *skb_pool = pool_param->sf_skb_pool;
+	struct sk_buff *skb;
+	unsigned int i = 0;
+	unsigned int add_count = 0;
+	bool pfmemalloc;
+	gfp_t gfp_mask;
+
+	for ( i = 0; i < pool_skb_num; i++){
+		gfp_mask = GFP_ATOMIC;
+		if (sk_memalloc_socks())
+			gfp_mask |= __GFP_MEMALLOC;
+		skb = kmem_cache_alloc_node(pool_param->skbuff_pool_head_cache, gfp_mask, NUMA_NO_NODE);
+		if(!skb){
+			break;
+		}
+		skb->per_data = kmalloc_reserve(pool_param->skb_size, gfp_mask, NUMA_NO_NODE, &pfmemalloc);
+		if(skb->per_data == NULL){
+			kmem_cache_free(skbuff_head_cache, skb);
+			break;;
+		}
+		skb->per_data_pfmemalloc = pfmemalloc;
+		skb->pool = skb_pool;
+		skb_queue_head(&skb_pool->recycle_list, skb);
+		add_count++;
+	}
+	pool_param->pool_skb_num += add_count;
+}
+
+static struct skb_pool_param_t *find_skb_pool(unsigned char pool_id){
+	struct skb_pool_list *rc = NULL;
+	list_for_each_entry(rc,&(sf_skb_pool_list.list),list) {
+		if(rc->pskb_pool->pool_id == pool_id){
+			SFDPRINTK("find exist pool 0x%p id%d \n", rc->pskb_pool,pool_id);
+			return &(rc->pskb_pool->pool_param);
+		}
+	}
+	return NULL;
+}
+
+static struct skb_pool_list *skb_pool_get_next(struct skb_pool_list *rc,loff_t *pos)
+{
+	struct skb_pool_list *next_rc = NULL;
+
+	next_rc = list_next_entry(rc, list);
+	//SFDPRINTK("head 0x%p, rc 0x%p, next 0x%p pos %lld\n", &sf_skb_pool_list,rc, next_rc,*pos);
+
+	if(next_rc == &sf_skb_pool_list){
+		++*pos;
+		return NULL;
+	}
+	//SFDPRINTK("got nextrc 0x%p\n",  next_rc);
+	return next_rc;
+}
+
+static void *skb_pool_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+{
+
+	return skb_pool_get_next((struct skb_pool_list *)v,pos);
+}
+
+static void skb_pool_seq_stop(struct seq_file *seq, void *v)
+{
+
+}
+
+static void *skb_pool_seq_start(struct seq_file *seq, loff_t *pos)
+{
+	if(*pos > 0)
+		return NULL;
+	seq_printf(seq, "%s\t%-15s%-15s%-15s%-15s%-15s%-15s%-15s%-15s\n",
+		"ID", "Free", "Recycle","Total Free",
+		"Pool_hit", "Pool_miss","Pool_num","Skb size","Enable");
+
+	return skb_pool_get_next(&sf_skb_pool_list,pos);
+}
+
+static int skb_pool_seq_show(struct seq_file *seq, void *v)
+{
+	struct skb_pool *s = ((struct skb_pool_list *)v)->pskb_pool;
+	struct skb_pool_param_t *pool_param = &(s->pool_param);
+	seq_printf(seq, "%u\t%-15u%-15u%-15u%-15lu%-15lu%-15u%-15u%-15u\n",
+		s->pool_id, s->free_list.qlen, s->recycle_list.qlen, s->free_list.qlen + s->recycle_list.qlen,
+		s->pool_hit, s->pool_miss, pool_param->pool_skb_num,pool_param->skb_size,pool_param->enable_skb_pool);
+
+	return 0;
+}
+static const struct seq_operations skb_pool_seq_ops = {
+	.start = skb_pool_seq_start,
+	.next  = skb_pool_seq_next,
+	.stop  = skb_pool_seq_stop,
+	.show  = skb_pool_seq_show,
+};
+
+static int skb_pool_seq_open(struct inode *inode, struct file *file)
+{
+	return seq_open(file, &skb_pool_seq_ops);
+}
+static void print_help(void)
+{
+	printk(" example: echo reset         [pool id], reset pool count\n");
+	printk(" example: echo enable        [pool id], enable pool \n");
+	printk(" example: echo disable       [pool id], disable pool\n");
+	printk(" example: echo log	         [0/1], disable debug log \n");
+	printk(" example: echo flog	         [0/1], disable debug flog \n");
+	printk(" example: echo inc   	     [pool_id] [num], increase pool skb num \n");
+	printk(" example: echo dec   	     [pool_id] [num], decrease pool skb num \n");
+}
+ssize_t skb_pool_cmd(struct file *file, const char __user *buf, size_t size, loff_t *ppos)
+{
+	struct skb_pool_list *rc = NULL;
+	struct skb_pool *s = NULL;
+	unsigned long i = 0, last_i = 0, index_arg = 0;
+	char l_buf[128] = {0};
+	char str[3][18] = {'\0'};
+	size_t len = min_t(size_t, size, sizeof(l_buf) - 1);
+	unsigned int value = 0;
+	unsigned int value2 = 0;
+	int ret = -1;
+	struct skb_pool_param_t * pool_param = NULL;
+	if (copy_from_user(l_buf, buf, len))
+		return -EFAULT;
+
+	for(; i < len; i++){
+		if(l_buf[i] == ' '){
+			memcpy(str[index_arg], l_buf + last_i, i - last_i);
+			last_i = i + 1;
+			index_arg++;
+		}
+	}
+	memcpy(str[index_arg], l_buf + last_i, len - last_i);
+
+	//SFDPRINTK("get  cmd  %s str[0] %s str[1] %s size %d ppos%lld\n", l_buf,str[0],str[1],size,*ppos);
+	if (strncmp(str[0], "help", 4) == 0){
+		print_help();
+		return size;
+	}
+	else if (strncmp(str[0], "reset", 5) == 0){
+			ret = kstrtou32(str[1], 0, &value);
+			printk("reset pool %d\n",value);
+			list_for_each_entry(rc,&(sf_skb_pool_list.list),list) {
+				s = rc->pskb_pool;
+				pool_param = &(s->pool_param);
+				if(pool_param){
+					if(pool_param->pool_id == value){
+						s->pool_hit = 0;
+						s->pool_miss = 0;
+						break;
+					}
+				}
+			}
+
+		return size;
+	}
+	else if (strncmp(str[0], "enable", 5) == 0){
+			ret = kstrtou32(str[1], 0, &value);
+			printk("enable pool %d\n",value);
+			list_for_each_entry(rc,&(sf_skb_pool_list.list),list) {
+				s = rc->pskb_pool;
+				pool_param = &(s->pool_param);
+				if(pool_param){
+					if(pool_param->pool_id == value){
+						pool_param->enable_skb_pool = 1;
+						break;
+					}
+				}
+			}
+
+		return size;
+	}
+	else if (strncmp(str[0], "disable", 5) == 0){
+			ret = kstrtou32(str[1], 0, &value);
+			printk("disable pool %d\n",value);
+			list_for_each_entry(rc,&(sf_skb_pool_list.list),list) {
+				s = rc->pskb_pool;
+				pool_param = &(s->pool_param);
+				if(pool_param){
+					if(pool_param->pool_id == value){
+						pool_param->enable_skb_pool = 0;
+						break;
+					}
+				}
+			}
+		return size;
+	}
+	else if (strncmp(str[0], "log", 3) == 0){
+			ret = kstrtou32(str[1], 0, &value);
+			printk("set log pool %d\n",value);
+			if(value){
+				enable_log = 1;
+			}
+			else{
+				enable_log = 0;
+			}
+		return size;
+	}
+	else if (strncmp(str[0], "flog", 4) == 0){
+			ret = kstrtou32(str[1], 0, &value);
+			printk("set log pool %d\n",value);
+			if(value){
+				enable_flog = 1;
+			}
+			else{
+				enable_flog = 0;
+			}
+		return size;
+	}
+	else if (strncmp(str[0], "inc", 3) == 0){
+		ret = kstrtou32(str[1], 0, &value);
+		ret = kstrtou32(str[2], 0, &value2);
+		printk("increase pool %d num %d\n",value,value2);
+		pool_param = find_skb_pool(value);
+		if(pool_param)
+			skb_pool_increase(pool_param,value2);
+
+		return size;
+	}
+	else if (strncmp(str[0], "dec", 3) == 0){
+		ret = kstrtou32(str[1], 0, &value);
+		ret = kstrtou32(str[2], 0, &value2);
+		printk("decrease pool %d num %d\n",value,value2);
+		pool_param = find_skb_pool(value);
+		if(pool_param)
+			skb_pool_decrease(pool_param,value2);
+
+		return size;
+	}
+
+	return size;
+}
+static const struct file_operations skb_pool_fops = {
+	.owner	 = THIS_MODULE,
+	.open    = skb_pool_seq_open,
+	.read    = seq_read,
+	.llseek  = seq_lseek,
+	.release = seq_release,
+	.write   = skb_pool_cmd,
+};
+
+static inline void skb_alloc_init_pool(void *foo)
+{
+	struct sk_buff *skb = (struct sk_buff *)foo;
+
+	skb->pool = NULL;
+}
+static inline void skb_clone_alloc_init_pool(void *foo)
+{
+	struct sk_buff_fclones *fclones = (struct sk_buff_fclones *)foo;
+
+	fclones->skb1.pool = NULL;
+	fclones->skb2.pool = NULL;
+}
+
+struct skb_pool_param_t *skb_pool_init(unsigned char pool_id,
+	unsigned int pool_skb_num, unsigned int  skb_size){
+
+	struct skb_pool *skb_pool;
+	struct skb_pool_list *pskb_pool_list_node;
+	struct kmem_cache *skbuff_pool_head_cache;
+	struct sk_buff *skb;
+	unsigned int i;
+	struct skb_pool_param_t * pool_param;
+	gfp_t gfp_mask;
+	char pool_name[25];
+	bool pfmemalloc;
+
+	if(pool_id >= SKB_POOL_MAX_ID){
+		SFDPRINTK("illegal pool id init fail %d\n", pool_id);
+		return NULL;
+	}
+
+	pool_param = find_skb_pool(pool_id);
+	if(pool_param){
+		return pool_param;
+	}
+
+	skb_pool = kmalloc(sizeof(struct skb_pool),GFP_KERNEL);
+	pool_param = &skb_pool->pool_param ;
+	pool_param->sf_skb_pool = skb_pool;
+
+	skb_pool->pool_id = pool_param->pool_id = pool_id;
+	pool_param->pool_skb_num = pool_skb_num;
+	pool_param->skb_size = skb_size;
+
+	sprintf(pool_name, "skbuff_pool_head_cache_%d", pool_id);
+	skbuff_pool_head_cache = pool_param->skbuff_pool_head_cache = kmem_cache_create(pool_name,
+							sizeof(struct sk_buff),
+							0,
+							SLAB_HWCACHE_ALIGN | SLAB_PANIC,
+							NULL);
+
+
+	skb_queue_head_init(&skb_pool->free_list);
+	skb_queue_head_init(&skb_pool->recycle_list);
+	skb_pool->pool_hit = skb_pool->pool_miss = 0;
+
+	for (i = 0; i < pool_skb_num; i++) {
+		gfp_mask = GFP_ATOMIC;
+		if (sk_memalloc_socks())
+			gfp_mask |= __GFP_MEMALLOC;
+		skb = kmem_cache_alloc_node(skbuff_pool_head_cache, gfp_mask, NUMA_NO_NODE);
+		skb->per_data = kmalloc_reserve(skb_size, gfp_mask, NUMA_NO_NODE, &pfmemalloc);
+		skb->per_data_pfmemalloc = pfmemalloc;
+		skb->pool = skb_pool;
+
+		skb_queue_head(&skb_pool->free_list, skb);
+	}
+
+	pskb_pool_list_node = (struct skb_pool_list *)kmalloc(sizeof(struct skb_pool_list),GFP_KERNEL);
+	pskb_pool_list_node->pskb_pool = skb_pool;
+	list_add(&(pskb_pool_list_node->list),&(sf_skb_pool_list.list));
+	SFDPRINTK("skb pool[%d] init success num  %d name %s pool 0x%p pool list 0x%p\n", pool_id,pool_skb_num,pool_name,skb_pool,pskb_pool_list_node);
+	return pool_param;
+}
+EXPORT_SYMBOL(skb_pool_init);
+#endif
 void __init skb_init(void)
 {
+#ifdef CONFIG_SF_SKB_POOL
+	skbuff_head_cache = kmem_cache_create("skbuff_head_cache",
+					      sizeof(struct sk_buff),
+					      0,
+					      SLAB_HWCACHE_ALIGN|SLAB_PANIC,
+					      skb_alloc_init_pool);
+	INIT_LIST_HEAD(&sf_skb_pool_list.list);
+
+	sf_common_skb_pool_param = skb_pool_init(SKB_POOL_COMMON_ID,MAX_POOL_SKB_NUM,MAX_POOL_SKB_RAW_SIZE);
+	sf_common_skb_pool_param->enable_skb_pool = 0;
+
+
+	proc_create("skb_pool", S_IRUGO, init_net.proc_net, &skb_pool_fops);
+#else
 	skbuff_head_cache = kmem_cache_create("skbuff_head_cache",
 					      sizeof(struct sk_buff),
 					      0,
 					      SLAB_HWCACHE_ALIGN|SLAB_PANIC,
 					      NULL);
+#endif
+#ifdef CONFIG_SF_SKB_POOL
+	skbuff_fclone_cache = kmem_cache_create("skbuff_fclone_cache",
+						sizeof(struct sk_buff_fclones),
+						0,
+						SLAB_HWCACHE_ALIGN|SLAB_PANIC,
+						skb_clone_alloc_init_pool);
+#else
 	skbuff_fclone_cache = kmem_cache_create("skbuff_fclone_cache",
 						sizeof(struct sk_buff_fclones),
 						0,
 						SLAB_HWCACHE_ALIGN|SLAB_PANIC,
 						NULL);
+#endif
 }
 
 static int
@@ -4812,9 +5514,6 @@ void kfree_skb_partial(struct sk_buff *skb, bool head_stolen)
 {
 	if (head_stolen) {
 		skb_release_head_state(skb);
-		//XC:9754 if skb from rx buffer pool, remove it from pool
-		if (vendor_priv_pool_check_magic(skb))
-		  skb->vendor_free(skb, 1);
 
 		kmem_cache_free(skbuff_head_cache, skb);
 	} else {
@@ -5286,6 +5985,9 @@ static int pskb_carve_inside_header(struct sk_buff *skb, const u32 off,
 	       skb_shinfo(skb),
 	       offsetof(struct skb_shared_info,
 			frags[skb_shinfo(skb)->nr_frags]));
+#ifdef CONFIG_SF_SKB_POOL
+	((struct skb_shared_info *)(data + size))->pool_id = SKB_POOL_INVALID_ID;
+#endif
 	if (skb_cloned(skb)) {
 		/* drop the old head gracefully */
 		if (skb_orphan_frags(skb, gfp_mask)) {
@@ -5301,7 +6003,17 @@ static int pskb_carve_inside_header(struct sk_buff *skb, const u32 off,
 		/* we can reuse existing recount- all we did was
 		 * relocate values
 		 */
+#ifdef CONFIG_SF_SKB_POOL
+		if(!IS_DATA_FROM_POOL(skb_shinfo(skb))) {
+			skb_free_head(skb);
+		}
+		else{
+			FSFDPRINTK("Change pool skb[%d] 0x%p  data 0x%p to 0x%p  perdata 0x%p %pS in carve\n",
+					skb->pool->pool_id, skb, skb->head, data, skb->per_data, __builtin_return_address(0));
+		}
+#else
 		skb_free_head(skb);
+#endif
 	}
 
 	skb->head = data;
@@ -5318,7 +6030,6 @@ static int pskb_carve_inside_header(struct sk_buff *skb, const u32 off,
 	skb->hdr_len = 0;
 	skb->nohdr = 0;
 	atomic_set(&skb_shinfo(skb)->dataref, 1);
-
 	return 0;
 }
 
@@ -5405,6 +6116,9 @@ static int pskb_carve_inside_nonlinear(struct sk_buff *skb, const u32 off,
 	memcpy((struct skb_shared_info *)(data + size),
 	       skb_shinfo(skb), offsetof(struct skb_shared_info,
 					 frags[skb_shinfo(skb)->nr_frags]));
+#ifdef CONFIG_SF_SKB_POOL
+	((struct skb_shared_info *)(data + size))->pool_id = SKB_POOL_INVALID_ID;
+#endif
 	if (skb_orphan_frags(skb, gfp_mask)) {
 		kfree(data);
 		return -ENOMEM;
@@ -5441,8 +6155,14 @@ static int pskb_carve_inside_nonlinear(struct sk_buff *skb, const u32 off,
 		/* split line is in frag list */
 		pskb_carve_frag_list(skb, shinfo, off - pos, gfp_mask);
 	}
-	skb_release_data(skb);
 
+	skb_release_data(skb);
+#ifdef CONFIG_SF_SKB_POOL
+	if(IS_DATA_FROM_POOL(skb_shinfo(skb))) {
+		FSFDPRINTK("Change pool skb[%d] 0x%p  data 0x%p from  perdata 0x%p to 0x%p  %pS in carve noline\n",
+			skb->pool->pool_id, skb, skb->head, skb->per_data, data,  __builtin_return_address(0));
+	}
+#endif
 	skb->head = data;
 	skb->head_frag = 0;
 	skb->data = data;

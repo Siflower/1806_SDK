@@ -948,6 +948,10 @@ static const struct flash_info spi_nor_ids[] = {
 
 	{ "at45db081d", INFO(0x1f2500, 0, 64 * 1024, 16, SECT_4K) },
 
+	/* CFX -- gm25xxx */
+	{ "gm25q64a",  INFO(0x1c4017, 0, 64 * 1024, 128, SECT_4K) },
+	{ "gm25q128a",  INFO(0x1c4018, 0, 64 * 1024, 256, SECT_4K) },
+
 	/* EON -- en25xxx */
 	{ "en25f32",    INFO(0x1c3116, 0, 64 * 1024,   64, SECT_4K) },
 	{ "en25p32",    INFO(0x1c2016, 0, 64 * 1024,   64, 0) },

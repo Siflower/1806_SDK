@@ -1,0 +1,13 @@
+Index: fstools-2018-09-29-29e53af0/libfstools/mtd.c
+===================================================================
+--- fstools-2018-09-29-29e53af0.orig/libfstools/mtd.c
++++ fstools-2018-09-29-29e53af0/libfstools/mtd.c
+@@ -215,7 +215,7 @@ static int mtd_volume_identify(struct vo
+ 		return FS_JFFS2;
+ 	}
+ 
+-	if (v->type == UBIVOLUME && deadc0de == 0xffffffff) {
++	if ((v->type == UBIVOLUME || v->type == NANDFLASH) && deadc0de == 0xffffffff) {
+ 		return FS_JFFS2;
+ 	}
+ 

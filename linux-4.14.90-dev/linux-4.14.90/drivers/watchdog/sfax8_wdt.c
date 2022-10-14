@@ -37,7 +37,8 @@
 #include <sf19a28.h>
 
 static DEFINE_PER_CPU(struct timer_list, sfax8_wdt_timer);
-atomic_t g_last_jiffies[4];
+static atomic_t g_last_jiffies[4];
+static unsigned long g_cpu_zero_next_timer = 0;
 
 #define WDOG_CONTROL_REG_OFFSET		    0x00
 #define WDOG_CONTROL_REG_WDT_EN_MASK	    0x01
@@ -143,8 +144,20 @@ static void sfax8_wdt_ping_cpu(void * iwdd){
 		}
 	}
 
-	mod_timer(t, jiffies + (wdd->timeout * HZ - HZ/2 )/ 2);
+	if(cpu==0){
+		g_cpu_zero_next_timer = jiffies + (wdd->timeout * HZ - HZ/2 )/ 2;
+		mod_timer(t, g_cpu_zero_next_timer);
+	}
+	else{
+		if(jiffies >= g_cpu_zero_next_timer){
+			mod_timer(t, jiffies + wdd->timeout * HZ/2);
+		}
+		else{
+		//	printk("[wdt info] cpu:%d sync next timer with cpu0 %lu\n",cpu,g_cpu_zero_next_timer);
+			mod_timer(t, g_cpu_zero_next_timer);
+		}
 
+	}
 	// printk("[wdt_info]  cpu%d set jiffies %08x now %08x\n", cpu,atomic_read(&(g_last_jiffies[cpu])), jiffies);
 }
 

@@ -52,6 +52,7 @@ NOSTDINC_FLAGS += -DCONFIG_SFAX8_ESWITCH_LIGHT
 endif
 
 SFAX8_KO_NAME="sf_eswitch.ko"
+
 ifneq ($(findstring NF,$(PROFILE)),)
 SFAX8_KO_NAME="nf_sf_eswitch.ko"
 endif
@@ -62,6 +63,10 @@ endif
 
 ifneq ($(findstring NAND,$(PROFILE)),)
 SFAX8_KO_NAME="sf_eswitch_nand.ko"
+endif
+
+ifneq ($(findstring EVB,$(PROFILE)),)
+SFAX8_KO_NAME="sf_eswitch_evb.ko"
 endif
 
 define Build/Prepare

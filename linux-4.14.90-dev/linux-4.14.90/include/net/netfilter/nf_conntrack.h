@@ -61,6 +61,7 @@ struct nf_conn {
 	/*bit 0 --  snat udp checksum  stat(0- checksum normal 1- checksum  0)*/
 	/* bit 1 --  dnat udp checksum  stat(0- checksum normal 1- checksum  0)*/
 	u8   udp_checksum_stat;
+	u8   udp_frag_stat;
 
 	spinlock_t	lock;
 	u16		cpu;
