@@ -1,0 +1,14 @@
+Index: hostapd-2019-08-08-ca8c2bd2/src/drivers/driver_nl80211.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/drivers/driver_nl80211.c
++++ hostapd-2019-08-08-ca8c2bd2/src/drivers/driver_nl80211.c
+@@ -4877,7 +4877,8 @@ static int nl80211_create_iface_once(str
+ 	msg = nl80211_cmd_msg(drv->first_bss, 0, NL80211_CMD_NEW_INTERFACE);
+ 	if (!msg ||
+ 	    nla_put_string(msg, NL80211_ATTR_IFNAME, ifname) ||
+-	    nla_put_u32(msg, NL80211_ATTR_IFTYPE, iftype))
++	    nla_put_u32(msg, NL80211_ATTR_IFTYPE, iftype) ||
++        nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, addr))
+ 		goto fail;
+ 
+ 	if (iftype == NL80211_IFTYPE_MONITOR) {

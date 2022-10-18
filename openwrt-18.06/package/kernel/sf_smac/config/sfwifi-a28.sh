@@ -27,7 +27,7 @@ insmod_rf() {
 insmod_rf_ate() {
 #   umount /sys/kernel/debug
 #   mount -t debugfs none /sys/kernel/debug
-    cmd="/sbin/insmod sf16a18_rf thermal_on=0"
+    cmd="/sbin/insmod sf16a18_rf thermal_on=1"
 	eval $cmd
     sleep 1
 }
@@ -73,6 +73,7 @@ insmod_umac(){
     ampdu_max_cnt=${ampdu_max_cnt-32}
     independent_antenna_control=${independent_antenna_control-0}
 	rts_cts_change=${rts_cts_change-2}
+    ampdu_density=${ampdu_density-7}
     "
     smac_modparams="
     mfp_on=${mfp_on-0}

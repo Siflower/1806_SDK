@@ -5,4 +5,50 @@
 # Internal uci firewall chains are flushed and recreated on reload, so
 # put custom rules into the root chains e.g. INPUT or FORWARD or into the
 # special user chains, e.g. input_wan_rule or postrouting_lan_rule.
+sleep 1
+test_result=`iptables -nL |grep "^zone_lan_input"`
+uci_result=`uci show firewall |grep input`
+# echo "test result is $test_result" >> /etc/got_error
+# echo "================================================" >> /etc/got_error
+# echo "uci result is $uci_result" >> /etc/got_error
+# echo "================================================" >> /etc/got_error
+if [ -z "$test_result" ]; then
+# 	echo "got error and reload firewall" >> /etc/got_error
+# 	echo "================================================" >> /etc/got_error
+	fw3 reload&
+fi
+#init UPLOAD DOWNLOAD
+#speed start
+#acl rules
+lan=$(uci get network.lan.ipaddr)
+test_forward_var=`iptables -L |grep forwardvar`
+test_input_var=`iptables -L -t mangle|grep inputvar`
+test_force_var=`iptables -L -t nat | grep DNAT | grep siwifi`
+#force dns request about siwifi.cn to local dnsmasq
+if [ -z "$test_force_var" ]; then
+    iptables -t nat -I prerouting_rule -p udp --dport 53 -m string --algo bm --from 40 --to 100 --string 'siwifi' -j DNAT --to-destination $lan
+    iptables -t nat -I prerouting_rule -p tcp --dport 53 -m string --algo bm --from 40 --to 100 --string 'siwifi' -j DNAT --to-destination $lan
+else
+    udpindex=$(iptables -L -t nat --line | grep DNAT | grep siwifi | grep udp | awk '{print $1}')
+    iptables -t nat -R prerouting_rule $udpindex -p udp --dport 53 -m string --algo bm --from 40 --to 100 --string 'siwifi' -j DNAT --to-destination $lan
+    tcpindex=$(iptables -L -t nat --line | grep DNAT | grep siwifi | grep tcp | awk '{print $1}')
+    iptables -t nat -R prerouting_rule $tcpindex -p tcp --dport 53 -m string --algo bm --from 40 --to 100 --string 'siwifi' -j DNAT --to-destination $lan
+fi
+if [ -z "$test_forward_var" ]; then
+    iptables -I forwarding_rule -m set --match-set forwardvar src -j DROP
+fi
+if [ -z "$test_input_var" ]; then
+	iptables -t mangle -I PREROUTING -m set --match-set inputvar src -j DROP
+fi
+
+test_url_mac=`iptables -L -t nat|grep urllist_mac`
+if [ -z "$test_url_mac" ]; then
+	iptables -t nat -I zone_lan_prerouting -p udp --dport 53 -m set --match-set urllist_mac src -j DNAT --to-destination $lan
+	iptables -t nat -I zone_lan_prerouting -p tcp --dport 53 -m set --match-set urllist_mac src -j DNAT --to-destination $lan
+else
+	udpindex=$(iptables -L -t nat --line | grep DNAT | grep urllist | grep udp | awk '{print $1}')
+	iptables -t nat -R zone_lan_prerouting $udpindex -p udp --dport 53 -m set --match-set urllist_mac src -j DNAT --to-destination $lan
+	tcpindex=$(iptables -L -t nat --line | grep DNAT | grep urllist | grep tcp | awk '{print $1}')
+	iptables -t nat -R zone_lan_prerouting $tcpindex -p tcp --dport 53 -m set --match-set urllist_mac src -j DNAT --to-destination $lan
+fi
 

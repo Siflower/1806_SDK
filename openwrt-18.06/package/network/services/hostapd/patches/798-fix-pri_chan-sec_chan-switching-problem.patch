@@ -1,0 +1,20 @@
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/hw_features.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/hw_features.c
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/hw_features.c
+@@ -239,6 +239,7 @@ static int ieee80211n_allowed_ht40_chann
+ 
+ static void ieee80211n_switch_pri_sec(struct hostapd_iface *iface)
+ {
++    struct hostapd_data *hapd = container_of(&iface, struct hostapd_data, iface);
+ 	if (iface->conf->secondary_channel > 0) {
+ 		iface->conf->channel += 4;
+ 		iface->conf->secondary_channel = -1;
+@@ -246,6 +247,7 @@ static void ieee80211n_switch_pri_sec(st
+ 		iface->conf->channel -= 4;
+ 		iface->conf->secondary_channel = 1;
+ 	}
++    hapd->iconf->channel = iface->conf->channel;
+ }
+ 
+ 

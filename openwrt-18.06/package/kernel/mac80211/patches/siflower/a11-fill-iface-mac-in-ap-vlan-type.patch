@@ -1,0 +1,14 @@
+Index: backports-4.19.7-1/net/wireless/nl80211.c
+===================================================================
+--- backports-4.19.7-1.orig/net/wireless/nl80211.c
++++ backports-4.19.7-1/net/wireless/nl80211.c
+@@ -3280,6 +3280,9 @@ static int nl80211_new_interface(struct
+ 	    !(rdev->wiphy.interface_modes & (1 << type)))
+ 		return -EOPNOTSUPP;
+ 
++    if ((type == NL80211_IFTYPE_AP_VLAN) && info->attrs[NL80211_ATTR_MAC])
++        nla_memcpy(params.macaddr, info->attrs[NL80211_ATTR_MAC], ETH_ALEN);
++
+ 	if ((type == NL80211_IFTYPE_P2P_DEVICE || type == NL80211_IFTYPE_NAN ||
+ 	     rdev->wiphy.features & NL80211_FEATURE_MAC_ON_CREATE) &&
+ 	    info->attrs[NL80211_ATTR_MAC]) {

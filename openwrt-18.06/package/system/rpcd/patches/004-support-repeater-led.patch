@@ -1,0 +1,49 @@
+Index: rpcd-2018-11-28-3aa81d0d/lepton.c
+===================================================================
+--- rpcd-2018-11-28-3aa81d0d.orig/lepton.c	2021-04-15 16:31:46.333220623 +0800
++++ rpcd-2018-11-28-3aa81d0d/lepton.c	2021-04-15 16:34:02.017226317 +0800
+@@ -703,10 +703,12 @@
+         return -1;
+     }
+     system(cmd);
++	system("echo default-on > /sys/class/leds/repeater-green/trigger");
+     system("uci set network.stabridge.disabled='0'");
+     system("uci commit network");
+     //dnsmasq stop
+     system("uci set basic_setting.dnsmasq.down='1'");
++    system("uci set basic_setting.dev_mode.mode='rep'");
+     system("uci commit basic_setting");
+     system("/etc/init.d/dnsmasq restart");
+     //bridge
+@@ -849,7 +851,10 @@
+ 
+     uci_free_context(get_ctx);
+     uci_free_context(set_ctx);
+-    return 0;
++
++	system("echo timer > /sys/class/leds/repeater-green/trigger");
++
++	return 0;
+ }
+ 
+ static int
+@@ -894,6 +899,7 @@
+     strcat(cmd,"'");
+     system(cmd);
+     system("uci set basic_setting.dnsmasq.down='0'");
++    system("uci set basic_setting.dev_mode.mode='ap'");
+     system("uci commit basic_setting");
+     //close wds connect
+     set_wireless_disable_local("sfi0","1");
+@@ -919,9 +925,9 @@
+     memset(cmd_buf,0,sizeof cmd_buf);
+     fgets(cmd_buf, sizeof cmd_buf, pp);
+     if(cmd_buf[0] == '0'){
+-        system("echo none > /sys/class/leds/wifi-status/trigger");
++        system("echo none > /sys/class/leds/repeater-green/trigger");
+     }else{
+-        system("echo default-on > /sys/class/leds/wifi-status/trigger");
++		system("echo default-on > /sys/class/leds/repeater-green/trigger");
+     }
+ 
+     // this delay_kick will do:

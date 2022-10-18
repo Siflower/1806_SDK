@@ -117,6 +117,7 @@ SF_ARCH=fullmask
 endif
 
 KO_FILE_NAME="src"
+
 ifneq ($(findstring NF,$(PROFILE)),)
 KO_FILE_NAME="nf_src"
 endif
@@ -127,6 +128,10 @@ endif
 
 ifneq ($(findstring NAND,$(PROFILE)),)
 KO_FILE_NAME="src_nand"
+endif
+
+ifneq ($(findstring EVB,$(PROFILE)),)
+KO_FILE_NAME="src_evb"
 endif
 
 define KernelPackage/sf_smac/description
@@ -266,6 +271,8 @@ ifeq ($(CONFIG_NEW_LEDS),y)
 EXTRA_KCONFIG += CONFIG_SF16A18_WIFI_LED=y
 EXTRA_KCONFIG += CONFIG_SF19A28_WIFI_LED=y
 endif
+EXTRA_KCONFIG += CONFIG_SIWIFI_REPEATER=y
+#EXTRA_KCONFIG += CONFIG_SIWIFI_REPEATER_IPV6=y
 #EXTRA_KCONFIG += CONFIG_SIWIFI_IGMP=y
 #CONFIG_SIWIFI_TEMPERATURE_CONTROL=y
 ifdef CONFIG_SIWIFI_TEMPERATURE_CONTROL

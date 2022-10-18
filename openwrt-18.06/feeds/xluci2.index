@@ -1,0 +1,84 @@
+Source-Makefile: feeds/xluci2/applications/luci2-app-sqm/Makefile
+
+Package: luci2-app-sqm
+Submenu: Applications
+Version: 1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +luci2-base +sqm-scripts +rpcd-mod-file
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci2
+Category: LuCI2
+Repository: base
+Title: SQM Scripts - LuCI2 interface
+Maintainer: 
+Source: 
+Type: ipkg
+Description:    Control the simple_qos SQM script
+
+@@
+
+
+Source-Makefile: feeds/xluci2/luci2-base/Makefile
+
+Package: luci2-base
+Version: 2015-02-14
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +rpcd +rpcd-mod-file +rpcd-mod-iwinfo +uhttpd +uhttpd-mod-ubus +libubox +libubus +lua-cjson +libubus-lua +libubox-lua
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci2
+Category: LuCI2
+Repository: base
+Title: LuCI2 UI modified by zjh
+Maintainer: Jo-Philipp Wich <jow@openwrt.org>
+Source: 
+License: Apache-2.0
+Type: ipkg
+Description:  Provides the LuCI2 web interface with standard functionality.
+Jo-Philipp Wich <jow@openwrt.org>
+@@
+
+
+Source-Makefile: feeds/xluci2/themes/luci2-theme-default/Makefile
+
+Package: luci2-theme-default
+Submenu: Themes
+Version: 1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci2
+Category: LuCI2
+Repository: base
+Title: LuCI2 Default theme
+Maintainer: 
+Source: 
+Type: ipkg
+Description: LuCI2 Default theme
+
+@@
+
+
+Source-Makefile: feeds/xluci2/themes/luci2-theme-sidenav/Makefile
+
+Package: luci2-theme-sidenav
+Submenu: Themes
+Version: 1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: luci2
+Category: LuCI2
+Repository: base
+Title: LuCI2 Side Nav theme
+Maintainer: 
+Source: 
+Type: ipkg
+Description: LuCI2 Side Nav theme
+
+@@
+
+

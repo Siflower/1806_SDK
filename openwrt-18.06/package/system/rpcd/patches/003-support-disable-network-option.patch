@@ -1,0 +1,35 @@
+Index: rpcd-2018-11-28-3aa81d0d/lepton.c
+===================================================================
+--- rpcd-2018-11-28-3aa81d0d.orig/lepton.c	2021-03-18 09:37:13.755058476 +0800
++++ rpcd-2018-11-28-3aa81d0d/lepton.c	2021-03-18 09:42:00.975070529 +0800
+@@ -304,6 +304,8 @@
+                             {
+                                 ptr.option = "disabled";
+                                 ptr.value = dis_scan_off;
++								ptr.option = "disable_network";
++								ptr.value = dis_scan_off;
+                                 uci_set(set_ctx, &ptr);
+                             }
+ 
+@@ -526,6 +528,10 @@
+                         ptr.option = "disabled";
+                         ptr.value = "0";
+                         uci_set(set_ctx, &ptr);
++
++						ptr.option = "disable_network";
++                        ptr.value = "1";
++                        uci_set(set_ctx, &ptr);
+                     }
+                 }
+             }
+@@ -828,6 +834,10 @@
+                         ptr.value = disabled;
+                         uci_set(set_ctx, &ptr);
+ 
++                        ptr.option = "disable_network";
++                        ptr.value = disabled;
++                        uci_set(set_ctx, &ptr);
++
+                         uci_commit(set_ctx, &ptr.p, false);
+                         uci_unload(set_ctx, ptr.p);
+                     }

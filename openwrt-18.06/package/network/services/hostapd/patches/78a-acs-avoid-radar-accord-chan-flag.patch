@@ -1,0 +1,21 @@
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/acs.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/acs.c
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/acs.c
+@@ -529,12 +529,10 @@ static struct hostapd_channel_data *acs_
+ 
+ static int acs_radar_chan(const struct hostapd_channel_data *chan)
+ {
+-	const int allowed[] = { 52, 56, 60, 64 };
+-	unsigned int i;
+-	for (i = 0; i < ARRAY_SIZE(allowed); i++)
+-		if (chan->chan == allowed[i])
+-			return 1;
+-	return 0;
++	if (chan->flag & HOSTAPD_CHAN_RADAR)
++		return 1;
++    else
++	    return 0;
+ }
+ 
+ static int is_24ghz_mode(enum hostapd_hw_mode mode)

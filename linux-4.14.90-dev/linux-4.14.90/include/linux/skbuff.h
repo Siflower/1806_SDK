@@ -489,6 +489,10 @@ int skb_zerocopy_iter_stream(struct sock *sk, struct sk_buff *skb,
  */
 struct skb_shared_info {
 	unsigned short	_unused;
+#ifdef  CONFIG_SF_SKB_POOL
+	unsigned char	pool_id;
+#endif  //
+
 	unsigned char	nr_frags;
 	__u8		tx_flags;
 	unsigned short	gso_size;
@@ -694,8 +698,6 @@ struct sk_buff {
 
 	unsigned long		_skb_refdst;
 	void			(*destructor)(struct sk_buff *skb);
-	bool            (*vendor_free)(struct sk_buff *skb, bool force_release);
-    __u32           vendor_free_priv[4];
 #ifdef CONFIG_XFRM
 	struct	sec_path	*sp;
 #endif
@@ -840,9 +842,60 @@ struct sk_buff {
 	sk_buff_data_t		end;
 	unsigned char		*head,
 				*data;
+
 	unsigned int		truesize;
+#ifdef CONFIG_SF_SKB_POOL
+	unsigned char    *per_data;
+	struct skb_pool	  *pool;
+	bool               per_data_pfmemalloc;
+#endif
 	refcount_t		users;
 };
+
+#ifdef CONFIG_SF_SKB_POOL
+
+struct skb_pool_param_t {
+	struct skb_pool *sf_skb_pool;
+	struct kmem_cache *skbuff_pool_head_cache;
+	unsigned char pool_id;
+	unsigned int pool_skb_num;
+	int enable_skb_pool;
+	bool use_skb_pool;
+	unsigned int  skb_size;
+	// return ture means keep alloc ,false means abort alloc
+	bool  (*device_skb_pool_alloc_fail)(struct net_device *ndev,unsigned int size);
+};
+
+struct skb_pool {
+	struct sk_buff_head free_list;
+	struct sk_buff_head recycle_list;
+	unsigned long pool_hit;
+	unsigned long pool_miss;
+	struct skb_pool_param_t  pool_param;
+	unsigned char  pool_id;
+};
+
+struct skb_pool_list{
+	struct list_head list;
+	struct skb_pool *pskb_pool;
+};
+
+#define MAX_POOL_SKB_RAW_SIZE     ( 2816)
+#define MAX_POOL_SKB_DATA_SIZE    ( 2816 - SKB_DATA_ALIGN(sizeof(struct skb_shared_info)))
+#define MAX_POOL_SKB_NUM      	  ( 512 )
+
+#define IS_SKB_FROM_POOL(skb) 			(skb->pool)
+#define IS_DATA_FROM_POOL(shinfo) 		(shinfo->pool_id >= 1)
+#define SKB_POOL_INVALID_ID   	0
+#define SKB_POOL_COMMON_ID      1
+#define SKB_POOL_ETHERNET_ID    2
+#define SKB_POOL_WIFI_LB_ID     3
+#define SKB_POOL_WIFI_HB_ID     4
+#define SKB_POOL_MAX_ID         5
+
+extern struct skb_pool_param_t * skb_pool_init(unsigned char pool_id,
+	unsigned int pool_skb_num, unsigned int  skb_size);
+#endif
 
 #ifdef __KERNEL__
 /*
@@ -2615,6 +2668,11 @@ void *netdev_alloc_frag(unsigned int fragsz);
 struct sk_buff *__netdev_alloc_skb(struct net_device *dev, unsigned int length,
 				   gfp_t gfp_mask);
 
+#ifdef CONFIG_SF_SKB_POOL
+struct sk_buff *__netdev_alloc_skb_from_pool(struct net_device *dev, unsigned int length,
+				   gfp_t gfp_mask, struct skb_pool_param_t *p_pool_param);
+#endif
+
 /**
  *	netdev_alloc_skb - allocate an skbuff for rx on a specific device
  *	@dev: network device to receive on
@@ -2651,7 +2709,7 @@ static inline struct sk_buff *dev_alloc_skb(unsigned int length)
 static inline struct sk_buff *netdev_alloc_skb_ip_align(struct net_device *dev,
 		unsigned int length)
 {
-	return __netdev_alloc_skb_ip_align(dev, length, GFP_ATOMIC);
+		return __netdev_alloc_skb_ip_align(dev, length, GFP_ATOMIC);
 }
 
 static inline void skb_free_frag(void *addr)

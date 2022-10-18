@@ -1,0 +1,26 @@
+<p><%:STEP1: Go to Network-Scan to see which WIFI you want to connect. Remember ssid, bssid, channel and encryption%></p>
+<p><%:STEP2: Add wwan in Network-Interface. protocol is DHCP client; Device in PhysicalSetting is sfix(sfi0 for 2.4G and sfi1 for 5G)%></p>
+<p><%:STEP3: Add interface in Network-Wireless, ifname is sfi0(2.4G) or sfi1(5G), network choose wwan. Input ssid, bssid. Choose right channel and encryption(input Passphrase if needed)%></p>
+<p>
+	<table style="width:auto">
+		<tr>
+			<p><%:STEP4: Continue to refresh this page. You will see ip if connected. Then push the Enable button and WDS is finished%></p>
+			<td>
+				<input type="text" id="wds_ip_input" class="form-control" />
+			</td>
+			<td>
+				<button type="button" class="btn btn-primary" id="wds_en">Enable</button>
+			</td>
+		</tr>
+	</table>
+</p>
+<p>
+	<table style="width:auto">
+		<tr>
+			<p><%:STEP5: Click the Disable button and delete wwan, sfix to cancel WDS%></p>
+			<td>
+				<button type="button" class="btn btn-primary" id="wds_dis">Disable</button>
+			</td>
+		</tr>
+	</table>
+</p>

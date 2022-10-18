@@ -25,6 +25,8 @@ static HLIST_HEAD(hooks);
 static DEFINE_SPINLOCK(hooks_lock);
 static struct delayed_work hook_work;
 static struct hlist_head ts_blacklist;
+static unsigned int hw_expedite_enable = 1;
+EXPORT_SYMBOL(hw_expedite_enable);
 // #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
 
 struct blacklist_dev {
@@ -423,6 +425,12 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 			break;
 		}
 		if(ct->status & IPS_SRC_NAT){
+			if((ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.udp.port == udph->source) && (skb_shinfo(skb)->frag_list == NULL)){
+				ct->udp_frag_stat |= 0x1;
+			}
+			if((ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.udp.port == udph->source) && (skb_shinfo(skb)->frag_list == NULL)){
+				ct->udp_frag_stat |= 0x2;
+			}
 			if((ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.udp.port == udph->source) && (udph->check != 0)){
 				//printk("============bypass ORIGINAL client snat sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
 				ct->udp_checksum_stat |= 0x1;
@@ -432,6 +440,12 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 				ct->udp_checksum_stat |= 0x2;
 			}
 		}else if(ct->status & IPS_DST_NAT){
+			if ((ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u.udp.port == udph->source) && (skb_shinfo(skb)->frag_list == NULL)) {
+				ct->udp_frag_stat |= 0x1;
+			}
+			if ((ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.udp.port == udph->source) && (skb_shinfo(skb)->frag_list == NULL)) {
+				ct->udp_frag_stat |= 0x2;
+			}
 			if((ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u.udp.port == udph->source) && (udph->check != 0)){
 					//printk("============bypass REPLY client snat sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
 					ct->udp_checksum_stat |= 0x1;
@@ -443,11 +457,17 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 		}else{
 			return XT_CONTINUE;
 		}
-		if (ct->udp_checksum_stat != 0x3){
-			//printk("============bypass checksum!=3  sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
+
+		if(hw_expedite_enable & 0x1){
+			if (ct->udp_checksum_stat != 0x3){
+				//printk("============bypass checksum!=3  sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
+				return XT_CONTINUE;
+			}
+		}
+
+		if (ct->udp_frag_stat != 0x3){
+			// bypass udp fragment pkt
 			return XT_CONTINUE;
-		}else{
-			//printk("============bypass checksum=3  sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
 		}
 #endif
 		break;

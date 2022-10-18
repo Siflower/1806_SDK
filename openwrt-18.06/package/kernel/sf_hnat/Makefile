@@ -40,6 +40,7 @@ NOSTDINC_FLAGS += -DCONFIG_SF19A28_FULLMASK
 endif
 
 SFAX8_KO_NAME="sfhnat.ko"
+
 ifneq ($(findstring NF,$(PROFILE)),)
 SFAX8_KO_NAME="nf_sfhnat.ko"
 endif
@@ -50,6 +51,10 @@ endif
 
 ifneq ($(findstring NAND,$(PROFILE)),)
 SFAX8_KO_NAME="sfhnat_nand.ko"
+endif
+
+ifneq ($(findstring EVB,$(PROFILE)),)
+SFAX8_KO_NAME="sfhnat_evb.ko"
 endif
 
 define Build/Prepare

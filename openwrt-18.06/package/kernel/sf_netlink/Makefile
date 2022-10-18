@@ -31,6 +31,7 @@ EXTRA_KCONFIG += CONFIG_SEND_ERR=y
 endif
 
 SFAX8_KO_NAME="sfax8_netlink.ko"
+
 ifneq ($(findstring NF,$(PROFILE)),)
 SFAX8_KO_NAME="nf_sfax8_netlink.ko"
 endif
@@ -41,6 +42,10 @@ endif
 
 ifneq ($(findstring NAND,$(PROFILE)),)
 SFAX8_KO_NAME="sfax8_netlink_nand.ko"
+endif
+
+ifneq ($(findstring EVB,$(PROFILE)),)
+SFAX8_KO_NAME="sfax8_netlink_evb.ko"
 endif
 
 define Build/Prepare

@@ -35,6 +35,7 @@ define KernelPackage/sfax8-factory-read/config
 endef
 
 SFAX8_KO_NAME="sfax8_factory_read.ko"
+
 ifneq ($(findstring NF,$(PROFILE)),)
 SFAX8_KO_NAME="nf_sfax8_factory_read.ko"
 endif
@@ -45,6 +46,10 @@ endif
 
 ifneq ($(findstring NAND,$(PROFILE)),)
 SFAX8_KO_NAME="sfax8_factory_read_nand.ko"
+endif
+
+ifneq ($(findstring EVB,$(PROFILE)),)
+SFAX8_KO_NAME="sfax8_factory_read_evb.ko"
 endif
 
 EXTRA_KCONFIG:= \

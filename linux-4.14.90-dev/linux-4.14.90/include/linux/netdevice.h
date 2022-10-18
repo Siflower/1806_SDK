@@ -1442,6 +1442,7 @@ enum netdev_priv_flags {
 #define IFF_MACSEC			IFF_MACSEC
 #define IFF_NO_IP_ALIGN			IFF_NO_IP_ALIGN
 
+
 /**
  *	struct net_device - The DEVICE structure.
  *
@@ -1935,6 +1936,8 @@ struct net_device {
 	struct lock_class_key	*qdisc_tx_busylock;
 	struct lock_class_key	*qdisc_running_key;
 	bool			proto_down;
+
+
 };
 #define to_net_dev(d) container_of(d, struct net_device, dev)
 

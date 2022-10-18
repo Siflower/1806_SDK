@@ -1,0 +1,21 @@
+Index: backports-4.19.7-1/net/wireless/core.c
+===================================================================
+--- backports-4.19.7-1.orig/net/wireless/core.c
++++ backports-4.19.7-1/net/wireless/core.c
+@@ -1231,12 +1231,14 @@ static int cfg80211_netdev_notifier_call
+ 			wdev->ps = false;
+ 		/* allow mac80211 to determine the timeout */
+ 		wdev->ps_timeout = -1;
+-
++        /* RM#12035 for three address repeater
++           Allow three - address interfaces to join the bridge */
++/*
+ 		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+ 		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
+ 		     wdev->iftype == NL80211_IFTYPE_ADHOC) && !wdev->use_4addr)
+ 			dev->priv_flags |= IFF_DONT_BRIDGE;
+-
++*/
+ 		INIT_WORK(&wdev->disconnect_wk, cfg80211_autodisconnect_wk);
+ 
+ 		nl80211_notify_iface(rdev, wdev, NL80211_CMD_NEW_INTERFACE);

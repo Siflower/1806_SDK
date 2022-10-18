@@ -1,0 +1,19 @@
+Index: hostapd-2019-08-08-ca8c2bd2/wpa_supplicant/events.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/wpa_supplicant/events.c
++++ hostapd-2019-08-08-ca8c2bd2/wpa_supplicant/events.c
+@@ -3133,6 +3133,14 @@ static void wpa_supplicant_event_disasso
+ 	    !wpas_temp_disabled(wpa_s, fast_reconnect_ssid) &&
+ 	    !wpa_is_bss_tmp_disallowed(wpa_s, fast_reconnect)) {
+ #ifndef CONFIG_NO_SCAN_PROCESSING
++        // If the last scan result expire (over 30 sec), start new scan.
++        struct os_reltime now;
++        os_get_reltime(&now);
++        if (now.sec >= wpa_s->last_scan.sec + 30) {
++            wpa_supplicant_req_scan(wpa_s, 0, 100000);
++            return;
++        }
++
+ 		wpa_dbg(wpa_s, MSG_DEBUG, "Try to reconnect to the same BSS");
+ 		if (wpa_supplicant_connect(wpa_s, fast_reconnect,
+ 					   fast_reconnect_ssid) < 0) {
