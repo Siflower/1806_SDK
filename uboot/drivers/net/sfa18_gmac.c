@@ -567,10 +567,10 @@ static void sf_trigger_eswitch_hwReset(void)
 		gpio_direction_output(gpio_pin, 1);
 		gpio_set_value(gpio_pin, 0);
 		// should more than 1ms
-		mdelay(2);
+		mdelay(250);
 		gpio_set_value(gpio_pin, 1);
 		gpio_free(gpio_pin);
-		mdelay(100);
+		mdelay(1000);
 		printf("trigger eswitch hw reset, gpio:%d\n", gpio_pin);
 	}
 }
