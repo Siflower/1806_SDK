@@ -3580,12 +3580,7 @@ EXPORT_SYMBOL(dev_queue_xmit_accel);
  *			Receiver routines
  *************************************************************************/
 
-#ifdef CONFIG_MEMORY_OPTIMIZE
-int netdev_max_backlog __read_mostly = 512 * 4;
-#else
-//modify to 3000 to avoid pkt drop when wifi>gmac rx path
-int netdev_max_backlog __read_mostly = 3000;
-#endif
+int netdev_max_backlog __read_mostly = 1000;
 EXPORT_SYMBOL(netdev_max_backlog);
 
 int netdev_tstamp_prequeue __read_mostly = 1;

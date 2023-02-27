@@ -81,7 +81,7 @@ detect_mac80211() {
 		htmode=""
 		ht_capab=""
 		ssidprefix="-2.4G"
-		noscan="0"
+		noscan="1"
 		band="2.4G"
 		htcodex="0"
 		txpower="20"
@@ -95,6 +95,7 @@ detect_mac80211() {
 			ssidprefix=""
 			band="5G"
 			txpower="25"
+			noscan="1"
 			iw phy "$dev" info | grep -q 'VHT Capabilities' && htmode="VHT80"
 		}
 
