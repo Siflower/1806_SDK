@@ -25,8 +25,10 @@ static HLIST_HEAD(hooks);
 static DEFINE_SPINLOCK(hooks_lock);
 static struct delayed_work hook_work;
 static struct hlist_head ts_blacklist;
-static unsigned int hw_expedite_enable = 1;
-EXPORT_SYMBOL(hw_expedite_enable);
+static unsigned int sf_hnat_udp_check = 1;
+EXPORT_SYMBOL(sf_hnat_udp_check);
+static unsigned int sf_hnat_enable = 1;
+EXPORT_SYMBOL(sf_hnat_enable);
 // #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
 
 struct blacklist_dev {
@@ -458,7 +460,7 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 			return XT_CONTINUE;
 		}
 
-		if(hw_expedite_enable & 0x1){
+		if(sf_hnat_udp_check & 0x1){
 			if (ct->udp_checksum_stat != 0x3){
 				//printk("============bypass checksum!=3  sport is:%d dport is:%d\n",ntohs(udph->source), ntohs(udph->dest));
 				return XT_CONTINUE;
@@ -519,7 +521,7 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 	if (flow_offload_add(&nf_flowtable, flow) < 0)
 		goto err_flow_add;
 
-	if (info->flags & XT_FLOWOFFLOAD_HW)
+	if ((info->flags & XT_FLOWOFFLOAD_HW) && sf_hnat_enable)
 		if (!check_flow_in_blacklist(xt_net(par), flow))
 			nf_flow_offload_hw_add(xt_net(par), flow, ct, &nf_flowtable.nf_count);
 

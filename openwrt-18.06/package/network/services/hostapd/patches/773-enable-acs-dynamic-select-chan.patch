@@ -1,0 +1,40 @@
+Index: hostapd-2019-08-08-ca8c2bd2/hostapd/config_file.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/hostapd/config_file.c
++++ hostapd-2019-08-08-ca8c2bd2/hostapd/config_file.c
+@@ -3243,6 +3243,16 @@ static int hostapd_config_fill(struct ho
+ 				   line);
+ 			return -1;
+ 		}
++    } else if (os_strcmp(buf, "acs_chan_dynamic_select_enable") == 0) {
++        conf->acs_chan_dynamic_select_enable = atoi(pos);
++    } else if (os_strcmp(buf, "acs_chan_dynamic_select_period") == 0) {
++        conf->acs_chan_dynamic_select_period = atoi(pos);
++    } else if (os_strcmp(buf, "switch_channel_even_have_sta_enable") == 0) {
++        conf->switch_channel_even_have_sta_enable = atoi(pos);
++    } else if (os_strcmp(buf, "acs_chan_busy_per") == 0) {
++        conf->acs_chan_busy_per = atoi(pos);
++    } else if (os_strcmp(buf, "acs_chan_bet_per") == 0) {
++        conf->acs_chan_bet_per = atoi(pos);
+ #endif /* CONFIG_ACS */
+ 	} else if (os_strcmp(buf, "dtim_period") == 0) {
+ 		int val = atoi(pos);
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ap_config.c
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.c
+@@ -244,11 +244,11 @@ struct hostapd_config * hostapd_config_d
+ 	conf->acs_ch_list.num = 0;
+ #ifdef CONFIG_ACS
+ 	conf->acs_num_scans = 5;
+-	conf->acs_chan_dynamic_select_enable = 0;
+-	conf->acs_chan_dynamic_select_period = 8;
++	conf->acs_chan_dynamic_select_enable = 1;
++	conf->acs_chan_dynamic_select_period = 15;
+ 	conf->switch_channel_even_have_sta_enable = 0;
+ 	conf->acs_chan_busy_per = 50;
+-	conf->acs_chan_bet_per = 20;
++	conf->acs_chan_bet_per = 0;
+ #endif /* CONFIG_ACS */
+ 
+ #ifdef CONFIG_IEEE80211AX

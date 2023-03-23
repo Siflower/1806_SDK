@@ -80,6 +80,7 @@
 
 
 struct kmem_cache *skbuff_head_cache __read_mostly;
+static struct kmem_cache *skbuff_pool_data_cache __read_mostly;
 #ifdef CONFIG_SF_SKB_POOL
 #include <linux/proc_fs.h>
 //#define SFDPRINTK(msg, args...)
@@ -148,7 +149,11 @@ static void *__kmalloc_reserve(size_t size, gfp_t flags, int node,
 	 * Try a regular allocation, when that fails and we're not entitled
 	 * to the reserves, fail.
 	 */
-	obj = kmalloc_node_track_caller(size,
+	obj = (size > 2048 && size <= MAX_POOL_SKB_RAW_SIZE) ?
+	      kmem_cache_alloc_node(skbuff_pool_data_cache,
+				    flags | __GFP_NOMEMALLOC | __GFP_NOWARN,
+				    node) :
+	      kmalloc_node_track_caller(size,
 					flags | __GFP_NOMEMALLOC | __GFP_NOWARN,
 					node);
 	if (obj || !(gfp_pfmemalloc_allowed(flags)))
@@ -562,7 +567,7 @@ struct sk_buff * __netdev_alloc_skb_from_pool(struct net_device *dev, unsigned i
 		goto skb_success;
 	}
 
-	if(likely(in_softirq()) && p_pool_param->use_skb_pool){
+	if(likely(in_softirq() && p_pool_param->use_skb_pool)){
 		skb = prepare_pool_skb(p_pool_param, len);
 		if(skb){
 			goto skb_success;
@@ -4609,9 +4614,7 @@ struct skb_pool_param_t *skb_pool_init(unsigned char pool_id,
 	skb_pool->pool_hit = skb_pool->pool_miss = 0;
 
 	for (i = 0; i < pool_skb_num; i++) {
-		gfp_mask = GFP_ATOMIC;
-		if (sk_memalloc_socks())
-			gfp_mask |= __GFP_MEMALLOC;
+		gfp_mask = GFP_KERNEL;
 		skb = kmem_cache_alloc_node(skbuff_pool_head_cache, gfp_mask, NUMA_NO_NODE);
 		skb->per_data = kmalloc_reserve(skb_size, gfp_mask, NUMA_NO_NODE, &pfmemalloc);
 		skb->per_data_pfmemalloc = pfmemalloc;
@@ -4630,6 +4633,11 @@ EXPORT_SYMBOL(skb_pool_init);
 #endif
 void __init skb_init(void)
 {
+        skbuff_pool_data_cache = kmem_cache_create("skbuff_pool_data_cache",
+						   MAX_POOL_SKB_RAW_SIZE,
+						   0,
+						   SLAB_HWCACHE_ALIGN|SLAB_PANIC,
+						   NULL);
 #ifdef CONFIG_SF_SKB_POOL
 	skbuff_head_cache = kmem_cache_create("skbuff_head_cache",
 					      sizeof(struct sk_buff),
