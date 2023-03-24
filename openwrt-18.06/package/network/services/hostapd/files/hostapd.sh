@@ -783,9 +783,10 @@ wpa_supplicant_prepare_interface() {
 			adhoc)
 				fail=1
 			;;
-			sta|wds-sta)
-				[ "$wds" = 1 -o "$multi_ap" = 1 ] || fail=1
-			;;
+# RM#13705 Allow three-address sta_vif to join the bridge
+#			sta|wds-sta)
+#				[ "$wds" = 1 -o "$multi_ap" = 1 ] || fail=1
+#			;;
 		esac
 
 		[ -n "$fail" ] && {

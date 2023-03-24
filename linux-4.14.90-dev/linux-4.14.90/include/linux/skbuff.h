@@ -852,6 +852,7 @@ struct sk_buff {
 	refcount_t		users;
 };
 
+#define MAX_POOL_SKB_RAW_SIZE	( 2816)
 #ifdef CONFIG_SF_SKB_POOL
 
 struct skb_pool_param_t {
@@ -880,7 +881,6 @@ struct skb_pool_list{
 	struct skb_pool *pskb_pool;
 };
 
-#define MAX_POOL_SKB_RAW_SIZE     ( 2816)
 #define MAX_POOL_SKB_DATA_SIZE    ( 2816 - SKB_DATA_ALIGN(sizeof(struct skb_shared_info)))
 #define MAX_POOL_SKB_NUM      	  ( 512 )
 

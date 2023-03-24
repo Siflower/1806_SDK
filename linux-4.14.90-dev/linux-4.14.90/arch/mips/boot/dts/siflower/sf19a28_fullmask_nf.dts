@@ -84,7 +84,6 @@
 	status = "okay";
     /*only support ext pa for 5G*/
 	/*force_expa = <1>;*/
-    dual-antenna-calibrate = <1>;
 };
 
 &gpio_keys {
