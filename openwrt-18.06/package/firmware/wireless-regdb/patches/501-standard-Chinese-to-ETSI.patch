@@ -1,0 +1,13 @@
+Index: wireless-regdb-2017-10-20-4343d359/db.txt
+===================================================================
+--- wireless-regdb-2017-10-20-4343d359.orig/db.txt
++++ wireless-regdb-2017-10-20-4343d359/db.txt
+@@ -276,7 +276,7 @@ country CL: DFS-JP
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5735 - 5835 @ 80), (20)
+ 
+-country CN: DFS-FCC
++country CN: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (23), AUTO-BW
+ 	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
