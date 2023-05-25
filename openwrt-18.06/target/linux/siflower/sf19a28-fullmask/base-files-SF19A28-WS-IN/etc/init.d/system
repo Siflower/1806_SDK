@@ -1,0 +1,59 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2014 OpenWrt.org
+
+START=10
+USE_PROCD=1
+
+validate_system_section()
+{
+	uci_validate_section system system "${1}" \
+		'hostname:string:OpenWrt' \
+		'buffersize:uinteger' \
+		'timezone:string:CST-8'\
+		'zonename:string'
+}
+
+system_config() {
+	local cfg="$1"
+
+	local hostname buffersize timezone
+
+	validate_system_section "${1}" || {
+		echo "validation failed"
+		return 1
+	}
+
+	hostnameset=`uci -q get system.@system[0].hostnameset`
+	[ -z "$hostnameset" ] && {
+		[ `uci -q get basic_setting.product.type` = "router" ] && {
+			# update wireless ssid
+			ssid24G="SiWiFi-`cat /sys/class/ieee80211/phy0/macaddress | cut -c 13- | sed 's/://g'`-2.4G"
+			ssid5G="SiWiFi-`cat /sys/class/ieee80211/phy1/macaddress | cut -c 13- | sed 's/://g'`-5G"
+			uci -q set wireless.default_radio0.ssid=$ssid24G
+			uci -q set wireless.default_radio1.ssid=$ssid5G
+			uci commit wireless
+			eval "uci -q set system.@system[0].hostnameset=1"
+			uci commit system
+		}
+	}
+	echo "$timezone" > /tmp/TZ
+	[ -n "$zonename" ] && [ -f "/usr/share/zoneinfo/$zonename" ] && ln -s "/usr/share/zoneinfo/$zonename" /tmp/localtime
+
+	# apply timezone to kernel
+	date -k
+}
+
+reload_service() {
+	config_load system
+	config_foreach system_config system
+}
+
+service_triggers()
+{
+	procd_add_reload_trigger "system"
+	procd_add_validation validate_system_section
+}
+
+start_service() {
+	reload_service
+}

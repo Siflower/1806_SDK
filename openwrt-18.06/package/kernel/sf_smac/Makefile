@@ -8,7 +8,7 @@ include $(INCLUDE_DIR)/package.mk
 
 define KernelPackage/sf_smac
   SUBMENU:=Wireless Drivers
-  TITLE:=SIFLOWER sf16a18 wireless driver
+  TITLE:=SIFLOWER sf19a28 wireless driver
   DEPENDS:=+kmod-sfax8-factory-read +kmod-cfg80211 +@DRIVER_11N_SUPPORT +@DRIVER_11AC_SUPPORT
   FILES:= \
 	  	$(PKG_BUILD_DIR)/sf16a18_rf.ko \
@@ -124,6 +124,10 @@ endif
 
 ifneq ($(findstring AC28S,$(PROFILE)),)
 KO_FILE_NAME="src_s"
+endif
+
+ifneq ($(findstring WS-IN,$(PROFILE)),)
+KO_FILE_NAME="src_ws_in"
 endif
 
 ifneq ($(findstring NAND,$(PROFILE)),)

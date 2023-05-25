@@ -61,6 +61,10 @@ ifneq ($(findstring AC28S,$(PROFILE)),)
 SFAX8_KO_NAME="sf_eswitch_s.ko"
 endif
 
+ifneq ($(findstring WS-IN,$(PROFILE)),)
+SFAX8_KO_NAME="sf_eswitch_s.ko"
+endif
+
 ifneq ($(findstring NAND,$(PROFILE)),)
 SFAX8_KO_NAME="sf_eswitch_nand.ko"
 endif
