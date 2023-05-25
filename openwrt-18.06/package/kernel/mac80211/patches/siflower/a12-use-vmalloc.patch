@@ -1,0 +1,52 @@
+Index: backports-4.19.7-1/net/wireless/core.c
+===================================================================
+--- backports-4.19.7-1.orig/net/wireless/core.c
++++ backports-4.19.7-1/net/wireless/core.c
+@@ -418,7 +418,10 @@ struct wiphy *wiphy_new_nm(const struct
+ 
+ 	alloc_size = sizeof(*rdev) + sizeof_priv;
+ 
+-	rdev = kzalloc(alloc_size, GFP_KERNEL);
++    if (alloc_size > PAGE_SIZE * 4)
++        rdev = vzalloc(alloc_size);
++    else
++        rdev = kzalloc(alloc_size, GFP_KERNEL);
+ 	if (!rdev)
+ 		return NULL;
+ 
+@@ -429,7 +432,7 @@ struct wiphy *wiphy_new_nm(const struct
+ 	if (unlikely(rdev->wiphy_idx < 0)) {
+ 		/* ugh, wrapped! */
+ 		atomic_dec(&wiphy_counter);
+-		kfree(rdev);
++		kvfree(rdev);
+ 		return NULL;
+ 	}
+ 
+@@ -464,7 +467,7 @@ use_default_name:
+ 		 */
+ 		rv = dev_set_name(&rdev->wiphy.dev, PHY_NAME "%d", rdev->wiphy_idx);
+ 		if (rv < 0) {
+-			kfree(rdev);
++			kvfree(rdev);
+ 			return NULL;
+ 		}
+ 	}
+@@ -505,7 +508,7 @@ use_default_name:
+ 				   &rdev->rfkill_ops, rdev);
+ 
+ 	if (!rdev->rfkill) {
+-		kfree(rdev);
++		kvfree(rdev);
+ 		return NULL;
+ 	}
+ 
+@@ -1002,7 +1005,7 @@ void cfg80211_dev_free(struct cfg80211_r
+ 	}
+ 	list_for_each_entry_safe(scan, tmp, &rdev->bss_list, list)
+ 		cfg80211_put_bss(&rdev->wiphy, &scan->pub);
+-	kfree(rdev);
++	kvfree(rdev);
+ }
+ 
+ void wiphy_free(struct wiphy *wiphy)
