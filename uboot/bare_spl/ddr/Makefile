@@ -22,6 +22,7 @@ obj-y += ddr_init.c ddr_common.c
 
 obj-$(ddr2_512mcommon) += ddr2_512mcommon.c
 obj-$(ddr2_1gcommon) += ddr2_1gcommon.c
+obj-$(ddr2_2gcommon) += ddr2_2gcommon.c
 obj-$(em68b16cwqh) += ddr2_em68b16cwqh.c
 obj-$(micron) += ddr2_micron.c
 obj-$(m14d5121632a) += ddr2_m14d5121632a.c

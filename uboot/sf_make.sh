@@ -53,6 +53,8 @@ get_ddr_size() {
 			size=0x4000000;;
 		ddr2_1gcommon)
 			size=0x8000000;;
+		ddr2_2gcommon)
+			size=0x10000000;;
 		em68b16cwqh) #64MB
 			size=0x4000000;;
 		hy5ps1g1631c)
@@ -291,6 +293,13 @@ case $prj in
 		add_sfbl_flag odt=1
 		[ -z $ddr3 ] && ddr3=m15t1g1664a
 		;;
+	sfa28_a28phy)
+        DEFCONFIG="sfa28_"$ver"_a28phy"
+        add_sfbl_flag sf19a28_fullmask=1
+        add_sfbl_flag crystal_40m=1
+        add_sfbl_flag odt=1
+        [ -z $ddr2 ] && ddr2=ddr2_512mcommon
+        ;;
 	sfa28_ac28nand)
 		DEFCONFIG="sfa28_"$ver"_ac28nand"
 		add_sfbl_flag sf19a28_fullmask=1

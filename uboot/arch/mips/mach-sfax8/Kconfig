@@ -75,6 +75,9 @@ config TARGET_SFA28_P20B
 config TARGET_SFA28_AC28
 	bool "SFA28 ac28 board"
 
+config TARGET_SFA28_A28PHY
+	bool "SFA28 a28phy board"
+
 config TARGET_SFA28_REP
 	bool "SFA28 rep board"
 

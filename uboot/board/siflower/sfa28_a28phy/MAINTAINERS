@@ -1,0 +1,6 @@
+SFA28 BOARD
+M:	Nevermore Wang <nevermore.wang@siflower.com.cn>
+S:	Maintained
+F:	board/siflower/sfa28/
+F:	include/configs/sfa28.h
+F:	configs/sfa28_fullmask_a28phy_defconfig

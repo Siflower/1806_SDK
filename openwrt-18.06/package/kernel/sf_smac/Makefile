@@ -138,6 +138,10 @@ ifneq ($(findstring EVB,$(PROFILE)),)
 KO_FILE_NAME="src_evb"
 endif
 
+ifneq ($(findstring PHY,$(PROFILE)),)
+KO_FILE_NAME="src_p"
+endif
+
 define KernelPackage/sf_smac/description
  Kernel module to sf16a18 smac && rf.
 endef

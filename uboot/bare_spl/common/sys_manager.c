@@ -678,6 +678,18 @@ int sys_reboot(void)
  */
 int sys_init(void)
 {
+#ifdef SF19A28
+	/*
+	* record_en from 0 to 1, the sys_events will
+	* be record. It's not from 1->0 in irom code
+	* when reboot with soft reset or watchdog
+	 * */
+	u8 record_en;
+	record_en = readb(SYS_MISC_CTRL);
+	record_en &= ~(0x1 << 1);
+	writew(record_en, SYS_MISC_CTRL);
+#endif
+
 	/* set clock divider to 1:3 */
 	set_clk_ratio();
 

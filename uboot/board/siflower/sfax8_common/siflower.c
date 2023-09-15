@@ -38,6 +38,7 @@ enum sys_con {
 	SYSCON_A28_MPW0_FPGA,
 	SYSCON_A28_MPW0_P20B,
 	SYSCON_A28_MPW0_AC28,
+	SYSCON_A28_MPW0_A28PHY,
 	SYSCON_A28_MPW0_REP,
 };
 
@@ -106,6 +107,10 @@ static enum sys_con sfa18_sys_con(void)
 
 #ifdef CONFIG_TARGET_SFA28_AC28
 	return SYSCON_A28_MPW0_AC28;
+#endif
+
+#ifdef CONFIG_TARGET_SFA28_A28PHY
+	return SYSCON_A28_MPW0_A28PHY;
 #endif
 
 #ifdef CONFIG_TARGET_SFA28_REP
@@ -187,6 +192,10 @@ int checkboard(void)
 
 		case SYSCON_A28_MPW0_AC28:
 			puts(" A28 MPW0 ac28");
+			break;
+
+		case SYSCON_A28_MPW0_A28PHY:
+			puts(" A28 MPW0 a28phy");
 			break;
 
 		case SYSCON_A28_MPW0_REP:
