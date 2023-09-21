@@ -56,6 +56,10 @@ ifneq ($(findstring EVB,$(PROFILE)),)
 SFAX8_KO_NAME="sfax8_factory_read_evb.ko"
 endif
 
+ifneq ($(findstring PHY,$(PROFILE)),)
+SFAX8_KO_NAME="sfax8_factory_read_p.ko"
+endif
+
 EXTRA_KCONFIG:= \
 	CONFIG_SFAX8_FACTORY_READ=m
 

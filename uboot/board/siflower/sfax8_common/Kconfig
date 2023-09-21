@@ -104,6 +104,7 @@ source "board/siflower/sfa18_air001/Kconfig"
 source "board/siflower/sfa28_fpga/Kconfig"
 source "board/siflower/sfa28_p20b/Kconfig"
 source "board/siflower/sfa28_ac28/Kconfig"
+source "board/siflower/sfa28_a28phy/Kconfig"
 source "board/siflower/sfa28_ac28nand/Kconfig"
 source "board/siflower/sfa28_rep/Kconfig"
 

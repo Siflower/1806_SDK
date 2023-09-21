@@ -95,13 +95,13 @@ void set_umctl2_reg(struct ddr_info *ddr)
 	else if (t->cl == 13)
 		t->mr[0] |= BIT(2) | BIT(4);
 	t->mr[0] |= BIT(8);
-	if ((t->cl - t->al) < 3)
-		t->mr[1] = (t->cl - t->al) << 3;
 	#ifdef DDR_DISABLE_ODT
 	t->mr[1] = 0;
 	#else
 	t->mr[1] = BIT(2) | BIT(6);
 	#endif
+	if ((t->cl - t->al) < 3)
+		t->mr[1] |= (t->cl - t->al) << 3;
 #endif
 	writel((t->mr[0] << 16) | t->mr[1], (void *)DDR_UMCTL2_INIT3);
 
@@ -317,7 +317,7 @@ static void set_phy_reg(struct ddr_info *ddr)
 	tmp = readl((void *)DDR_PHY_PGCR1);
 	tmp &= ~(0x3 << 7);
 #ifndef DDR2
-		tmp |= BIT(7);
+	tmp |= BIT(7);
 #endif
 	writel(tmp, (void *)DDR_PHY_PGCR1);
 
@@ -357,6 +357,32 @@ static void set_phy_reg(struct ddr_info *ddr)
 
 void ddr_phy_init(struct ddr_info *ddr)
 {
+	u32 tmp;
+
+	// program DTCR
+	tmp = readl((void *)DDR_PHY_DTCR);
+	tmp &= ~((0xff << 24) | BIT(22));
+	tmp |= (0x8 << 28) | BIT(24);
+	writel(tmp, (void *)DDR_PHY_DTCR);
+
+	tmp = readl((void *)DDR_PHY_BISTAR1);
+	tmp &= ~(0x3 << 2);
+	tmp |= (1 << 2);
+	writel(tmp, (void *)DDR_PHY_BISTAR1);
+
+	tmp = readl((void *)DDR_PHY_DX0GCR);
+	tmp &= ~(0xf << 26);
+	tmp |= (1 << 26);
+	writel(tmp, (void *)DDR_PHY_DX0GCR);
+
+	tmp = readl((void *)DDR_PHY_DX1GCR);
+	tmp &= ~(0xf << 26);
+	tmp |= (1 << 26);
+	writel(tmp, (void *)DDR_PHY_DX1GCR);
+
+	writel(0x10000, (void *)DDR_PHY_ODTCR);
+	writel(0x107b, (void *)DDR_PHY_ZQ0CR1);
+
 	writew(BIT(1) | BIT(0), (void *)MEM_RESET);
 
 	// wait phy init done
@@ -387,12 +413,6 @@ void ddr_training(void)
 	writel(0x0, (void *)DDR_UMCTL2_PWRCTL);   // diasble low power function
 	writel(0x1, (void *)DDR_UMCTL2_RFSHCTL3); // disable auto-refresh
 	set_quasi_dynamic_reg(0x0, DDR_UMCTL2_DFIMISC);
-
-	// program DTCR
-	tmp = readl((void *)DDR_PHY_DTCR);
-	tmp &= ~((0xff << 24) | BIT(22));
-	tmp |= (0x8 << 28) | BIT(24);
-	writel(tmp, (void *)DDR_PHY_DTCR);
 
 // printf("ddr training start!!!\n");
 // specify which training steps to run
