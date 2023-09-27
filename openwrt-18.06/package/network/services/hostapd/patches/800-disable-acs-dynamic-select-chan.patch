@@ -1,0 +1,13 @@
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ap_config.c
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ap_config.c
+@@ -244,7 +244,7 @@ struct hostapd_config * hostapd_config_d
+ 	conf->acs_ch_list.num = 0;
+ #ifdef CONFIG_ACS
+ 	conf->acs_num_scans = 5;
+-	conf->acs_chan_dynamic_select_enable = 1;
++	conf->acs_chan_dynamic_select_enable = 0;
+ 	conf->acs_chan_dynamic_select_period = 15;
+ 	conf->switch_channel_even_have_sta_enable = 0;
+ 	conf->acs_chan_busy_per = 50;

@@ -1,0 +1,154 @@
+--- netifd-2018-12-16-2750ce2e/device.c	2023-07-20 07:43:31.502682005 +0000
++++ netifd-2018-12-16-2750ce2e/device.c	2023-07-20 05:50:40.816267330 +0000
+@@ -29,6 +29,7 @@
+ #include "netifd.h"
+ #include "system.h"
+ #include "config.h"
++#include "wireless.h"
+
+ #define SET_IFINDEX_RETRY 10
+ static struct list_head devtypes = LIST_HEAD_INIT(devtypes);
+@@ -677,6 +678,7 @@ void device_set_link(struct device *dev,
+
+ 	dev->link_active = state;
+ 	device_broadcast_event(dev, state ? DEV_EVENT_LINK_UP : DEV_EVENT_LINK_DOWN);
++	wireless_sta_proto_renew(dev->ifname, state);
+ }
+
+ void device_set_ifindex(struct device *dev, int ifindex)
+--- netifd-2018-12-16-2750ce2e/wireless.c	2023-07-20 07:43:31.502682005 +0000
++++ netifd-2018-12-16-2750ce2e/wireless.c	2023-07-21 03:19:41.347780126 +0000
+@@ -16,6 +16,7 @@
+ #include "wireless.h"
+ #include "handler.h"
+ #include "ubus.h"
++#include "proto.h"
+
+ #define WIRELESS_SETUP_RETRY	3
+
+@@ -1476,3 +1477,116 @@ wireless_start_pending(void)
+ 			__wireless_wpas_set_up(wdev);
+ 	}
+ }
++
++/*
++ * Description: deauth all stations under all ap in a same bridge
++ * @bridge: the bridge name
++*/
++
++void wireless_deauth_all_station(const char *bridge)
++{
++	struct wireless_interface *vif;
++	struct wireless_device *wdev;
++	struct interface *iface;
++	struct blob_attr *cur;
++	const char *vif_network;
++	int rem;
++	int status;
++	char cmd[256];
++
++	vlist_for_each_element(&wireless_devices, wdev, node) {
++		vlist_for_each_element(&wdev->interfaces, vif, node) {
++			if (!vif->ap_mode)
++				continue;
++
++			blobmsg_for_each_attr(cur, vif->network, rem) {
++				vif_network = blobmsg_data(cur);
++
++				iface = vlist_find(&interfaces, vif_network, iface, node);
++				if (!iface){
++					netifd_log_message(L_WARNING, "%s[%d] %s: iface is null\n\n",
++											__func__, __LINE__, vif->ifname);
++					continue;
++				}
++				if (!iface->main_dev.dev){
++					netifd_log_message(L_WARNING, "%s[%d] %s: iface->main_dev.dev is null\n\n",
++										__func__, __LINE__, vif->ifname);
++					continue;
++				}
++
++				if (strcmp(iface->main_dev.dev->ifname, bridge) != 0)
++					continue;
++
++				sprintf(cmd, "ubus call hostapd.%s deauth", vif->ifname);
++				status = system(cmd);
++				if (-1 == status)
++				{
++					netifd_log_message(L_CRIT, "%s[%d] system error: %s\n", __func__, __LINE__, strerror(errno));
++				}
++				else
++				{
++					if (WIFEXITED(status))
++					{
++						if (0 != WEXITSTATUS(status))
++						{
++							netifd_log_message(L_CRIT, "%s[%d] failed to run cmd, exit code: %d\n",
++												__func__, __LINE__, WEXITSTATUS(status));
++						}
++					}
++					else
++					{
++						netifd_log_message(L_CRIT, "%s[%d] cmd stopped abnormally, exit status code = [%d]\n",
++												__func__, __LINE__, WEXITSTATUS(status));
++					}
++				}
++			}
++		}
++	}
++}
++
++void wireless_sta_proto_renew(char *ifname, bool status)
++{
++    struct wireless_interface *vif;
++    struct wireless_device *wdev;
++    struct interface *iface = NULL;
++    struct blob_attr *cur;
++    const char *network;
++    int rem;
++
++    if (!status)
++        return;
++
++    vlist_for_each_element(&wireless_devices, wdev, node) {
++        vif = vlist_find(&wdev->interfaces, ifname, vif, node);
++        if (vif)
++            break;
++    }
++
++    if (!vif)
++        return;
++
++    if (vif->ap_mode)
++        return;
++
++    blobmsg_for_each_attr(cur, vif->network, rem) {
++        network = blobmsg_data(cur);
++
++        iface = vlist_find(&interfaces, network, iface, node);
++        if (iface)
++            break;
++    }
++
++	if (!iface)
++		return;
++
++    interface_proto_event(iface->proto, PROTO_CMD_RENEW, false);
++
++	if (iface->main_dev.dev) {
++		wireless_deauth_all_station(iface->main_dev.dev->ifname);
++	}
++	else {
++		netifd_log_message(L_WARNING, "%s[%d] %s: iface->main_dev.dev is null\n\n",
++									__func__, __LINE__, iface->ifname);
++		return;
++	}
++}
+--- netifd-2018-12-16-2750ce2e/wireless.h	2023-07-20 07:43:31.502682005 +0000
++++ netifd-2018-12-16-2750ce2e/wireless.h	2023-07-21 03:30:43.430487993 +0000
+@@ -141,4 +141,6 @@ int wireless_device_notify(struct wirele
+ void wireless_start_pending(void);
+ void wireless_init(void);
+
++void wireless_deauth_all_station(const char *bridge);
++void wireless_sta_proto_renew(char *ifname, bool status);
+ #endif

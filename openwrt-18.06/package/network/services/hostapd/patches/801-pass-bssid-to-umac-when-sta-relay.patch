@@ -1,0 +1,16 @@
+Index: hostapd-2019-08-08-ca8c2bd2/wpa_supplicant/scan.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/wpa_supplicant/scan.c
++++ hostapd-2019-08-08-ca8c2bd2/wpa_supplicant/scan.c
+@@ -185,6 +185,11 @@ static void wpas_trigger_scan_cb(struct
+ 			   "Request driver to clear scan cache due to local BSS flush");
+ 		params->only_new_results = 1;
+ 	}
++
++	if (wpa_s->conf->ssid->bssid) {
++		os_memcpy(wpa_s->next_scan_bssid, wpa_s->conf->ssid->bssid, ETH_ALEN);
++	}
++
+ 	ret = wpa_drv_scan(wpa_s, params);
+ 	/*
+ 	 * Store the obtained vendor scan cookie (if any) in wpa_s context.
