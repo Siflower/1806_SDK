@@ -803,6 +803,7 @@ static const struct spinand_manufacturer *spinand_manufacturers[] = {
 	&winbond_spinand_manufacturer,
 	&toshiba_spinand_manufacturer,
 	&fudanmicro_spinand_manufacturer,
+        &esmt_spinand_manufacturer,
 	&gigadevice_spinand_manufacturer,
 	/*
 	 * Note:
@@ -810,7 +811,7 @@ static const struct spinand_manufacturer *spinand_manufacturers[] = {
 	 * gigadevice_spinand_manufacturer. So we ignore it becase
 	 * it doesn't use.
 	 * */
-	&esmt_spinand_manufacturer,
+	//&esmt_spinand_manufacturer,
 	&foresee_spinand_manufacturer,
 };
 
