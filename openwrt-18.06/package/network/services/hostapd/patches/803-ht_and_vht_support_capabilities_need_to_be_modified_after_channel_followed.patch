@@ -1,0 +1,29 @@
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/drv_callbacks.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/drv_callbacks.c
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/drv_callbacks.c
+@@ -899,6 +899,24 @@ void hostapd_event_ch_switch(struct host
+         hapd->iconf->ht_capab &= ~HT_CAP_INFO_SUPP_CHANNEL_WIDTH_SET;
+     }
+ 
++    if(width == CHAN_WIDTH_80) {
++        hapd->iconf->ieee80211ac = 1;
++        hapd->iconf->vht_capab |= VHT_CAP_RXLDPC;
++        hapd->iconf->vht_capab |= VHT_CAP_SHORT_GI_80;
++        hapd->iconf->vht_capab |= VHT_CAP_TXSTBC;
++        hapd->iconf->vht_capab |= VHT_CAP_RXSTBC_1;
++        hapd->iconf->vht_capab |= VHT_CAP_MAX_MPDU_LENGTH_7991;
++        hapd->iconf->vht_capab |= VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MAX;
++    } else {
++        hapd->iconf->ieee80211ac = 0;
++        hapd->iconf->vht_capab &= ~VHT_CAP_RXLDPC;
++        hapd->iconf->vht_capab &= ~VHT_CAP_SHORT_GI_80;
++        hapd->iconf->vht_capab &= ~VHT_CAP_TXSTBC;
++        hapd->iconf->vht_capab &= ~VHT_CAP_RXSTBC_1;
++        hapd->iconf->vht_capab &= ~VHT_CAP_MAX_MPDU_LENGTH_7991;
++        hapd->iconf->vht_capab &= ~VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MAX;
++    }
++
+ 	is_dfs = ieee80211_is_dfs(freq, hapd->iface->hw_features,
+ 				  hapd->iface->num_hw_features);
+ 

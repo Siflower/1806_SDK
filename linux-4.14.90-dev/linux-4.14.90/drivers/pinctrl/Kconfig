@@ -21,6 +21,9 @@ config GENERIC_PINMUX_FUNCTIONS
 config PINCONF
 	bool "Support pin configuration controllers" if COMPILE_TEST
 
+config SFAX8_PINCONF
+	bool "Support pinctrl-sfax8 pinconf"
+
 config GENERIC_PINCONF
 	bool
 	select PINCONF

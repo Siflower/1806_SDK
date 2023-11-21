@@ -1,5 +1,7 @@
---- netifd-2018-12-16-2750ce2e/device.c	2023-07-20 07:43:31.502682005 +0000
-+++ netifd-2018-12-16-2750ce2e/device.c	2023-07-20 05:50:40.816267330 +0000
+Index: netifd-2018-12-16-2750ce2e/device.c
+===================================================================
+--- netifd-2018-12-16-2750ce2e.orig/device.c
++++ netifd-2018-12-16-2750ce2e/device.c
 @@ -29,6 +29,7 @@
  #include "netifd.h"
  #include "system.h"
@@ -16,17 +18,24 @@
  }
 
  void device_set_ifindex(struct device *dev, int ifindex)
---- netifd-2018-12-16-2750ce2e/wireless.c	2023-07-20 07:43:31.502682005 +0000
-+++ netifd-2018-12-16-2750ce2e/wireless.c	2023-07-21 03:19:41.347780126 +0000
-@@ -16,6 +16,7 @@
+Index: netifd-2018-12-16-2750ce2e/wireless.c
+===================================================================
+--- netifd-2018-12-16-2750ce2e.orig/wireless.c
++++ netifd-2018-12-16-2750ce2e/wireless.c
+@@ -16,6 +16,12 @@
  #include "wireless.h"
  #include "handler.h"
  #include "ubus.h"
 +#include "proto.h"
++#include <sys/types.h>
++#include <sys/socket.h>
++#include <netinet/in.h>
++#include <net/if.h>
++#include <sys/ioctl.h>
 
  #define WIRELESS_SETUP_RETRY	3
 
-@@ -1476,3 +1477,116 @@ wireless_start_pending(void)
+@@ -1476,3 +1482,146 @@ wireless_start_pending(void)
  			__wireless_wpas_set_up(wdev);
  	}
  }
@@ -99,52 +108,84 @@
 +
 +void wireless_sta_proto_renew(char *ifname, bool status)
 +{
-+    struct wireless_interface *vif;
-+    struct wireless_device *wdev;
-+    struct interface *iface = NULL;
-+    struct blob_attr *cur;
-+    const char *network;
-+    int rem;
++	struct wireless_interface *vif;
++	struct wireless_device *wdev;
++	struct interface *iface = NULL;
++	struct blob_attr *cur;
++	struct ifreq ifr;
++	const char *network;
++	int rem;
++	int sockfd;
 +
-+    if (!status)
-+        return;
++	if (!status)
++		return;
 +
-+    vlist_for_each_element(&wireless_devices, wdev, node) {
-+        vif = vlist_find(&wdev->interfaces, ifname, vif, node);
-+        if (vif)
-+            break;
-+    }
++	vlist_for_each_element(&wireless_devices, wdev, node) {
++		vif = vlist_find(&wdev->interfaces, ifname, vif, node);
++		if (vif)
++			break;
++	}
 +
-+    if (!vif)
-+        return;
++	if (!vif)
++		return;
 +
-+    if (vif->ap_mode)
-+        return;
++	if (vif->ap_mode)
++		return;
 +
-+    blobmsg_for_each_attr(cur, vif->network, rem) {
-+        network = blobmsg_data(cur);
++	blobmsg_for_each_attr(cur, vif->network, rem) {
++		network = blobmsg_data(cur);
 +
-+        iface = vlist_find(&interfaces, network, iface, node);
-+        if (iface)
-+            break;
-+    }
++		iface = vlist_find(&interfaces, network, iface, node);
++		if (iface)
++			break;
++	}
 +
 +	if (!iface)
 +		return;
 +
-+    interface_proto_event(iface->proto, PROTO_CMD_RENEW, false);
++	interface_proto_event(iface->proto, PROTO_CMD_RENEW, false);
 +
-+	if (iface->main_dev.dev) {
++	if (iface->main_dev.dev)
 +		wireless_deauth_all_station(iface->main_dev.dev->ifname);
-+	}
-+	else {
++
++	else
 +		netifd_log_message(L_WARNING, "%s[%d] %s: iface->main_dev.dev is null\n\n",
 +									__func__, __LINE__, iface->ifname);
++
++	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
++	if (sockfd == -1) {
++		netifd_log_message(L_WARNING, "%s[%d] : cannot create socked\n", __func__, __LINE__);
 +		return;
 +	}
++
++	memset(&ifr, 0, sizeof(ifr));
++	strncpy(ifr.ifr_name, "eth0", IFNAMSIZ);
++	if (ioctl(sockfd, SIOCGIFFLAGS, &ifr) == -1)
++		goto out;
++
++	ifr.ifr_flags &= ~IFF_UP;
++	if (ioctl(sockfd, SIOCSIFFLAGS, &ifr) == -1)
++		goto out;
++
++	netifd_log_message(L_WARNING, "%s[%d] :Success to set network interface flags down", __func__, __LINE__);
++
++	ifr.ifr_flags |= IFF_UP;
++	if (ioctl(sockfd, SIOCSIFFLAGS, &ifr) == -1)
++		goto out;
++
++	netifd_log_message(L_WARNING, "%s[%d] :Success to set network interface flags up", __func__, __LINE__);
++	close(sockfd);
++	return;
++
++out:
++	netifd_log_message(L_WARNING, "%s[%d] :Failed to operate network interface flags", __func__, __LINE__);
++	close(sockfd);
++	return;
 +}
---- netifd-2018-12-16-2750ce2e/wireless.h	2023-07-20 07:43:31.502682005 +0000
-+++ netifd-2018-12-16-2750ce2e/wireless.h	2023-07-21 03:30:43.430487993 +0000
+Index: netifd-2018-12-16-2750ce2e/wireless.h
+===================================================================
+--- netifd-2018-12-16-2750ce2e.orig/wireless.h
++++ netifd-2018-12-16-2750ce2e/wireless.h
 @@ -141,4 +141,6 @@ int wireless_device_notify(struct wirele
  void wireless_start_pending(void);
  void wireless_init(void);
