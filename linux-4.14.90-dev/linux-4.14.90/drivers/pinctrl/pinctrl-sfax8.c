@@ -550,6 +550,38 @@ static inline enum sfax8_fsel sfax8_pinctrl_fsel_get(
 *    This part is used to set pin pull type.                                                      *
 *                                                                                                 *
 ***************************************************************************************************/
+#ifdef CONFIG_SOC_SF19A28
+static int sfax8_pad_set_pull(struct regmap *regmap_base, u32 index, pad_pull pull)
+{
+	int tmp = 0;
+
+	if(index > PAD_INDEX_MAX)
+		return -EINVAL;
+
+	switch (pull)
+	{
+		case NOPULL:
+		break;
+
+		case PULLUP:
+		tmp = (0x1 << SW_PU_REG);
+		break;
+
+		case PULLDOWN:
+		tmp = (0x1 << SW_PD_REG);
+		break;
+
+		default:
+		return -EINVAL;
+		break;
+	}
+
+	regmap_update_bits(regmap_base, PAD_INDEX_REG0(index),
+			   BIT(SW_PU_REG) | BIT(SW_PD_REG), tmp);
+
+	return 0;
+}
+#else
 static int sfax8_pad_set_pull(struct regmap *regmap_base, u32 index, pad_pull pull)
 {
 	int tmp_pu = 0,tmp_pd = 0;
@@ -630,6 +662,7 @@ static pad_pull sfax8_pad_get_pull(struct regmap *regmap_base, u32 index)
 		return -EINVAL;
 	}
 }
+#endif
 #endif
 
 /**************************************************************************************************
@@ -1078,12 +1111,54 @@ static void siflower_calc_pull_reg_and_bit(struct siflower_pin_bank *bank,
 	}
 }
 
+#ifdef CONFIG_SOC_SF19A28
+static int sfax8_pinconf_get(struct pinctrl_dev *pctldev,
+			unsigned pin, unsigned long *config)
+{
+	struct sfax8_pinctrl *pc = pinctrl_dev_get_drvdata(pctldev);
+	enum pin_config_param param = pinconf_to_config_param(*config);
+	int ret, pin_reg = 0;
+
+	regmap_read(pc->regmap_base, PAD_INDEX_REG0(pin), &pin_reg);
+
+	switch (param) {
+		case PIN_CONFIG_BIAS_PULL_DOWN:
+		ret = (pin_reg & BIT(SW_PD_REG));
+		if (!ret)
+			return -ENOTSUPP;
+		break;
+
+		case PIN_CONFIG_BIAS_PULL_UP:
+		ret = (pin_reg & BIT(SW_PU_REG));
+		if (!ret)
+			return -ENOTSUPP;
+		break;
+
+		case PIN_CONFIG_INPUT_ENABLE:
+		ret = (pin_reg & BIT(SW_IE_REG));
+		if (!ret)
+			return -ENOTSUPP;
+		break;
+
+		case PIN_CONFIG_OUTPUT_ENABLE:
+		ret = (pin_reg & BIT(SW_OEN_REG));
+		if (ret)
+			return -ENOTSUPP;
+		break;
+
+		default:
+			return -ENOTSUPP;
+	}
+	return 0;
+}
+#else
 static int sfax8_pinconf_get(struct pinctrl_dev *pctldev,
 			unsigned pin, unsigned long *config)
 {
 	/* No way to read back config in HW */
 	return -ENOTSUPP;
 }
+#endif
 
 #ifdef CONFIG_SFAX8_PINCONF
 static struct siflower_pin_bank *pin_to_bank(struct sfax8_pinctrl *info,
@@ -1500,6 +1575,7 @@ static struct siflower_pin_ctrl *siflower_pinctrl_get_soc_data(
 static const struct pinconf_ops sfax8_pinconf_ops = {
 	.pin_config_get = sfax8_pinconf_get,
 	.pin_config_set = sfax8_pinconf_set,
+	.is_generic = true,
 };
 
 static struct pinctrl_desc sfax8_pinctrl_desc = {

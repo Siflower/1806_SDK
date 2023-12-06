@@ -1,0 +1,45 @@
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/drv_callbacks.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/drv_callbacks.c
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/drv_callbacks.c
+@@ -867,11 +867,24 @@ void hostapd_event_ch_switch(struct host
+ 	} else if (hapd->iconf->ch_switch_vht_config) {
+ 		/* CHAN_SWITCH VHT config */
+ 		if (hapd->iconf->ch_switch_vht_config &
+-		    CH_SWITCH_VHT_ENABLED)
++		    CH_SWITCH_VHT_ENABLED) {
+ 			hapd->iconf->ieee80211ac = 1;
+-		else if (hapd->iconf->ch_switch_vht_config &
+-			 CH_SWITCH_VHT_DISABLED)
++            hapd->iconf->vht_capab |= VHT_CAP_RXLDPC;
++            hapd->iconf->vht_capab |= VHT_CAP_SHORT_GI_80;
++            hapd->iconf->vht_capab |= VHT_CAP_TXSTBC;
++            hapd->iconf->vht_capab |= VHT_CAP_RXSTBC_1;
++            hapd->iconf->vht_capab |= VHT_CAP_MAX_MPDU_LENGTH_7991;
++            hapd->iconf->vht_capab |= VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MAX;
++        } else if (hapd->iconf->ch_switch_vht_config &
++			 CH_SWITCH_VHT_DISABLED) {
+ 			hapd->iconf->ieee80211ac = 0;
++            hapd->iconf->vht_capab &= ~VHT_CAP_RXLDPC;
++            hapd->iconf->vht_capab &= ~VHT_CAP_SHORT_GI_80;
++            hapd->iconf->vht_capab &= ~VHT_CAP_TXSTBC;
++            hapd->iconf->vht_capab &= ~VHT_CAP_RXSTBC_1;
++            hapd->iconf->vht_capab &= ~VHT_CAP_MAX_MPDU_LENGTH_7991;
++            hapd->iconf->vht_capab &= ~VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MAX;
++        }
+ 	}
+ 	hapd->iconf->ch_switch_vht_config = 0;
+ 
+@@ -880,6 +893,12 @@ void hostapd_event_ch_switch(struct host
+ 	hostapd_set_oper_centr_freq_seg0_idx(hapd->iconf, seg0_idx);
+ 	hostapd_set_oper_centr_freq_seg1_idx(hapd->iconf, seg1_idx);
+ 
++    if((width == CHAN_WIDTH_40) || (width == CHAN_WIDTH_80)){
++        hapd->iconf->ht_capab |= HT_CAP_INFO_SUPP_CHANNEL_WIDTH_SET;
++    } else {
++        hapd->iconf->ht_capab &= ~HT_CAP_INFO_SUPP_CHANNEL_WIDTH_SET;
++    }
++
+ 	is_dfs = ieee80211_is_dfs(freq, hapd->iface->hw_features,
+ 				  hapd->iface->num_hw_features);
+ 

@@ -29,8 +29,12 @@ check_switch_port_valid() {
 			return 1; # intel gsw141 switch
 		fi
 
-		if [ "$switch_type" -eq "3" -a "$cpu_port" -eq "17" ];then
+		if [ "$switch_type" -eq "4" -a "$cpu_port" -eq "17" ];then
 			return 1; # nf2507 switch
+		fi
+
+		if [ "$switch_type" -eq "5" -a "$cpu_port" -eq "5" ];then
+			return 1; # yt9215rb switch
 		fi
 	fi
 
