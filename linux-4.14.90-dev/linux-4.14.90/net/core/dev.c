@@ -145,7 +145,7 @@
 #include <linux/crash_dump.h>
 #include <linux/sctp.h>
 #include <net/udp_tunnel.h>
-
+#include "../bridge/br_private.h"
 #include "net-sysfs.h"
 
 /* Instead of increasing this, you should create a hash table. */
@@ -5255,6 +5255,22 @@ static int hook_dev_xmit_path(struct sk_buff *skb)
     }
     return ret;
 }
+
+struct net_device *sf_hnat_find_wifi_ndev_by_dmac(struct sk_buff *skb, struct net_bridge *br)
+{
+	struct net_bridge_fdb_entry *dst = NULL;
+	const struct ethhdr *eth = (struct ethhdr *)skb->data;
+	const unsigned char *dmac = NULL;
+
+	dmac = eth->h_dest;
+	dst = br_fdb_find_rcu(br, dmac, 0);
+
+	if (dst == NULL)
+		return NULL;
+
+	return dst->dst->dev;
+}
+EXPORT_SYMBOL(sf_hnat_find_wifi_ndev_by_dmac);
 
 static int process_backlog(struct napi_struct *napi, int quota)
 {

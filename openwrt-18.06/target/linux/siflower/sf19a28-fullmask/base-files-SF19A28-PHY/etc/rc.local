@@ -10,7 +10,7 @@
 #devmem 0x1790b3b0 32 0xAAAA0007
 #devmem 0x1790b3d4 32 0x1B0B50FF
 #devmem 0x1790b3d8 32 0x1B0B50FF
-#echo enable 1 > /proc/net/skb_pool
-#echo enable 2 > /proc/net/skb_pool
-#echo enable 3 > /proc/net/skb_pool
-#echo enable 4 > /proc/net/skb_pool
+echo enable 1 > /proc/net/skb_pool
+echo enable 2 > /proc/net/skb_pool
+echo enable 3 > /proc/net/skb_pool
+echo enable 4 > /proc/net/skb_pool

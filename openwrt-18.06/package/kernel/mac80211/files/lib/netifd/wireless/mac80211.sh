@@ -183,7 +183,9 @@ mac80211_hostapd_setup_base() {
 			esac
 			enable_ac=1
 			append base_cfg "vht_oper_chwidth=0" "$N"
-			append base_cfg "vht_oper_centr_freq_seg0_idx=$idx" "$N"
+			if [ "$band" = "5G" ]; then
+				append base_cfg "vht_oper_centr_freq_seg0_idx=$idx" "$N"
+			fi
 		;;
 		VHT80)
 			case "$(( ($channel / 4) % 4 ))" in
@@ -779,12 +781,12 @@ mac80211_interface_cleanup() {
 	for wdev in $(list_phy_interfaces "$phy"); do
 		local inf=$(uci show wireless| grep ifname | grep \'$wdev\' |awk 'BEGIN{FS="."}{printf $2}')
 		local wirelessmode=$(uci get wireless.$inf.mode)
-		if [ $mode = "hostap" ]; then
+		if [ "$mode" = "hostap" ]; then
 			if [[ ! $wirelessmode ]] || [[ "$wirelessmode" = "ap" ]]; then
 				ip link set dev "$wdev" down 2>/dev/null
 				iw dev "$wdev" del
 			fi
-		elif [ $mode = "wpa" ]; then
+		elif [ "$mode" = "wpa" ]; then
 			if [[ ! $wirelessmode ]] || [[ "$wirelessmode" = "sta" ]]; then
 				ip link set dev "$wdev" down 2>/dev/null
 				iw dev "$wdev" del
@@ -823,14 +825,40 @@ drv_mac80211_repup() {
 	wireless_set_up_wpas
 }
 
+mac80211_rm_conf_file() {
+	json_select config
+	json_get_vars ifname mode
+	json_select ..
+
+	case "$mode" in
+		ap)
+			local band=$(uci get wireless.${__netifd_device}.band)
+			case "$band" in
+				2.4G)
+					[ -f /var/run/hostapd-phy0.conf ] && rm /var/run/hostapd-phy0.conf
+				;;
+				5G)
+					[ -f /var/run/hostapd-phy1.conf ] && rm /var/run/hostapd-phy1.conf
+				;;
+			esac
+		;;
+		sta)
+			[ -f /var/run/wpa_supplicant-${ifname}.conf ] && rm /var/run/wpa_supplicant-${ifname}.conf
+		;;
+	esac
+}
+
+
 drv_mac80211_repdown() {
-	wireless_process_kill_wpas
+	# wireless_process_kill_wpas
 
 	json_select data
 	json_get_vars phy
 	json_select ..
 
 	mac80211_interface_cleanup "$phy" "wpa"
+
+	for_each_interface "sta" mac80211_rm_conf_file
 }
 
 drv_mac80211_setup() {
@@ -912,15 +940,15 @@ drv_mac80211_setup() {
 
 	for_each_interface "ap wds-ap" mac80211_prepare_vif
 
-	[ -n "$hostapd_ctrl" ] && {
-		/usr/sbin/hostapd -s -P /var/run/wifi-$phy.pid -B "$hostapd_conf_file"
-		ret="$?"
-		wireless_add_process "$(cat /var/run/wifi-$phy.pid)" "/usr/sbin/hostapd" 1
-		[ "$ret" != 0 ] && {
-			wireless_setup_failed HOSTAPD_START_FAILED
-			return
-		}
-	}
+	# [ -n "$hostapd_ctrl" ] && {
+	# 	/usr/sbin/hostapd -s -P /var/run/wifi-$phy.pid -B "$hostapd_conf_file"
+	# 	ret="$?"
+	# 	wireless_add_process "$(cat /var/run/wifi-$phy.pid)" "/usr/sbin/hostapd" 1
+	# 	[ "$ret" != 0 ] && {
+	# 		wireless_setup_failed HOSTAPD_START_FAILED
+	# 		return
+	# 	}
+	# }
 
 	for_each_interface "ap wds-ap" mac80211_setup_vif
 
@@ -937,13 +965,15 @@ list_phy_interfaces() {
 }
 
 drv_mac80211_teardown() {
-	wireless_process_kill_all
+	# wireless_process_kill_all
 
 	json_select data
 	json_get_vars phy
 	json_select ..
 
 	mac80211_interface_cleanup "$phy" "hostap"
+
+	for_each_interface "ap" mac80211_rm_conf_file
 }
 
 add_driver mac80211

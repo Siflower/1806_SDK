@@ -29,7 +29,7 @@ config setting 'auto_ota'
         option enable 1
 
 config setting 'ota'
-        option romtype 52
+        option romtype 30
         option chip 'fullmask'
         option imagetype 0
 

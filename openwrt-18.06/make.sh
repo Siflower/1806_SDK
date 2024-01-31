@@ -42,19 +42,20 @@ else
 		branch="release"
 	fi
 # need to use tag for rep
-	is_rep_board=$(echo $board | grep "rep")
+#	is_rep_board=$(echo $board | grep "rep")
 
-	if [ "$is_rep_board" != "" ];then
-		tag=`git tag  |  grep "${branch}.rep-" | sort -V | awk 'END{print}'`
-	else
+#	if [ "$is_rep_board" != "" ];then
+#		tag=`git tag  |  grep "${branch}.rep-" | sort -V | awk 'END{print}'`
+#	else
 # ${branch}-1 is specailly for release-1.0.0 branch
-		tag=`git tag  |  grep "${branch}-1" | sort -V | awk 'END{print}'`
-	fi
+#		tag=`git tag  |  grep "${branch}-1" | sort -V | awk 'END{print}'`
+#	fi
 
 
 	if [ ! -n "$tag" ] ;then
 		#compatible with old version
-		tag=`git tag  |  grep -v "-"  | sort -V | awk 'END{print}'`
+		tag_commit=`git rev-list --tags --max-count=1`
+		tag=`git describe --tags $tag_commit`
 		version=$tag
 	else
 		version=`printf "$tag" | awk -F "[-]" '{print $2}'`

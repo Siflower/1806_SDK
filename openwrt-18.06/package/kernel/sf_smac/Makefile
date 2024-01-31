@@ -388,12 +388,20 @@ endif
 ifdef CONFIG_PACKAGE_SFUMAC_SMAC
 	echo 'boot_hook_add preinit_main insmod_mac80211' >> $(1)/lib/preinit/99_rf_misc
 endif
+
 ifndef CONFIG_PACKAGE_SFSMAC_HB_LA_ENABLE
-	echo 'boot_hook_add preinit_main insmod_$(SF_UMAC_TYPE)_lb' >> $(1)/lib/preinit/99_rf_misc
-endif
 ifndef CONFIG_PACKAGE_SFSMAC_LB_LA_ENABLE
-	echo 'boot_hook_add preinit_main insmod_$(SF_UMAC_TYPE)_hb' >> $(1)/lib/preinit/99_rf_misc
+	echo 'boot_hook_add preinit_main insmod_fmac' >> $(1)/lib/preinit/99_rf_misc
 endif
+endif
+
+#ifndef CONFIG_PACKAGE_SFSMAC_HB_LA_ENABLE
+#	echo 'boot_hook_add preinit_main insmod_$(SF_UMAC_TYPE)_lb' >> $(1)/lib/preinit/99_rf_misc
+#endif
+#ifndef CONFIG_PACKAGE_SFSMAC_LB_LA_ENABLE
+#	echo 'boot_hook_add preinit_main insmod_$(SF_UMAC_TYPE)_hb' >> $(1)/lib/preinit/99_rf_misc
+#endif
+
 ifndef CONFIG_FLASH_OPTIMIZE
 	$(INSTALL_DIR) $(1)/sbin
 	cp $(PKG_BUILD_DIR)/config/rf_recali.sh $(1)/sbin/

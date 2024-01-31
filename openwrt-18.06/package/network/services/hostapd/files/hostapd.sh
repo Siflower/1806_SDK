@@ -1052,26 +1052,27 @@ wpa_supplicant_run() {
 
 	_wpa_supplicant_common "$ifname"
 
-	/usr/sbin/wpa_supplicant -B -s \
-		${network_bridge:+-b $network_bridge} \
-		-P "/var/run/wpa_supplicant-${ifname}.pid" \
-		-D ${_w_driver:-wext} \
-		-i "$ifname" \
-		-c "$_config" \
-		-C "$_rpath" \
-		"$@"
+	# /usr/sbin/wpa_supplicant -B -s \
+	# 	${network_bridge:+-b $network_bridge} \
+	# 	-P "/var/run/wpa_supplicant-${ifname}.pid" \
+	# 	-D ${_w_driver:-wext} \
+	# 	-i "$ifname" \
+	# 	-c "$_config" \
+	# 	-C "$_rpath" \
+	# 	"$@"
 
-	ret="$?"
-	wireless_add_process_wpas "$(cat "/var/run/wpa_supplicant-${ifname}.pid")" /usr/sbin/wpa_supplicant 1
+	# ret="$?"
+	# wireless_add_process_wpas "$(cat "/var/run/wpa_supplicant-${ifname}.pid")" /usr/sbin/wpa_supplicant 1
 
-	[ "$ret" != 0 ] && wireless_setup_vif_failed WPA_SUPPLICANT_FAILED
+	# [ "$ret" != 0 ] && wireless_setup_vif_failed WPA_SUPPLICANT_FAILED
 
 	#set wds connect/disconnect status
 	[ -e /usr/bin/wpa_cli_event.sh ] && /usr/sbin/wpa_cli -a "/usr/bin/wpa_cli_event.sh" -i "$ifname"&
 	# check current status
 	[ -e /usr/bin/check_connection.sh ] && /usr/bin/check_connection.sh "$ifname"&
 
-	return $ret
+	# return $ret
+    return 0
 }
 
 hostapd_common_cleanup() {
