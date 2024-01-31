@@ -9,16 +9,16 @@
 	#address-cells = <1>;
 	#size-cells = <1>;
 	compatible = "siflower,sf19a28-soc";
-	model = "sf19a28-phy";
+	model = "sf19a28-ac28";
 
 };
 
 &gmac {
 	status = "okay";
-	delay = <0x18 0x0a>;
+	delay = <0x40 0x90>;
 	phy = <&phy0>;
-	phy0: ethernet-phy@0 {
-		max-speed = <1000>;
+phy0: ethernet-phy@0 {
+		  max-speed = <1000>;
 	};
 };
 
@@ -89,7 +89,7 @@
 	status = "okay";
     /*only support ext pa for 5G*/
 	force_expa = <1>;
-        dual-antenna-calibrate = <1>;
+    dual-antenna-calibrate = <1>;
 };
 
 &gpio_keys {

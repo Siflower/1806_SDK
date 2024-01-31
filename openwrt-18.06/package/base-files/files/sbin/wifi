@@ -126,11 +126,18 @@ wifi_updown() {
 	cmd=down
 	[ enable = "$1" ] && {
 		_wifi_updown disable "$2"
+		/usr/sbin/sf_wpad stop
 		ubus_wifi_cmd "$cmd" "$2"
 		scan_wifi
 		cmd=up
+		ubus call network reload
 	}
-	ubus_wifi_cmd "$cmd" "$2"
+	if [ enable = "$1" ];then
+		ubus_wifi_cmd "$cmd" "$2"
+	else
+		/usr/sbin/sf_wpad stop
+		ubus_wifi_cmd "$cmd" "$2"
+	fi
 	_wifi_updown "$@"
 }
 
@@ -240,7 +247,6 @@ case "$1" in
 	status) ubus_wifi_cmd "status" "$2";;
 	reload) wifi_reload "$2";;
 	reload_legacy) wifi_reload_legacy "$2";;
-	--help|help) usage;;
-	''|up) ubus call network reload; wifi_updown "enable" "$2";;
-	*) usage; exit 1;;
+	''|up) wifi_updown "enable" "$2";;
+	*|--help|help) usage; exit 1;;
 esac

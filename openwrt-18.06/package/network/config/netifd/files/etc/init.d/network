@@ -75,7 +75,16 @@ reload_service() {
 
 stop_service() {
 	/sbin/wifi down
-#	procd_kill network ''
+	ifdown -a
+	sleep 1
+	# service_stop /sbin/netifd
+	# procd_kill network ''
+}
+
+restart() {
+	trap '' TERM
+	stop "$@"
+	start "$@"
 }
 
 service_running() {
@@ -177,14 +186,6 @@ service_triggers()
 	validate_switch_section
 	validate_switch_vlan
 	procd_close_validate
-}
-
-restart() {
-	ifdown -a
-	sleep 1
-	trap '' TERM
-	stop "$@"
-	start "$@"
 }
 
 shutdown() {

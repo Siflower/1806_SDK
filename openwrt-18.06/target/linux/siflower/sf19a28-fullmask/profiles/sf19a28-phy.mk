@@ -8,11 +8,11 @@
 define Profile/SF19A28-PHY
  NAME:= SF19A28 PHY
  PACKAGES:=\
-       block-mount fstools badblocks
+	block-mount fstools badblocks
 endef
 
-define Profile/SF19A28-AC28S/Description
- Support for siflower ac28 8+64 phy boards v1.0
+define Profile/SF19A28-PHY/Description
+ Support for siflower phy boards v1.0
 endef
 
 define Profile/SF19A28-PHY/Config

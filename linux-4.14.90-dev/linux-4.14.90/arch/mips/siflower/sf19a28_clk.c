@@ -19,6 +19,7 @@
 #include <linux/clk.h>
 #include <linux/clk-provider.h>
 #include <linux/clkdev.h>
+#include <linux/kernel.h>
 //#include <linux/clk-private.h>
 #include <linux/slab.h>
 #include <linux/spinlock.h>
@@ -423,31 +424,39 @@ unsigned long get_oscclk_rate(struct clk_hw *hw)
 static unsigned long sf_pll_recalc_rate(struct clk_hw *hw,
 		unsigned long parent_rate)
 {
-	unsigned long long pll_para = 0, tmp;
+	unsigned long long temp, refdiv, fbdiv, frac, postdiv1, postdiv2;
 	unsigned long rate;
 	struct sf_clk_pll *pll = container_of(hw, struct sf_clk_pll, hw);
-	int i;
-	unsigned char postdiv;
+	fbdiv = (sf_pll_read(pll->base, PLL_PARA + 0x4) << 8) | sf_pll_read(pll->base, PLL_PARA);
+	fbdiv &= 0xFFF;
+	refdiv = sf_pll_read(pll->base, PLL_PARA + 0x14) >> 2;
+	refdiv &= 0x3F;
+	if (readl(pll->base) & 0x20) {
+		frac = 0;
+	} else {
+		frac = sf_pll_read(pll->base, PLL_PARA + 0x10) & 0xF;
+		frac = frac << 8;
+		frac |= sf_pll_read(pll->base, PLL_PARA + 0xC);
+		frac = frac << 8;
+		frac |= sf_pll_read(pll->base, PLL_PARA + 0x8);
+		frac = frac << 4;
+		frac |= (sf_pll_read(pll->base, PLL_PARA + 0x4) >> 4);
+	}
+	postdiv1 = (sf_pll_read(pll->base, PLL_PARA + 0x10) >> 4) & 0x7;
+	postdiv2 = (sf_pll_read(pll->base, PLL_PARA + 0x14) & 0x3) << 1;
+	postdiv2 |= sf_pll_read(pll->base, PLL_PARA + 0x10) >> 7;
 
-	for(i = 5; i >= 0; i--) {
-		pll_para = pll_para << 8;
-		pll_para |= sf_pll_read(pll->base, PLL_PARA + 4 * i);
+	// 12M osc
+	if (frac) {
+		temp = (get_oscclk_rate(hw) * ((fbdiv << 24) + frac)) >> 12;
+		rate = DIV_ROUND_UP_ULL(temp, (refdiv * postdiv1 * postdiv2 * (1 << 12)));
+	} else {
+		rate = get_oscclk_rate(hw) * fbdiv;
+		rate = DIV_ROUND_UP_ULL(rate, (refdiv * postdiv1 * postdiv2));
 	}
 
-	tmp = pll_para >> 32;
-	pll_para -= tmp << 32;
-
-	if(pll_para > (1 << 16))
-		rate = 0;
-	else
-		rate = pll_para;
-
-	postdiv = (tmp >> 4) & 0x7;
-	//12M osc
-	rate = rate * get_oscclk_rate(hw) / postdiv;
-
 	/* FIXME: cpu-pll is regarded as cpu-clk because of dvfs bug. */
-	if(strcmp(hw->init->name, "cpupll") == 0)
+	if (strcmp(hw->init->name, "cpupll") == 0)
 		return rate / 2;
 	else
 		return rate;

@@ -1,0 +1,39 @@
+Index: netifd-2018-12-16-2750ce2e/wireless.c
+===================================================================
+--- netifd-2018-12-16-2750ce2e.orig/wireless.c
++++ netifd-2018-12-16-2750ce2e/wireless.c
+@@ -12,6 +12,7 @@
+  * GNU General Public License for more details.
+  */
+ #include <signal.h>
++#include <stdlib.h>
+ #include "netifd.h"
+ #include "wireless.h"
+ #include "handler.h"
+@@ -23,6 +24,7 @@ struct vlist_tree wireless_devices;
+ struct avl_tree wireless_drivers;
+ static struct blob_buf b;
+ static int drv_fd;
++static int sfwpad_flag;
+
+ static const struct blobmsg_policy wdev_policy =
+ 	{ .name = "disabled", .type = BLOBMSG_TYPE_BOOL };
+@@ -435,6 +437,10 @@ __wireless_device_set_up(struct wireless
+ 	wdev->prev_config = NULL;
+ 	wdev->state = IFS_SETUP;
+ 	wireless_device_run_handler(wdev, true, WDEV_SETUP);
++	if (sfwpad_flag == 0) {
++		system("/usr/sbin/sf_wpad start &");
++		sfwpad_flag = 1;
++	}
+ }
+
+ static void
+@@ -1467,6 +1473,7 @@ void
+ wireless_start_pending(void)
+ {
+ 	struct wireless_device *wdev;
++	sfwpad_flag = 0;
+
+ 	vlist_for_each_element(&wireless_devices, wdev, node)
+ 	{
