@@ -55,7 +55,7 @@ config setting 'arp_check_dev'
 config setting 'vendor'
         option name 'BananaPi'
         option lan_ip '192.168.4.1'
-        option hosts 'bpi.pub'
+        option hosts ''
         option encryption 'psk2+ccmp'
 
 config setting 'led'

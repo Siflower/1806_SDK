@@ -39,6 +39,21 @@
 
 #include <rpcd/plugin.h>
 
+static void get_cmd_result(const char *cmd, char *tmp, int len) {
+	FILE *p_file = NULL;
+	memset(tmp, 0, len);
+	p_file = popen(cmd, "r");
+	if (p_file) {
+		while (fgets(tmp, len, p_file) != NULL) {}
+		pclose(p_file);
+
+		int str_len = strlen(tmp);
+		if (str_len > 0 && tmp[str_len - 1] == '\n') {
+			tmp[str_len - 1] = '\0';
+		}
+	}
+}
+
 static const struct rpc_daemon_ops *ops;
 
 static struct blob_buf buf;
@@ -50,6 +65,15 @@ enum {
 
 static const struct blobmsg_policy rpc_data_policy[__RPC_D_MAX] = {
 	[RPC_D_DATA]   = { .name = "data",  .type = BLOBMSG_TYPE_STRING },
+};
+
+enum {
+	RPC_F_NAME,
+	__RPC_F_MAX
+};
+
+static const struct blobmsg_policy rpc_get_factory_info_policy[__RPC_F_MAX] = {
+	[RPC_F_NAME] = {.name = "name", .type = BLOBMSG_TYPE_STRING},
 };
 
 static int
@@ -163,15 +187,48 @@ rpc_web_get_server_addr(struct ubus_context *ctx, struct ubus_object *obj,
 	return 0;
 
 }
+
+static int
+rpc_web_get_factory_info(struct ubus_context *ctx, struct ubus_object *obj,
+                   struct ubus_request_data *req, const char *method,
+                   struct blob_attr *msg)
+{
+	struct blob_attr *tb[__RPC_F_MAX];
+	blobmsg_parse(rpc_get_factory_info_policy, __RPC_F_MAX, tb, blob_data(msg), blob_len(msg));
+
+	char *name = blobmsg_data(tb[RPC_F_NAME]);
+	char cmd[128];
+	char result[128];
+	int i;
+
+	blob_buf_init(&buf, 0);
+	memset(cmd, 0, sizeof(cmd));
+	sprintf(cmd, "cat sys/devices/platform/factory-read/%s", name);
+	get_cmd_result(cmd, result, sizeof(result));
+
+    for (i = 0; result[i]!= '\0'; i++) {
+        if ((unsigned char)result[i] < 32 || (unsigned char)result[i] >= 127) {
+            result[i] = ' ';
+        }
+    }
+
+	blobmsg_add_string(&buf, "result", result);
+
+	ubus_send_reply(ctx, req, buf.head);
+
+	return 0;
+}
+
 static int
 rpc_web_api_init(const struct rpc_daemon_ops *o, struct ubus_context *ctx)
 {
 	int rv = 0;
 
 	static const struct ubus_method web_system_methods[] = {
-		UBUS_METHOD_NOARG("get_test",         rpc_web_get_test),
-		UBUS_METHOD_NOARG("get_server_addr",  rpc_web_get_server_addr),
-		UBUS_METHOD("set_test",               rpc_web_set_test, rpc_data_policy),
+		UBUS_METHOD_NOARG("get_test",           rpc_web_get_test),
+		UBUS_METHOD_NOARG("get_server_addr",    rpc_web_get_server_addr),
+		UBUS_METHOD("get_factory_info",         rpc_web_get_factory_info, rpc_get_factory_info_policy),
+		UBUS_METHOD("set_test",                 rpc_web_set_test, rpc_data_policy),
 	};
 
 	static struct ubus_object_type web_system_type =

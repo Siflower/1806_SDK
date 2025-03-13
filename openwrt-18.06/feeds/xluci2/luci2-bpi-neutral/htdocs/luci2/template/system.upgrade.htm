@@ -1,0 +1,49 @@
+<div class="thirdTitleContent">
+	<h2><%:Backup / Upgrade%></h2>
+</div>
+<div class="tab-pane active">
+	<div class="title_line">
+		<h3 class="title_line" style="border-bottom:solid 1px #c9c9c9;font-size:14px;"><%:Click "Generate archive" to download a tar archive of the current configuration files. To reset the firmware to its initial state, click "Perform reset" (only possible with squashfs images).%></h3>
+		<div style="margin:0 0 20px 40px">
+			<div class="row">
+				<form action="/cgi-bin/luci-backup" method="post" style="display:inline">
+					<input type="hidden" name="sessionid" />
+					<input class="btn btn-primary" type="button" id="btn_backup" value="<%:Generate archive%>" />
+				</form>
+				<input class="btn btn-danger" type="button" id="btn_reset" value="<%:Perform reset%>" />
+			</div>
+		</div>
+		<h3 class="title_line" style="border-bottom:solid 1px #c9c9c9;font-size:14px;"><%:To restore configuration files, you can upload a previously generated backup archive here.%></h3>
+		<div style="margin:0 0 20px 40px">
+			<div class="row">
+				<input class="btn btn-primary" type="button" id="btn_restore" value="<%:Upload archive...%>" />
+			</div>
+		</div>
+		<h3 class="title_line" style="border-bottom:solid 1px #c9c9c9;font-size:14px;"><%:Flash new firmware image%></h3>
+		<div style="margin:0 0 20px 40px">
+			<div class="row">
+				<input class="btn btn-primary" type="button" id="btn_flash" value="<%:Flash image...%>" />
+			</div>
+		</div>
+		<h3 class="title_line" style="border-bottom:solid 1px #c9c9c9;font-size:14px;"><%:OTA online upgrade%></h3>
+		<div style="margin:0 0 20px 28px">
+			<input class="btn btn-primary" type="button" id="btn_ota" value="<%:OTA upgrade...%>" />
+			<div class="checkbox" id="checkbox_ota" style="width: 50px; background-size: 300%; margin-left: -3px; margin-top: 20px;">
+				<input id="check_ota" type="checkbox" class="luci2-field-validate" style="opacity: 0; cursor: pointer; height: 21px; width: 21px; margin: 1px 0px 0px 14px; padding: 0px"/>
+				<div style="width:200px; margin-left: 45px; font-size: 14px; margin-top: -25px;"><%:open the ota automatic upgrade or not%></div>
+			</div>
+        </div>
+		<h3 class="title_line" style="border-bottom:solid 1px #c9c9c9;font-size:14px;"><%:Generate/Upload factory%></h3>
+		<div style="margin:0 0 20px 40px">
+			<div class="row">
+				<form action="/cgi-bin/factory-backup" method="post" style="display:inline">
+					<input type="hidden" name="sessionid" />
+					<input class="btn btn-primary" type="button" id="btn_factory_backup" value="<%:Generate factory%>" />
+				</form>
+				<form action="/cgi-bin/luci-upload" method="post" style="display:inline">
+					<input type="hidden" name="sessionid" />
+					<input class="btn btn-primary" type="button" id="btn_factory_restore" value="<%:Upload factory%>" />
+				</form>
+			</div>
+		</div>
+	</div>

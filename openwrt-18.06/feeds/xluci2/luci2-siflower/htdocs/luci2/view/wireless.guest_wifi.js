@@ -196,7 +196,7 @@ L.ui.view.extend({
 
         m.on('apply',function(){
             L.ui.setting(true);
-            self.do_cmd("sleep 1; env -i; ubus call network reload ; wifi reload_legacy; sleep 3; gwifi start; gwifi speed_rst 0;gwifi speed_rst 1").then(function(){
+            self.do_cmd("sleep 3; gwifi start; gwifi speed_rst 0;gwifi speed_rst 1").then(function(){
                 L.ui.setting(false);
             })
         });

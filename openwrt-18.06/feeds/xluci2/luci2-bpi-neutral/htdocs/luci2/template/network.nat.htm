@@ -1,0 +1,71 @@
+<div class="thirdTitleContent">
+	<h2><%:NAT Server%></h2>
+	<p class="description"><%:Click the "Add" button on the corresponding form to add a service.%></p>
+</div>
+<div class="subject">
+	<div id="ruletable" style="width: 90%;margin-left: 5%;border: 1px solid #c9c9c9;border-radius: 12px;position: relative;">
+		<div class="title" style="text-align: center;font-size: 20px;border-bottom: 1px solid #c9c9c9;line-height: 85px;"><%:Port Map%></div>
+		<div class="ic-add_normal" style="position: absolute;top: 21px;right: 24px;"></div>
+		<div class="head row" style="display: table;text-align: center;width: 100%;background-color: #f2f2f2;margin: 0;line-height: 40px;border-bottom: 1px solid #c9c9c9;">
+			<div><%:Name%></div>
+			<div><%:Proto Type%></div>
+			<div><%:External port%></div>
+			<div><%:Internal IP%></div>
+			<div><%:Internal port%></div>
+			<div><%:Operations%></div>
+		</div>
+		<div class="rule row" style="width: 100%;height: 70px;margin: 0;">
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+			<div style="width: 15%; margin: 0px; text-align: center;position: relative;">
+				<div class="edit_big" style=" width: 25px; margin: 22.5px 12.5px; text-align: center;height: 25px;position: absolute;background-position: 46% 94.15%;display: block;"></div>
+				<div style="border-left: 2px solid #c9c9c9;height: 25px;position: absolute;right: 48px;top: 22.5px;"></div>
+				<div class="ic-del" style="width: 25px; margin: 22.5px 12.5px; text-align: center;height: 25px;position: absolute;background-position: 56.4% 97.57%;background-size: 550%;margin-left: 62.5px;"></div>
+			</div>
+		</div>
+
+	</div>
+	<div id="newrule" style="display: none;">
+		<div style="font-size: 18px;margin: 35px 50px;"><%:Add New Server%></div>
+		<div id="settings" style="margin: 28px 7.5%;width: 85%;">
+			<div class="row" id="name">
+				<div><%:Name%></div>
+				<div><input></div>
+			</div>
+			<div class="row" id="type">
+				<div><%:Type%></div>
+				<div><input readonly="true"></div>
+			</div>
+			<div class="row" id="Proto">
+				<div><%:Proto Type%></div>
+				<div>
+					<select>
+					<option>TCP+UDP</option>
+					<option>TCP</option>
+					<option>UDP</option>
+					<option>ICMP</option>
+					</select>
+				</div>
+			</div>
+			<div class="row" id="EP">
+				<div><%:External port%></div>
+				<div><input></div>
+			</div>
+			<div class="row" id="IIP">
+				<div><%:Internal IP address%></div>
+				<div><input></div>
+			</div>
+			<div class="row" id="IP">
+				<div><%:Internal port%></div>
+				<div><input></div>
+			</div>
+		</div>
+		<div id="btn" style="float: left;display: block;padding: 60px 85px;">
+			<div id="cancel" class="common_button_long" style="float: left;display: block;margin-right: 35px;"><%:Cancel%></div>
+			<div id="save" class="common_button_long" style="float: left;display: block;"><%:Save%></div>
+		</div>
+	</div>
+</div>

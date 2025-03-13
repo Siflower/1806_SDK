@@ -103,6 +103,26 @@ auto_ota() {
     ubus call luci2.system upgrade_start
 }
 
+request_url() {
+    local device_model=$(uci get basic_setting.ota.romtype)
+    local url=$(uci get basic_setting.ota.url)
+    local post_url="$url/自己设置的路径/$device_model"
+
+    echo "$post_url" > dev/console
+    # Perform the curl request and capture the response
+    response=$(curl -s $post_url)
+
+    # Extract values from the JSON response using sed
+    downloadUrl=$(echo "$response" | sed -n 's/.*"url": "\([^"]*\)".*/\1/p')
+    md5Str=$(echo "$response" | sed -n 's/.*"file_checksum": "\([^"]*\)".*/\1/p')
+    ota_version=$(echo "$response" | sed -n 's/.*"version": "\([^"]*\)".*/\1/p')
+
+    uci set basic_setting.ota.downloadUrl=$downloadUrl
+    uci set basic_setting.ota.md5Str=$md5Str
+    uci set basic_setting.ota.ota_version=$ota_version
+    uci commit basic_setting
+}
+
 update_fail_config() {
     times=$(($(uci get basic_setting.auto_ota.times) + 1))
     uci set basic_setting.auto_ota.times=$times
@@ -142,6 +162,9 @@ case "$1" in
             romtype=$(uci get basic_setting.ota.romtype)
             auto_ota "$romtype"
         fi
+        ;;
+    request_url)
+        request_url "$romtype"
         ;;
     upgrade_prepare)
         if [ "$#" -ne 3 ]; then

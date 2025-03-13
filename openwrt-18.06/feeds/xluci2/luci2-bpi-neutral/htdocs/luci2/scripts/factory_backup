@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ "$1" == "create_backup" ]; then
+	mtd_dev=$(cat /proc/mtd | grep factory | awk -F ':' '{printf $1}')
+	dd if=/dev/${mtd_dev}
+fi
+if [ "$1" == "restore_backup" ]; then
+	mtd erase factory
+	mtd write /tmp/factory.bin factory
+fi

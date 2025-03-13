@@ -1,0 +1,82 @@
+<div id="main">
+	<div class="thirdTitleContent">
+		<h2><%:WiFi Visitor Control%></h2>
+		<p><%:Select enable WiFi blacklist / whitelist control%></p>
+	</div>
+	<div class="title_line"></div>
+	<div id="control">
+		<div class="row">
+			<div><%:Turn on WiFi control%></div>
+			<div class="switch_off" style="width: 45px; height: 28px;" id="wifi_control"></div>
+		</div>
+		<div id="type">
+			<div class="row" style="margin-top: 5px;">
+				<div><%:model%></div>
+				<div style="margin-top: 7px; margin-left: 70px;"><%:Open blacklist(Devices in the list are not allowed to connect to the WiFi)%></div>
+				<div class="checkbox" id="black_list_checkbox"
+					style="width: 50px; background-size: 350%; margin-left: -325px; height: 20px;">
+					<input id="black_list_check" type="checkbox" class="luci2-field-validate"
+						style="opacity: 0; cursor: pointer; height: 21px; width: 21px; margin: 1px 0px 0px 14px; padding: 0px" />
+				</div>
+			</div>
+			<div class="row" style="margin-top: 10px;">
+				<div style="margin-left: 266px; width: 300px; text-align: left;"><%:Open whitelist(Only devices in the list are allowed to connect to the WiFi)%></div>
+				<div class="checkbox" id="white_list_checkbox"
+					style="width: 50px; background-size: 350%; margin-left: -343px; height: 20px;">
+					<input id="white_list_check" type="checkbox" class="luci2-field-validate"
+						style="opacity: 0; cursor: pointer; height: 21px; width: 21px; margin: 1px 0px 0px 14px; padding: 0px" />
+				</div>
+			</div>
+		</div>
+		<div id="table">
+			<div id="black_list_table" class="productList bdr_12 border_1px"
+				style="margin-top: 40px; width: 680px; margin-left: 30px;">
+				<div id="title" class="title border_1px_bottom"
+					style="font-size: 18px; text-align: center; color: #262626; line-height: 85px; height: 85px; border-bottom: 1px solid #c9c9c9; width: 680px;">
+					<%:Blacklist list%></div>
+				<div>
+					<div id="add_black_list_btn" class="botton_add ic-add_normal marginleft_620"
+						style="position: absolute; margin-top: -63px"></div>
+				</div>
+				<div class="text_center" style="display: table; height: 39px; font-size: 14px;">
+					<div class="pull-left border_1px_right height_40" style="width: 240px;">
+						<div class="middleText" style="margin-top: 10px;"><%:Equipment name%></div>
+					</div>
+					<div class="pull-left border_1px_right height_40" style="width: 238px;">
+						<div class="middleText" style="margin-top: 10px;"><%:MAC address%></div>
+					</div>
+					<div class="pull-left border_1px_right height_40" style="width: 100px;">
+						<div class="middleText" style="margin-top: 10px;"><%:modify%></div>
+					</div>
+					<div class="pull-left border_1px_right height_40" style="width: 100px; border-right: none;">
+						<div class="middleText" style="margin-top: 10px;"><%:delete%></div>
+					</div>
+				</div>
+			</div>
+			<div id="white_list_table" class="productList bdr_12 border_1px"
+				style="margin-top: 40px; width: 680px; margin-left: 30px;">
+				<div id="title" class="title border_1px_bottom"
+					style="font-size: 18px; text-align: center; color: #262626; line-height: 85px; height: 85px; border-bottom: 1px solid #c9c9c9; width: 680px;">
+					<%:Whitelist list%></div>
+				<div>
+					<div id="add_white_list_btn" class="botton_add ic-add_normal marginleft_620"
+						style="position: absolute; margin-top: -63px"></div>
+				</div>
+				<div class="text_center" style="display: table; height: 39px; font-size: 14px;">
+					<div class="pull-left border_1px_right height_40" style="width: 240px;">
+						<div class="middleText" style="margin-top: 10px;"><%:Equipment name%></div>
+					</div>
+					<div class="pull-left border_1px_right height_40" style="width: 238px;">
+						<div class="middleText" style="margin-top: 10px;"><%:MAC address%></div>
+					</div>
+					<div class="pull-left border_1px_right height_40" style="width: 100px;">
+						<div class="middleText" style="margin-top: 10px;"><%:modify%></div>
+					</div>
+					<div class="pull-left border_1px_right height_40" style="width: 100px; border-right: none;">
+						<div class="middleText" style="margin-top: 10px;"><%:delete%></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

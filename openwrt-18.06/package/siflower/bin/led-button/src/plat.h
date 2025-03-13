@@ -5,7 +5,7 @@
 #ifndef __PLAT_H_
 #define __PLAT_H_
 
-#define MAX_NAME_LEN	24
+#define MAX_NAME_LEN	32
 #define MAX_LED_SUPPORTED	24
 #define MAX_BTNS	5
 
@@ -28,6 +28,9 @@ enum {
 	BOARD_15, /* SF19A28_BPI */
 	BOARD_16, /* SF19A28_REP_SW */
 	BOARD_17, /* SF19A28_REP_PHY */
+	BOARD_18, /* SF19A28_BPI_LUCI2 */
+	BOARD_19, /* SF19A28_BPI_LUCI2_NEUTRAL */
+	BOARD_20, /* SF19A28_BPI_LUCI2_SIFLOWER */
 	BOARD_MAX, /* not used */
 };
 

@@ -1,0 +1,12 @@
+{
+    "firewall": {
+        "title": "Firewall",
+        "index": 50
+    },
+    "firewall/dmz": {
+        "title": "DMZ",
+        "acls": [ "superuser" ],
+        "view": "firewall/dmz",
+        "index": 20
+    }
+}

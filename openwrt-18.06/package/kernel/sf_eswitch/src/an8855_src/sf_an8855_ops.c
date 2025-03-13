@@ -212,6 +212,7 @@ static int air_an8855_apply_vlan_config(struct switch_dev *dev)
 		port_list |= entry->member;
 		SF_MDIO_LOCK();
 		air_vlan_create(0, entry->vid, NULL);
+		air_vlan_setIVL(0, entry->vid, 1);
 		air_vlan_setFid(0, entry->vid, entry->vid);
 		air_vlan_setMemberPort(0, entry->vid, entry->member);
 
@@ -219,22 +220,15 @@ static int air_an8855_apply_vlan_config(struct switch_dev *dev)
 		air_vlan_setEgsTagConsistent(0, entry->vid, 0);
 
 		for (i = 0; i < AN8855_NUM_PORTS; i++) {
-			u32 pvc_mode = 0x8100 << PVC_STAG_VPID_OFFT;
+
 			if (!(entry->member & BIT(i)))
 				continue;
-
-			if ((entry->untag & BIT(i)))
-				pvc_mode |= (AIR_VLAN_PORT_ATTR_TRANSPARENT_PORT << PVC_VLAN_ATTR_OFFT);
-
-			if (i == pesw_priv->swdev.cpu_port)
-				pvc_mode |= PVC_SPTAG_EN_OFFT | PVC_SPTAG_MODE_OFFT;
 
 			if (entry->untag & BIT(i))
 				air_vlan_setPortEgsTagCtl(0, entry->vid, i, AIR_VLAN_PORT_EGS_TAG_CTL_TYPE_UNTAGGED);
 			else
 				air_vlan_setPortEgsTagCtl(0, entry->vid, i, AIR_VLAN_PORT_EGS_TAG_CTL_TYPE_TAGGED);
 
-			an8855_reg_write(PVC(i), pvc_mode);
 		}
 		SF_MDIO_UNLOCK();
 	}
@@ -549,6 +543,7 @@ extern int an8855_init(void);
 void air_an8855_init(struct sf_eswitch_priv *pesw_priv)
 {
 	int i;
+	u32 pvc_mode = 0x8100 << PVC_STAG_VPID_OFFT;
 	AIR_INIT_PARAM_T param = {
 		.dev_access = {
 			.read_callback = __switch_read,
@@ -570,8 +565,9 @@ void air_an8855_init(struct sf_eswitch_priv *pesw_priv)
 	air_port_setRgmiiMode(0, AIR_PORT_SPEED_1000M);
 	air_port_air_port_setRgmiiDelay();
 	for (i = 0; i < AN8855_NUM_PORTS; i++) {
+		an8855_reg_write(PVC(i), pvc_mode);
 		air_port_setVlanMode(0, i, AIR_PORT_VLAN_MODE_SECURITY);
-		air_port_setPortMatrix(0, i, (1 << AN8855_NUM_PORTS) - 1);
+		air_vlan_setPortAttr(0, i, AIR_VLAN_PORT_ATTR_USER_PORT);
 	}
 
 	memset(&vlan_entries, 0, sizeof(struct vlan_entry));
