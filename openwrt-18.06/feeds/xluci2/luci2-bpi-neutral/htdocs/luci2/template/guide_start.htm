@@ -1,0 +1,107 @@
+<style>
+	html, body {
+		height: 100%;
+		background-color: #ececec;
+	}
+
+	.wrapper {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+	}
+
+	.content_width{
+		width: 1000px;
+		position: relative;
+	}
+
+	.main_content {
+		flex: 1;
+		min-height: 100%;
+		display: flex;
+		justify-content: center;
+		background-color: white;
+	}
+
+	.flex_center{
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.footer{
+		background-color: #e7e7e7;
+		height: 150px;
+		text-align: center;
+		color: #777;
+	}
+
+	.clickbtn{
+		border: 1px solid #ccc;
+		border-radius: 5px;
+		text-align: inherit;
+		outline: none;
+		cursor: pointer;
+		background:none;
+		margin:20px 15px 0 0;
+		padding: 12px 30px;
+	}
+
+	.clickOk{
+		background-color: #1F6AB5;
+		border: 1px solid #1F6AB5;
+		color: #fff;
+	}
+
+	.clickOk:hover{
+		background-color: #ec3030;
+		border: 1px solid #ec3030;
+	}
+
+	.guidetxt>div{
+		padding-bottom: 12px;
+	}
+
+	.guide_h{
+		font-size: 32px;
+    	margin-bottom: 30px;
+	}
+
+	.header{
+		border: 1px solid #ececec;
+	}
+</style>
+
+<div class="wrapper ">
+	<div class="header fluid clearboth">
+		<div class="container_box clearboth">
+			<div class="productname fl paddingleft_15 marginleft_15 text_left_right"><%:AC1200 Gigabit Router%></div>
+			<div class="btn_box fr login_lang">
+				<div>
+					<span class="login_langinfo"></span>
+					<span>&#8744;</span>
+				</div>
+				<ul></ul>
+			</div>
+		</div>
+	</div>
+	<div class="main_content">
+		<div class="flex_center" style="width: 1200px;">
+			<div class="guideimg" style="margin-right: 100px;">
+				<img src="/luci2/res/guidebg.png" alt="">
+			</div>
+			<div class="guidetxt">
+				<div class="guide_h"><span><%:Welcome to%></span>&nbsp;<span><%:AC1200 Gigabit Router%></span></div>
+				<div><%:You can perform initial routing configuration, such as selecting internet access methods, changing WIFI name and password, and setting administrator passwords%></div>
+				<div><%:When choosing to skip, the default settings will be maintained%></div>
+				<div>
+					<button class="clickbtn clickSkip"><%:Skip%></button>
+					<button class="clickbtn clickOk" style="background-color: #ed8e70;"><%:Start setting%></button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="footer flex_center">
+		<div><%:AC1200%></div>
+	</div>
+</div>

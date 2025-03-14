@@ -1,0 +1,143 @@
+<style>
+	html, body {
+		height: 100%;
+		background-color: #ececec;
+	}
+
+	.wrapper {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+	}
+
+	.content_width{
+		width: 1000px;
+		position: relative;
+	}
+
+	.main_content {
+		flex: 1;
+		min-height: 100%;
+		display: flex;
+		justify-content: center;
+		margin: 50px 0;
+	}
+
+	.flex_center{
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.footer{
+		padding: 30px 0;
+	}
+
+    .page_title{
+		text-align: center;
+	}
+
+	.page_title{
+		font-size: 23px;
+		font-weight: bold;
+		margin: 30px 0;
+	}
+
+	.thirdTitleContent{
+		border-bottom: unset;
+	}
+
+	.guidepage{
+		display: none;
+		background: white;
+		border-radius: 3px;
+    	box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.1);
+	}
+
+	.page_active{
+		display: block;
+	}
+
+	.step{
+		margin: 15px auto;
+		position: absolute;
+		right: 30px;
+		bottom: 30px;
+	}
+
+	.step span{
+		padding-left: 15px;
+		cursor: pointer;
+		color: #888;
+	}
+
+	.step span:hover{
+		color: #333;
+	}
+
+	.clickbtn{
+		border: 1px solid #ccc;
+		border-radius: 5px;
+		text-align: inherit;
+		outline: none;
+		cursor: pointer;
+		background:none;
+		margin-left: 10px;
+		padding: 10px 20px;
+	}
+
+.clickOk{
+	background-color: #1F6AB5;
+	border: 1px solid #1F6AB5;
+	color: #fff;
+}
+
+	.list-group{
+		display: flex;
+		justify-content: center;
+	}
+</style>
+
+<div class="wrapper ">
+	<div class="header fluid clearboth">
+		<div class="container_box clearboth">
+			<div class="productname fl paddingleft_15 marginleft_15 text_left_right"><%:AC1200 Gigabit Router%></div>
+		</div>
+	</div>
+	<div class="main_content">
+		<div id="page_time" class="guidepage content_width">
+			<div class="page_title"><%:Set time zone%></div>
+			<div id="time_set" style="margin: 10% auto auto;"></div>
+			<div class="step">
+				<span class="nextclick" data-id="page_wan"><%:Next%></span>
+			</div>
+		</div>
+		<div id="page_wan" class="guidepage content_width">
+			<div class="page_title"><%:Choose internet access method%></div>
+			<div id="wan_set" style="margin: 10% auto auto;"></div>
+			<div class="step">
+				<span class="backclick" data-id="page_time"><%:Back%></span>
+				<span class="nextclick" data-id="page_wireless"><%:Next%></span>
+			</div>
+		</div>
+		<div id="page_wireless" class="guidepage content_width">
+			<div class="page_title"><%:Set up wireless%></div>
+			<div id="wireless_set" style="margin: 10% auto auto;"></div>
+			<div class="step">
+				<span class="backclick" data-id="page_wan"><%:Back%></span>
+				<span class="nextclick" data-id="page_password"><%:Next%></span>
+			</div>
+		</div>
+		<div id="page_password" class="guidepage content_width">
+			<div class="page_title"><%:Set password%></div>
+			<div id="password_set" style="margin: 10% auto auto;"></div>
+			<div class="step">
+				<span class="backclick" data-id="page_wireless"><%:Back%></span>
+				<span class="guideconfirm"><%:Finish%></span>
+			</div>
+		</div>
+	</div>
+	<div class="footer flex_center">
+		<div><%:AC1200%></div>
+	</div>
+</div>

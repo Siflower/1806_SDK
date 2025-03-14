@@ -1,0 +1,30 @@
+{
+	"network": {
+		"title": "Network",
+		"index": 20
+	},
+	"network/lan": {
+		"title": "Lan / DHCP",
+		"acls": [ "superuser" ],
+		"view": "network/lan",
+		"index": 10
+	},
+	"network/ipv6": {
+		"title": "IPV6",
+		"acls": [ "superuser" ],
+		"view": "network/ipv6",
+		"index": 20
+	},
+	"network/bindtable":{
+		"title":"IP-MAC Bind",
+		"acls": [ "ip_mac_bound" ],
+		"view":"network/bindtable",
+		"index": 30
+	},
+	"network/nat":{
+		"title":"NAT Server",
+		"acls": [ "firewall" ],
+		"view":"network/nat",
+		"index": 50
+	}
+}

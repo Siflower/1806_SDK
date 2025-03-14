@@ -112,8 +112,8 @@ gwifi_start_all(){
 	gwifi_start $n0 0
 	gwifi_start $n1 1
 	echo "$CRONUSER" >/etc/crontabs/cron.update
-	ubus call network reload
-	wifi reload_legacy
+	# ubus call network reload
+	# wifi reload_legacy
 }
 
 gwifi_speed_stop(){

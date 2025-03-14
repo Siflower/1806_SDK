@@ -1,0 +1,29 @@
+<div class="thirdTitleContent">
+	<h2><%:Packet Capture%></h2>
+	<p class="description"><%:After clicking [Start], the router automatically captures the packets through the gateway and saves it to your device based on the set length of time. It can help analyze network issues. Click again at any time to stop if this is not necessary.%></p>
+</div>
+<div class="subject">
+	<div class="row form-group" style="margin-left: 19px;">
+		<div><%:Set Time%></div>
+		<div class="col-lg-5">
+			<select id="timeset" class="form-control" style="width: 250px;">
+				<option value="15mins"><%:15 mins%></option>
+				<option value="forever"><%:Forever%></option>
+				<option value="Custom"><%:Custom%></option>
+			</select>
+		</div>
+	</div>
+	<div class="row form-group" id="timecustom" style="display: none;margin-left: 35px;">
+		<div><%:Custom Time%></div>
+		<div class="col-lg-5" style="margin-left: 2px;">
+			<input id="ctime" class="form-control" type="text" placeholder="">
+			<div style="display: none;" id="error" class="label label-danger"></div>
+		</div>
+		<div style="width:180px; margin-top:7px; text-align:left; margin-left:0px;"><%:Min(s)%></div>
+	</div>
+	<form action="/cgi-bin/capture" method="post" style="display:inline">
+		<input type="hidden" name="sessionid">
+		<input class="common_button_long" type="button" id="capture" style="margin: 30px 242.5px">
+	</form>
+</div>
+

@@ -1,0 +1,18 @@
+{
+	"advance": {
+		"title": "Advance",
+		"index": 60
+	},
+	"advance/capture": {
+		"title": "Packet Capture",
+		"acls": [ "superuser" ],
+		"view": "advance/capture",
+		"index": 50
+	},
+	"advance/diagnose": {
+		"title": "Diagnose",
+		"acls": [ "superuser" ],
+		"view": "advance/diagnose",
+		"index": 60
+	}
+}

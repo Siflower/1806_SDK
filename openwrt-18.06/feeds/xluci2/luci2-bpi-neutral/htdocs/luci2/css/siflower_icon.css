@@ -1,0 +1,470 @@
+/*siflower logo*/
+.siflower_logo {
+	background-image: url('../res/bananapilogo.png');
+	background-size: 100%;
+}
+/*siflower logo*/
+/*first page menu*/
+.menu_home {
+	background-image: url('../res/bananapi.png');
+	background-position: 45% 84.4%;
+	background-size:380%;
+}
+.menu_internet {
+	background-image: url('../res/bananapi.png');
+	background-position: 45% 89.6%;
+	background-size:380%;
+}
+.menu_wifi {
+	background-image: url('../res/bananapi.png');
+	background-position: 45% 87.1%;
+	background-size:380%;
+}
+.menu_device {
+	background-image: url('../res/bananapi.png');
+	background-position: 45% 81.9%;
+	background-size:380%;
+}
+.menu_more {
+	background-image: url('../res/bananapi.png');
+	background-position: 45% 92.1%;
+	background-size:380%;
+}
+.menu_home_big {
+	background-image: url('../res/bananapi.png');
+	background-position: 48% 4.4%;
+}
+.menu_internet_big {
+	background-image: url('../res/bananapi.png');
+	background-position: 48% 9.5%;
+}
+.menu_wifi_big {
+	background-image: url('../res/bananapi.png');
+	background-position: 48% 6.8%;
+}
+.menu_device_big {
+	background-image: url('../res/bananapi.png');
+	background-position: 48% 1.9%;
+}
+.menu_more_big {
+	background-image: url('../res/bananapi.png');
+	background-position: 48% 12%;
+}
+.home_resstart_box{
+	width: 95px;
+	height: 95px;
+	background-image: url('../res/bananapi.png');
+	background-position: 48.5% 14.1%;
+	position: absolute;
+	left: 50%;
+	margin-left: -48px;
+	bottom: -150px;
+	background-size: 300%;
+}
+.home_resstart {
+    width: 39px;
+    height: 40px;
+    background-image: url('../res/bananapi.png');
+    background-position: 48.7% 50.1%;
+    position: absolute;
+    left: 28.2px;
+    bottom: 25px;
+    cursor: pointer;
+    background-size: 470%;
+}
+.home_resstart:hover {
+    background-image: url('../res/bananapi.png');
+    background-position: 48.7% 52.73%;
+    background-size: 470%;
+}
+.home_resstart:hover .home_resword{
+    display: block;
+}
+.home_resword{
+    display: none;
+    width: 95px;
+    font-size: 14px;
+    color: #a0bcdb;
+    position: absolute;
+    left:-28px;
+    bottom:64px;
+}
+.ic_route{
+background-image: url(../res/bananapi.png);
+background-position: 49% 62%;
+background-size: 350%;
+}
+.router_wan .router_up_speed i {
+    display: block;
+    width: 23px;
+    height: 23px;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 26.5%;
+    background-size: 800%;
+}
+.router_wan .router_down_speed i {
+    display: block;
+    width: 23px;
+    height: 23px;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 28%;
+    background-size: 800%;
+    margin-left: 2px;
+}
+.wifi_24g_able {
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 29.4%;
+    background-size: 150%;
+}
+.wifi_24g_disable {
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 31.3%;
+    background-size: 150%;
+}
+.wifi_5g_able {
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 29.4%;
+    background-size: 150%;
+}
+.wifi_5g_disable {
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 31.3%;
+    background-size: 150%;
+}
+.wifi_lan p {
+    width: 100%;
+    height: 2px;
+    line-height: 20px;
+    background: #537AB1;
+    position: absolute;
+    top: 9px;
+    left: 0;
+}
+.repeater_connect {
+    width: 145px;
+    height: 38px;
+    position: absolute;
+    top: 0;
+    margin-top: 27px;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 24.3%;
+    background-size: 100%;
+}
+/*first page menu end*/
+
+.checkbox {
+    margin-top: 7px;
+    height: 21px;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 42.15%;
+    background-size: 40%;
+    margin-left: -200px;
+}
+.checkbox_press {
+    margin-top: 7px;
+    height: 21px;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 43.8%;
+    background-size: 40%;
+    margin-left: -200px;
+}
+.switch_on {
+    overflow: hidden;
+    margin-top: 7px;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 43% 47.6%;
+    background-size: 300%;
+}
+.switch_off {
+    overflow: hidden;
+    margin-top: 7px;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 43% 45.7%;
+    background-size: 300%;
+}
+.btn_on {
+    background-image: url('../res/bananapi.png');
+    background-position: 43% 47.6%;
+    background-size: 300%;
+}
+.btn_off {
+    background-image: url('../res/bananapi.png');
+    background-position: 43% 45.7%;
+    background-size: 300%;
+}
+.ic-add_normal {
+    width: 42px;
+    height: 42px;
+    overflow: hidden;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 48% 71.3%;
+    background-size: 400%;
+}
+.ic-add_normal:hover {
+    width: 42px;
+    height: 42px;
+    overflow: hidden;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 48% 68.9%;
+    background-size: 400%;
+}
+.ic-del {
+    width: 30px;
+    height: 30px;
+    overflow: hidden;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 55% 97.6015%;
+    background-size: 600%;
+}
+.ic-del:hover {
+    width: 30px;
+    height: 30px;
+    overflow: hidden;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 54.8% 99.25295%;
+    background-size: 600%;
+}
+.edit_big {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 47% 94%;
+    vertical-align: middle;
+    margin-left: 15px;
+    cursor: pointer;
+    background-size: 600%;
+}
+.edit_big:hover {
+    background-image: url('../res/bananapi.png');
+    background-position: 47.68% 95.6863%;
+    background-size: 600%;
+}
+.wifilock3 {
+    width: 30px;
+    height: 30px;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 48% 74.3%;
+    background-size: 550%;
+}
+.wifilock2 {
+    width: 30px;
+    height: 30px;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 75.6%;
+    background-size: 550%;
+}
+.wifilock1 {
+    width: 30px;
+    height: 30px;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 78.3%;
+    background-size: 550%;
+}
+.wifiopen2 {
+    width: 30px;
+    height: 30px;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 77.1%;
+    background-size: 550%;
+}
+.wifiopen1 {
+    width: 30px;
+    height: 30px;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 79.5%;
+    background-size: 550%;
+}
+.wifiopen3 {
+    width: 30px;
+    height: 30px;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 73%;
+    background-size: 550%;
+}
+.repeaterline {
+    height: 2px;
+    width: 125px;
+    margin-top: 14px;
+    background: #a0bcdb;
+    z-index: 1;
+}
+.repeater_fail {
+    display: block;
+    height: 30px;
+    width: 100px;
+    background-repeat: no-repeat;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 24.3%;
+    background-size: 120%;
+}
+.content_status_repeater .repeater_line_box .repeater_line {
+    width: 100px;
+    height: 2px;
+    background: #a0bcdb;
+    position: absolute;
+    top: 45px;
+}
+.content_status_repeater .repeater_status_line {
+    color: #ef5146;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 29.5%;
+    background-size: 150%;
+}
+.repeater_sucess{
+	width: 100px;
+	height: 30px;
+    color: #ef5146;
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 29.5%;
+    background-size: 150%;
+}
+.home_network{
+	width:200px;
+	height:100px;
+    background-image: url('../res/bananapi.png');
+	background-position: 50% 58.24%;
+	background-size: 110%;
+	margin-left: -43px;
+}
+.home_device{
+	width:200px;
+	height:100px;
+    background-image: url('../res/bananapi.png');
+	background-position: 50% 65.6%;
+	background-size: 110%;
+	margin-left: -34px;
+}
+.home_wds_center{
+	width:200px;
+	height:100px;
+    background-image: url('../res/bananapi.png');
+	background-position: 50% 62.2%;
+	background-size: 150%;
+}
+.wds_router{
+	width: 200px;
+	height: 100px;
+	background-image: url(../res/bananapi.png);
+	background-size: 150%;
+	background-position: 50% 62.2%;
+	margin-top: -100px;
+}
+.eyeHidden {
+    width: 30px;
+    height: 30px;
+    background-image: url('../res/bananapi.png');
+    background-position: 19.4% 99.4%;
+    background-size: 500%;
+}
+.eyeShow {
+    width: 30px;
+    height: 30px;
+    background-image: url('../res/bananapi.png');
+    background-position: 17% 97.8%;
+    background-size: 500%;
+}
+.ic_downarrow::before {
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 28%;
+    background-size: 800%;
+}
+.selsect_box::after{
+	content: "";
+	position: absolute;
+	top: 3px;
+	width: 30px; height: 30px;
+	background-repeat: no-repeat;
+	overflow: hidden;
+	background-color: white;
+}
+.ic-menu_up {
+    background-image: url('../res/bananapi.png');
+    background-position: 50% 22.3%;
+    background-size: 500%;
+}
+.login1 {
+	width: 130px;
+    height: 130px;
+    background-repeat: no-repeat;
+    overflow: hidden;
+    background-image: url(../res/icon1.png);
+    margin-left: 60px;
+}
+.login2 {
+	width: 130px;
+    height: 130px;
+    background-repeat: no-repeat;
+    overflow: hidden;
+    background-image: url(../res/icon2.png);
+    margin-left: 60px;
+	mix-blend-mode: multiply;
+}
+.login3 {
+	width: 130px;
+    height: 130px;
+    background-repeat: no-repeat;
+    overflow: hidden;
+    background-image: url(../res/icon3.png);
+    margin-left: 60px;
+	mix-blend-mode: multiply;
+}
+#loginleadapp .enter {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin-top: -45px;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.1);
+    background-repeat: no-repeat;
+    overflow: hidden;
+    background-image: url('../res/bananapi.png');
+    background-position: 49% 22.4%;
+    background-size: 600%;
+    margin-left: 307px;
+    margin-top: -45.5px;
+    transform: rotate(-90deg);
+}
+.lead_tip{
+	position: relative;
+	padding-top:10px;
+	width:100%;
+	font-size:30px;
+	color:#ffffff;
+	opacity:0.8;
+}
+.login_error {
+    width: 20px;
+    height: 20px;
+    background-image: url('../res/bananapi.png');
+    background-position: 49.8% 54.8%;
+    background-size: 600%;
+    display: inline-block;
+    vertical-align: bottom;
+}

@@ -1,0 +1,1547 @@
+* {
+    -webkit-text-size-adjust: none;
+}
+
+body {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    background: #e7e7e7;
+}
+
+body, html, p, h1, h2, h3, h4, ul, li, dl, dt, dd, input {
+    padding: 0;
+    margin: 0;
+    font-family: 'Microsoft YaHei', Arial, sans-serif !important;
+}
+
+.fluid {
+    width: 100%;
+    position: relative;
+}
+
+.header {
+    height: 65px;
+    background-color: white;
+}
+
+.container_box {
+    width: 1000px;
+    margin: 0 auto;
+}
+
+.fl {
+    float: left;
+}
+
+.marginleft_15 {
+    margin-left: 15px !important;
+}
+
+.commonLogo {
+    width: 70px;
+    height: 42px;
+    margin-top: 16px;
+    margin-left: 50px;
+}
+
+.clearboth::after, .row::after {
+    display: block;
+    clear: both;
+    content: '';
+    visibility: hidden;
+    height: 0;
+}
+
+.productname {
+    margin-top: 16px;
+    font-size: 22px;
+    color: #262626;
+    width: 400px;
+    white-space: nowrap;
+}
+
+.border_1px_left {
+    border-left: 1px solid #c9c9c9;
+}
+
+.paddingleft_15 {
+    padding-left: 15px;
+}
+
+.text_left_right {
+    text-align: left;
+}
+
+.logout {
+    font-size: 12px;
+    margin-top: 24px;
+    color: #595959;
+    cursor: pointer;
+}
+
+.logout:hover {
+    color: #a0bcdb;
+}
+
+.marginright_20 {
+    margin-right: 20px;
+}
+
+.fluid {
+    width: 100%;
+    position: relative;
+}
+
+#nav {
+    height: 180px;
+    background-size: contain;
+    position: relative;
+}
+
+#nav .bg {
+    position: absolute;
+    width: 100%;
+    height: 110px;
+    top: 0;
+    left: 0;
+    min-width: 1000px;
+    z-index: 1;
+}
+
+#nav .container {
+    position: absolute;
+    z-index: 2;
+    min-width: 885px;
+    height: 100%;
+    color: #fff;
+}
+
+.marginleft-380 {
+    margin-left: -380px !important;
+}
+
+.left50 {
+    left: 50% !important;
+}
+
+#nav .container ul {
+    height: 180px;
+    overflow: hidden;
+}
+
+.marginright_30 {
+    margin-right: 30px !important;
+}
+
+li.nav_item {
+    min-width: 118px;
+    text-align: center;
+    font-size: 14px;
+    margin-top: 33px;
+    color: #ffffff;
+}
+
+li {
+    list-style: none;
+}
+
+.nav_item .big_icon {
+    width: 122px;
+    height: 122px;
+    background-repeat: no-repeat;
+    display: block;
+    text-decoration: none;
+    outline: none;
+    background-color: transparent;
+    margin: 0 auto;
+    margin-top: 9px;
+}
+
+.home_content {
+    width: 1000px;
+    margin: 0 auto 30px;
+    text-align: center;
+    position: relative;
+}
+
+.content_status {
+    margin: 85px auto 0;
+    height: 90px;
+    width: 825px;
+    font-size: 12px;
+}
+
+.router_wan {
+    width: 285px;
+    height: 84px;
+    position: relative;
+    cursor: pointer;
+}
+
+.marginleft_20 {
+    margin-left: 20px !important;
+}
+
+.router_wan .router_up_speed {
+    width: 150px;
+    position: absolute;
+    top: 12px;
+}
+
+.marginleft_2 {
+    margin-left: 2px !important;
+}
+
+.left_175 {
+    left: 175px;
+}
+
+.router_wan .router_wan_line {
+    width: 125px;
+    height: 2px;
+    background: #a0bcdb;
+    position: absolute;
+    top: 44px;
+}
+
+.left_150 {
+    left: 150px;
+}
+
+.router_wan .router_up_speed span {
+    display: block;
+    font-size: 24px;
+    font-weight: 500;
+    height: 24px;
+    line-height: 24px;
+    color: #595959;
+}
+
+.router_wan .router_up_speed em {
+    font-size: 12px;
+    font-style: normal;
+    color: #7f7f7f;
+    margin-top: 6px;
+}
+
+.router_wan .router_down_speed span {
+    display: block;
+    font-size: 24px;
+    font-weight: 500;
+    height: 24px;
+    line-height: 24px;
+    color: #595959;
+}
+
+.router_wan .router_down_speed em {
+    font-size: 12px;
+    font-style: normal;
+    color: #7f7f7f;
+    margin-top: 6px;
+}
+
+.content_status .router_more {
+    cursor: pointer;
+}
+
+.router_more {
+    width: 90px;
+    height: 90px;
+    position: relative;
+}
+
+.marginleft_50 {
+    margin-left: 50px !important;
+}
+
+.router_wifi {
+    width: 150px;
+    height: 122px;
+    position: relative;
+    transform: translateY(-10px);
+    z-index: 1000;
+}
+
+.marginleft_60 {
+    margin-left: 60px !important;
+}
+
+.wifi_24g_box {
+    width: 125px;
+    height: 47px;
+}
+
+.wifi_24g_box:hover .wifi_24g_hover {
+    display: block;
+}
+
+.wifi_24g {
+    width: 100%;
+    height: 23px;
+    background-repeat: no-repeat;
+    position: relative;
+    cursor: pointer;
+}
+
+.wifi_24g_hover {
+    display: none;
+    width: 115px;
+    padding: 5px;
+    border-radius: 5px;
+    background: #a0bcdb;
+    color: #fff;
+    position: absolute;
+    bottom: 34px;
+    left: 0;
+    font-size: 12px;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.wifi_24g_hover::after {
+    content: "";
+    position: absolute;
+    bottom: -12px;
+    left: 57px;
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+    border-top-color: #a0bcdb;
+}
+
+.tip_24g {
+    width: 125px;
+    height: 24px;
+    color: #7f7f7f;
+    line-height: 24px;
+}
+
+.home_content .content_status .wifi_lan {
+    cursor: pointer;
+}
+
+.wifi_lan span {
+    padding: 0 6px;
+    color: #595959;
+    line-height: 20px;
+    background: #f7f7f7;
+    z-index: 100;
+    position: relative;
+}
+
+.wifi_5g_box {
+    width: 125px;
+    height: 47px;
+    margin-top: 8px;
+}
+
+.wifi_5g_box:hover .wifi_5g_hover {
+    display: block;
+}
+
+.wifi_5g {
+    width: 100%;
+    height: 23px;
+    position: relative;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.wifi_5g_hover::after {
+    content: "";
+    position: absolute;
+    top: -12px;
+    left: 57px;
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+    border-bottom-color: #a0bcdb;
+}
+
+.wifi_5g_hover {
+    display: none;
+    width: 115px;
+    padding: 5px;
+    border-radius: 5px;
+    background: #a0bcdb;
+    color: #fff;
+    position: absolute;
+    top: 52px;
+    left: 0;
+    font-size: 12px;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.tip_5g {
+    width: 125px;
+    height: 24px;
+    color: #7f7f7f;
+    line-height: 24px;
+}
+
+.router_deviceCount {
+    width: 124px;
+    height: 90px;
+    text-align: center;
+}
+
+.marginleft_30 {
+    margin-left: 30px !important;
+}
+
+.content_status .router_deviceCount span:nth-child(1) {
+    margin-top: -10px;
+    font-size: 36px;
+    line-height: 80px;
+    color: #595959;
+    cursor: pointer;
+}
+
+.fun_name {
+    width: 825px;
+    height: 24px;
+    margin: 0 auto;
+    transform: translateY(-20px);
+    overflow: hidden;
+}
+
+.fun_name p {
+    width: 145px;
+    color: #595959;
+    font-size: 14px;
+    line-height: 24px;
+    cursor: pointer;
+}
+
+.marginleft_184 {
+    margin-left: 184px !important;
+}
+
+.marginleft_200 {
+    margin-left: 200px !important;
+}
+
+.hone_connect {
+    width: 100%;
+    height: 52px;
+    padding: 46px 0 81px 0;
+}
+
+.hone_connect .home_box {
+    display: inline-block;
+}
+
+.border_1px_right {
+    border-right: 1px solid #c9c9c9;
+}
+
+.hone_connect .descripe {
+    color: #595959;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.hone_connect .content {
+    color: #7f7f7f;
+    margin-top: 8px;
+    font-size: 12px;
+}
+
+#morePage {
+    width: 100%;
+    position: relative;
+}
+
+#morePage .container {
+    width: 960px;
+    margin: 10px auto;
+    border: 1px solid #c9c9c9;
+    border-radius: 8px;
+    background-color: rgb(242, 242, 242);
+    overflow: hidden;
+    box-sizing: content-box;
+}
+
+.title_line {
+    color: #000000;
+    font-size: 16px;
+    padding: 12px 0px;
+    margin: 8px 36px 0;
+}
+
+.row {
+    font-size: 14px;
+}
+
+.row>div {
+    float: left;
+    height: 100%;
+    width: 280px;
+}
+
+.row>div:first-child {
+    width: 197px;
+    margin-top: 7px;
+    text-align: right;
+}
+
+.row>div:last-child {
+    margin-left: 18px;
+    width: 375px;
+    text-align: left;
+    position: relative;
+}
+
+.common_button_long, .white_button_long, .unhover_button_long, .common_button_long_disable {
+    width: 263px;
+    height: 50px;
+    font-size: 16px;
+    line-height: 50px;
+    text-align: center;
+    cursor: pointer;
+    margin: 0 auto;
+    color: #000;
+    border: 1px solid #c9c9c9;
+    background-color: rgba(255, 255, 255, .2);
+    border-radius: 8px;
+	outline: none;
+}
+
+.Devices .devicesContainer {
+    width: 1000px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.Devices .devicesContainer .devicesList {
+    width: 958px;
+    min-height: 515px;
+    border-radius: 10px;
+    border: 1px solid #c9c9c9;
+    margin: 0 auto;
+    overflow: hidden;
+    padding-bottom: 120px;
+}
+
+.Devices .devicesContainer .devicesList .deviceTitle.higher {
+    height: 57px;
+}
+
+.Devices .devicesContainer .devicesList .deviceTitle {
+    font-size: 16px;
+    width: 960px;
+    overflow: visible;
+    height: 40px;
+    background-color: #e9e9e9;
+    position: relative;
+    display: table;
+}
+
+.border_1px_bottom {
+    border-bottom: 1px solid #c9c9c9;
+}
+
+.Devices .devicesContainer .devicesList .deviceTitle.higher>div {
+    height: 57px;
+}
+
+.text_center {
+    text-align: center;
+}
+
+.Devices .middleText {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    -moz-transform: translateY(-50%);
+    -webkit-transform: translateY(-50%);
+    -o-transform: translateY(-50%);
+}
+
+#menus {
+    width: 220px;
+    min-height: 800px;
+}
+
+.menu_item {
+    font-size: 14px;
+}
+
+.menu_item .dt.focus {
+    background-color: #a0bcdb;
+    color: #fff;
+}
+
+.menu_item .dt {
+    padding: 20px;
+    cursor: pointer;
+    position: relative;
+    font-size: 14px;
+}
+
+.ic-menu-arrow {
+    width: 30px;
+    height: 30px;
+    background-repeat: no-repeat;
+    overflow: hidden;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-15px);
+    -webkit-transform: translateY(-15px);
+    -o-transform: translateY(-15px);
+    -moz-transform: translateY(-15px);
+    -ms-transform: translateY(-15px);
+}
+
+.menu_item .dd {
+    height: 100%;
+    overflow: hidden;
+    max-height: 500px;
+}
+
+.menu_item li.active::before {
+    background: #a0bcdb;
+}
+
+.menu_item li::before {
+    content: "";
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #BEC2C8;
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-5px);
+    -webkit-transform: translateY(-5px);
+    -o-transform: translateY(-5px);
+    -moz-transform: translateY(-5px);
+    -ms-transform: translateY(-5px);
+}
+
+#morePage .right_box {
+    width: 738px;
+    min-height: 800px;
+    background-color: #fff;
+}
+
+/* thirldTitleContent BEGIN */
+.thirdTitleContent {
+    padding: 15px 50px;
+    border-bottom: 1px solid #c9c9c9;
+    color: rgb(89, 89, 89);
+}
+
+.thirdTitleContent h2 {
+    font-size: 24px;
+    color: #262626;
+    margin: 35px 0;
+    font-weight: 400;
+}
+
+.thirdTitleContent .description {
+    font-size: 13px;
+    line-height: 20px;
+    margin-bottom: 8px;
+}
+
+.thirdTitleContent .helpInfo {
+    margin-bottom: 10px;
+}
+
+.thirdTitleContent .helpInfo h3 {
+    font-size: 14px;
+    font-weight: 400;
+    text-decoration: underline;
+    line-height: 30px;
+    height: 30px;
+    position: relative;
+}
+
+.thirdTitleContent .helpInfo h3 span {
+    cursor: pointer;
+}
+
+.thirdTitleContent .helpDesc {
+    font-size: 12px;
+    padding: 10px 0;
+}
+
+.thirdTitleContent .helpDesc ul li {
+    list-style: disc;
+}
+
+.thirdTitleContent ol li {
+    list-style: decimal;
+}
+
+.thirdTitleContent ol {
+    margin: 0;
+    padding: 0;
+}
+
+.thirdTitleContent .helpDesc>ul>li ul,
+.thirdTitleContent ol {
+    margin-left: 25px;
+}
+
+/* thirldTitleContent END */
+
+.clearboth::after, .row::after {
+    display: block;
+    clear: both;
+    content: "";
+    visibility: hidden;
+    height: 0;
+}
+
+.bdr_12 {
+    border-radius: 12px;
+}
+
+.border_1px {
+    border: 1px solid #c9c9c9;
+}
+
+.marginleft_620 {
+    margin-left: 620px !important;
+}
+
+.height_40 {
+    height: 40px;
+}
+
+.height_70 {
+    height: 70px;
+}
+
+.PopWin {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, .5);
+    z-index: 10000;
+}
+
+.PopWin .pop_absolute_center {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+}
+
+.PopWin .PopWin_box {
+    background-color: #fff;
+    border-radius: 8px;
+}
+
+.PopWin .PopWin_box div.popWin_title {
+    height: 96px;
+    line-height: 4.5;
+    font-size: 22px;
+    color: #262626;
+    text-align: center;
+    font-weight: 400;
+    border-bottom: solid 1px #c9c9c9;
+    padding: 0 15px;
+}
+
+.table_cell {
+    display: table-cell !important;
+    vertical-align: middle;
+    line-height: 1 !important;
+}
+
+.PopWin .PopWin_box .PopWin_buttons {
+    margin: 60px auto 50px;
+    overflow: hidden;
+}
+
+.btn {
+    cursor: pointer;
+    background-repeat: no-repeat;
+}
+
+.repeater_edit {
+    height: 90px;
+    width: 585px;
+    overflow: hidden;
+    background-repeat: no-repeat;
+}
+
+.subject {
+    margin-top: 50px;
+    font-size: 14px;
+}
+
+.guidegray {
+    height: 38px;
+    line-height: 38px;
+    font-size: 12px;
+    color: #595959;
+    background-color: #f2f2f2;
+    border-bottom: 1px solid rgb(201, 201, 201);
+}
+
+.Scroller {
+    overflow: hidden;
+    position: relative;
+}
+
+.Scroller .scroller_container {
+    overflow: auto;
+}
+
+.gscrollitem {
+    font-size: 14px;
+    height: 60px;
+    text-align: center;
+    cursor: pointer;
+    border-bottom: 1px solid #c9c9c9;
+}
+
+.rlistconnect {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    padding-top: 12px;
+    color: #a0bcdb;
+}
+
+.fr {
+    float: right;
+}
+
+.gscrollitem:hover, .gscrollitem:hover div, #othernet_btn:hover, #othernet_btn:hover div {
+    color: #fff;
+    background-color: #a0bcdb;
+}
+
+
+.InputContent>div:last-child, .switchbutton_box>div:last-child {
+    display: table-cell;
+    vertical-align: middle;
+    padding-left: 20px;
+    float: none;
+}
+
+.InputComponent .inputArea {
+    border: 1px solid #c9c9c9;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    outline: none
+}
+
+.InputContent .inputBox .eye {
+    left: 250px;
+}
+
+.InputComponent .InputContent .inputBox .eye {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background-repeat: no-repeat;
+    top: 5px;
+    cursor: pointer;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+
+.InputContent>div:first-child, .switchbutton_box>div:first-child {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: right;
+    line-height: 1;
+    width: 197px;
+    float: none;
+}
+
+.ic-loading {
+    width: 79px;
+    height: 79px;
+    background-repeat: no-repeat;
+    background-image: url(../res/loading.gif);
+}
+
+.content_status_repeater {
+    margin: 100px auto 0;
+    height: 90px;
+    width: 845px;
+    font-size: 12px;
+}
+
+.content_status_repeater .repeater_line_box {
+    width: 243px;
+    height: 100%;
+    position: relative;
+}
+
+.content_status_repeater .repeater_center_box {
+    width: 246px;
+    height: 100%;
+    position: relative;
+}
+
+.content_status_repeater .repeater_status {
+    width: 100px;
+    height: 30px;
+    position: absolute;
+    top: 30px;
+}
+
+.content_status_repeater .repeater_status .repeater_bridgestrenth {
+    width: 110px;
+    height: 20px;
+    line-height: 20px;
+    font-size: 12px;
+    position: absolute;
+    left: 0;
+    top: 25px;
+}
+
+.router_wifi {
+    width: 150px;
+    height: 122px;
+    position: relative;
+    transform: translateY(-10px);
+    z-index: 1000;
+}
+
+.content_status_repeater .router_deviceCount {
+    width: 100px;
+    height: 90px;
+    text-align: center;
+}
+
+.content_status_repeater .router_deviceCount {
+    line-height: 80px;
+    color: #212121;
+    font-size: 16px;
+    cursor: default;
+}
+
+.hone_connect_repeater {
+    padding: 80px 0 70px 0;
+}
+
+.hone_connect .home_box {
+    display: inline-block;
+}
+
+#loginleadapp .lead_App {
+    right: 0px;
+    bottom: 0px;
+    position: absolute;
+    left: 0px;
+    width: 100%;
+    top: 0px;
+}
+
+.circle-container {
+  display: flex;
+  align-items: center; /* 如果希望垂直居中 */
+}
+
+.circle {
+  background: #FA617B;
+  border-radius: 50%;
+  box-shadow: 0.2em 0.2em 0 0 rgba(15, 28, 63, 0.125);
+  height: 1.5em;
+  width: 1.5em;
+  margin-left: 0; /* 确保没有额外的左边距 */
+  z-index: 1; /* 确保图片在背景之下 */
+}
+
+#loginleadapp .loginlead_title {
+    z-index: 1; /* 确保背景在其他内容的后面 */
+    height: 70px;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    top: 0px;
+    background-color: #FEFEFE;
+    box-shadow:0px -50px 120px;
+}
+
+.background-container {
+    position: fixed; /* 保持背景容器固定在视口 */
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(22deg, #D7EBFF,80%, #EBEEFB); /* 70度的渐变 */
+    display: flex; /* 使用Flexbox布局 */
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
+}
+
+#main-outlet {
+    box-sizing: border-box;
+    background: linear-gradient(to bottom right, #ffffff, 80%, #E6EDFC);
+    border-radius: 25px;
+    width: 430px;
+    height: 555px;
+    max-width: 430px;
+    padding: 3em 3em 5%;
+    padding-bottom: 5%!important;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.18);
+    z-index: -1; /* 确保图片在背景之下 */
+    overflow: hidden; /* 裁剪超出边界的内容 */
+    position: relative; /* 确保内部元素可以定位 */
+}
+
+.image-container {
+    position: absolute; /* 允许图片定位 */
+    top: -10px; /* 调整图片的垂直位置 */
+    left: -1px;
+    height: 35%;
+    width: 100%;
+    z-index: 1; /* 确保图片在背景之下 */
+}
+
+.image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 确保图片覆盖容器并裁剪超出部分 */
+}
+
+#loginleadapp .lead_title {
+    position: relative;
+    padding-top: 0px;
+    width: 100%;
+    font-size: 50px;
+    color: #0091FF;
+    z-index:1; /* 确保图片在背景之下 */
+}
+
+#loginleadapp .lead_title1 {
+    position: relative;
+    padding-top: 15px;
+    width: 100%;
+    font-size: 30px;
+    color: #323232;
+}
+
+#loginleadapp .appLogo {
+    position: absolute;
+    width: 70px;
+    height: 42px;
+    margin-top: 16px;
+    margin-left: 50px;
+}
+
+#loginleadapp .lead_productname {
+    position: absolute;
+    margin-top: 23px;
+    font-size: 18px;
+    color: #1F6AB5;
+    width: 500px;
+    white-space: nowrap;
+}
+
+#loginleadapp .lead_productname1 {
+    position: absolute;
+    margin-top: 3q5px;
+    font-size: 18px;
+    color: #FA6F43;
+    width: 500px;
+    white-space: nowrap;
+}
+
+.marginleft_140 {
+    margin-left: 140px !important;
+}
+
+.InputComponent.customWidth {
+    display: inline-block;
+    margin: 0 5px;
+}
+
+#loginleadapp input {
+    background-color: #001E55;
+    opacity: 0.3;
+    color: #ffffff;
+    min-height: auto;
+    padding-right: 43px !important;
+}
+
+.paddingleft_14 {
+    padding-left: 14px;
+}
+
+.login_leader_border {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.login_lang{
+    position: relative;
+    margin-top: 25px;
+    margin-right: 50px;
+    cursor: pointer;
+}
+
+.login_lang ul{
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: -10px;
+    background-color: white;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.25);
+    border-radius: 5px;
+    min-width: 160px;
+    overflow: hidden;
+    padding: 10px 0;
+    margin-top: 12px;
+}
+
+.login_lang ul li {
+    padding: 10px 20px;
+    white-space: nowrap;
+    margin: 0;
+    display: block;
+    text-align: center;
+}
+
+.login_lang ul li:hover {
+    font-weight: bold;
+}
+
+.marginleft_290 {
+    margin-left: 290px;
+}
+
+#leadPage .leadList {
+    width: 1200px;
+    height: 460px;
+    margin: 20px auto;
+}
+
+.paddingright_40 {
+    padding-right: 40px;
+}
+
+#loginleadapp .login_lead_QR {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin-top: 120px;
+    background-repeat: no-repeat;
+    overflow: hidden;
+    background-image: url(../res/code.png);
+    background-size: 100%;
+}
+
+#loginleadapp #loginlead_top {
+    height: 70px;
+    width: 100%;
+    position: relative;
+}
+
+#app {
+    min-width: 1000px;
+    background: white;
+}
+
+#index {
+    background-color: #f7f7f7;
+}
+
+.nav_item .small_icon {
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    display: block;
+    text-decoration: none;
+    outline: none;
+    background-color: transparent;
+    margin: 0 auto;
+    margin-top: 5px;
+}
+
+.left_115 {
+    left: 115px;
+}
+
+.wifi_lan {
+    width: 125px;
+    height: 20px;
+    font-size: 12px;
+    position: relative;
+    text-align: center;
+    margin-bottom: 4px;
+    cursor: default;
+}
+
+.repeater_name {
+    width: 1000px;
+    height: 28px;
+}
+
+.repeater_name p {
+    width: 145px;
+    color: #000;
+    font-size: 14px;
+    height: 28px;
+    line-height: 28px;
+    transform: translateY(-20px);
+}
+
+.Devices .devicesList .deviceDesc {
+    height: 110px;
+    position: relative;
+}
+
+.Devices .devicesList .deviceDesc>div {
+    height: 100%;
+    position: relative;
+}
+
+.Devices .deviceDesc .deviceLogo, .Devices .deviceDesc .devicesInfo {
+    height: 100%;
+    color: #828282;
+    font-size: 12px;
+}
+
+.Devices .deviceDesc .devicesInfo .deviceName {
+    margin-top: 10px;
+}
+
+.Devices .deviceDesc .devicesInfo .deviceName .hostname {
+    color: #a0bcdb;
+    font-size: 16px;
+    height: 38px;
+    line-height: 38px;
+}
+
+.Devices .deviceDesc .devicesInfo .deviceName>div {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.Devices .deviceDesc .devicesInfo .deviceName .hostname p {
+    height: 38px;
+    line-height: 19px;
+    word-break: break-all;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.Devices .deviceDesc .devicesInfo .deviceIpMac, .Devices .deviceDesc .devicesInfo .deviceTime {
+    margin-top: 5px;
+}
+
+.Devices .deviceDesc .devicesInfo .deviceRate .upRate, .Devices .deviceDesc .devicesInfo .deviceIpMac .IP {
+    box-sizing: border-box;
+    width: 187px;
+}
+
+.Devices .deviceDesc .devicesInfo .deviceRate>div, .Devices .deviceDesc .devicesInfo .deviceIpMac>div {
+    display: inline-block;
+}
+
+.Devices .deviceDesc .devicesInfo .deviceIpMac, .Devices .deviceDesc .devicesInfo .deviceTime {
+    margin-top: 5px;
+}
+
+.absolute_center {
+    position: absolute !important;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    -o-transform: translate(-50%, -50%);
+}
+
+.switchbtn {
+    width: 50px;
+    height: 27px;
+    overflow: hidden;
+    margin-top: 7px;
+    cursor: pointer;
+    background-repeat: no-repeat;
+}
+
+.Devices .deviceDesc .mydevice {
+    width: 100%;
+    color: #a0bcdb;
+    font-size: 14px;
+    text-align: center;
+}
+
+.Devices .deviceDesc .rateData {
+    width: 100%;
+}
+
+.Devices .deviceDesc .rateData>div {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.ic_uparrow::before, .ic_downarrow::before {
+    content: "";
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    -webkit-transform: translateY(-50%);
+    -moz-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    -o-transform: translateY(-50%);
+    background-repeat: no-repeat;
+}
+
+.ic_uparrow, .ic_downarrow {
+    padding-left: 20px;
+    position: relative;
+}
+
+.menu_item .dt:hover, .menu_item li:hover, .menu_item li.active {
+    background-color: #ddd;
+}
+
+.menu_item li {
+    padding: 18px 0 18px 40px;
+    cursor: pointer;
+    position: relative;
+}
+
+.border_top {
+    border-top: 1px solid #C9C9C9;
+}
+
+.row {
+    position: relative;
+    clear: both;
+    font-size: 14px;
+}
+
+.marginleft_215 {
+    margin-left: 215px !important;
+}
+
+#loginleadapp input::placeholder {
+    color: black;
+    font-size: 16px;
+}
+
+.router_wan .router_down_speed {
+    width: 150px;
+    position: absolute;
+    top: 52px;
+}
+
+/* loadingView BEGIN */
+
+.loading {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, .3);
+    z-index: 10000;
+}
+
+.loading_content {
+    width: 480px;
+    background-color: #eee;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #444;
+}
+
+.loading_content .loading_box {
+    position: relative;
+    padding: 25px 0;
+    min-height: 61px;
+}
+
+.loading .loading_cancel {
+    margin-top: 20px;
+    padding: 0 40px;
+}
+
+.loading .loading_title {
+    height: 40px;
+    line-height: 40px;
+    font-size: 16px;
+    border-bottom: 1px solid #ccc;
+}
+
+.loading_word {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    padding: 0 20px;
+    min-height: 61px;
+    height: 61px;
+    width: 340px;
+    position: relative;
+    display: table;
+    color: #595959;
+}
+
+.loading_box.timer .loading_word {
+    width: 100%;
+    min-height: auto;
+    margin-top: 10px;
+    text-align: center
+}
+
+.loading_box .loading_word>p {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.loading_box .loading_gif {
+    width: 61px;
+    height: 61px;
+    background: url(../res/loading.gif) no-repeat;
+    background-size: contain;
+    display: table
+}
+
+.loading_box .loading_gif .loading_time {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.loading_box.default .loading_gif, .loading_box.cancel .loading_gif {
+    position: absolute;
+    top: 50%;
+    margin-top: -30px;
+}
+
+.loading_box.timer .loading_gif {
+    margin: 0 auto;
+}
+
+.loading .loading_button .button {
+    display: block;
+    margin: 20px auto 37px;
+}
+
+/* loadingView END */
+
+.left_130 {
+    left: 130px;
+}
+
+.router_wan p {
+    width: 145px;
+    position: absolute;
+    top: 65px;
+    color: #7f7f7f;
+}
+
+.button_common_short {
+    width: 175px;
+    height: 45px;
+    font-size: 16px;
+    line-height: 45px;
+}
+
+.button_press_short {
+    width: 175px;
+    height: 45px;
+    font-size: 16px;
+    line-height: 45px;
+    background-color: #a0bcdb;
+    border: 1px solid #a0bcdb;
+    color: #fff;
+}
+
+.button_common_short:hover {
+    background-color: #a0bcdb;
+    border: 1px solid #a0bcdb;
+    color: #fff;
+}
+
+.common_button_long:hover, .white_button_long:hover, .common_button:hover {
+    background-color: #a0bcdb;
+    border: 1px solid #a0bcdb;
+    color: #fff;
+}
+
+.select_box.disable .info_show::after {
+    display: none;
+}
+
+.select_box {
+    background-color: #fff;
+    position: relative;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.select_box .list_fixed {
+    background-color: #fff;
+    border-radius: 8px;
+    position: absolute;
+    transform: none;
+    z-index: 510;
+    width: 100%;
+    top: 100%;
+    left: -1px;
+    margin-top: 1px;
+    overflow: hidden;
+}
+
+.select_box .select_list {
+    height: 100%;
+    overflow: auto;
+}
+
+.select_box .select_list li {
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    -ms-text-overflow: ellipsis;
+    padding-left: 10px;
+}
+
+.select_box .select_list li:hover {
+    background-color: #a0bcdb;
+    color: #fff;
+}
+
+.button {
+    text-align: center;
+    cursor: pointer;
+    margin: 0 auto;
+    color: #333;
+    border: 1px solid #c9c9c9;
+    background-color: rgba(255, 255, 255, .2);
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.login_info {
+    width: 330px;
+    font-size: 14px;
+    color: #a0bcdb;
+    opacity: 0.8;
+    margin-top: 10px;
+}
+
+input::-ms-reveal {
+    display: none;
+}

@@ -1,0 +1,42 @@
+{
+	"wireless": {
+		"title": "Wireless",
+		"index": 30
+	},
+	"wireless/adv_wifi": {
+		"title": "Advanced WiFi",
+		"acls": [ "superuser" ],
+		"view": "wireless/adv_wifi",
+		"index": 10
+	},
+	"wireless/guest_wifi": {
+		"title": "Guest WiFi",
+		"acls": [ "superuser" ],
+		"view": "wireless/guest_wifi",
+		"index": 20
+	},
+	"wireless/wds": {
+		"title": "Wi-Fi Repeater",
+		"acls": [ "superuser" ],
+		"view": "wireless/wds",
+		"index": 30
+	},
+	"wireless/timing": {
+		"title": "Wi-Fi Timing",
+		"acls": [ "superuser" ],
+		"view": "wireless/timing",
+		"index": 40
+	},
+	"wireless/visit_control": {
+		"title": "WiFi Visitor Control",
+		"acls": [ "superuser" ],
+		"view": "wireless/visit_control",
+		"index": 50
+	},
+	"wireless/wifiinfo": {
+		"title": "Wi-Fi Debugging Information",
+		"acls": [ "superuser" ],
+		"view": "wireless/wifiinfo",
+		"index": 60
+	}
+}
