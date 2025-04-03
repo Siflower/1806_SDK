@@ -968,4 +968,3 @@ yt_ret_t yt_qos_schedule_dwrr_get(yt_unit_t unit, yt_qid_t qinfo, yt_queue_weigh
 
     return YT_DISPATCH(unit)->qos_schedule_dwrr_get(unit, qinfo, pQweight);
 }
-

@@ -290,8 +290,8 @@ int sf_wifi_init_wifi_factory_info(struct siwifi_hw *siwifi_hw)
 #ifdef CONFIG_SFAX8_FACTORY_READ
     char buf[WIFI_VERSION_SIZE];
 #endif
-    struct mpw0_plat_data *priv =
-                    (struct mpw0_plat_data *)&siwifi_hw->plat->priv;
+    struct v1_plat_data *priv =
+                    (struct v1_plat_data *)&siwifi_hw->plat->priv;
     int lb = priv->band & LB_MODULE;
     struct siwifi_factory_info *factory_info = &siwifi_hw->factory_info;
     char *wifi_info_buf = NULL;

@@ -488,4 +488,3 @@ extern yt_ret_t yt_led_parallel_pos_invert_get(yt_unit_t unit, yt_port_t port, y
 
 
 #endif
-

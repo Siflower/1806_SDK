@@ -121,4 +121,3 @@ extern yt_ret_t yt_sys_chipInfo_get(yt_unit_t unit, yt_switch_chip_t *pChip);
 
 
 #endif
-

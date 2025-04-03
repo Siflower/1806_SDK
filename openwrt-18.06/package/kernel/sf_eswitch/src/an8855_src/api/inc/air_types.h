@@ -53,4 +53,3 @@ typedef UI8_T   AIR_MAC_T[6];
  */
 
 #endif  /* AIR_TYPES_H */
-

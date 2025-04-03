@@ -105,7 +105,7 @@ SF16A18_UMAC_SRC_OBJS :=	\
 	$(root_src_ref_dir)/siwifi_msg_rx.o	\
 	$(root_src_ref_dir)/siwifi_utils.o	\
 	$(root_src_ref_dir)/siwifi_cmds.o	\
-    $(root_src_ref_dir)/siwifi_mpw0.o	\
+    $(root_src_ref_dir)/siwifi_v1.o	\
     $(root_src_ref_dir)/siwifi_mod_params.o	\
     $(root_src_ref_dir)/siwifi_txq.o	\
     $(root_src_ref_dir)/ipc_host.o	\

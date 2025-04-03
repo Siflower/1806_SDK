@@ -367,7 +367,7 @@ static void sgmac_set_mdc_clk_div(struct sgmac_priv *priv)
 {
 	int value = readl(priv->base + GMAC_GMII_ADDR);
 	value &= ~GMAC_GMII_ADDR_CR_MASK;
-#ifdef CONFIG_SF16A18_MPW1
+#ifdef CONFIG_SF16A18_V2
 	value |= GMAC_GMII_ADDR_CR_124;
 #else
 	/* In sf19a28, the CSR clk is 150MHz */
@@ -1466,7 +1466,7 @@ static int sgmac_recovery(struct net_device *ndev)
 	memset(&priv->xstats, 0, sizeof(struct sgmac_extra_stats));
 	if(priv->phy_node){
 #ifdef CONFIG_SFAX8_RGMII_GMAC
-#ifdef CONFIG_SF16A18_MPW1
+#ifdef CONFIG_SF16A18_V2
 		priv->phydev = of_phy_connect(ndev, priv->phy_node, sgmac_adjust_link,
 				0, PHY_INTERFACE_MODE_RGMII_RXID);
 #else
@@ -1733,17 +1733,17 @@ static int sgmac_open(struct net_device *ndev)
 	memset(&priv->xstats, 0, sizeof(struct sgmac_extra_stats));
 	// if not connect to phy , reset would fail with rtl 82111f RM#2248
 	/* austin:
-	 * In mpw0, only RMII can work well.
-	 * In mpw1, RGMII can work but it need extern phy rx delay function, and
+	 * In v1, only RMII can work well.
+	 * In v2, RGMII can work but it need extern phy rx delay function, and
 	 * RMII can also work well.
-	 * In later mpw version, maybe we will fix RGMII timing bug and can
+	 * In later v version, maybe we will fix RGMII timing bug and can
 	 * use PHY_INTERFACE_MODE_RGMII instead of PHY_INTERFACE_MODE_RGMII_RXID.
 	 */
 	/* should init gswitch before gmac reset */
 
 	if(priv->phy_node){
 #ifdef CONFIG_SFAX8_RGMII_GMAC
-#ifdef CONFIG_SF16A18_MPW1
+#ifdef CONFIG_SF16A18_V2
 		priv->phydev = of_phy_connect(ndev, priv->phy_node, sgmac_adjust_link,
 				0, PHY_INTERFACE_MODE_RGMII_RXID);
 #else

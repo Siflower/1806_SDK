@@ -130,7 +130,7 @@ L.ui.view.extend({
 				if (hwmode == '11b') {
 					return '11b';
 				}
-				else if (htmode == 'HT20' || htmode == 'HT40' || htmode == 'VHT20' || htmode == 'VHT40') {
+				else if (htmode == 'HT20' || htmode == 'HT40' || htmode == 'VHT20') {
 					return '11n';
 				}
 				else {
@@ -171,13 +171,7 @@ L.ui.view.extend({
 				if (ht_coex == '1') {
 					return 'auto';
 				}
-				else if (htmode == 'VHT20') {
-					htmode = 'HT20';
-				}
-				else if (htmode == 'VHT40') {
-					htmode = 'HT40';
-				}
-				else if (htmode != 'VHT20' && htmode != 'VHT40') {
+				else if (htmode != 'HT20' && htmode != 'HT40') {
 					htmode = 'HT20';
 				}
 				return htmode;
@@ -192,17 +186,17 @@ L.ui.view.extend({
 					L.uci.set('wireless', 'radio0', 'noscan', '0');
 				}
 				else if (val2 == '11n' && val == 'HT20') {
-					L.uci.set('wireless', 'radio0', 'htmode', 'VHT20');
+					L.uci.set('wireless', 'radio0', 'htmode', 'HT20');
 					L.uci.set('wireless', 'radio0', 'ht_coex', '0');
 					L.uci.set('wireless', 'radio0', 'noscan', '0');
 				}
 				else if (val2 == '11n' && val == 'HT40') {
-					L.uci.set('wireless', 'radio0', 'htmode', 'VHT40');
+					L.uci.set('wireless', 'radio0', 'htmode', 'HT40');
 					L.uci.set('wireless', 'radio0', 'ht_coex', '0');
 					L.uci.set('wireless', 'radio0', 'noscan', '1');
 				}
 				else if (val2 == '11n' && val == 'auto') {
-					L.uci.set('wireless', 'radio0', 'htmode', 'VHT40');
+					L.uci.set('wireless', 'radio0', 'htmode', 'HT40');
 					L.uci.set('wireless', 'radio0', 'ht_coex', '1');
 					L.uci.set('wireless', 'radio0', 'noscan', '0');
 				}

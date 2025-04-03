@@ -382,4 +382,3 @@ uint32_t hal_table_reg_exit(void)
     
     return CMM_ERR_OK;
 }
-

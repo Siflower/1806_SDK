@@ -15,4 +15,3 @@ extern int32_t uart_switch_write(uint32_t regAddr,uint32_t regValue);
 extern int32_t uart_switch_read(uint32_t regAddr, uint32_t *pRegAddr);
 extern int32_t phy_operation(uint32_t addr);
 #endif
-

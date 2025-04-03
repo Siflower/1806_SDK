@@ -387,4 +387,3 @@ yt_ret_t yt_dot1x_rx_bypass_mc_get(yt_unit_t unit, yt_enable_t *pEnable)
 
     return YT_DISPATCH(unit)->dot1x_rx_bypass_mc_get(unit, pEnable);
 }
-

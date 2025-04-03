@@ -217,4 +217,3 @@ yt_ret_t yt_storm_ctrl_rate_get(yt_unit_t unit, yt_port_t port, yt_storm_type_t 
 
     return YT_DISPATCH(unit)->storm_ctrl_rate_get(unit, port, storm_type, pRate);
 }
-

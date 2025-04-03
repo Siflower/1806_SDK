@@ -337,8 +337,10 @@ int sfax8_set_char_mtd(int id, unsigned char *ctx_buf, unsigned char *str, const
 	ei.priv = 0;
 	ret = mtd_erase(mtd, &ei);
 
-	sprintf(ctx_buf, "%s", str);
-	sprintf(tmp_buf, "%s", str);
+	for (i = 0; i < len; i++) {
+		ctx_buf[i] = str[i];
+		tmp_buf[i] = str[i];
+	}
 	memcpy(buf + (offset % mtd->erasesize), tmp_buf, len);
 
 	ret = mtd_write(mtd, offset - (offset % mtd->erasesize), mtd->erasesize, &retlen, buf);

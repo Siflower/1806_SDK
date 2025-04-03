@@ -769,4 +769,3 @@ yt_ret_t  yt_vlan_port_vidTypeSel_get(yt_unit_t unit, yt_port_t port, yt_vlan_ty
 
     return YT_DISPATCH(unit)->vlan_port_vidTypeSel_get(unit, port, pType);
 }
-

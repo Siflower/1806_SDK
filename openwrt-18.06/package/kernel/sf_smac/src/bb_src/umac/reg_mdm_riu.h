@@ -6,11 +6,9 @@
  *    Description:  Definitions of the MDM HW block registers and register access functions.
  *
  *        Version:  1.0
- *        Created:  2017年08月29日 17时09分57秒
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  robert (), robert.chang@siflower.com.cn
  *        Company:  Siflower
  *
  * =====================================================================================

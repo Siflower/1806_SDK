@@ -233,5 +233,3 @@ yt_ret_t  yt_nic_ext_cputag_en_get(yt_unit_t unit,  yt_enable_t *pEnable)
 
     return YT_DISPATCH(unit)->nic_ext_cputag_en_get(unit, pEnable);
 }
-
-

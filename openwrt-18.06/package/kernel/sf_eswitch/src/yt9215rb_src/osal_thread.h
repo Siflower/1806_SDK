@@ -38,4 +38,3 @@ extern yt_ret_t osal_thread_del(osal_thread_t thread_id);
 extern yt_ret_t osal_thread_delay(uint32_t us);
 
 #endif
-

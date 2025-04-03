@@ -195,4 +195,3 @@ yt_ret_t  fal_tiger_nic_ext_cputag_en_get(yt_unit_t unit,  yt_enable_t *pEnable)
 
     return CMM_ERR_OK;
 }
-

@@ -9082,4 +9082,3 @@ __INLINE void mdm_userposid_setf(int reg_idx, uint32_t userposid)
 #endif // _REG_MDM_CFG_H_
 
 /// @}
-

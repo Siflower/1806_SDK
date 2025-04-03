@@ -740,13 +740,6 @@ int sf_dump_napt_table_content_by_index(struct sf_hnat_priv *phnat_priv, int nap
 	return 0;
 }
 
-/* 4100  GMAC收到的总报文数量
- * 4170  判断需要做snat的报文数量
- * 4174  判断需要做dnat的报文数量
- * 4124  查中转发到GMAC的报文
- * 4114  上送host的报文
- * 412c	 host下发的报文
- */
 void sf_hnat_read_count_registers(struct sf_hnat_priv *phnat_priv)
 {
 	unsigned char i, offset;

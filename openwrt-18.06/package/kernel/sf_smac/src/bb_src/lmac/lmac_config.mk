@@ -245,7 +245,7 @@ ccflags-y += -DCFG_SHAREMEM_ACCESS_ALIGNMENT=4
 ccflags-y += -Wno-unused-function #TODO this should move to linux global compile option in future
 ccflags-y += -Wno-unused-value #TODO this should move to linux global compile option in future
 
-#workaround for dma's bug in mpw0 platform
+#workaround for dma's bug in v1 platform
 ccflags-y += -DCFG_WORK_AROUND_DMA_READ_REORDER_ISSUE
 
 ifeq ($(FULLMASK), TRUE)
@@ -293,7 +293,7 @@ ccflags-$(CONFIG_SIWIFI_HEART_BEAT) += -DCFG_HB
 ifneq ($(CONFIG_WIFI_LITE_MEMORY), y)
 ccflags-y += -DCFG_PROF
 #ccflags-y += -DCFG_LA_ENABLE
-#ccflags-y += -DCFG_A28_MPW_LA_CLK_BUG
+#ccflags-y += -DCFG_A28_V_LA_CLK_BUG
 #ccflags-y += -DCFG_A28_FULLMASK_LA_BUG
 endif
 ccflags-y += -DCFG_DBG=2
@@ -398,7 +398,7 @@ ccflags-$(CONFIG_SIWIFI_UNSTANDARD_CH_ENABLE) += -DCFG_UNSTANDARD_CH_ENABLE
 ifneq ($(CONFIG_SF16A18_USE_FMAC), n)
 ccflags-y += -DCFG_ATE_TOOLS
 endif
-ifeq ($(MPW0), TRUE)
+ifeq ($(V1), TRUE)
 ccflags-y += -DCFG_IPC_VER_V10
 endif
 ccflags-y += -DCFG_PLF_VER_V20
@@ -437,7 +437,7 @@ ccflags-$(CONFIG_SIWIFI_TDLS) += -DCFG_TDLS
  	0: Don't use HSU, use software implementation.	\
 	1: Use HSU and fallback to software implementation if not available. \
 	2: Only use HSU. (runtime error is generated if HSU is not available)
-ifeq ($(MPW0), TRUE)
+ifeq ($(V1), TRUE)
 ccflags-y += -DCFG_HSU=0
 else
 ccflags-y += -DCFG_HSU=0

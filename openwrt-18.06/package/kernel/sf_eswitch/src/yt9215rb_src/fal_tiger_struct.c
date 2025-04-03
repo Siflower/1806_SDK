@@ -1528,4 +1528,3 @@ const field_id_t psch_shp_cfg_tblm_field[] = {
 const field_id_t psch_meter_cfg_tblm_field[] = { 
     {PSCH_METER_CFG_TBL_METER_LENGTHf,2,0,0},
 };
-

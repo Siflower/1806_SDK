@@ -623,4 +623,3 @@ yt_ret_t yt8531_test_template(yt_unit_t unit, uint8_t phy_addr, yt_utp_template_
 
     return CMM_ERR_OK;
 }
-

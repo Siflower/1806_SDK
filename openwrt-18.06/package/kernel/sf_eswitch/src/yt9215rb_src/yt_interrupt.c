@@ -120,4 +120,3 @@ yt_ret_t yt_int_status_get(yt_unit_t unit, yt_intr_status_t *pIntStatus)
 
     return YT_DISPATCH(unit)->int_status_get(unit, pIntStatus);
 }
-

@@ -167,4 +167,3 @@ yt_ret_t  yt_dos_large_icmp_size_get(yt_unit_t unit, yt_dos_icmp_version_t ver, 
 
     return YT_DISPATCH(unit)->dos_large_icmp_size_get(unit, ver, psize);
 }
-

@@ -1,0 +1,37 @@
+#!/bin/sh
+factory_path="/sys/devices/platform/factory-read/"
+macaddr=`cat $factory_path/macaddr`
+macaddr_lan=`cat $factory_path/macaddr_lan`
+macaddr_wan=`cat $factory_path/macaddr_wan`
+uci set network.eth0.macaddr=$macaddr
+uci set network.lan_dev.macaddr=$macaddr_lan
+uci set network.wan_dev.macaddr=$macaddr_wan
+uci commit network
+
+sfwifi reset fmac
+
+phy_path="/sys/class/ieee80211/"
+phy_lb=`ls $phy_path | awk 'NR==1'`
+phy_hb=`ls $phy_path | awk 'NR==2'`
+ssid_number_lb=`cat $phy_path/$phy_lb/macaddress | cut -c 13- | sed 's/://g'`
+ssid_number_hb=`cat $phy_path/$phy_hb/macaddress | cut -c 13- | sed 's/://g'`
+
+ssid_default_prefix=`uci show wireless.default_radio0.ssid | awk -F "'" '{print $2}' | awk -F "-" '{print $1}'`
+ssid_default_suffix_lb=`uci show wireless.default_radio0.ssid | awk -F "'" '{print $2}' | sed "s/$ssid_default_prefix-....//"`
+ssid_default_suffix_hb=`uci show wireless.default_radio1.ssid | awk -F "'" '{print $2}' | sed "s/$ssid_default_prefix-....//"`
+
+ssid_guest_prefix=`uci show wireless.guest_radio0.ssid | awk -F "'" '{print $2}' | awk -F "-" '{print $1}'`
+ssid_guest_suffix_lb=`uci show wireless.guest_radio0.ssid | awk -F "'" '{print $2}' | sed "s/$ssid_guest_prefix-....//"`
+ssid_guest_suffix_hb=`uci show wireless.guest_radio1.ssid | awk -F "'" '{print $2}' | sed "s/$ssid_guest_prefix-....//"`
+
+ssid_lease_prefix_lb=`uci show wireless.lease_radio0.ssid | awk -F "'" '{print $2}' | sed "s/....$//"`
+
+uci set wireless.default_radio0.ssid=${ssid_default_prefix}"-"${ssid_number_lb}${ssid_default_suffix_lb}
+uci set wireless.default_radio1.ssid=${ssid_default_prefix}"-"${ssid_number_hb}${ssid_default_suffix_hb}
+uci set wireless.guest_radio0.ssid=${ssid_guest_prefix}"-"${ssid_number_lb}${ssid_guest_suffix_lb}
+uci set wireless.guest_radio1.ssid=${ssid_guest_prefix}"-"${ssid_number_hb}${ssid_guest_suffix_hb}
+uci set wireless.lease_radio0.ssid=${ssid_lease_prefix_lb}${ssid_number_lb}
+uci commit wireless
+
+sfwifi reset fmac
+echo "Done!"

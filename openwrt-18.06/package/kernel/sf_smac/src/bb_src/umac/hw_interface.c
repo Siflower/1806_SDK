@@ -10,7 +10,6 @@
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  hwa@siflower.com.cn
  *        Company:  Siflower
  *
  * =====================================================================================

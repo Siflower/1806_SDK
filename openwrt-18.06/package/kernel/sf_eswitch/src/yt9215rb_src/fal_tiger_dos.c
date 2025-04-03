@@ -480,4 +480,3 @@ yt_ret_t  fal_tiger_dos_large_icmp_size_get(yt_unit_t unit, yt_dos_icmp_version_
     *psize = size;
     return CMM_ERR_OK;
 }
-

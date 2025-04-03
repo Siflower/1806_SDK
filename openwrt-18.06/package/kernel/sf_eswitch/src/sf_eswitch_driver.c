@@ -123,11 +123,11 @@ static int phy_monitor_thread(void *data)
 		else
 			updown = 0;
 
-		old_phy_status[i] = pesw_priv->phy_status[i] = updown;
 #ifdef CONFIG_SFAX8_GENL
-		if (updown)
+		if (updown && old_phy_status[i] != pesw_priv->phy_status[i])
 			notify_link_event(pesw_priv, i, updown, "eth0");
 #endif
+	old_phy_status[i] = pesw_priv->phy_status[i] = updown;
 	}
 
 	while (!kthread_should_stop()) {

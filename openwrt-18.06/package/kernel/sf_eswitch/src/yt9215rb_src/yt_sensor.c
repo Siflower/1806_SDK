@@ -81,4 +81,3 @@ yt_ret_t yt_sensor_temp_value_get(yt_unit_t unit, yt_bool_t *pIsNegative, uint16
 
     return YT_DISPATCH(unit)->sensor_temp_value_get(unit, pIsNegative, pAbsoluteValue);
 }
-

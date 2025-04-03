@@ -1460,7 +1460,6 @@ netdev_tx_t siwifi_start_xmit(struct sk_buff *skb, struct net_device *dev)
     u16 frame_oft;
     u8 tid;
     bool is_pae_frame = false;
-    bool is_icmp = false;
 
     if (test_bit(SIWIFI_DEV_HW_DEAD, &siwifi_hw->drv_flags)) {
         printk(KERN_CRIT "%s: bypassing (SIWIFI_DEV_HW_DEAD set)\n", __func__);
@@ -1496,7 +1495,6 @@ netdev_tx_t siwifi_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
     /* Retrieve the pointer to the Ethernet data */
     eth = (struct ethhdr *)skb->data;
-    is_icmp = siwifi_check_skb_is_icmp(skb);
 #if defined(CONFIG_SF19A28_FULLMASK) && IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER) && IS_ENABLED(CONFIG_NF_FLOW_TABLE)
 
     //if the skb is with ethernet vlan type , untag vlan
@@ -1537,11 +1535,9 @@ netdev_tx_t siwifi_start_xmit(struct sk_buff *skb, struct net_device *dev)
         goto free;
     }
 
-    if(is_icmp) {
-        tid = 7;
-        skb->cb[PING_CB_POSITION] = PING_CB_CODE;
+    if(sta->user_tid >= 0 && sta->user_tid != SIWIFI_USER_TID_NOT_SET) {
+        tid = sta->user_tid;
     }
-
     txq = siwifi_txq_sta_get(sta, tid, siwifi_hw);
     spin_lock_bh(&siwifi_hw->tx_lock);
     txq->time_stat.come_xmit++;

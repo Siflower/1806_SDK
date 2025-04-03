@@ -133,5 +133,3 @@ yt_ret_t fal_tiger_loop_detect_unitID_get(yt_unit_t unit, yt_local_id_t *pLocalI
 
     return CMM_ERR_OK;
 }
-
-

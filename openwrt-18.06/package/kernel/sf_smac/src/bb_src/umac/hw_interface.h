@@ -10,7 +10,6 @@
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  hwa@siflower.com.cn
  *        Company:  Siflower
  *
  * =====================================================================================
@@ -197,4 +196,3 @@ extern void vendor_hook_rxdata(struct siwifi_sta *sta, struct sk_buff *skb, stru
 extern void vendor_hook_sta_ps(struct siwifi_sta *sta, bool enable);
 #endif /* CONFIG_VDR_HW */
 #endif /* _HW_INTERFACE_H_ */
-

@@ -60,4 +60,3 @@ yt_ret_t yt_port_isolation_get(yt_unit_t unit, yt_port_t port, yt_port_mask_t *p
 
     return YT_DISPATCH(unit)->port_isolation_get(unit, port, pIso_portmask);
 }
-

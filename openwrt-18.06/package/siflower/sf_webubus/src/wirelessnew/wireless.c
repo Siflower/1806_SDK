@@ -508,20 +508,50 @@ static int rpc_web_wireless_wds_disable(struct ubus_context *ctx,
 	//make sure htmode without "+-"
 	char htmode[6] = {};
 	char oip[20] = {};
+	char hosts[32] = {};
 	int ret = 0;
+#ifdef WDS_SSID_FOLLOW
+	char ossid[32];
+	char iface[8];
+#endif
+	char command[100];
+
 	get("wireless", "radio0", "htmode", htmode);
 	ret = get("network", "lan", "oip", oip);
 	htmode[5] = '\0';
 	set("wireless", "radio0", "htmode", htmode);
 
+#ifdef WDS_SSID_FOLLOW
+	get("wireless", "wds", "device", iface);
+	iface[6] = '\0';
+	if (!strcmp(iface, "radio0")) {
+		ret = get("wireless", "default_radio0", "ossid", ossid);
+		if(ret == 0) {
+			set("wireless", "default_radio0", "ssid", ossid);
+			del("wireless", "default_radio0", "ossid");
+		}
+	} else if(!strcmp(iface, "radio1")) {
+		ret = get("wireless", "default_radio1", "ossid", ossid);
+		if(ret == 0) {
+			set("wireless", "default_radio1", "ssid", ossid);
+			del("wireless", "default_radio1", "ossid");
+		}
+	}
+#endif
 	del("wireless", "wds", NULL);
 	if (ret == 0) {
 		set("network", "lan", "proto", "static");
 		set("network", "lan", "ipaddr", oip);
 		set("network", "lan", "netmask", "255.255.255.0");
 		set("network", "lan", " ip6assign", "60");
+		get("basic_setting", "vendor", "hosts", hosts);
+		sprintf(command, "/usr/sbin/dns_redirect.sh %s enable %s", hosts, oip);
+        system(command);
+		system("sh /sbin/internet_detect.sh 4");
+		system("/etc/init.d/network restart");
+	    return 0;
 	}
-
+	system("sh /sbin/internet_detect.sh 4");
 	system("/etc/init.d/dnsmasq start");
 	system("/etc/init.d/network restart");
 

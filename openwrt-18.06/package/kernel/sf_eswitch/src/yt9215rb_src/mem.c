@@ -31,4 +31,3 @@ uint32_t mem_switch_read(uint32_t reg_addr, uint32_t *reg_value)
 
     return CMM_ERR_OK;
 }
-
