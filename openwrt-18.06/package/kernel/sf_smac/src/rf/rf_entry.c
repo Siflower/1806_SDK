@@ -134,6 +134,100 @@ enum SF_RF_IRQ_SOURCE{
 
 #endif
 
+/*
+ * The function of this function is to turn on PA, which is the chip heating!
+ */
+void rfchip_hot(uint32_t timeout)
+{
+    int i;
+    uint16_t default_value[32];
+    uint16_t addr[32] = {
+        0x0001,
+        0x1001,
+        0x2001,
+        0x2080,
+        0x2332,
+        0x2338,
+        0x2352,
+        0x2358,
+        0x2382,
+        0x2388,
+        0x23A2,
+        0x23A8,
+        0x233B,
+        0x235B,
+        0x238B,
+        0x23AB,
+        0x233C,
+        0x235C,
+        0x238C,
+        0x23AC,
+        0x233D,
+        0x235D,
+        0x238D,
+        0x23AD,
+        0x0030,
+        0x1030,
+        0x01CF,
+        0x11CF,
+        0x01BF,
+        0x11BF,
+        0x0003,
+        0x1003
+    };
+        uint16_t heating_value[32] = {
+         0x0F00,
+         0x0F00,
+         0x0002,
+         0x0000,
+         0x0400,
+         0x0303,
+         0x0400,
+         0x0303,
+         0x0400,
+         0x0303,
+         0x0400,
+         0x0303,
+         0x286D,
+         0x286D,
+         0x1066,
+         0x1066,
+         0x1F77,
+         0x1F77,
+         0x1F43,
+         0x1F43,
+         0x6000,
+         0x6000,
+         0x6000,
+         0x6000,
+         0x0007,
+         0x0007,
+         0x3F3F,
+         0x3F3F,
+         0x01FF,
+         0x01FF,
+         0x1F1F,
+         0x1F1F
+    };
+    //store default value;
+    for (i = 0; i < 32; i++) {
+        if ((i >= 4) && (i <= 23)) {
+            default_value[i] = ml_apb_rsbus_read(addr[i]);
+        } else {
+            default_value[i] = ml_apb_read(addr[i]);
+        }
+    }
+    //set heating value
+    for (i = 0; i < 32; i++) {
+        ml_apb_write(addr[i], heating_value[i]);
+    }
+    udelay(timeout);
+    //set default value
+    for (i = 0; i < 32; i++) {
+        ml_apb_write(addr[i], default_value[i]);
+    }
+}
+
 struct rf_pl_context *g_rf_pl_ctx;
 
 int call_umhelper(char *cmd, char *args)
@@ -388,6 +482,9 @@ static int sf_wifi_int_handler(struct rf_pl_context *priv)
     }else if(test_bit(SF_RF_IRQ_SOURCE_CAL_REQ_SYS_RE, &priv->irq_source) && (do_cali_restore_flag == true)){
         do_cali_restore_flag = false;
         ret = sf_wifi_rf_app_calibrate_restore(priv);
+    }else {
+        printk("irq_source : 0x%lx, 0x300A = 0x%x, 0x300B = 0x%x, 0x310A = 0x%x, 0x310B = 0x%x\n",
+                priv->irq_source, ml_apb_read(0x300A), ml_apb_read(0x300B), ml_apb_read(0x310A), ml_apb_read(0x310B));
     }
     return ret;
 }
@@ -534,6 +631,8 @@ static irqreturn_t sf_wifi_rf_irq_handle(int irq, void *params)
         priv->hk_irq_source_num[(tmp & 0xF0) >> 4]++;
     if(tmp & 0xF00)
         priv->hk_irq_source_num[(tmp & 0xF00) >> 8]++;
+     printk("irq_source : 0x%x, 0x300A = 0x%x, 0x300B = 0x%x, 0x310A = 0x%x, 0x310B = 0x%x\n",
+        tmp, ml_apb_read(0x300A), ml_apb_read(0x300B), ml_apb_read(0x310A), ml_apb_read(0x310B));
 
     if(tmp & SF_RF_CALIBRATION_MASK){
         //mask the all irq
@@ -1716,6 +1815,8 @@ int sf_wifi_rf_probe(struct platform_device *pdev)
             goto error_release_resources;
         }
         i++;
+        if (i <= 2)
+            rfchip_hot(1000 * 1000 * 10);
     }
     if (i == rf_BOOTUP_RETRY_MAX) {
         ret = -4;
