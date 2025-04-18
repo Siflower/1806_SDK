@@ -10,7 +10,6 @@
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  franklin (), franklin.wang@siflower.com.cn
  *        Company:  Siflower Communication Tenology Co.,Ltd
  *
  * =====================================================================================
@@ -38,4 +37,3 @@ enum {
 int iqe_init(struct siwifi_hw *priv, uint32_t iqlength, int mode);
 void iqe_enable(struct siwifi_hw *priv, int enable);
 #endif
-

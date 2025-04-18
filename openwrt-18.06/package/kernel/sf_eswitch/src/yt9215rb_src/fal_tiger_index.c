@@ -1902,5 +1902,3 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* fields_id */ psch_meter_cfg_tblm_field,
         },
 };
-
-

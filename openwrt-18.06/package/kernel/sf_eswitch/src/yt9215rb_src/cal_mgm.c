@@ -50,5 +50,3 @@ uint32_t cal_mgm_init(void)
    
     return CMM_ERR_OK;
 }
-
-

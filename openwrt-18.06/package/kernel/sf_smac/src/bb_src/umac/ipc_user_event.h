@@ -6,11 +6,9 @@
  *    Description:  define user event of ipc message
  *
  *        Version:  1.0
- *        Created:  2017年04月12日 19时57分57秒
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  robert (), robert.chang@siflower.com.cn
  *        Company:  Siflower
  *
  * =====================================================================================

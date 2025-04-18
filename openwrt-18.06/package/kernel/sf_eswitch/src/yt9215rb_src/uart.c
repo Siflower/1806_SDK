@@ -217,4 +217,3 @@ int32_t phy_operation(uint32_t addr)
     write(uart_fd, buffer, 10);
     return 0;
 }
-

@@ -6,11 +6,9 @@
  *    Description:  for lmac baremetal glue
  *
  *        Version:  1.0
- *        Created:  2017年03月14日 09时27分50秒
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  robert , robert.chang@siflower.com.cn
  *        Company:  Siflower
  *
  * =====================================================================================
@@ -53,7 +51,7 @@ extern void task_dump_registers(int task_id,uint32_t fexception_base);
 
 void notify_lmac_complete_ipc(struct siwifi_hw *siwifi_hw)
 {
-    struct mpw0_plat_data *plat_priv = (struct mpw0_plat_data *)&siwifi_hw->plat->priv;
+    struct v1_plat_data *plat_priv = (struct v1_plat_data *)&siwifi_hw->plat->priv;
     plat_priv->lmac_prepared = 1;
     wake_up_all(&plat_priv->lmac_wq);
     printk("lmac init complete(%d)\n", siwifi_hw->mod_params->is_hb);
@@ -62,7 +60,7 @@ void notify_lmac_complete_ipc(struct siwifi_hw *siwifi_hw)
 //must be atomic
 void notify_lmac_la_init_ipc(struct siwifi_hw *siwifi_hw, int8_t type, int8_t enable)
 {
-    struct mpw0_plat_data *priv = (struct mpw0_plat_data *)&siwifi_hw->plat->priv;
+    struct v1_plat_data *priv = (struct v1_plat_data *)&siwifi_hw->plat->priv;
     uint8_t data;
     int ret;
     struct ipc_shared_env_tag *ipc_shenv;
@@ -132,7 +130,7 @@ EXIT:
 #define TASK_LB 0
 #define TASK_HB 1
 
-int lmac_glue_init(struct mpw0_plat_data *priv, struct device *device)
+int lmac_glue_init(struct v1_plat_data *priv, struct device *device)
 {
     init_waitqueue_head(&priv->lmac_wq);
     priv->lmac_prepared = 0;
@@ -160,7 +158,7 @@ int lmac_glue_init(struct mpw0_plat_data *priv, struct device *device)
     return 0;
 }
 
-u8 *lmac_glue_share_mem_init(struct mpw0_plat_data *priv)
+u8 *lmac_glue_share_mem_init(struct v1_plat_data *priv)
 {
 #if defined(CONFIG_SFA28_FULLMASK)
     return (u8 *)((priv->band == LB_MODULE) ? LB_IRAM_BASE : HB_IRAM_BASE);
@@ -173,7 +171,7 @@ u8 *lmac_glue_share_mem_init(struct mpw0_plat_data *priv)
 #define LMAC_TIMEOUT_MS 30000
 
 
-int lmac_glue_start(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
+int lmac_glue_start(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
 {
     printk("lmac_glue_start(%d)\n", siwifi_hw->mod_params->is_hb);
     priv->lmac_prepared = 0;
@@ -213,7 +211,7 @@ int lmac_glue_start(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
     return 0;
 }
 
-void lmac_glue_stop(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
+void lmac_glue_stop(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
 {
     printk("lmac_glue_stop(%d)\n", siwifi_hw->mod_params->is_hb);
     if (priv->band == LB_MODULE)
@@ -234,7 +232,7 @@ void lmac_glue_stop(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
     priv->deep_debug_type = 0;
 }
 
-void lmac_glue_deinit(struct mpw0_plat_data *priv)
+void lmac_glue_deinit(struct v1_plat_data *priv)
 {
     priv->deep_debug_type = 0;
     priv->lmac_prepared = 0;

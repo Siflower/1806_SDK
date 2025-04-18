@@ -831,4 +831,3 @@ yt_ret_t  yt_multicast_port_igmp_bypass_ingrfilter_en_get(yt_unit_t unit, yt_por
 
     return YT_DISPATCH(unit)->multicast_port_igmp_bypass_ingrfilter_en_get(unit, port, pEnable);
 }
-

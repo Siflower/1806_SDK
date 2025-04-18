@@ -108,4 +108,3 @@ yt_ret_t  yt_stp_instance_map_get(yt_unit_t unit, yt_vlan_t vid, yt_stp_id_t *pS
 
     return YT_DISPATCH(unit)->stp_instance_map_get(unit, vid, pStp_id );
 }
-

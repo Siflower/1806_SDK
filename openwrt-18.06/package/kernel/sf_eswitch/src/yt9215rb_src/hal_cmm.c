@@ -20,4 +20,3 @@ uint32_t hal_init(void)
 
     return CMM_ERR_OK;
 }
-

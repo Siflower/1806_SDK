@@ -430,7 +430,6 @@ static int siwifi_take_cooling(struct siwifi_temp_ctrl * temp_ctrl, int cur_temp
     //if cur_temp >= warning_temp clz one ant
     if ((cur_temp >= warn_temp) && (first_warn_flag == 0) && (temp_ctrl->band_flag == 0)) {
         first_warn_flag = 1;
-        LOG("Temp ctrl : Open final limit!\n");
 
         pp = popen("echo 0 > sys/kernel/debug/ieee80211/phy1/siwifi/rc_set_no_ss", "r");
         if (pp == NULL)
@@ -447,10 +446,9 @@ static int siwifi_take_cooling(struct siwifi_temp_ctrl * temp_ctrl, int cur_temp
             return 0;
         }
         pclose(pp);
-    } else if ((cur_temp <= (warn_temp - 20)) && (first_warn_flag == 1) && (temp_ctrl->band_flag == 0)) {
+    } else if ((cur_temp <= (warn_temp - 25)) && (first_warn_flag == 1) && (temp_ctrl->band_flag == 0)) {
         //Todo restore two ant
         first_warn_flag = 0;
-        LOG("Temp ctrl : Close final limit!\n");
 
         pp = popen("echo property_id=53 property_value=0 > /sys/kernel/debug/aetnensis/property", "r");
         if (pp == NULL)
@@ -468,7 +466,6 @@ static int siwifi_take_cooling(struct siwifi_temp_ctrl * temp_ctrl, int cur_temp
         }
         pclose(pp);
     }
-    LOG("first flag is %d\n",first_warn_flag);
 
     // judge whether cooling measures are being taken, and current temp is lower than high temp level
     if (cur_temp < temp_ctrl->temp_ctrl_level[0] && !temp_ctrl->enable_cool_ctrl)

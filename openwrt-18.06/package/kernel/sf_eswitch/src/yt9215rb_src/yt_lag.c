@@ -98,4 +98,3 @@ yt_ret_t yt_lag_group_info_get(yt_unit_t unit, uint8_t groupId, yt_link_agg_grou
 
     return YT_DISPATCH(unit)->lag_group_info_get(unit, groupId, p_laginfo);
 }
-

@@ -25,7 +25,7 @@
 #include "lmac_msg.h"
 
 #include "reg_mdm_cfg.h"
-#include "siwifi_mpw0.h"
+#include "siwifi_v1.h"
 #include "siwifi_lmac_glue.h"
 #include "siwifi_cfgfile.h"
 #include "ipc_host.h"
@@ -1520,7 +1520,7 @@ static ssize_t siwifi_dbgfs_cali_table_read(struct file *file,
 {
     struct siwifi_hw *priv = private_data_proc_debug(file->private_data);
     struct phy_aetnensis_cfg_tag *phy_tag = (struct phy_aetnensis_cfg_tag *)&priv->phy_config;
-    struct mpw0_plat_data *plat_data = (struct mpw0_plat_data *)&priv->plat->priv;
+    struct v1_plat_data *plat_data = (struct v1_plat_data *)&priv->plat->priv;
     struct siwifi_factory_info *factory_info = &priv->factory_info;
     uint8_t *tx_pow_cali_gain_list = NULL;
     int channel_lb[13] = {2412, 2417, 2422, 2427, 2432, 2437, 2442, 2447, 2452, 2457, 2462, 2467, 2472};
@@ -1859,7 +1859,7 @@ static ssize_t siwifi_dbgfs_mib_read(struct file *file,
     if (*ppos)
         return 0;
 
-    bufsz = min_t(size_t, bufsz, count);
+    bufsz = min_t(size_t, bufsz, count * 2);
     buf = siwifi_kmalloc(bufsz, GFP_ATOMIC);
     if (buf == NULL)
         return 0;
@@ -5941,6 +5941,67 @@ static ssize_t siwifi_dbgfs_rf_gain_tb_idx_read(struct file *file,
 DEBUGFS_READ_WRITE_FILE_OPS(rf_gain_tb_idx);
 #endif
 
+static ssize_t siwifi_dbgfs_sta_tid_read(struct file *file,
+                                    char __user *user_buf,
+                                    size_t count, loff_t *ppos)
+{
+    struct siwifi_hw *siwifi_hw = file->private_data;
+    char buf[256];
+    int ret = 0;
+    ssize_t read;
+    struct siwifi_vif *siwifi_vif;
+    struct siwifi_sta *siwifi_sta;
+
+    list_for_each_entry(siwifi_vif, &siwifi_hw->vifs, list) {
+        if (SIWIFI_VIF_TYPE(siwifi_vif) ==  NL80211_IFTYPE_AP) {
+            list_for_each_entry(siwifi_sta, &siwifi_vif->ap.sta_list, list) {
+                if(siwifi_sta->user_tid >= 0 && siwifi_sta->user_tid != SIWIFI_USER_TID_NOT_SET) {
+                    ret = scnprintf(buf, min_t(size_t, sizeof(buf) - 1, count),
+                            "sta %d(%pM) tid:%d\n", siwifi_sta->sta_idx, siwifi_sta->mac_addr, siwifi_sta->user_tid);
+                }
+            }
+        }
+    }
+
+    read = simple_read_from_buffer(user_buf, count, ppos, buf, ret);
+
+    return read;
+}
+
+static ssize_t siwifi_dbgfs_sta_tid_write(struct file *file,
+                                    const char __user *user_buf,
+                                    size_t count, loff_t *ppos)
+{
+    struct siwifi_hw *siwifi_hw = private_data_proc_debug(file->private_data);
+    struct siwifi_vif *siwifi_vif;
+    struct siwifi_sta *siwifi_sta;
+    char buf[128];
+    size_t len = min_t(size_t, count, sizeof(buf) - 1);
+    u8 mac[6];
+    int tid;
+
+    if (copy_from_user(buf, user_buf, len))
+        return -EFAULT;
+    buf[len] = '\0';
+    if(sscanf(buf, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx %d", &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5], &tid) > 0) {
+        list_for_each_entry(siwifi_vif, &siwifi_hw->vifs, list) {
+            if (SIWIFI_VIF_TYPE(siwifi_vif) ==  NL80211_IFTYPE_AP) {
+                list_for_each_entry(siwifi_sta, &siwifi_vif->ap.sta_list, list) {
+                    if(!memcmp(mac, siwifi_sta->mac_addr, 6)) {
+                        if(tid < 0){
+                            siwifi_sta->user_tid = SIWIFI_USER_TID_NOT_SET;
+                        } else {
+                            siwifi_sta->user_tid = tid;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    return count;
+}
+DEBUGFS_READ_WRITE_FILE_OPS(sta_tid)
 
 int siwifi_dbgfs_register(struct siwifi_hw *siwifi_hw, const char *name)
 {
@@ -6019,6 +6080,7 @@ int siwifi_dbgfs_register(struct siwifi_hw *siwifi_hw, const char *name)
             S_IWUSR | S_IRUSR);
     DEBUGFS_ADD_FILE(mgmt_info,  dir_drv, S_IWUSR | S_IRUSR);
     DEBUGFS_ADD_FILE(ctrl_info,  dir_drv, S_IWUSR | S_IRUSR);
+    DEBUGFS_ADD_FILE(sta_tid, dir_drv, S_IWUSR | S_IRUSR);
     DEBUGFS_ADD_FILE(set_cca_parameter, dir_drv, S_IWUSR | S_IRUSR);
     DEBUGFS_ADD_U32(scan_timeout, dir_drv, &siwifi_hw->scan_timeout,
             S_IWUSR | S_IRUSR);

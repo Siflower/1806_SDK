@@ -620,4 +620,3 @@ yt_ret_t yt_rate_shaping_queue_rate_get(yt_unit_t unit, yt_qid_t qinfo, yt_qos_t
 
     return YT_DISPATCH(unit)->rate_shaping_queue_rate_get(unit, qinfo, pRate);
 }
-

@@ -1,11 +1,31 @@
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/hostapd.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/hostapd.c
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/hostapd.c
+@@ -1656,6 +1656,15 @@ static int setup_interface2(struct hosta
+ 			wpa_printf(MSG_DEBUG, "Interface initialization will "
+ 				   "be completed in a callback");
+ 			return 0;
++                }
++
++               ret = ieee80211n_check_interference_2g4(iface);
++               if (ret < 0)
++	                goto fail;
++		if (ret == 1) {
++		        wpa_printf(MSG_DEBUG, "Interface initialization will "
++			        "be completed in a callback");
++		        return 0;
+ 		}
+ 
+ 		if (iface->conf->ieee80211h)
 Index: hostapd-2019-08-08-ca8c2bd2/src/ap/hw_features.c
 ===================================================================
 --- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/hw_features.c
 +++ hostapd-2019-08-08-ca8c2bd2/src/ap/hw_features.c
-@@ -520,6 +520,116 @@ static int ieee80211n_check_40mhz(struct
+@@ -516,6 +516,114 @@ static int ieee80211n_check_40mhz(struct
+ 	return 1;
  }
-
-
+ 
 +static void choose_rxgain_by_scan_result(struct hostapd_iface *iface)
 +{
 +    struct wpa_scan_results *scan_res;
@@ -114,11 +134,9 @@ Index: hostapd-2019-08-08-ca8c2bd2/src/ap/hw_features.c
 +    iface->scan_cb = choose_rxgain_by_scan_result;
 +    return 1;
 +}
-+
-+
+ 
  static int ieee80211n_supported_ht_capab(struct hostapd_iface *iface)
  {
- 	u16 hw = iface->current_mode->ht_capab;
 Index: hostapd-2019-08-08-ca8c2bd2/src/ap/hw_features.h
 ===================================================================
 --- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/hw_features.h
@@ -131,23 +149,3 @@ Index: hostapd-2019-08-08-ca8c2bd2/src/ap/hw_features.h
  int hostapd_prepare_rates(struct hostapd_iface *iface,
  			  struct hostapd_hw_modes *mode);
  void hostapd_stop_setup_timers(struct hostapd_iface *iface);
-Index: hostapd-2019-08-08-ca8c2bd2/src/ap/hostapd.c
-===================================================================
---- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/hostapd.c
-+++ hostapd-2019-08-08-ca8c2bd2/src/ap/hostapd.c
-@@ -1654,6 +1654,15 @@ static int setup_interface2(struct hosta
- 			wpa_printf(MSG_DEBUG, "Interface initialization will "
- 				   "be completed in a callback");
- 			return 0;
-+                }
-+
-+               ret = ieee80211n_check_interference_2g4(iface);
-+               if (ret < 0)
-+	                goto fail;
-+		if (ret == 1) {
-+		        wpa_printf(MSG_DEBUG, "Interface initialization will "
-+			        "be completed in a callback");
-+		        return 0;
- 		}
- 
- 		if (iface->conf->ieee80211h)

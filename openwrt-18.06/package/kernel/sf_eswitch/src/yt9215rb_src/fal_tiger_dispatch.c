@@ -543,4 +543,3 @@ fal_dispatch_t  fal_tiger_dispatch =
     .sensor_temp_value_get = fal_tiger_sensor_temp_value_get,
 #endif
 };
-

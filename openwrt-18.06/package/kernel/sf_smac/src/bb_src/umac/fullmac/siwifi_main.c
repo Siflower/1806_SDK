@@ -25,7 +25,7 @@
 #include <sfax8_factory_read.h>
 #endif
 #include "siwifi_defs.h"
-#include "siwifi_mpw0.h"
+#include "siwifi_v1.h"
 #include "siwifi_msg_tx.h"
 #include "siwifi_tx.h"
 #include "reg_access.h"
@@ -2236,6 +2236,7 @@ static int siwifi_cfg80211_add_station(struct wiphy *wiphy, struct net_device *d
 			sta->stats.last_calc_tp = jiffies - HZ;
 			sta->stats.last_th_tp = 0;
             sta->stats.last_tx_info = 0;
+            sta->user_tid = SIWIFI_USER_TID_NOT_SET;
 
             sta->acm = 0;
             for (tid = 0; tid < NX_NB_TXQ_PER_STA; tid++) {

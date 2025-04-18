@@ -165,4 +165,3 @@ extern yt_ret_t  yt_rma_bypass_vlan_filter_set(yt_unit_t unit, yt_rma_da_t da, y
 extern yt_ret_t  yt_rma_bypass_vlan_filter_get(yt_unit_t unit, yt_rma_da_t da, yt_enable_t *pEnable);
 
 #endif
-

@@ -95,4 +95,3 @@ yt_ret_t  yt_wol_ethertype_get(yt_unit_t unit, yt_tpid_t *pEth_type)
 
     return YT_DISPATCH(unit)->wol_ethertype_get(unit, pEth_type);
 }
-

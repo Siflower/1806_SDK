@@ -721,4 +721,3 @@ yt_ret_t  fal_tiger_port_vidTypeSel_get(yt_unit_t unit, yt_port_t port, yt_vlan_
 
     return CMM_ERR_OK;
 }
-

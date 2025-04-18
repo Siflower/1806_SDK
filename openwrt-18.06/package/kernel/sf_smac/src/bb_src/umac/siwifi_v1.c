@@ -1,7 +1,7 @@
 /**
  ****************************************************************************************
  *
- * @file siwifi_mpw0.c
+ * @file siwifi_v1.c
  *
  * Copyright (C) Siflower 2018-2025
  *
@@ -32,7 +32,7 @@
 #endif
 
 #include "reg_mdm_riu.h"
-#include "siwifi_mpw0.h"
+#include "siwifi_v1.h"
 #include "siwifi_prof.h"
 #include "siwifi_tx.h"
 #include "siwifi_main.h"
@@ -196,7 +196,7 @@ static int sf_wifi_rf_callback(void *data, uint32_t event, uint32_t flags, void 
 #ifdef CONFIG_SIWIFI_RF_RECALI
     struct siwifi_hw *siwifi_hw = NULL;
     int error;
-    struct mpw0_plat_data *priv;
+    struct v1_plat_data *priv;
     int cnt = 0;
 #endif
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
@@ -208,7 +208,7 @@ static int sf_wifi_rf_callback(void *data, uint32_t event, uint32_t flags, void 
     }
 #ifdef CONFIG_SIWIFI_RF_RECALI
     siwifi_hw = (struct siwifi_hw *)data;
-    priv = (struct mpw0_plat_data *)&siwifi_hw->plat->priv;
+    priv = (struct v1_plat_data *)&siwifi_hw->plat->priv;
     //method to implement:
     //1, stop business, rf send stop communication
     //  do not let use to configure at this time, so block all ops
@@ -542,8 +542,8 @@ static int sf_wifi_load_cali_conf(struct siwifi_hw *siwifi_hw)
 #endif
     struct phy_aetnensis_cfg_tag *phy_tag =
         (struct phy_aetnensis_cfg_tag *)&siwifi_hw->phy_config;
-    struct mpw0_plat_data *priv =
-        (struct mpw0_plat_data *)&siwifi_hw->plat->priv;
+    struct v1_plat_data *priv =
+        (struct v1_plat_data *)&siwifi_hw->plat->priv;
     struct siwifi_factory_info *factory_info =
         &siwifi_hw->factory_info;
 
@@ -723,7 +723,7 @@ ERROR:
 }
 #endif
 
-static void sf_wifi_lmac_share_ram_take(struct mpw0_plat_data *priv)
+static void sf_wifi_lmac_share_ram_take(struct v1_plat_data *priv)
 {
     uint8_t tmp = 0;
     //NOTE after configuare this, we use 0xB1000000 & 0xB1400000 to access share memory range
@@ -741,7 +741,7 @@ static void sf_wifi_lmac_share_ram_take(struct mpw0_plat_data *priv)
     writeb(tmp, (void *)REG_SYSM_SHARE_RAM_SEL);
 }
 
-static void sf_wifi_lmac_share_ram_leave(struct mpw0_plat_data *priv)
+static void sf_wifi_lmac_share_ram_leave(struct v1_plat_data *priv)
 {
 #ifdef CONFIG_SFA28_FULLMASK
     uint8_t tmp = 0;
@@ -769,7 +769,7 @@ static void sf_wifi_lmac_share_ram_leave(struct mpw0_plat_data *priv)
  * params:
  * return:
  * */
-static void sf_wifi_lmac_platform_reset(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv, uint8_t init, uint8_t system_reset)
+static void sf_wifi_lmac_platform_reset(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv, uint8_t init, uint8_t system_reset)
 {
     uint32_t offset;
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
@@ -790,21 +790,21 @@ static void sf_wifi_lmac_platform_reset(struct siwifi_hw *siwifi_hw, struct mpw0
             if (!siwifi_hw->mod_params->is_hb) {
                 writew(0x0, (void *)(SIFLOWER_SYSCTL_BASE + SF_WIFI_1_SYSM_RESET));
                 writew(0x1, (void *)(SIFLOWER_SYSCTL_BASE + SF_WIFI_1_SYSM_RESET));
-#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_MPW_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
+#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_V_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
                 writew(0x0, (void *)(SIFLOWER_SYSCTL_BASE + SF_WIFI_2_SYSM_RESET));
                 writew(0x1, (void *)(SIFLOWER_SYSCTL_BASE + SF_WIFI_2_SYSM_RESET));
 #endif
             } else {
                 writew(0x0, (void *)(SIFLOWER_SYSCTL_BASE + SF_WIFI_2_SYSM_RESET));
                 writew(0x1, (void *)(SIFLOWER_SYSCTL_BASE + SF_WIFI_2_SYSM_RESET));
-#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_MPW_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
+#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_V_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
                 writew(0x0, (void *)(SIFLOWER_SYSCTL_BASE + SF_WIFI_1_SYSM_RESET));
                 writew(0x1, (void *)(SIFLOWER_SYSCTL_BASE + SF_WIFI_1_SYSM_RESET));
 #endif
             }
         }
         release_reset(offset);
-#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_MPW_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
+#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_V_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
         release_reset((priv->band & LB_MODULE) ? SF_WIFI_2_SOFT_RESET : SF_WIFI_1_SOFT_RESET);
 #endif
 
@@ -815,14 +815,14 @@ static void sf_wifi_lmac_platform_reset(struct siwifi_hw *siwifi_hw, struct mpw0
         value &= 0xF7;
         set_module_clk_gate(offset, value, 0);
 
-#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_MPW_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
+#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_V_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
         value = get_module_clk_gate((priv->band & LB_MODULE) ? SF_WIFI_2_SOFT_RESET : SF_WIFI_1_SOFT_RESET, 0);
         value &= 0xF7;
         set_module_clk_gate((priv->band & LB_MODULE) ? SF_WIFI_2_SOFT_RESET : SF_WIFI_1_SOFT_RESET, value, 0);
 #endif
     } else {
         hold_reset(offset);
-#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_MPW_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
+#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_V_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
         hold_reset((priv->band & LB_MODULE) ? SF_WIFI_2_SOFT_RESET : SF_WIFI_1_SOFT_RESET);
 #endif
     }
@@ -948,7 +948,7 @@ DONE:
     return ret;
 }
 
-static int sf_wifi_lmac_fw_load(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
+static int sf_wifi_lmac_fw_load(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
 {
     //1,load agc mem
     int ret = 0;
@@ -966,7 +966,7 @@ static int sf_wifi_lmac_fw_load(struct siwifi_hw *siwifi_hw, struct mpw0_plat_da
 void siwifi_task(unsigned long data)
 {
     struct siwifi_hw *siwifi_hw = (struct siwifi_hw *)data;
-    struct mpw0_plat_data *priv = (struct mpw0_plat_data *)&siwifi_hw->plat->priv;
+    struct v1_plat_data *priv = (struct v1_plat_data *)&siwifi_hw->plat->priv;
     u32 status, statuses = 0, rx_status = 0;
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
     unsigned long now = jiffies;
@@ -1023,7 +1023,7 @@ void siwifi_task(unsigned long data)
     REG_SW_CLEAR_PROFILING(siwifi_hw, SW_PROF_SIWIFI_IPC_IRQ_HDLR);
 }
 
-int siwifi_tasks_create(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
+int siwifi_tasks_create(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
 {
     //first, creat lmac task
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
@@ -1036,7 +1036,7 @@ int siwifi_tasks_create(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv
     return 0;
 }
 
-void siwifi_tasks_destory(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
+void siwifi_tasks_destory(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
 {
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
 #ifdef CONFIG_SF16A18_WIFI_ATE_TOOLS
@@ -1049,7 +1049,7 @@ void siwifi_tasks_destory(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *pr
 /*
  * c.f Modem UM (AGC/CCA initialization)
  */
-static int siwifi_agc_load(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
+static int siwifi_agc_load(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
 {
     //TODO use standard API to request firmware
     //we only have one phy
@@ -1060,7 +1060,7 @@ static int siwifi_agc_load(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *p
 /*
  * c.f ldpc bin load
  */
-static int siwifi_ldpc_load(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
+static int siwifi_ldpc_load(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
 {
 
     int ret = 0;
@@ -1077,7 +1077,7 @@ static int siwifi_ldpc_load(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *
     return 0;
 }
 
-static void siwifi_irqs_deinit(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
+static void siwifi_irqs_deinit(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
 {
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
 
@@ -1101,7 +1101,7 @@ static irqreturn_t siwifi_host_irq_hdlr(int irq, void *dev_id)
 
 /*
  * */
-static int siwifi_irqs_init(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
+static int siwifi_irqs_init(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
 {
     int ret;
 #ifdef CONFIG_SMP
@@ -1140,7 +1140,7 @@ static int siwifi_irqs_init(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *
     return 0;
 }
 
-static int siwifi_sysm_enable(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv, uint8_t init)
+static int siwifi_sysm_enable(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv, uint8_t init)
 {
     int ret = 0;
     //1, enable the top pll clk gating
@@ -1164,7 +1164,7 @@ static int siwifi_sysm_enable(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data
             printk("Failed to enable wifi bus clk\n");
             return ret;
         }
-#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_MPW_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
+#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_V_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
         ret = clk_prepare_enable(priv->other_band_pl_clk);
         if (ret) {
             printk("Failed to enable other band pl clk\n");
@@ -1207,7 +1207,7 @@ static int siwifi_sysm_enable(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data
 #endif
         clk_disable_unprepare(priv->pl_clk);
         clk_disable_unprepare(priv->bus_clk);
-#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_MPW_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
+#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_V_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
         clk_disable_unprepare(priv->other_band_pl_clk);
         clk_disable_unprepare(priv->other_band_bus_clk);
 #endif
@@ -1225,7 +1225,7 @@ static int siwifi_sysm_enable(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data
 int siwifi_platform_restart(struct siwifi_hw *siwifi_hw)
 {
     int ret;
-    struct mpw0_plat_data *priv;
+    struct v1_plat_data *priv;
     u8 *shared_ram;
     unsigned long now = jiffies;
     static struct {
@@ -1234,7 +1234,7 @@ int siwifi_platform_restart(struct siwifi_hw *siwifi_hw)
         unsigned int max_cnt;
     } restart_recs = { .last = 0, .cnt = 0, .max_cnt = 5 };
 
-    priv = (struct mpw0_plat_data *)&siwifi_hw->plat->priv;
+    priv = (struct v1_plat_data *)&siwifi_hw->plat->priv;
 
     if (!priv->on) {
         printk("platform has already been turned off!\n");
@@ -1347,8 +1347,8 @@ error_ipc_init:
 int32_t siwifi_platform_get_clkfreq(struct siwifi_hw *siwifi_hw, int32_t clk_type)
 {
 
-    struct mpw0_plat_data *priv;
-    priv = (struct mpw0_plat_data *)&siwifi_hw->plat->priv;
+    struct v1_plat_data *priv;
+    priv = (struct v1_plat_data *)&siwifi_hw->plat->priv;
 
     //need some protection??TODO
 
@@ -1376,8 +1376,8 @@ int32_t siwifi_platform_get_clkfreq(struct siwifi_hw *siwifi_hw, int32_t clk_typ
 int32_t siwifi_platform_set_clkfreq(struct siwifi_hw *siwifi_hw, int32_t clk_type, int32_t freq)
 {
 
-    struct mpw0_plat_data *priv;
-    priv = (struct mpw0_plat_data *)&siwifi_hw->plat->priv;
+    struct v1_plat_data *priv;
+    priv = (struct v1_plat_data *)&siwifi_hw->plat->priv;
 
 
     if (!priv->on)
@@ -1522,15 +1522,15 @@ static int siwifi_check_fw_compatibility(struct siwifi_hw *siwifi_hw)
 int siwifi_platform_on(struct siwifi_hw *siwifi_hw)
 {
     int ret;
-    struct mpw0_plat_data *priv;
+    struct v1_plat_data *priv;
 
     u8 *shared_ram;
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
 
-    priv = (struct mpw0_plat_data *)&siwifi_hw->plat->priv;
+    priv = (struct v1_plat_data *)&siwifi_hw->plat->priv;
     //get shared env
     if (priv->on) {
-        printk("the mpw0 platform has already been turned on!\n");
+        printk("the v1 platform has already been turned on!\n");
         return 0;
     }
 
@@ -1642,8 +1642,8 @@ error_sysm_enable:
  */
 void siwifi_platform_off(struct siwifi_hw *siwifi_hw)
 {
-    struct mpw0_plat_data *priv;
-    priv = (struct mpw0_plat_data *)&siwifi_hw->plat->priv;
+    struct v1_plat_data *priv;
+    priv = (struct v1_plat_data *)&siwifi_hw->plat->priv;
 
     if (!priv->on) {
         printk("platform has already been turned off!\n");
@@ -1687,7 +1687,7 @@ static int siwifi_platform_init(struct siwifi_plat **siwifi_pl, struct platform_
 
     struct resource *res;
     uint32_t priv_size = 0;
-    struct mpw0_plat_data *priv = NULL;
+    struct v1_plat_data *priv = NULL;
     struct siwifi_plat *siwifi_plat = NULL;
     struct siwifi_mod_params *mod_params = (struct siwifi_mod_params *)of_device_get_match_data(&pdev->dev);
     int ret;
@@ -1695,7 +1695,7 @@ static int siwifi_platform_init(struct siwifi_plat **siwifi_pl, struct platform_
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
     *siwifi_pl = NULL;
 
-    priv_size = ALIGN(sizeof(struct siwifi_plat), sizeof(void *)) + sizeof(struct mpw0_plat_data);
+    priv_size = ALIGN(sizeof(struct siwifi_plat), sizeof(void *)) + sizeof(struct v1_plat_data);
 
     siwifi_plat = siwifi_kzalloc(priv_size, GFP_KERNEL);
     if (!siwifi_plat) {
@@ -1717,7 +1717,7 @@ static int siwifi_platform_init(struct siwifi_plat **siwifi_pl, struct platform_
         goto error_plat;
     }
 
-    priv = (struct mpw0_plat_data *)&siwifi_plat->priv;
+    priv = (struct v1_plat_data *)&siwifi_plat->priv;
     priv->base = ioremap(res->start, resource_size(res));
     if (!priv->base) {
         printk("can not remap the sources!\n");
@@ -1757,7 +1757,7 @@ static int siwifi_platform_init(struct siwifi_plat **siwifi_pl, struct platform_
     }
 
 #ifdef CONFIG_SFA28_FULLMASK
-#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_MPW_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
+#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_V_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
     if (!mod_params->is_hb)
     {
         priv->bus_clk = devm_clk_get(&pdev->dev, "bus2_clk");
@@ -1780,7 +1780,7 @@ static int siwifi_platform_init(struct siwifi_plat **siwifi_pl, struct platform_
     {
         priv->bus_clk = devm_clk_get(&pdev->dev, "bus3_clk");
     }
-#endif //CFG_A28_MPW_LA_CLK_BUG
+#endif //CFG_A28_V_LA_CLK_BUG
 #endif //CONFIG_SFA28_FULLMASK
 
     if (IS_ERR(priv->bus_clk)) {
@@ -1788,7 +1788,7 @@ static int siwifi_platform_init(struct siwifi_plat **siwifi_pl, struct platform_
         ret = -EINVAL;
         goto error_io;
     }
-#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_MPW_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
+#if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_V_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
     if (IS_ERR(priv->other_band_bus_clk)) {
         dev_err(&pdev->dev, "Failed to get other band bus clk\n");
         ret = -EINVAL;
@@ -1858,10 +1858,10 @@ static void siwifi_platform_deinit(struct siwifi_plat *siwifi_plat)
 {
 
     struct resource *res;
-    struct mpw0_plat_data *priv;
+    struct v1_plat_data *priv;
     struct platform_device *pdev;
 
-    priv = (struct mpw0_plat_data *)&siwifi_plat->priv;
+    priv = (struct v1_plat_data *)&siwifi_plat->priv;
     pdev = siwifi_plat->pdev;
 
     /*Step1: reelease the lmac resources*/

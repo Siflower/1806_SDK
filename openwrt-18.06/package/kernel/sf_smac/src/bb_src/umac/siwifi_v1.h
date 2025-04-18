@@ -1,15 +1,15 @@
 /**
  ****************************************************************************************
  *
- * @file siwifi_mpw0.h
+ * @file siwifi_v1.h
  *
  * Copyright (C) Siflower 2018-2025
  *
  ****************************************************************************************
  */
 
-#ifndef _SIWIFI_MPW0_H_
-#define _SIWIFI_MPW0_H_
+#ifndef _SIWIFI_V1_H_
+#define _SIWIFI_V1_H_
 #include <linux/platform_device.h>
 
 #include "siwifi_defs.h"
@@ -94,4 +94,4 @@ int siwifi_register_hp_drv(void);
 void siwifi_unregister_hp_drv(void);
 
 struct device *siwifi_platform_get_dev(struct siwifi_plat *siwifi_plat);
-#endif /* _SIWIFI_MPW0_H_ */
+#endif /* _SIWIFI_V1_H_ */

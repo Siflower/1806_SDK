@@ -91,4 +91,3 @@ void siwifi_pci_unregister_drv(void)
 {
     pci_unregister_driver(&siwifi_pci_drv);
 }
-

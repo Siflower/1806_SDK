@@ -20,13 +20,13 @@
 #define AMSDU_NB_V 2
 #endif
 
-#define AMSDU_THRESHOLD_L 800
-#define AMSDU_THRESHOLD_M 1400
+#define AMSDU_THRESHOLD_L 400
+#define AMSDU_THRESHOLD_M 200
 #define AMSDU_THRESHOLD_H 2000
 
 #define EDCA_AC_1_ADDR(band) (WIFI_BASE_ADDR(band) + 0x00080000 + 0x0204)
 // only tid 0 ~ 4(BE/BK/BK/BE) allow enable amsdu
-#define AMSDU_MAX_TID 4
+#define AMSDU_MAX_TID 8
 #define AMSDU_CHECK_INTERVAL 10
 
 #define EDCA_WMM_COUNTER 5

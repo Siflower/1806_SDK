@@ -33,7 +33,7 @@
 #include "rf_pl_ref.h"
 //todo:ycchang: sync with siwifi_platform.h
 #if 1
-#include "siwifi_mpw0.h"
+#include "siwifi_v1.h"
 #else
 #include "siwifi_platform.h"
 #endif
@@ -91,6 +91,8 @@
 
 // 30 seconds
 #define SRC_FILTER_AGING_TIME 30
+
+#define SIWIFI_USER_TID_NOT_SET 0xFF
 
 /**
  * struct siwifi_bcn - Information of the beacon in used (AP mode)
@@ -567,6 +569,7 @@ struct siwifi_sta {
 #endif */
     // RM#10611 count of times to update idle time
     u16 update_time_count;
+    int user_tid;
 };
 
 static inline const u8 *siwifi_sta_addr(struct siwifi_sta *siwifi_sta) {

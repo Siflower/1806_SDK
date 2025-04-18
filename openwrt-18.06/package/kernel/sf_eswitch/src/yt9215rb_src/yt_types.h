@@ -168,4 +168,3 @@ typedef enum yt_phy_type_e
 }yt_phy_type_t;
 
 #endif //YT_TYPES_H
-

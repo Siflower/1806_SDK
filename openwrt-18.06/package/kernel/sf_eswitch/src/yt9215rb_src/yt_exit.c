@@ -23,4 +23,3 @@ yt_ret_t yt_exit(uint8_t unit)
 
     return CMM_ERR_OK;
 }
-

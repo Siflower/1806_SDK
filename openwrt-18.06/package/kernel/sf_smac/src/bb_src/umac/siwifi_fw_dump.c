@@ -572,7 +572,7 @@ static void siwifi_um_helper_work(struct work_struct *ws)
     struct siwifi_hw *siwifi_hw = container_of(siwifi_debugfs, struct siwifi_hw,
                                            debugfs);
 #ifdef CFG_DBGDUMP
-#if defined(CFG_A28_MPW_LA_CLK_BUG)
+#if defined(CFG_A28_V_LA_CLK_BUG)
 #ifdef CONFIG_SF16A18_WIFI_LA_ENABLE
 #define LA_MEM_LINE_COUNT (32 * 1024)
 #define MEMORY_SIZE_PER_LA_LINE 8
@@ -587,7 +587,7 @@ static void siwifi_um_helper_work(struct work_struct *ws)
 #endif
 
 #ifdef CONFIG_SF16A18_WIFI_LA_ENABLE
-#if defined(CFG_A28_MPW_LA_CLK_BUG)
+#if defined(CFG_A28_V_LA_CLK_BUG)
 	la_cntrl_set(LA_STOP_BIT | LA_CLK_SEL_BIT);
 	data = readb((void *)REG_SYSM_SHARE_RAM_SEL);
     data &= ~(((1 << siwifi_hw->mod_params->is_hb) == LB_MODULE) ? ( 1 << 0 ) : ( 1 << 1 ));

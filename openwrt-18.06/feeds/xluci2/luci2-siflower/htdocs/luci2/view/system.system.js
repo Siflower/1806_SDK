@@ -47,15 +47,15 @@ L.ui.view.extend({
 
 				self.interval = window.setInterval(function() {
 					date.setTime(++(self.time) * 1000);
-					$('#' + id).html('%04d-%02d-%02d %02d:%02d:%02d<br>%s'.format(
-						date.getFullYear(),
-						date.getMonth() + 1,
-						date.getDate(),
-						date.getHours(),
-						date.getMinutes(),
-						date.getSeconds(),
-						self.timezone
-					));
+					const formattedTime =`${date.getFullYear()}/` +
+							`${String(date.getMonth() + 1).padStart(2, '0')}/` +
+							`${String(date.getDate()).padStart(2, '0')} ` +
+							`${String(date.getHours()).padStart(2, '0')}:` +
+							`${String(date.getMinutes()).padStart(2, '0')}:` +
+							`${String(date.getSeconds()).padStart(2, '0')} ` +
+							`${self.timezone}`;
+
+        			$('#' + id).text(formattedTime);
 				}, 1000);
 			});
 		};

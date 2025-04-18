@@ -1,17 +1,8 @@
-From d9c6eec830de256f0ec004948563751faeb0dba8 Mon Sep 17 00:00:00 2001
-From: "gongcheng.liu" <gongcheng.liu@siflower.com.cn>
-Date: Tue, 15 Oct 2024 01:55:13 +0000
-Subject: [PATCH] Prevent auth and assoc attacks
-
----
- src/ap/ieee802_11.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/src/ap/ieee802_11.c b/src/ap/ieee802_11.c
-index 5866c44..2b95a9a 100644
---- a/src/ap/ieee802_11.c
-+++ b/src/ap/ieee802_11.c
-@@ -4752,6 +4752,12 @@ int ieee802_11_mgmt(struct hostapd_data *hapd, const u8 *buf, size_t len,
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/ieee802_11.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/ieee802_11.c
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/ieee802_11.c
+@@ -4685,6 +4685,12 @@ int ieee802_11_mgmt(struct hostapd_data
  		break;
  	case WLAN_FC_STYPE_ASSOC_REQ:
  		wpa_printf(MSG_DEBUG, "mgmt::assoc_req");
@@ -24,14 +15,11 @@ index 5866c44..2b95a9a 100644
  		handle_assoc(hapd, mgmt, len, 0, ssi_signal);
  		ret = 1;
  		break;
-@@ -4805,6 +4811,7 @@ static void handle_auth_cb(struct hostapd_data *hapd,
+@@ -4738,6 +4744,7 @@ static void handle_auth_cb(struct hostap
  	status_code = le_to_host16(mgmt->u.auth.status_code);
-
+ 
  	if (!ok) {
 +		ap_free_sta(hapd, sta);
  		hostapd_logger(hapd, mgmt->da, HOSTAPD_MODULE_IEEE80211,
  			       HOSTAPD_LEVEL_NOTICE,
  			       "did not acknowledge authentication response");
---
-2.17.1
-

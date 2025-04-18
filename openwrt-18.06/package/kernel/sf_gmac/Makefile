@@ -61,8 +61,8 @@ ifdef CONFIG_TARGET_siflower_sf16a18_fullmask
 NOSTDINC_FLAGS += -DCONFIG_SF16A18_FULL_MASK
 endif
 
-ifdef CONFIG_TARGET_siflower_sf19a28_mpw1
-NOSTDINC_FLAGS += -DCONFIG_SF19A28_MPW1
+ifdef CONFIG_TARGET_siflower_sf19a28_v2
+NOSTDINC_FLAGS += -DCONFIG_SF19A28_V2
 endif
 
 ifdef CONFIG_TARGET_siflower_sf19a28_fullmask

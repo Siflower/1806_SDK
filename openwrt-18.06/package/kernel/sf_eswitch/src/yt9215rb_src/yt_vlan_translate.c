@@ -370,4 +370,3 @@ yt_ret_t  yt_vlan_egr_trans_table_del(yt_unit_t unit, yt_trans_tbl_id_t entry_id
 
     return YT_DISPATCH(unit)->vlan_egr_trans_table_del(unit, entry_idx);
 }
-

@@ -1106,7 +1106,7 @@ int siwifi_send_rf_get_temperature(struct siwifi_hw *siwifi_hw, struct mm_rf_get
 }
 
 #ifdef CONFIG_SIWIFI_COOLING_TEMP
-#if (defined(CONFIG_SFA28_MPW0) || defined(CONFIG_SFA28_FULLMASK))
+#if (defined(CONFIG_SFA28_V1) || defined(CONFIG_SFA28_FULLMASK))
 int	siwifi_send_change_power_req(struct siwifi_hw *siwifi_hw,int change_power,int change_power_trend){
 	struct mm_change_power_req *req;
 

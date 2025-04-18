@@ -111,4 +111,3 @@ static void fal_monitor_polling_thread(void)
         }
     }
 }
-

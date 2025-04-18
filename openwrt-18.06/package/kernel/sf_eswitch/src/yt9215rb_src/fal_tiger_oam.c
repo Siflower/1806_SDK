@@ -161,4 +161,3 @@ yt_ret_t fal_tiger_oam_mux_act_get(yt_unit_t unit, yt_port_t port, yt_oam_mux_ac
 
     return CMM_ERR_OK;
 }
-

@@ -10,7 +10,6 @@
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  franklin (), franklin.wang@siflower.com.cn
  *        Company:  Siflower Communication Tenology Co.,Ltd
  *
  * =====================================================================================

@@ -9,7 +9,6 @@
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  harry (), harry.feng@siflower.com.cn
  *        Company:  Siflower Communication Tenology Co.,Ltd
  *
  * =====================================================================================

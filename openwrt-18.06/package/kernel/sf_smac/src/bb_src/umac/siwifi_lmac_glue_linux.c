@@ -6,11 +6,9 @@
  *    Description:  glue implement for lmac built in kernel
  *
  *        Version:  1.0
- *        Created:  2017年03月13日 14时14分34秒
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  robert , robert.chang@siflower.com.cn
  *        Company:  Siflower
  *
  * =====================================================================================
@@ -47,7 +45,7 @@ extern unsigned int sf_wifi_shmem_free_size(void);
 //make the g_lmac_pl_ctx_impl depart from platform private is for the clean include header files when compile lmac code
 static struct lmac_pl_context g_lmac_pl_ctx_impl;
 
-u8 *get_share_env(struct mpw0_plat_data *priv)
+u8 *get_share_env(struct v1_plat_data *priv)
 {
     u8 *ipc_shenv;
 #ifdef CFG_DYNAMIC_MGM_SHAREMEM
@@ -60,7 +58,7 @@ u8 *get_share_env(struct mpw0_plat_data *priv)
 
 static void sf_wifi_lmac_prepare_complete(void)
 {
-    struct mpw0_plat_data *priv = (struct mpw0_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
+    struct v1_plat_data *priv = (struct v1_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
     priv->lmac_prepared = 1;
     wake_up_all(&priv->lmac_wq);
@@ -68,8 +66,8 @@ static void sf_wifi_lmac_prepare_complete(void)
 
 static irqreturn_t sf_wifi_lmac_irq_handle(int irq, void *dev_id)
 {
-    struct mpw0_plat_data *priv;
-    priv = (struct mpw0_plat_data *)dev_id;
+    struct v1_plat_data *priv;
+    priv = (struct v1_plat_data *)dev_id;
     priv->lmac_irq_running = 1;
     //wake up the wq
     rw_intc_fiq();
@@ -85,7 +83,7 @@ static int sf_wifi_lmac_global_irq_request(void)
     struct cpumask lmac_irq_affi;
 #endif
 
-    struct mpw0_plat_data *priv = (struct mpw0_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
+    struct v1_plat_data *priv = (struct v1_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
 
     if(priv->lmac_irq_requested){
@@ -126,7 +124,7 @@ static int sf_wifi_lmac_global_irq_request(void)
 
 static int sf_wifi_lmac_global_irq_free(void)
 {
-    struct mpw0_plat_data *priv = (struct mpw0_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
+    struct v1_plat_data *priv = (struct v1_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
     if(!priv->lmac_irq_requested){
         printk("irq has been already freeed!\n");
@@ -140,7 +138,7 @@ static int sf_wifi_lmac_global_irq_free(void)
 
 static int sf_wifi_lmac_global_irq_enable(void)
 {
-    struct mpw0_plat_data *priv = (struct mpw0_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
+    struct v1_plat_data *priv = (struct v1_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
     if(!priv->lmac_irq_requested){
         printk("the irq is not requested , can not enable!\n");
         goto DONE;
@@ -163,7 +161,7 @@ DONE:
 
 static int sf_wifi_lmac_global_irq_disable(int sync)
 {
-    struct mpw0_plat_data *priv = (struct mpw0_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
+    struct v1_plat_data *priv = (struct v1_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
 
     if(!priv->lmac_irq_requested){
         printk("the irq is not requested , can not disable!\n");
@@ -212,7 +210,7 @@ static void sf_wifi_lmac_res_barrier(int type)
 static int sf_wifi_lmac_led_turn_on(int led)
 {
     uint32_t timeout = 0;
-    struct mpw0_plat_data *priv = (struct mpw0_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
+    struct v1_plat_data *priv = (struct v1_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
 
     //FIXME:here we should add a spin lock to protect the led_status & led_time
     //because this function(trun on/off) could be called both by software thread(cpu0) and by hardware interrupt(cpu1)
@@ -243,7 +241,7 @@ static int sf_wifi_lmac_led_turn_on(int led)
 static int sf_wifi_lmac_led_turn_off(int led)
 {
     uint32_t timeout = 0;
-    struct mpw0_plat_data *priv = (struct mpw0_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
+    struct v1_plat_data *priv = (struct v1_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
     if(!(priv->led_status & led)){
         return 0;
     }
@@ -268,8 +266,8 @@ static int sf_wifi_lmac_led_turn_off(int led)
 
 static void sf_wifi_lmac_led_expires(unsigned long data)
 {
-    struct mpw0_plat_data *priv;
-    priv = (struct mpw0_plat_data *)data;
+    struct v1_plat_data *priv;
+    priv = (struct v1_plat_data *)data;
     if(!priv->led_on){
         led_onoff(priv->band, 1);
         mod_timer(&priv->led_timer, jiffies + HZ * LMAC_LED_BLIGHTING_INTERVAL / 1000);
@@ -281,7 +279,7 @@ static void sf_wifi_lmac_led_expires(unsigned long data)
     }
 }
 
-static int sf_wifi_lmac_led_init(struct mpw0_plat_data *priv)
+static int sf_wifi_lmac_led_init(struct v1_plat_data *priv)
 {
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
     //init & led timer to timerlist
@@ -300,7 +298,7 @@ static int sf_wifi_lmac_led_init(struct mpw0_plat_data *priv)
     return 0;
 }
 
-static int sf_wifi_lmac_led_release(struct mpw0_plat_data *priv)
+static int sf_wifi_lmac_led_release(struct v1_plat_data *priv)
 {
     del_timer_sync(&priv->led_timer);
     return 0;
@@ -308,14 +306,14 @@ static int sf_wifi_lmac_led_release(struct mpw0_plat_data *priv)
 #endif
 
 
-static void sf_wifi_lmac_task_sleep(struct mpw0_plat_data *priv)
+static void sf_wifi_lmac_task_sleep(struct v1_plat_data *priv)
 {
     //SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
     if (priv->lmac_pl_ctx->led_on)
         priv->lmac_pl_ctx->led_on(LED_CPU_SLEEP);
 }
 
-static void sf_wifi_lmac_task_wake_up(struct mpw0_plat_data *priv)
+static void sf_wifi_lmac_task_wake_up(struct v1_plat_data *priv)
 {
     //SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
     if (priv->lmac_pl_ctx->led_on)
@@ -324,7 +322,7 @@ static void sf_wifi_lmac_task_wake_up(struct mpw0_plat_data *priv)
 
 static int sf_wifi_lmac_sleep_request(uint32_t (*hw_condition)(void))
 {
-    struct mpw0_plat_data *priv = (struct mpw0_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
+    struct v1_plat_data *priv = (struct v1_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
 
     wait_event_cmd(priv->lmac_wq,
             (priv->request_lmac_exit || (hw_condition())),
@@ -339,7 +337,7 @@ static int sf_wifi_lmac_sleep_request(uint32_t (*hw_condition)(void))
 
 static int sf_wifi_lmac_deep_debug_enable(int type, int enable)
 {
-    struct mpw0_plat_data *priv = (struct mpw0_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
+    struct v1_plat_data *priv = (struct v1_plat_data *)g_lmac_pl_ctx_impl.plat_priv;
     uint8_t data;
     //check if conflicts happen for different type, now :
     //LA/IQDUMP/NORMAL FUNCTION can not be worked together, so if one is enable, must denied the others's request
@@ -424,7 +422,7 @@ static int sf_wifi_lmac_main_loop(void *params)
     return 0;
 }
 
-static int sf_wifi_lmac_tasks_create(struct mpw0_plat_data *priv)
+static int sf_wifi_lmac_tasks_create(struct v1_plat_data *priv)
 {
 
     priv->lmac_kthread = kthread_create(sf_wifi_lmac_main_loop, NULL, "lmac_work_thread");
@@ -443,7 +441,7 @@ static int sf_wifi_lmac_tasks_create(struct mpw0_plat_data *priv)
 }
 
 
-static void sf_wifi_lmac_tasks_destroy(struct mpw0_plat_data *priv)
+static void sf_wifi_lmac_tasks_destroy(struct v1_plat_data *priv)
 {
     if(priv->lmac_kthread){
         //first wake up the thread
@@ -454,7 +452,7 @@ static void sf_wifi_lmac_tasks_destroy(struct mpw0_plat_data *priv)
     priv->lmac_kthread = NULL;
 }
 
-int lmac_glue_init(struct mpw0_plat_data *priv)
+int lmac_glue_init(struct v1_plat_data *priv)
 {
     //init lmac context
     sf_wifi_init_context(&g_lmac_pl_ctx_impl);
@@ -515,7 +513,7 @@ int lmac_glue_init(struct mpw0_plat_data *priv)
     return 0;
 }
 
-u8 *lmac_glue_share_mem_init(struct mpw0_plat_data *priv)
+u8 *lmac_glue_share_mem_init(struct v1_plat_data *priv)
 {
 #ifdef CFG_DYNAMIC_MGM_SHAREMEM
     sf_wifi_shmem_reset();
@@ -524,7 +522,7 @@ u8 *lmac_glue_share_mem_init(struct mpw0_plat_data *priv)
     return get_share_env(priv);
 }
 
-int lmac_glue_start(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
+int lmac_glue_start(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
 {
     int ret = 0;
     if((ret = sf_wifi_lmac_tasks_create(priv))){
@@ -534,12 +532,12 @@ int lmac_glue_start(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
     return ret;
 }
 
-void lmac_glue_stop(struct siwifi_hw *siwifi_hw, struct mpw0_plat_data *priv)
+void lmac_glue_stop(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
 {
     sf_wifi_lmac_tasks_destroy(priv);
 }
 
-void lmac_glue_deinit(struct mpw0_plat_data *priv)
+void lmac_glue_deinit(struct v1_plat_data *priv)
 {
 #ifdef CONFIG_SF16A18_WIFI_LED
     /* reelease the wifi led resources*/
@@ -555,7 +553,7 @@ void notify_lmac_complete_ipc(struct siwifi_hw *siwifi_hw)
 void notify_lmac_la_init_ipc(struct siwifi_hw *siwifi_hw, int8_t type,int8_t enable)
 {
     int ret = sf_wifi_lmac_deep_debug_enable(type, enable);
-    struct mpw0_plat_data *priv = (struct mpw0_plat_data *)&siwifi_hw->plat->priv;
+    struct v1_plat_data *priv = (struct v1_plat_data *)&siwifi_hw->plat->priv;
     set_ipc_event_user_reply(get_share_env(priv), ret);
     clear_ipc_event_user_bit(get_share_env(priv), IPC_USER_EVENT_DEEP_DEBUG_SET);
 }

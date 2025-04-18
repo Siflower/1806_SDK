@@ -90,6 +90,11 @@ if [ "$sublan1$sublan2$sublan3$sublan4" = "$subwan1$subwan2$subwan3$subwan4" ];t
 
 	ifconfig eth0 down #down eth0 for the clients have enough time to detect link down
 	sleep 1
+	# if have hosts, rebind the hosts
+	hosts=$($UCIG basic_setting.vendor.hosts 2>/dev/null)
+	if [ -n "$hosts" ]; then
+		/usr/sbin/dns_redirect.sh $hosts enable $new_lan
+	fi
 	/etc/init.d/network restart >/dev/null 2>&1
 	exit 0
 fi

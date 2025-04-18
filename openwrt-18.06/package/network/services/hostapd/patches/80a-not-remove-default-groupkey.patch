@@ -2,7 +2,7 @@ Index: hostapd-2019-08-08-ca8c2bd2/src/ap/hostapd.c
 ===================================================================
 --- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/hostapd.c
 +++ hostapd-2019-08-08-ca8c2bd2/src/ap/hostapd.c
-@@ -210,7 +210,6 @@ void hostapd_sta_deauth_all(struct hosta
+@@ -190,7 +190,6 @@ static void hostapd_clear_old(struct hos
  	for (j = 0; j < iface->num_bss; j++) {
  		hostapd_flush_old_stations(iface->bss[j],
  					   WLAN_REASON_PREV_AUTH_NOT_VALID);

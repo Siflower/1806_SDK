@@ -32,4 +32,8 @@ if [ -n "$AUTOIPV6" ]; then
 	ubus call network add_dynamic "$(json_dump)"
 fi
 
+if [ -n "$IPLOCAL" ]; then
+	netclash $IPLOCAL 255.255.255.0
+fi
+
 echo "$(date) INFO ppp up" >> /tmp/sf_log.txt

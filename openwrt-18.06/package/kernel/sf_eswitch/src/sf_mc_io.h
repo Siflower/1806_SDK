@@ -32,5 +32,3 @@ struct sf_port_devname default_p2d_match[SF_DEFAULT_PORT_NO] = {
 	{ "br-lan3", 2},
 	{ "eth0.2", 3},
 };
-
-

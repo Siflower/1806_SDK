@@ -188,4 +188,3 @@ yt_ret_t yt_oam_mux_act_get(yt_unit_t unit, yt_port_t port, yt_oam_mux_action_t 
 
     return YT_DISPATCH(unit)->oam_mux_act_get(unit, port, pAction);
 }
-

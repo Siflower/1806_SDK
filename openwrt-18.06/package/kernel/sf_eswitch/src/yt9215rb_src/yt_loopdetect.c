@@ -177,4 +177,3 @@ yt_ret_t yt_loop_detect_unitID_get(yt_unit_t unit, yt_local_id_t *pLocalID, yt_r
 
     return YT_DISPATCH(unit)->loop_detect_unitID_get(unit, pLocalID, pRemoteID);
 }
-

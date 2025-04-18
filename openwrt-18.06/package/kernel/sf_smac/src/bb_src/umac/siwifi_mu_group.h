@@ -176,4 +176,3 @@ void siwifi_mu_group_sta_select(struct siwifi_hw *siwifi_hw)
 #endif /* CONFIG_SIWIFI_MUMIMO_TX */
 
 #endif /* _SIWIFI_MU_GROUP_H_ */
-

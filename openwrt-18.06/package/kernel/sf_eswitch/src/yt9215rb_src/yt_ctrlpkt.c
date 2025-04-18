@@ -285,5 +285,3 @@ yt_ret_t yt_ctrlpkt_lldp_act_get(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_a
         
     return YT_DISPATCH(unit)->ctrlpkt_lldp_act_get(unit, port, pAct_ctrl);
 }
-
-

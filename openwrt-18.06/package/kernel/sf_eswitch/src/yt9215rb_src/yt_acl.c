@@ -304,4 +304,3 @@ yt_ret_t yt_acl_rule_del(yt_unit_t unit, uint32_t id)
 
     return YT_DISPATCH(unit)->acl_rule_del(unit, id);
 }
-

@@ -5,4 +5,3 @@
 extern yt_ret_t yt_exit(uint8_t unit);
 
 #endif
-

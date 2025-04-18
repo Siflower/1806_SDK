@@ -41,7 +41,6 @@
 #define IEEE80211_RADIOTAP_HE 23
 #define IEEE80211_RADIOTAP_HE_MU 24
 
-//The new version has defined these, annotated by tong.chen@siflower.com.cn
 /*struct ieee80211_radiotap_he {
 	__le16 data1, data2, data3, data4, data5, data6;
 };
@@ -279,7 +278,6 @@ struct ieee80211_wmm_param_ie {
 } __packed;
 #endif
 
-//The new version has defined these, annotated by tong.chen@siflower.com.cn
 /*#if MY_LINUX_VERSION_CODE < KERNEL_VERSION(4, 19, 0)
 enum {
     IEEE80211_HE_MCS_SUPPORT_0_7    = 0,

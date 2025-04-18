@@ -295,4 +295,3 @@ __INLINE u32 ipc_app_signature_getf(void *env)
 
 
 #endif // _REG_IPC_APP_H_
-

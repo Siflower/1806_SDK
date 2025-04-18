@@ -2705,5 +2705,3 @@ GSW_return_t GSW_TimestampTimerGet(void *cdev, GSW_TIMESTAMP_Timer_t *parm);
 */
 GSW_return_t GSW_TimestampTimerSet(void *cdev, GSW_TIMESTAMP_Timer_t *parm);
 /*@}*/ /* FLOW_LL_OAM */
-
-

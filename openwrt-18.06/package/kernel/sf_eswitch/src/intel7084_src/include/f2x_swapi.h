@@ -4637,4 +4637,3 @@ typedef struct
 /*@{*/
 
 /*@}*/ /* GSW_IOCTL_PMAC */
-

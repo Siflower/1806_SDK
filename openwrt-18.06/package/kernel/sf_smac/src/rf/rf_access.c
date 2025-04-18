@@ -187,8 +187,8 @@ uint16_t ml_apb_rsbus_read(uint16_t addr)
     return readw((g_rf_access_base + (RSBUS_READ << 1)));
 }
 
-//4s
-#define APB_RESPONSE_TIMEOUT 40000
+//10s
+#define APB_RESPONSE_TIMEOUT 100000
 static int8_t ml_apb_wait_cmd_resp(uint16_t rrq, uint16_t cmd_base, uint16_t cmd)
 {
     uint16_t value;
@@ -507,13 +507,13 @@ int rf_trx_stop(int trxid)
 
     resp_args = ml_apb_send_1_params_cmd(1, cmd_base, _TRX_Stop,trxid);
     if (resp_args != 1) {
-        printk("trx prepare failed, resp_args : %d\n", resp_args);
+        printk("trx stop failed, resp_args : %d\n", resp_args);
         return -4;
     }
 
     resp_args = ml_apb_send_1_params_cmd(1, cmd_base, _TRX_Park,trxid);
     if (resp_args != 1) {
-        printk("trx prepare failed, resp_args : %d\n", resp_args);
+        printk("trx park failed, resp_args : %d\n", resp_args);
         return -4;
     }
 
