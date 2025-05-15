@@ -117,10 +117,42 @@ detect_mac80211() {
 		[ -f "/sys/devices/factory-read/countryid" ] && {
 			country=`cat /sys/devices/factory-read/countryid`
 		}
-		ssid=SiWiFi-`cat /sys/class/ieee80211/${dev}/macaddress | cut -c 13- | sed 's/://g'`$ssidprefix
+		if [ "$band" == "2.4G" ]; then
+			ssid_mtd=`cat /sys/devices/platform/factory-read/default_ssid_lb | sed 's/[^[:print:]]//g'`
+		else
+			ssid_mtd=`cat /sys/devices/platform/factory-read/default_ssid_hb | sed 's/[^[:print:]]//g'`
+		fi
+
+		if [ "$ssid_mtd" == "" ]; then
+			ssid=SiWiFi-`cat /sys/class/ieee80211/${dev}/macaddress | cut -c 13- | sed 's/://g'`$ssidprefix
+		else
+			ssid=$ssid_mtd
+		fi
+
 		ssid_lease=SiWiFi-租赁-$ssidprefix`cat /sys/class/ieee80211/${dev}/macaddress | cut -c 13- | sed 's/://g'`
 		if [ ! -n "$country" ]; then
 			country='CN'
+		fi
+
+		if [ "$band" == "2.4G" ]; then
+			key_mtd=`cat /sys/devices/platform/factory-read/default_key_lb | sed 's/[^[:print:]]//g'`
+		else
+			key_mtd=`cat /sys/devices/platform/factory-read/default_key_hb | sed 's/[^[:print:]]//g'`
+		fi
+
+		if [ "$key_mtd" == "" ]; then
+			key=12345678
+		else
+			key=$key_mtd
+		fi
+
+		encryption=$(uci get basic_setting.vendor.encryption 2>/dev/null)
+		if [ -z "$encryption" ]; then
+			encryption="none"
+		else
+			if [ "$encryption"!= "psk+ccmp" ] && [ "$encryption"!= "psk2+ccmp" ]; then
+				encryption="none"
+			fi
 		fi
 
 		txpower_lvl=2

@@ -45,6 +45,10 @@
 #define XO_CONFIG_SIZE          2
 #define COOLING_TEMP_SIZE       2
 #define GMAC_DELAY_SIZE	        4
+#define DEFAULT_SSID_LB_SIZE	32
+#define DEFAULT_SSID_HB_SIZE	32
+#define DEFAULT_KEY_LB_SIZE		16
+#define DEFAULT_KEY_HB_SIZE		16
 
 /**
 * @name HW feature definitions
@@ -123,6 +127,10 @@ enum sfax8_factory_read_action {
 	READ_WIFI_INFO,
 	READ_COOLING_TEMP,
 	READ_GMAC_DELAY,
+	READ_DEFAULT_SSID_LB,
+	READ_DEFAULT_SSID_HB,
+	READ_DEFAULT_KEY_LB,
+	READ_DEFAULT_KEY_HB,
 };
 
 int sf_get_value_from_factory(enum sfax8_factory_read_action action, void *buffer, int len);
