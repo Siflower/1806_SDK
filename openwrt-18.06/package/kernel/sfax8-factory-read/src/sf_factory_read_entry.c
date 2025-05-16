@@ -34,7 +34,7 @@
 #endif
 struct sfax8_factory_read_context *f_read_ctx = NULL;
 
-static char factory_read_names[27][22] = {
+static char factory_read_names[31][22] = {
 	"mtd-mac-address",
 	"mtd-mac-address",
 	"mtd-mac-address",
@@ -62,6 +62,10 @@ static char factory_read_names[27][22] = {
 	"mtd-wifi-info",
 	"mtd-cooling-temp",
 	"mtd-gmac-delay",
+	"mtd-default-ssid-lb",
+	"mtd-default-ssid-hb",
+	"mtd-default-key-lb",
+	"mtd-default-key-hb",
 };
 
 int get_value_through_mtd(struct device_node *np,
@@ -697,6 +701,34 @@ static int save_value_from_factory_to_host(struct platform_device *pdev,
 	/* txDelay is the first two bytes in gmac_delay */
 	priv->exist_flag |= (1 << READ_GMAC_DELAY);
 	factory_print_string("get gmac delay:", priv->gmac_delay, GMAC_DELAY_SIZE);
+
+	// get default_ssid_lb
+	if ((ret = get_value_through_mtd(np, "mtd-default-ssid-lb", 0, DEFAULT_SSID_LB_SIZE,
+			     priv->default_ssid_lb)))
+		printk("get default_ssid_lb through mtd failed! ret %d\n", ret);
+	priv->exist_flag |= (1 << READ_DEFAULT_SSID_LB);
+	factory_print_string("default_ssid_lb is:", priv->default_ssid_lb, DEFAULT_SSID_LB_SIZE);
+
+	// get default_ssid_hb
+	if ((ret = get_value_through_mtd(np, "mtd-default-ssid-hb", 0, DEFAULT_SSID_HB_SIZE,
+			     priv->default_ssid_hb)))
+		printk("get default_ssid_hb through mtd failed! ret %d\n", ret);
+	priv->exist_flag |= (1 << READ_DEFAULT_SSID_HB);
+	factory_print_string("default_ssid_hb is:", priv->default_ssid_hb, DEFAULT_SSID_HB_SIZE);
+
+	// get default_key_lb
+	if ((ret = get_value_through_mtd(np, "mtd-default-key-lb", 0, DEFAULT_KEY_LB_SIZE,
+			     priv->default_key_lb)))
+		printk("get default_key_lb through mtd failed! ret %d\n", ret);
+	priv->exist_flag |= (1 << READ_DEFAULT_KEY_LB);
+	factory_print_string("default_key_lb is:", priv->default_key_lb, DEFAULT_KEY_LB_SIZE);
+
+	// get default_key_hb
+	if ((ret = get_value_through_mtd(np, "mtd-default-key-hb", 0, DEFAULT_KEY_HB_SIZE,
+			     priv->default_key_hb)))
+		printk("get default_key_hb through mtd failed! ret %d\n", ret);
+	priv->exist_flag |= (1 << READ_DEFAULT_KEY_HB);
+	factory_print_string("default_key_hb is:", priv->default_key_hb, DEFAULT_KEY_HB_SIZE);
 
 	return 0;
 }

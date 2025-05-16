@@ -21,6 +21,22 @@
 #include <linux/device.h>
 #include <sfax8_factory_read.h>
 
+#define SUPPORT_WIFI_VIF_CNT 4
+
+#ifdef CONFIG_VENDOR_HSG
+#define FIXED_MACADDRESS_ALLOC
+#define MACADDR_LAN_OFFSET 1
+#define MACADDR_WAN_OFFSET 0
+#define MACADDR_WIFI_LB_OFFSET 2
+#define MACADDR_WIFI_HB_OFFSET 6
+#else
+#define FIXED_MACADDRESS_ALLOC
+#define MACADDR_LAN_OFFSET 0
+#define MACADDR_WAN_OFFSET 1
+#define MACADDR_WIFI_LB_OFFSET 2
+#define MACADDR_WIFI_HB_OFFSET 6
+#endif
+
 /*
  * SF factory_read PRIVATE PLATFORM DRIVER DATA
  * */
@@ -59,6 +75,10 @@ struct sfax8_factory_read_context {
 #endif
 	unsigned char cooling_temp[COOLING_TEMP_SIZE];
 	unsigned char gmac_delay[GMAC_DELAY_SIZE];
+	unsigned char default_ssid_lb[DEFAULT_SSID_LB_SIZE];
+	unsigned char default_ssid_hb[DEFAULT_SSID_HB_SIZE];
+	unsigned char default_key_lb[DEFAULT_KEY_LB_SIZE];
+	unsigned char default_key_hb[DEFAULT_KEY_HB_SIZE];
 
 	//the debug fs root node
 	struct dentry *debugfs;

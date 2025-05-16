@@ -27,11 +27,11 @@ system_config() {
 	[ -z "$hostnameset" ] && {
 		[ `uci -q get basic_setting.product.type` = "router" ] && {
 			# update wireless ssid
-			ssid24G="SiWiFi-`cat /sys/class/ieee80211/phy0/macaddress | cut -c 13- | sed 's/://g'`-2.4G"
-			ssid5G="SiWiFi-`cat /sys/class/ieee80211/phy1/macaddress | cut -c 13- | sed 's/://g'`-5G"
-			uci -q set wireless.default_radio0.ssid=$ssid24G
-			uci -q set wireless.default_radio1.ssid=$ssid5G
-			uci commit wireless
+			# ssid24G="SiWiFi-`cat /sys/class/ieee80211/phy0/macaddress | cut -c 13- | sed 's/://g'`-2.4G"
+			# ssid5G="SiWiFi-`cat /sys/class/ieee80211/phy1/macaddress | cut -c 13- | sed 's/://g'`-5G"
+			# uci -q set wireless.default_radio0.ssid=$ssid24G
+			# uci -q set wireless.default_radio1.ssid=$ssid5G
+			# uci commit wireless
 			eval "uci -q set system.@system[0].hostnameset=1"
 			uci commit system
 		}

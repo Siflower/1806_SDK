@@ -425,6 +425,11 @@
 			mtd-wifi-info = <&factory 2050>;
 			mtd-cooling-temp = <&factory 174>;
 			mtd-gmac-delay = <&factory 178>;
+			mtd-default-ssid-lb = <&factory 184>;
+			mtd-default-ssid-hb = <&factory 216>;
+			mtd-default-key-lb = <&factory 248>;
+			mtd-default-key-hb = <&factory 264>;
+			mtd-backup = <&factory 280>;
 			status = "okay";
 	};
 
