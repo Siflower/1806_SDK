@@ -30,7 +30,7 @@ config setting 'auto_ota'
         option times 0
 
 config setting 'ota'
-        option romtype 0x1
+        option romtype 0x6
         option url "http://ota.siflower.com"
 
 config setting 'dev_mode'
@@ -51,5 +51,17 @@ config setting 'auto_adapt'
 config setting 'arp_check_dev'
         option enable 0
 
+config setting 'led'
+        option default_led 'bpi-red'
+        option reset_led 'bpi-blue'
+        option reset_option 'flash'
+        option wps_led 'bpi-blue'
+        option wps_option 'flash'
+        option internet_led 'bpi-blue'
+        option wan_status 0
+
 config setting 'web_guide'
-        option inited 1
+        option inited 0
+
+config setting 'wifi_switch'
+        option status 'up'

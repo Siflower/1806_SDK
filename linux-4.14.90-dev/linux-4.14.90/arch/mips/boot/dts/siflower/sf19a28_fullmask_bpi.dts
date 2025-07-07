@@ -70,6 +70,15 @@
 &uart0 {
 	status = "okay";
 };
+
+&pwm0 {
+	status = "okay";
+};
+
+&pwm1 {
+	status = "okay";
+};
+
 &timer0 {
 	status = "okay";
 };
@@ -128,13 +137,13 @@
 
 &leds {
 	status = "okay";
-	bpi-blue {
+	bpi-red {
 		label = "bpi-red";
 		gpios = <&gpio 1 1>;
 		default-state = "on";
 		linux,default-trigger = "none";
 	};
-	bpi-red {
+	bpi-green {
 		label = "bpi-green";
 		gpios = <&gpio 2 1>;
 		linux,default-trigger = "none";

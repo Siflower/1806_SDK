@@ -387,6 +387,14 @@ config PWM_SAMSUNG
 	  To compile this driver as a module, choose M here: the module
 	  will be called pwm-samsung.
 
+config PWM_SFAX8
+	tristate "Siflower PWM support"
+	help
+	  Generic PWM framework driver for Siflower.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called pwm-sfax8.
+
 config PWM_SPEAR
 	tristate "STMicroelectronics SPEAr PWM support"
 	depends on PLAT_SPEAR
