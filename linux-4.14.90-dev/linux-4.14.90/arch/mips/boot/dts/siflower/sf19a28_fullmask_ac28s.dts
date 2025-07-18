@@ -70,6 +70,15 @@
 &uart0 {
 	status = "okay";
 };
+
+&pwm0 {
+	status = "okay";
+};
+
+&pwm1 {
+	status = "okay";
+};
+
 &timer0 {
 	status = "okay";
 };

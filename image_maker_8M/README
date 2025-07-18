@@ -1,0 +1,57 @@
+本工具主要用于在linux环境下生成最终带uboot，openwrt和pcba的flash镜像。
+
+本工具包含3个文件：
+1、sf-makeimage.sh是所使用的脚本。
+2、factory_default.bin是用到的4K factory分区默认值，由全0xff组成。
+3、README是本工具的说明文档。
+
+flash的划分和使用：
+目前支持4M，8M和16M镜像的生成
+4M flash的系统分区：
+-------------------------------------------------------
+|  SPL |  UBOOT |  FACTORY | KERNEL & FS |    PCBA   |
+-------------------------------------------------------
+| 32K  |  164K  |    4K    |  FREE SPACE | LAST 256K |
+-------------------------------------------------------
+
+8M/16M flash的分区：
+------------------------------------------------------------
+|  SPL |  UBOOT | ENV | FACTORY | KERNEL & FS |    PCBA   |
+------------------------------------------------------------
+| 128K |  384K  | 64K |   64K   |  FREE SPACE | LAST 512K |
+------------------------------------------------------------
+
+下文提到的uboot镜像包含了SPL和UBOOT分区，openwrt镜像为KERNEL & FS分区，PCBA镜像为PCBA分区。
+FACTORY分区由factory_default.bin填充，ENV分区全0。
+
+该工具的使用：
+该工具可以生成2种镜像：带PCBA的镜像和不带PCBA镜像。执行sf-makeimage.sh脚本需要2个参数：项目名称和flash大小。
+下面以p10h为例，其flash镜像大小为8M，分别介绍生成这两种镜像的方法。
+
+1、带PCBA的镜像：启动后将进入PCBA测试，主要用于工厂生产。
+需要将三个bin复制到本目录下：
+uboot镜像：uboot_release_p10h_fullmask_4.2.14.bin。在uboot目录下编译生成的镜像，名字中需带uboot和p10h。
+openwrt镜像：openwrt_release_p10h_fullmask_rel_4.2.18.bin。在openwrt目录下编译生成的镜像，名字中需带openwrt和p10h。
+PCBA镜像：pcba_master_p10h_fullmask_4.0.0_1643db3.bin。在uboot目录下编译生成的镜像，名字中需带pcba和p10h。
+保证名字中有p10h且有uboot,openwrt和pcba的3个镜像都有且只有一个，脚本中会有查重检测。比如本目录下如果有openwrt_release_p10h_fullmask_rel_4.2.18.bin和openwrt_release_p10h_fullmask_rel_4.2.17.bin两个openwrt p10h镜像，那么运行脚本时会报错：too many openwrt image found!!!
+执行：sh sf-makeimage.sh p10h 8
+运行成功的最后会有如下log：
+the final bin is p10h_output_20190611.bin
+
+2、不带PCBA的镜像：启动后将进入uboot，然后启动openwrt。
+需要将两个bin复制到本目录下：
+uboot镜像：uboot_release_p10h_fullmask_4.2.14.bin。在uboot目录下编译生成的镜像，名字中需带uboot和p10h。
+openwrt镜像：openwrt_release_p10h_fullmask_rel_4.2.18.bin。在openwrt目录下编译生成的镜像，名字中需带openwrt和p10h。
+将uboot镜像复制一份，名字中uboot改为pcba，如：cp uboot_release_p10h_fullmask_4.2.14.bin pcba_release_p10h_fullmask_4.2.14.bin
+如果需要测试wifi性能，请根据内置/外置PA的不同，执行：cp expa_fac.bin factory_default.bin或者cp inpa_fac.bin factory_default.bin，这样镜像中将带有wifi校准的经验值（由于是p10m和p10h的经验值，不能保证在所有其他板子上有最好的效果）
+修改sf-makeimage.sh，将“printf "PCBT" | dd of=./$output_file bs=1 count=4 seek=$FACTORY_PCBT_OFFSET conv=notrunc”这一行前面加“#”将其注掉。
+保证名字中有p10h且有uboot,openwrt和pcba的3个镜像都有且只有一个，脚本中会有查重检测。比如本目录下如果有openwrt_release_p10h_fullmask_rel_4.2.18.bin和openwrt_release_p10h_fullmask_rel_4.2.17.bin两个openwrt p10h镜像，那么运行脚本时会报错：too many openwrt image found!!!
+执行：sh sf-makeimage.sh p10h 8
+运行成功的最后会有如下log：
+the final bin is p10h_output_20190611.bin
+执行：mv p10h_output_20190611.bin p10h_output_20190611_nopcbt.bin 修改bin文件的名称，以区分该文件不带PCBA测试。
+
+注：PCBA测试镜像
+为了在产线上电后更快地进入测试模式，我们在uboot的基础上专门编写了pcba镜像。
+在SPL中会进行判断，如果检测到factory分区中的特殊值，那么会跳转到PCBA分区，进行测试。
+在PCBA测试的最后会将factory分区中的特殊值擦去，这样下次启动，SPL将跳转到UBOOT分区，并运行KERNEL，而KERNEL在第一次启动时会将flash中后面的内容（包括PCBA分区）全部擦除，并当做文件系统处理。

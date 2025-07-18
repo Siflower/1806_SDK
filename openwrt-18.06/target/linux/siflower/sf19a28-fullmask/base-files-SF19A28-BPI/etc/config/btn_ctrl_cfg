@@ -14,21 +14,28 @@
 #              ---------------------------------
 # @btn_cmd: Command that needs to be executed. You should try to put your
 #            own functions in a script and then execute the script.
+# @press_time: Defination of the time of press action:
+#            Short Press:		< short press time(default 4s)
+#            Long Press:		>= short press time(default 4s) && < long press time(default 12s)
+#            Extra Long press:	>= extra long press time(default 12s)
 
-# factory reset when button long prees
-config btn_config
-	option btn_code '0x198'
-	option btn_action '1'
-	option btn_cmd 'sh /bin/sf_reset.sh'
-
-# factory reset when button extra long prees
-config btn_config
-	option btn_code '0x198'
-	option btn_action '3'
-	option btn_cmd 'sh /bin/sf_reset.sh'
-# wps function when button short press
+# factory reset when button short press
 config btn_config
 	option btn_code '0x198'
 	option btn_action '2'
-	option btn_cmd 'sh /usr/share/led-button/wps.sh'
+	option press_time '2'
+	option btn_cmd 'sh /bin/sf_reboot.sh'
 
+# factory reset when button extra long press
+config btn_config
+	option btn_code '0x198'
+	option btn_action '3'
+	option press_time '4'
+	option btn_cmd 'sh /bin/sf_reset.sh'
+
+# wps function when button short press
+config btn_config
+	option btn_code '0x199'
+	option btn_action '2'
+	option press_time '4'
+	option btn_cmd 'sh /usr/share/led-button/wps.sh'

@@ -23,15 +23,8 @@
 config btn_config
 	option btn_code '0x198'
 	option btn_action '2'
-	option press_time '4'
+	option press_time '2'
 	option btn_cmd 'sh /bin/sf_reboot.sh'
-
-# factory reset when button long press
-config btn_config
-	option btn_code '0x198'
-	option btn_action '1'
-	option press_time '4'
-	option btn_cmd 'sh /bin/sf_reset.sh'
 
 # factory reset when button extra long press
 config btn_config
@@ -46,17 +39,3 @@ config btn_config
 	option btn_action '2'
 	option press_time '4'
 	option btn_cmd 'sh /usr/share/led-button/wps.sh'
-
-# wps function when button long press
-config btn_config
-	option btn_code '0x199'
-	option btn_action '1'
-	option press_time '4'
-	option btn_cmd 'wifi switch'
-
-# wps function when button extra long press
-config btn_config
-	option btn_code '0x199'
-	option btn_action '3'
-	option press_time '4'
-	option btn_cmd 'wifi switch'

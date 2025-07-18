@@ -30,9 +30,8 @@ config setting 'auto_ota'
         option times 0
 
 config setting 'ota'
-        option romtype "wifi5"
-        option url "https://ota.banana-pi.org"
-        option version 1
+        option romtype 0x6
+        option url "http://ota.siflower.com"
 
 config setting 'dev_mode'
         option mode 'ap'
@@ -51,12 +50,6 @@ config setting 'auto_adapt'
 
 config setting 'arp_check_dev'
         option enable 0
-
-config setting 'vendor'
-        option name 'BananaPi'
-        option lan_ip '192.168.4.1'
-        option hosts 'bpi.pub'
-        option encryption 'psk2+ccmp'
 
 config setting 'led'
         option default_led 'bpi-red'
