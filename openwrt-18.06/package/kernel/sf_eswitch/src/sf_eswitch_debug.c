@@ -1,6 +1,11 @@
 #include "sf_eswitch.h"
 #include "sf_eswitch_debug.h"
 #include "intel7084_src/src/gsw_sw_init.h"
+#include "realtek8367c_src/rtk_switch.h"
+#include "realtek8367c_src/vlan.h"
+#include "realtek8367c_src/stat.h"
+#include "realtek8367c_src/rtl8367c_asicdrv_vlan.h"
+#include "realtek8367c_src/l2.h"
 #include "air.h"
 #include "yt9215rb_src/yt_stat.h"
 
@@ -49,7 +54,9 @@ ssize_t sf_eswitch_debug_read(struct file *file, char __user *user_buf,
 	char buf[256] = {0};
 	size_t read;
 
-	if (pesw_priv->model == INTEL7084 || pesw_priv->model == INTEL7082)
+	if (pesw_priv->model == RTK8367C)
+		max_port = RTK_SWITCH_PORT_NUM;
+	else if (pesw_priv->model == INTEL7084 || pesw_priv->model == INTEL7082)
 		max_port = INTEL_SWITCH_PORT_NUM;
 	else if (pesw_priv->model == AN8855)
 		max_port = 4;
@@ -107,7 +114,8 @@ ssize_t sf_eswitch_debug_write(struct file *file, const char __user *user_buf,
 	unsigned int i = 0, ret = 0, last_i = 0, index_arg = 0;
 	char str[5][20] = {'\0'};
 	char buf[128] = {0};
-
+	rtk_uint32 address = 0;
+	rtk_l2_ucastAddr_t l2_data;
 
 	size_t len = min_t(size_t, count, sizeof(buf) - 1);
 	if (copy_from_user(buf, user_buf, len))
@@ -335,6 +343,30 @@ ssize_t sf_eswitch_debug_write(struct file *file, const char __user *user_buf,
 					parm.nRxUnderSizeErrorPkts, parm.nRxOversizeErrorPkts);
 			printk("nRxFCSErrorPkts: %-20u nTxAcmDroppedPkts:%-20u\n",
 					parm.nRxFCSErrorPkts, parm.nTxAcmDroppedPkts);
+		} else if (pesw_priv->model == RTK8367C) {
+			unsigned int port=0;
+			rtk_stat_port_cntr_t parm;
+			ret = kstrtou32(str[1], 0, &port);
+			rtk_stat_port_getAll(port, &parm);
+			printk("===== get switch port:%u counter =====\n", port);
+			printk("ifInUcastPkts:          %-20u ifOutUcastPkts:    %-20u\n",
+					parm.ifInUcastPkts, parm.ifOutUcastPkts);
+			printk("ifInBroadcastPkts:      %-20u ifOutBroadcastPkts:%-20u\n",
+					parm.ifInBroadcastPkts, parm.ifOutBrocastPkts);
+			printk("ifInMulticastPkts:      %-20u ifOutMulticastPkts:%-20u\n",
+					parm.ifInMulticastPkts, parm.ifOutMulticastPkts);
+			printk("dot3StatsFCSErrors:     %-20u dot3StatsSymbolErrors:%-20u\n",
+					parm.dot3StatsFCSErrors, parm.dot3StatsSymbolErrors);
+			printk("inMldChecksumError:     %-20u inIgmpChecksumError:%-20u\n",
+					parm.inMldChecksumError, parm.inIgmpChecksumError);
+			printk("inReportSuppressionDrop:%-20u inLeaveSuppressionDrop:%-20u\n",
+					parm.inReportSuppressionDrop, parm.inLeaveSuppressionDrop);
+			printk("etherStatsDropEvents:   %-20u etherStatsPkts1024toMaxOctets:%-20u\n",
+					parm.etherStatsDropEvents, parm.etherStatsPkts1024toMaxOctets);
+			printk("dot3InPauseFrames:      %-20u dot3OutPauseFrames:%-20u\n",
+					parm.dot3InPauseFrames, parm.dot3OutPauseFrames);
+			printk("etherStatsUndersizePkts:%-20u etherStatsOversizePkts:%-20u\n",
+					parm.etherStatsUndersizePkts, parm.etherStatsOversizePkts);
 		} else if (pesw_priv->model == AN8855) {
 			unsigned int port=0;
 			AIR_MIB_CNT_RX_T rx_mib;
@@ -437,6 +469,11 @@ ssize_t sf_eswitch_debug_write(struct file *file, const char __user *user_buf,
 			mp.eRmonType = mode;
 			intel7084_count_clear(&mp);
 			printk("clear switch counter type:%d port:%d\n", mode, port);
+		} else if (pesw_priv->model == RTK8367C) {
+			unsigned int port=0;
+			ret = kstrtou32(str[1], 0, &port);
+			rtk_stat_port_reset(port);
+			printk("clear switch counter port:%d\n", port);
 		} else if (pesw_priv->model == AN8855) {
 			unsigned int port=0;
 			ret = kstrtou32(str[1], 0, &port);

@@ -16,6 +16,7 @@
 #define YT9215RB_MODE					0x3
 #define YT9215S_MODE					0x2
 #define YT9215SC_MODE				    0x1
+#define RTK8367C_ID					0x6367
 #define INTEL7084_ID					0x2003
 #define INTEL7082_ID					0x3003
 #define AN8855_ID					0xc0ff0410
@@ -54,7 +55,7 @@ extern struct mutex op_switch_lock;
 
 enum sf_eswitch_model {
 	UNKNOWN = 0,
-	RESERVE1,
+	RTK8367C,
 	INTEL7084,
 	INTEL7082,
 	RESERVE2,
