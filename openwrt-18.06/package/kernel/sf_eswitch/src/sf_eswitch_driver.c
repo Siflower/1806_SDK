@@ -7,6 +7,9 @@
 #include <linux/of_mdio.h>
 #include <linux/platform_device.h>
 #include "sf_eswitch.h"
+#include "realtek8367c_src/rtk_types.h"
+#include "realtek8367c_src/rtk_switch.h"
+#include "realtek8367c_src/rtl8367c_asicdrv.h"
 #include "intel7084_src/src/gsw_sw_init.h"
 #include "yt9215rb_src/sf_yt9215rb_ops.h"
 #include "yt9215rb_src/chipdef_tiger.h"
@@ -109,7 +112,9 @@ static int phy_monitor_thread(void *data)
 	struct sf_eswitch_api_t *pesw_api = pesw_priv->pesw_api;
 	int i, updown, max_port = 0;
 
-	if (pesw_priv->model == INTEL7084 || pesw_priv->model == INTEL7082)
+	if (pesw_priv->model == RTK8367C)
+		max_port = RTK_SWITCH_PORT_NUM;
+	else if (pesw_priv->model == INTEL7084 || pesw_priv->model == INTEL7082)
 		max_port = INTEL_SWITCH_PORT_NUM;
 	else if (pesw_priv->model == YT9215RB || pesw_priv->model == YT9215S || pesw_priv->model == YT9215SC)
 		max_port = YT9215RB_PHY_PORT_NUM;
@@ -190,6 +195,40 @@ unsigned char sf_eswitch_init_swdev(struct platform_device *pdev, struct mii_bus
 #endif
 
 	do {
+		// chip id to read realtek 8367c
+		rtk_phy_id = 0;
+		rtl8367c_setAsicReg(0x13C2, 0x0249);
+		rtl8367c_getAsicReg(0x1300, &chip_id);
+
+		if (chip_id == RTK8367C_ID) {
+			pesw_priv->model =  RTK8367C;
+			pesw_priv->pesw_api = &rtk8367c_api;
+			pesw_priv->port_list = SWITCH_PORT_LIST;
+			rtk_rgmii_port = EXT_PORT0;
+#ifdef CONFIG_SWCONFIG
+			pswdev->ports = RTK_SWITCH_PORT_NUM;
+			pswdev->cpu_port = EXT_PORT0;
+#endif
+			break;
+		}
+
+		// chip id to read realtek 8367s
+		rtk_phy_id = 29;
+		rtl8367c_setAsicReg(0x13C2, 0x0249);
+		rtl8367c_getAsicReg(0x1300, &chip_id);
+
+		if (chip_id == RTK8367C_ID) {
+			pesw_priv->model =  RTK8367C;
+			pesw_priv->pesw_api = &rtk8367c_api;
+			pesw_priv->port_list = SWITCH_PORT_LIST;
+			rtk_rgmii_port = EXT_PORT1;
+#ifdef CONFIG_SWCONFIG
+			pswdev->ports = RTK_SWITCH_PORT_NUM;
+			pswdev->cpu_port = EXT_PORT1;
+#endif
+			break;
+		}
+
 		// chip id to read an8855
 		chip_id = air_an8855_phy_id_get();
 		if (chip_id == AN8855_ID) {
@@ -328,7 +367,10 @@ unsigned int sf_eswitch_read_phy_reg(struct sf_eswitch_priv* priv , int phyNo, i
 	unsigned int phyData = 0;
 
 	SF_MDIO_LOCK();
-	if (priv->model == INTEL7084 || priv->model == INTEL7082) {
+	if (priv->model == RTK8367C) {
+		rtl8367c_getAsicPHYReg(phyNo, phyReg, &phyData);
+	}
+	else if (priv->model == INTEL7084 || priv->model == INTEL7082) {
 		parm.nAddressDev = phyNo;
 		parm.nAddressReg = phyReg;
 		intel7084_phy_rd(&parm);
@@ -347,7 +389,10 @@ void sf_eswitch_write_phy_reg(struct sf_eswitch_priv* priv, int phyNo, int phyRe
 	GSW_MDIO_data_t parm;
 
 	SF_MDIO_LOCK();
-	if (priv->model == INTEL7084 || priv->model == INTEL7082) {
+	if (priv->model == RTK8367C) {
+		rtl8367c_setAsicPHYReg(phyNo, phyReg, phyData);
+	}
+	else if (priv->model == INTEL7084 || priv->model == INTEL7082) {
 		parm.nAddressDev = phyNo;
 		parm.nAddressReg = phyReg;
 		parm.nData = phyData;

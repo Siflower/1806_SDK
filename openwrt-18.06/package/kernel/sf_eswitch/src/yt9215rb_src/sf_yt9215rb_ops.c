@@ -32,10 +32,11 @@ extern struct mii_bus *gp_mii_bus;
 extern struct vlan_entry vlan_entries;
 extern yt_swDescp_t yt9215rb_swDescp;
 extern int check_port_in_portlist(struct sf_eswitch_priv *pesw_priv, int port);
+extern int notify_link_event(struct sf_eswitch_priv *pesw_priv, int port,
+	int updown, char *ifname, uint8_t *mac, uint16_t vlan_id, bool flag);
 
 uint32_t yt9215_port_nums;
 uint32_t yt9215_cpu_port;
-
 static uint32_t yt_smi0_cl22_write(uint8_t phyAddr, uint8_t regAddr, uint16_t regValue) {
 	return mdiobus_write(gp_mii_bus, phyAddr, regAddr, regValue);
 }
@@ -335,6 +336,79 @@ static int yt9215rb_set_vlan_enable(struct switch_dev *dev,
 	return 0;
 }
 
+static int yt9215_get_port_fdb_uc_entry(struct switch_dev *dev, const struct switch_attr *attr, struct switch_val *val)
+{
+	struct sf_eswitch_priv *priv = container_of(dev, struct sf_eswitch_priv, swdev);
+	l2_ucastMacAddr_info_t pUcastMac;
+	uint16_t fdb_index = 0, next_fdb_index;
+	static char buf[64];
+	int len = 0;
+	yt_port_t port;
+	yt_vlan_t vid;
+
+	if (val->port_vlan >= YT9215S_NUM_PORTS)
+		return -EINVAL;
+
+	memset(&pUcastMac, 0, sizeof(pUcastMac));
+
+	while ( fdb_index <= 4096 ) {
+		next_fdb_index = 0;
+		yt_l2_fdb_uc_withindex_getnext(0, fdb_index, &next_fdb_index, &pUcastMac);
+		if (next_fdb_index) {
+			fdb_index = next_fdb_index;
+			port = pUcastMac.port;
+			vid = pUcastMac.vid;
+			if (val->port_vlan == port) {
+				printk("The mac:%pM vlan_id:%d is at the yt9215s's port:%d\n",
+					pUcastMac.macaddr.addr, vid, port);
+					notify_link_event(priv, port, priv->phy_status[port], "eth0", pUcastMac.macaddr.addr, vid, false);
+			}
+		fdb_index++;
+		} else {
+			break;
+		}
+	}
+	len += snprintf(buf + len, sizeof(buf) - len, "These are the port %d of yt9215s's fdb entry.\n", val->port_vlan);
+
+	val->value.s = buf;
+	val->len = len;
+
+ 	return 0;
+}
+
+static int yt9215_get_info_fdb_uc_entry(struct switch_dev *dev, const struct switch_attr *attr, struct switch_val *val)
+{
+	l2_ucastMacAddr_info_t pUcastMac;
+	static char buf[64];
+	int len = 0;
+	uint16_t fdb_index = 0, next_fdb_index;
+	yt_port_t port;
+	yt_vlan_t vid;
+
+	memset(&pUcastMac, 0, sizeof(pUcastMac));
+
+	while ( fdb_index <= 4096 ) {
+		next_fdb_index = 0;
+		yt_l2_fdb_uc_withindex_getnext(0, fdb_index, &next_fdb_index, &pUcastMac);
+		if (next_fdb_index) {
+			fdb_index = next_fdb_index;
+			port = pUcastMac.port;
+			vid = pUcastMac.vid;
+			printk("The mac:%pM vlan_id:%d is at the yt9215s's port:%d, the index is %d\n",
+					pUcastMac.macaddr.addr, vid, port, next_fdb_index );
+		fdb_index++;
+		} else {
+			break;
+		}
+	}
+	len += snprintf(buf + len, sizeof(buf) - len, "These are the yt9215s's fdb entry.\n");
+
+	val->value.s = buf;
+	val->len = len;
+
+ 	return 0;
+}
+
 static int yt9215rb_get_vlan_fid(struct switch_dev *dev,
 		const struct switch_attr *attr,
 		struct switch_val *val)
@@ -375,10 +449,21 @@ static struct switch_attr yt9215rb_globals[] = {
 		.set = yt9215rb_set_vlan_enable,
 		.max = 1,
 		.ofs = 1
+	}, {
+		.type = SWITCH_TYPE_STRING,
+		.name = "fdb_entry",
+		.description = "Get the switch's fdb unicast entry",
+		.get = yt9215_get_info_fdb_uc_entry,
 	}
 };
 
 static struct switch_attr yt9215rb_port[] = {
+	{
+		.type = SWITCH_TYPE_STRING,
+		.name = "fdb_entry",
+		.description = "Get the switch's each port's fdb unicast entry",
+		.get = yt9215_get_port_fdb_uc_entry,
+	}
 };
 
 static struct switch_attr yt9215rb_vlan[] = {
