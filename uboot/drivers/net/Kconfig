@@ -60,6 +60,11 @@ config JLSEMI_PHY
 	help
 	  Currently has a driver for the jlsemi
 
+config SIFLOWER_PHY
+	tristate "SIFLOWER PHYs"
+	help
+	  Currently has a driver for the siflower phy
+
 config ALTERA_TSE
 	bool "Altera Triple-Speed Ethernet MAC support"
 	depends on DM_ETH

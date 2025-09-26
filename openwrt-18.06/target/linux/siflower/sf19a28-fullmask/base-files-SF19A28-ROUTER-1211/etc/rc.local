@@ -1,0 +1,42 @@
+#echo 4 > /sys/devices/platform/10800000.gmac/net/eth0/queues/rx-0/rps_cpus
+#devmem 0x19e01444 32 0x2
+#devmem 0x19e016a4 32 0x1
+#echo 1000000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+#echo 1000000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+#[ ! -f "/etc/spl" ] && {
+#    touch /etc/spl
+#    mtd -r write /lib/667.img spl-loader
+#}
+#devmem 0x1790b3b0 32 0xAAAA0007
+#devmem 0x1790b3d4 32 0x1B0B50FF
+#devmem 0x1790b3d8 32 0x1B0B50FF
+echo enable 1 > /proc/net/skb_pool
+echo enable 2 > /proc/net/skb_pool
+echo enable 3 > /proc/net/skb_pool
+echo enable 4 > /proc/net/skb_pool
+echo inc 3 1024 > /proc/net/skb_pool
+echo inc 4 1024 > /proc/net/skb_pool
+
+echo 3 > /proc/sys/vm/drop_caches
+
+crontab_file="/etc/crontabs/root"
+cron_job="/usr/sbin/ota auto_ota"
+
+if [ ! -f "$crontab_file" ]; then
+    echo "Error: $crontab_file not found."
+    exit 1
+fi
+
+sed -i '/\/usr\/sbin\/ota auto_ota/d' "$crontab_file"
+
+echo "$random_minute $random_hour * * * $cron_job" >> "$crontab_file"
+
+/etc/init.d/cron restart
+
+proto=$(uci get network.lan.proto)
+if [ -f "/usr/sbin/dns_redirect.sh" ] && [ ! -e "/tmp/dns_redirect.lock" ]; then
+    br_lan_ip=$(uci get network.lan.ipaddr)
+    if [ "$proto" == "static" ]  && [ -n "$br_lan_ip" ] ;then
+        /usr/sbin/dns_redirect.sh enable $br_lan_ip &
+    fi
+fi

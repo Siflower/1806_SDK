@@ -9,6 +9,7 @@ dtb-$(CONFIG_DT_SF19A28_FULLMASK_BPI_LUCI2_NEUTRAL)	+= sf19a28_fullmask_bpi_luci
 dtb-$(CONFIG_DT_SF19A28_FULLMASK_BPI_LUCI2_SIFLOWER)	+= sf19a28_fullmask_bpi_luci2_siflower.dtb
 dtb-$(CONFIG_DT_SF19A28_FULLMASK_AC28S)	+= sf19a28_fullmask_ac28s.dtb
 dtb-$(CONFIG_DT_SF19A28_FULLMASK_YTS)	+= sf19a28_fullmask_yts.dtb
+dtb-$(CONFIG_DT_SF19A28_FULLMASK_ROUTER_1211)	+= sf19a28_fullmask_router_1211.dtb
 
 obj-y		+= $(patsubst %.dtb, %.dtb.o, $(dtb-y))
 always				:= $(dtb-y)

@@ -518,6 +518,9 @@ int phy_init(void)
 #ifdef CONFIG_JLSEMI_PHY
 	phy_jlsemi_init();
 #endif
+#ifdef CONFIG_SIFLOWER_PHY
+	phy_siflower_init();
+#endif
 	return 0;
 }
 

@@ -122,6 +122,13 @@ config DT_SF19A28_FULLMASK_A28_100M
 	  The corresponding DTS file is at
 	  arch/mips/boot/dts/sf19a28_fullmask_a28_100m.dts
 
+config DT_SF19A28_FULLMASK_ROUTER_1211
+	bool "Built-in device tree for sf19a28 fullmask router 1211"
+	default n
+	select BUILTIN_DTB
+	help
+	  The corresponding DTS file is at
+	  arch/mips/boot/dts/sf19a28_fullmask_router_1211.dts
 
 endif #SF19A28_FULLMASK
 
