@@ -30,3 +30,4 @@ obj-$(CONFIG_PHY_VITESSE) += vitesse.o
 obj-$(CONFIG_PHY_INTEL_XWAY) += intel-xway.o
 jlsemiphy-objs := jlsemi.o jlsemi-core.o
 obj-$(CONFIG_JLSEMI_PHY) += jlsemiphy.o
+obj-$(CONFIG_SIFLOWER_PHY) += siflower.o

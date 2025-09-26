@@ -665,10 +665,10 @@ int sf_gmac_register(void)
 	sgmac_mdio_init(dev->name, priv);
 	priv->bus = miiphy_get_dev_by_name(dev->name);
 
-#ifndef CONFIG_SFA18_GMAC_PHY
 	// trigger switch hw reset first
 	sf_trigger_eswitch_hwReset();
 
+#ifndef CONFIG_SFA18_GMAC_PHY
 	// chip id to read realtek 8367c
 	if (chip_id == 0) {
 		rtk_phy_id = 0;

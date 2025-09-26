@@ -186,6 +186,11 @@ config JLSEMI_PHY
 	---help---
 	  Currently has a driver for the jlsemi
 
+config SIFLOWER_PHY
+	tristate "Siflower PHYs"
+	---help---
+	  Currently supports the SF1211F, SF1240 gigabit PHY.
+
 config SWPHY
 	bool
 

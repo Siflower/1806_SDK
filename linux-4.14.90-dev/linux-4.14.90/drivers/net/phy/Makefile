@@ -97,3 +97,4 @@ obj-$(CONFIG_VITESSE_PHY)	+= vitesse.o
 obj-$(CONFIG_XILINX_GMII2RGMII) += xilinx_gmii2rgmii.o
 jlsemiphy-objs			:= jlsemi-core.o jlsemi.o
 obj-$(CONFIG_JLSEMI_PHY)	+= jlsemiphy.o
+obj-$(CONFIG_SIFLOWER_PHY)	+= siflower.o
