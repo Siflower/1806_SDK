@@ -49,6 +49,13 @@ L.ui.view.extend({
 		params: ['ifname', 'ip']
 	}),
 
+	//wds channel
+	wds_channel: L.rpc.declare({
+		object: 'iwinfo',
+		method: 'info',
+		params: ['device'],
+	}),
+
 	//Check lan IP
 	lan_ip: L.rpc.declare({
 		object: 'network.interface.lan',
@@ -1148,27 +1155,29 @@ L.ui.view.extend({
 
 				self.lan_ip().then(function (data) {
 				var d = L.uci.get('wireless', 'wds', 'device');
+				device='';
 				if (d == 'radio0') {
 					start.find('#selfssid').text('2.4G SSID: ' + L.uci.get('wireless', 'default_radio0', 'ssid'));
+					device='wlan0-1';
 				} else if (d == 'radio1') {
 					start.find('#selfssid').text('5G SSID: ' + L.uci.get('wireless', 'default_radio1', 'ssid'));
+					device='wlan1-1';
 				} else if (d == undefined) {
 					start.find('#selfssid').text('2.4G SSID: ' + L.uci.get('wireless', 'default_radio0', 'ssid') + '\n5G SSID: ' + L.uci.get('wireless', 'default_radio1', 'ssid'));
 				}
-				proto = L.uci.get('network', 'lan', 'proto');
-				if (data != '0' && proto != 'static') {
-					status.find('#res').prop('class', 'repeater_sucess');
-					start.find('#ssid').text('SSID: ' + L.uci.get('wireless', 'wds', 'ssid'));
-					if (d == 'radio0') {
-						start.find('#rch').text(L.tr("Channel: ") + L.uci.get('wireless', 'radio0', 'channel'));
-					} else if (d == 'radio1') {
-						start.find('#rch').text(L.tr("Channel: ") + L.uci.get('wireless', 'radio1', 'channel'));
-					}
-					//TODO 根据装置不同显示信号强度
-					start.find('#next').remove();
-				} else start.find('#next').text(L.tr("Next"));//Next
-				if (!$('#repeater_edit').length && !$('#selfssid').length)
-					$('.subject').append(status).append(start);
+				self.wds_channel(device).then(function (device_info) {
+					proto = L.uci.get('network', 'lan', 'proto');
+					if (data != '0' && proto != 'static') {
+						channel = device_info.channel;
+						status.find('#res').prop('class', 'repeater_sucess');
+						start.find('#ssid').text('SSID: ' + L.uci.get('wireless', 'wds', 'ssid'));
+						start.find('#rch').text(L.tr("Channel: ") + channel);
+						//TODO 根据装置不同显示信号强度
+						start.find('#next').remove();
+					} else start.find('#next').text(L.tr("Next"));//Next
+					if (!$('.repeater_edit').length && !$('#selfssid').length)
+						$('.subject').append(status).append(start);
+				});
 			});
 		}
 
@@ -1183,7 +1192,7 @@ L.ui.view.extend({
 		function checkWDS() {
 			proto = L.uci.get('network', 'lan', 'proto');
 			self.lan_ip().then(function (data) {
-				if (proto == 'dhcp' && data != '0') {
+				if (checkWifi() && proto == 'dhcp' && data != '0') {
 					wds_on();
 				} else {
 					$('#wds_en').prop('class', 'switch_off');

@@ -221,6 +221,7 @@ indicate_upgrade() {
 # $(1): path to image
 # $(2): (optional) pipe command to extract firmware, e.g. dd bs=n skip=m
 default_do_upgrade() {
+	mtd erase firmware
 	sync
 	if [ "$SAVE_CONFIG" -eq 1 ]; then
 		get_image "$1" "$2" | mtd $MTD_CONFIG_ARGS -j "$CONF_TAR" write - "${PART_NAME:-image}"

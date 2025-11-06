@@ -1252,10 +1252,10 @@ static struct wireless_dev *siwifi_interface_add(struct siwifi_hw *siwifi_hw,
         // 4096 skbs number
         vif->lm_ctl[i].tx_cnt_limit = 1024 * 4;
 #else
-        // 6MB memory cache size
-        vif->lm_ctl[i].tx_memory_limit = 6 * 1024 * 1024;
-        // 4096 skbs number
-        vif->lm_ctl[i].tx_cnt_limit = 1024 * 4;
+        // 50MB memory cache size
+        vif->lm_ctl[i].tx_memory_limit = 50 * 1024 * 1024;
+        // 8192 skbs number
+        vif->lm_ctl[i].tx_cnt_limit = 2048 * 4;
 #endif
     }
 
@@ -1269,6 +1269,9 @@ static struct wireless_dev *siwifi_interface_add(struct siwifi_hw *siwifi_hw,
 	vif->wdev.iftype = type;
 	vif->up = false;
 	vif->ch_index = SIWIFI_CH_NOT_SET;
+#ifdef CONFIG_SIWIFI_IGMP
+    vif->enable_multicast_to_unicast = 0;
+#endif
 	memset(&vif->net_stats, 0, sizeof(vif->net_stats));
 
 	switch (type) {
@@ -2054,6 +2057,26 @@ struct station_parameters *siwifi_rebuild_sta_params(struct station_parameters *
     return station_parameters;
 }
 
+/**
+ * @sta_count: count station num.
+ */
+int siwifi_vif_sta_count(struct siwifi_hw *siwifi_hw)
+{
+    struct siwifi_vif *vif;
+    struct siwifi_sta *siwifi_sta;
+    int count_sta = 0;
+
+    list_for_each_entry(vif, &siwifi_hw->vifs, list) {
+        if (SIWIFI_VIF_TYPE(vif) != NL80211_IFTYPE_AP)
+            continue;
+        list_for_each_entry(siwifi_sta, &vif->ap.sta_list, list) {
+            count_sta++;
+            // printk(">>>>>>>>>>>>>>>>vif count_sta is %d\n", count_sta);
+        }
+    }
+    return count_sta;
+}
+
 #ifdef CONFIG_SIWIFI_EASYMESH
 /**
  * siwifi_notify_easymesh - Global callback function pointer for EasyMesh WiFi events.
@@ -2321,6 +2344,9 @@ static int siwifi_cfg80211_add_station(struct wiphy *wiphy, struct net_device *d
             error = -EBUSY;
             break;
     }
+#ifdef TOKEN_ENABLE
+    tx_descs_num = siwifi_get_num_tx_descs_per_ac(siwifi_hw);
+#endif /* TOKEN_ENABLE */
     siwifi_hw->adding_sta = false;
 
     return error;
@@ -2413,6 +2439,9 @@ static int siwifi_cfg80211_del_station_compat(struct wiphy *wiphy,
 #endif /* CONFIG_SIWIFI_EASYMESH */
 
             found ++;
+#ifdef TOKEN_ENABLE
+            tx_descs_num = siwifi_get_num_tx_descs_per_ac(siwifi_hw);
+#endif /* TOKEN_ENABLE */
             break;
         }
     }
@@ -3845,6 +3874,15 @@ tag:
 				sinfo->rxrate.mcs = found_sta->stats.data_rx_mcs;
 				sinfo->rxrate.nss = found_sta->stats.data_rx_nss + 1;
 			}
+            if(found_sta->stats.format_mod == FORMATMOD_VHT && sinfo->rxrate.mcs > 9) {
+                printk("detect error rx mcs(ht): rate bw=%d, mcs=%d, nss=%d\n", found_sta->stats.data_rx_bw, sinfo->rxrate.mcs, sinfo->rxrate.nss);
+                return -EINVAL;
+            } else if ((found_sta->stats.format_mod == FORMATMOD_HT_MF || \
+                    found_sta->stats.format_mod == FORMATMOD_HT_GF) && \
+                    sinfo->rxrate.mcs > 15) {
+                printk("detect error rx mcs(vht): rate bw=%d, mcs=%d, nss=%d\n", found_sta->stats.data_rx_bw, sinfo->rxrate.mcs, sinfo->rxrate.nss);
+                return -EINVAL;
+            }
 			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
 		}
 	}
@@ -3870,11 +3908,19 @@ tag:
 					sinfo->txrate.flags |= RATE_INFO_FLAGS_VHT_MCS;
 					sinfo->txrate.mcs = mcs_index->vht.mcs;
 					sinfo->txrate.nss = mcs_index->vht.nss + 1;
+                    if(sinfo->txrate.mcs > 9) {
+                        printk("detect error tx mcs(vht): rate bw=%d, mcs=%d, nss=%d\n", r_cfg->bwTx, sinfo->txrate.mcs, sinfo->txrate.nss);
+                        return -EINVAL;
+                    }
 				}else if (r_cfg->formatModTx == FORMATMOD_HT_MF || \
 						r_cfg->formatModTx == FORMATMOD_HT_GF ){
 					sinfo->txrate.flags |= RATE_INFO_FLAGS_MCS;
 					sinfo->txrate.mcs = mcs_index->ht.mcs + 8 * mcs_index->ht.nss;
 					sinfo->txrate.nss = mcs_index->ht.nss + 1;
+                    if(sinfo->txrate.mcs > 15) {
+                        printk("detect error tx mcs(ht): rate bw=%d, mcs=%d, nss=%d\n", r_cfg->bwTx, sinfo->txrate.mcs, sinfo->txrate.nss);
+                        return -EINVAL;
+                    }
 				}
 				switch (r_cfg->bwTx)
 				{
@@ -5237,6 +5283,9 @@ int siwifi_cfg80211_init(struct siwifi_plat *siwifi_plat, void **platform_data)
     siwifi_hw->tcp_pacing_shift = 7;
     siwifi_hw->task_max_process_time = 0;
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
+#ifdef CONFIG_SIWIFI_IGMP
+    siwifi_hw->enable_multicast_to_unicast = 0;
+#endif
 #ifdef CONFIG_SIWIFI_COOLING_TEMP
     siwifi_hw->temp_disable = 0;
 #endif
@@ -5263,6 +5312,9 @@ int siwifi_cfg80211_init(struct siwifi_plat *siwifi_plat, void **platform_data)
     siwifi_hw->procfsdir = proc_mkdir(siwifi_hw->mod_params->is_hb ? "hb" : "lb", NULL);
 #endif
     siwifi_hw->rx_skb_alloc_fail_cnt = 0;
+    siwifi_hw->ave_speed_cnt_thres   = AVE_SPEED_CNT_THRES;
+    siwifi_hw->ave_speed_credits_low = AVE_SPEED_CREDITS_LOW;
+    siwifi_hw->ave_speed_credits_up  = AVE_SPEED_CREDITS_UP;
     siwifi_trace_init(siwifi_hw);
 #ifdef CONFIG_BRIDGE_ACCELERATE
     if(siwifi_hw->mod_params->is_hb){

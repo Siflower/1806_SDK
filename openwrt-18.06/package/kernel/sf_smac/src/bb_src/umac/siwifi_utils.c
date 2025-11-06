@@ -434,7 +434,7 @@ int siwifi_ipc_rxbuf_elem_allocs(struct siwifi_hw *siwifi_hw)
 #endif  //
 
     if (unlikely(!skb)) {
-        //dev_err(siwifi_hw->dev, "Failed to allocate rx buffer\n");
+        dev_err(siwifi_hw->dev, "Failed to allocate rx buffer\n");
         siwifi_hw->rx_skb_alloc_fail_cnt++;
         return -ENOMEM;
     }
@@ -1783,6 +1783,20 @@ int siwifi_channel_recovery_check(struct siwifi_hw *siwifi_hw)
     spin_lock_bh(&siwifi_hw->cb_lock);
     // only check vif_sta, vif_ap will follow vif_sta when siwifi_chanctx_link
     if (!(siwifi_hw->chanctx_table[vif_sta->ch_index].chan_def.chan)) {
+        struct cfg80211_chan_def chandef;
+        struct ieee80211_channel *chan = ieee80211_get_channel(siwifi_hw->wiphy, channel_freq);
+        if (chan) {
+            cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_NO_HT);
+            chandef.width = channel_width;
+            chandef.center_freq1 = cfm.center_freq1;
+            chandef.center_freq2 = cfm.center_freq2;
+            siwifi_chanctx_unlink(vif_sta);
+            siwifi_chanctx_link(vif_sta, channel_idx, &chandef);
+            printk("vif_sta %s channel restored: freq=%d, width=%d\n",
+                vif_sta->ndev->name, channel_freq, channel_width);
+        } else {
+            printk("vif_sta %s channel recovery failed: unable to retrieve channel object\n", vif_sta->ndev->name);
+        }
         // It shouldn't have happened
         printk("vif_sta %s [ch_idx %d].chan_def.chan is NULL\n", vif_sta->ndev->name, vif_sta->ch_index);
         spin_unlock_bh(&siwifi_hw->cb_lock);

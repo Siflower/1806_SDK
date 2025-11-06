@@ -134,17 +134,17 @@ static int fr_ctx_all_ff(unsigned char* fr_ctx_member, int count)
 	int all_ff = 1;
 	int i;
 
-    if (!fr_ctx_member) {
-        printk("fr_ctx_member is null!!!\n");
-        return 0;
-    }
-    for (i = 0; i < count; i++) {
-        if (fr_ctx_member[i]!= 0xff) {
-            all_ff = 0;
-            break;
-        }
-    }
-    return all_ff;
+	if (!fr_ctx_member) {
+		printk("fr_ctx_member is null!!!\n");
+		return 0;
+	}
+	for (i = 0; i < count; i++) {
+		if (fr_ctx_member[i] != 0xff) {
+			all_ff = 0;
+			break;
+		}
+	}
+	return all_ff;
 }
 
 static ssize_t sf_factory_read_dbgfs_stats_read(struct file *file,
@@ -156,12 +156,12 @@ static ssize_t sf_factory_read_dbgfs_stats_read(struct file *file,
 	char *buf;
 	int res;
 	ssize_t read;
-        size_t bufsz = (MACADDR_HDR_MAX_LEN + SN_HDR_MAX_LEN +
-                        SN_FLAG_HDR_MAX_LEN + COUNTRYID_HDR_MAX_LEN +
-                        EXIST_HDR_MAX_LEN +
-                        HW_VER_HDR_MAX_LEN + HW_FEATURE_HDR_MAX_LEN);
+	size_t bufsz = (MACADDR_HDR_MAX_LEN + SN_HDR_MAX_LEN +
+		SN_FLAG_HDR_MAX_LEN + COUNTRYID_HDR_MAX_LEN +
+		EXIST_HDR_MAX_LEN +
+		HW_VER_HDR_MAX_LEN + HW_FEATURE_HDR_MAX_LEN);
 
-        /*everything is read out in one go*/
+	/*everything is read out in one go*/
 	if (*ppos)
 		return 0;
 	if (!fr_ctx)
@@ -193,117 +193,112 @@ static ssize_t sf_factory_read_dbgfs_stats_read(struct file *file,
 }
 DEBUGFS_READ_FILE_OPS(stats);
 
-static ssize_t sf_factory_read_dbgfs_memory_read(struct file *file,
-        char __user *user_buf,
-        size_t count,
-        loff_t *ppos)
+static ssize_t sf_factory_read_dbgfs_memory_read(struct file *file, char __user *user_buf,
+							size_t count, loff_t *ppos)
 {
-    struct sfax8_factory_read_context *fr_ctx = file->private_data;
-    char *buf;
-    unsigned char *data;
-    int res, i;
-    ssize_t read;
-    size_t bufsz;
+	struct sfax8_factory_read_context *fr_ctx = file->private_data;
+	char *buf;
+	unsigned char *data;
+	int res, i;
+	ssize_t read;
+	size_t bufsz;
 
-    /*everything is read out in one go*/
-    if(*ppos)
-        return 0;
-    if(!fr_ctx)
-        return 0;
-    if((!fr_ctx->start_offset) && (!fr_ctx->len)){
-        printk("do not find start point and length!\n");
-        return 0;
-    }
+	/*everything is read out in one go*/
+	if (*ppos)
+		return 0;
+	if (!fr_ctx)
+		return 0;
+	if ((!fr_ctx->start_offset) && (!fr_ctx->len)) {
+		printk("do not find start point and length!\n");
+		return 0;
+	}
 
-    bufsz = 16;
+	bufsz = 16;
 
-    buf = kzalloc(fr_ctx->len, GFP_ATOMIC);
-    if(buf == NULL)
-        return 0;
+	buf = kzalloc(fr_ctx->len, GFP_ATOMIC);
+	if (buf == NULL)
+		return 0;
 
-    res = 0;
+	res = 0;
 	data = kzalloc(fr_ctx->len, GFP_ATOMIC);
-	if(data == NULL){
+	if (data == NULL) {
 		printk("data is null!\n");
 	}
 
-	if(fr_ctx->np == NULL){
+	if (fr_ctx->np == NULL) {
 		printk("device node is null!\n");
 		return 0;
 	}
 
 	get_value_through_mtd(NULL, NULL, fr_ctx->start_offset, fr_ctx->len, data);
-	for(i = 0; i < fr_ctx->len; i++){
+	for (i = 0; i < fr_ctx->len; i++) {
 		res += scnprintf(&buf[res], min_t(size_t, bufsz - 1, count - res),
 						"[%d]:%x\n", i, data[i]);
-    }
+	}
 
-    read = simple_read_from_buffer(user_buf, count, ppos, buf, res);
-    kfree(data);
+	read = simple_read_from_buffer(user_buf, count, ppos, buf, res);
+	kfree(data);
 	kfree(buf);
 
-    return read;
+	return read;
 }
 DEBUGFS_READ_FILE_OPS(memory);
 
-static ssize_t sf_factory_read_dbgfs_start_len_read(struct file *file,
-        char __user *user_buf,
-        size_t count,
-        loff_t *ppos)
+static ssize_t sf_factory_read_dbgfs_start_len_read(struct file *file, char __user *user_buf,
+							size_t count, loff_t *ppos)
 {
-    struct sfax8_factory_read_context *fr_ctx = file->private_data;
-    char *buf;
-    int res;
-    ssize_t read;
-    size_t bufsz = 32;
-    /*everything is read out in one go*/
-    if(*ppos)
-        return 0;
-    if(!fr_ctx)
-        return 0;
+	struct sfax8_factory_read_context *fr_ctx = file->private_data;
+	char *buf;
+	int res;
+	ssize_t read;
+	size_t bufsz = 32;
+	/*everything is read out in one go*/
+	if (*ppos)
+		return 0;
+	if (!fr_ctx)
+		return 0;
 
-    bufsz = min_t(size_t, bufsz, count);
-    buf = kmalloc(bufsz, GFP_ATOMIC);
-    if(buf == NULL)
-        return 0;
+	bufsz = min_t(size_t, bufsz, count);
+	buf = kmalloc(bufsz, GFP_ATOMIC);
+	if (buf == NULL)
+		return 0;
 
-    bufsz--;
+	bufsz--;
 
-    res = scnprintf(buf, bufsz, "start:%d len:%d\n", fr_ctx->start_offset, fr_ctx->len);
+	res = scnprintf(buf, bufsz, "start:%d len:%d\n", fr_ctx->start_offset, fr_ctx->len);
 
-    read = simple_read_from_buffer(user_buf, count, ppos, buf, res);
-    kfree(buf);
+	read = simple_read_from_buffer(user_buf, count, ppos, buf, res);
+	kfree(buf);
 
-    return read;
+	return read;
 }
 
-static ssize_t sf_factory_read_dbgfs_start_len_write(struct file *file,
-                                        const char __user *user_buf,
-                                        size_t count, loff_t *ppos)
+static ssize_t sf_factory_read_dbgfs_start_len_write(struct file *file, const char __user *user_buf,
+							size_t count, loff_t *ppos)
 {
-    struct sfax8_factory_read_context *fr_ctx = file->private_data;
+	struct sfax8_factory_read_context *fr_ctx = file->private_data;
 
-    char buf[32];
-    int val,length;
-    size_t len = min_t(size_t, count, sizeof(buf) - 1);
+	char buf[32];
+	int val, length;
+	size_t len = min_t(size_t, count, sizeof(buf) - 1);
 
-    if (copy_from_user(buf, user_buf, len))
-        return -EFAULT;
-    if(!fr_ctx)
-        return -EFAULT;
+	if (copy_from_user(buf, user_buf, len))
+		return -EFAULT;
+	if (!fr_ctx)
+		return -EFAULT;
 
-    buf[len] = '\0';
+	buf[len] = '\0';
 
-    if (sscanf(buf, "%d %d", &val, &length)){
-        printk("%d %d\n",val,length);
+	if (sscanf(buf, "%d %d", &val, &length)) {
+		printk("%d %d\n", val, length);
 		fr_ctx->start_offset = val;
 		fr_ctx->len = length;
-    }else{
-        printk("can not sscanf the buf!\n");
-        return -EFAULT;
-    }
+	} else {
+		printk("can not sscanf the buf!\n");
+		return -EFAULT;
+	}
 
-    return count;
+	return count;
 }
 DEBUGFS_READ_WRITE_FILE_OPS(start_len);
 
@@ -597,7 +592,7 @@ static ssize_t sf_factory_read_sn_show(struct device *dev, struct device_attribu
 		printk("fr_ctx is null!!!\n");
 		return 0;
 	}
-	if(!fr_ctx_all_ff(fr_ctx->sn, 16)) {
+	if (!fr_ctx_all_ff(fr_ctx->sn, 16)) {
 		return sprintf(buf, "%.16s\n", fr_ctx->sn);
 	} else {
 		return sprintf(buf, "\n");
@@ -665,7 +660,7 @@ static ssize_t sf_factory_read_hw_ver_flag_show(struct device *dev, struct devic
 		return 0;
 	}
 
-	if(!fr_ctx_all_ff(fr_ctx->hw_ver_flag, 2)) {
+	if (!fr_ctx_all_ff(fr_ctx->hw_ver_flag, 2)) {
 		return sprintf(buf, "%.2s\n", fr_ctx->hw_ver_flag);
 	} else {
 		return sprintf(buf, "\n");
@@ -942,7 +937,7 @@ static ssize_t sf_factory_read_login_info_show(struct device *dev, struct device
 		printk("fr_ctx is null!!!\n");
 		return 0;
 	}
-	return sprintf(buf, "%#x\n", fr_ctx->login_info);
+	return sprintf(buf, "0x%x\n", fr_ctx->login_info);
 }
 
 static ssize_t sf_factory_read_login_info_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
@@ -955,7 +950,7 @@ static ssize_t sf_factory_read_login_info_store(struct device *dev, struct devic
 		return 0;
 	}
 
-	ret = sscanf(buf, "0x%8x", &info);
+	ret = sscanf(buf, "0x%x", &info);
 	if (ret < 1) {
 		printk("can not sscanf the buf!\n");
 		return -EFAULT;
@@ -1015,7 +1010,7 @@ static ssize_t sf_factory_read_rom_type_show(struct device *dev, struct device_a
 		printk("fr_ctx is null!!!\n");
 		return 0;
 	}
-	return sprintf(buf, "%#x\n", fr_ctx->rom_type);
+	return sprintf(buf, "0x%x\n", fr_ctx->rom_type);
 }
 
 static ssize_t sf_factory_read_rom_type_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
@@ -1028,7 +1023,7 @@ static ssize_t sf_factory_read_rom_type_store(struct device *dev, struct device_
 		return 0;
 	}
 
-	ret = sscanf(buf, "0x%8x", &type);
+	ret = sscanf(buf, "0x%x", &type);
 	if (ret < 1) {
 		printk("can not sscanf the buf!\n");
 		return -EFAULT;
@@ -1157,7 +1152,7 @@ static ssize_t sf_factory_read_hw_feature_show(struct device *dev, struct device
 		printk("fr_ctx is null!!!\n");
 		return 0;
 	}
-	return sprintf(buf, "%#x\n",fr_ctx->hw_feature);
+	return sprintf(buf, "0x%x\n", fr_ctx->hw_feature);
 }
 
 static ssize_t sf_factory_read_hw_feature_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
@@ -1170,7 +1165,7 @@ static ssize_t sf_factory_read_hw_feature_store(struct device *dev, struct devic
 		return 0;
 	}
 
-	ret = sscanf(buf, "0x%8x", &feature);
+	ret = sscanf(buf, "0x%x", &feature);
 	if (ret < 1) {
 		printk("can not sscanf the buf!\n");
 		return -EFAULT;

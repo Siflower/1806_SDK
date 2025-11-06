@@ -6,6 +6,9 @@
 #
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
+ifeq ($(CONFIG_NAND_SUPPORT), y)
+include ./nand.mk
+endif
 
 ifeq ($(SUBTARGET),sf23a2892-mpw0)
 define Device/Default
@@ -75,6 +78,9 @@ define Image/MakeSysupgradeBinary
 	cat $(KDIR)/uImage.lzma $(KDIR)/root.squashfs > $(KDIR)/$(output_name)
 	$(call prepare_generic_squashfs,$(KDIR)/$(output_name))
 	$(CP) $(KDIR)/$(output_name) $(BIN_DIR)/$(output_name)
+ifeq ($(CONFIG_NAND_SUPPORT), y)
+	$(call Build/append-metadata,$(BIN_DIR)/$(output_name))
+endif
 endef
 
 define Image/Build/Initramfs

@@ -196,6 +196,8 @@ union siwifi_hw_txstatus {
 		u32 sw_discard         : 1;
 		u32 hw_tx              : 1;
         u32 reserved           :24;
+        u32 ampdu_timeout      : 1;
+        u32 single_timeout     : 1;
     };
     u32 value;
 };

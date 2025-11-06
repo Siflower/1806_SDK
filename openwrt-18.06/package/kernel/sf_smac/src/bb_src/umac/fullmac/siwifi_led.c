@@ -181,6 +181,7 @@ out:
 void siwifi_led_deinit(struct siwifi_hw *hw)
 {
     siwifi_leds_unregister(hw);
+    siwifi_local_free_led_names(hw);
 }
 
 void siwifi_led_rx(struct siwifi_hw *siwifi_hw)
@@ -241,14 +242,19 @@ static void siwifi_local_tx_led_deactivate(struct led_classdev *led_cdev)
 	atomic_dec(&siwifi_hw->tx_led_active);
 }
 
-void siwifi_local_alloc_led_names(struct siwifi_hw *siwifi_hw)
+int siwifi_local_alloc_led_names(struct siwifi_hw *siwifi_hw)
 {
-	siwifi_hw->local_rx_led.name = kasprintf(GFP_KERNEL, "%srx",
-				       wiphy_name(siwifi_hw->wiphy));
-	siwifi_hw->local_tx_led.name = kasprintf(GFP_KERNEL, "%stx",
-				       wiphy_name(siwifi_hw->wiphy));
-	//printk("=====siwifi_local_alloc_led_names rx_led.name %s tx_led.name %s=====\n",
-	//		siwifi_hw->local_rx_led.name, siwifi_hw->local_tx_led.name);
+	siwifi_hw->local_rx_led.name = kasprintf(GFP_KERNEL, "%srx", wiphy_name(siwifi_hw->wiphy));
+	if (!siwifi_hw->local_rx_led.name)
+		return -ENOMEM;
+
+	siwifi_hw->local_tx_led.name = kasprintf(GFP_KERNEL, "%stx", wiphy_name(siwifi_hw->wiphy));
+	if (!siwifi_hw->local_tx_led.name) {
+		siwifi_kfree(siwifi_hw->local_rx_led.name);
+		return -ENOMEM;
+	}
+
+	return 0;
 }
 
 void siwifi_local_free_led_names(struct siwifi_hw *siwifi_hw)
@@ -259,7 +265,10 @@ void siwifi_local_free_led_names(struct siwifi_hw *siwifi_hw)
 
 void siwifi_local_led_init(struct siwifi_hw *siwifi_hw)
 {
-	siwifi_local_alloc_led_names(siwifi_hw);
+	if (siwifi_local_alloc_led_names(siwifi_hw)) {
+		printk(KERN_ERR "Failed to allocate LED names\n");
+		return;
+	}
 
 	atomic_set(&siwifi_hw->rx_led_active, 1);
 	siwifi_hw->local_rx_led.activate = siwifi_local_rx_led_activate;

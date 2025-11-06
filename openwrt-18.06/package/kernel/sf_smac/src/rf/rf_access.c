@@ -111,8 +111,8 @@ enum {
     DTEMP_CAL_LB_TXIQC,
     HK_INTERVAL = 27,
     HK_DISABLE = 42,
-    LB_BASE_GAIN = 45,
     HB_BASE_GAIN = 44,
+    LB_BASE_GAIN = 45,
     //for all firmware
     HB1_PA_ENABLE=46,
     HB2_PA_ENABLE=47,

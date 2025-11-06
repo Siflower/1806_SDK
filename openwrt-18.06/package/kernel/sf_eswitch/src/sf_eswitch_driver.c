@@ -241,7 +241,7 @@ unsigned char sf_eswitch_init_swdev(struct platform_device *pdev, struct mii_bus
 #endif
 			break;
 		}
-		
+
 		//chip id to read intel
 		ethsw_init_pedev0();
 		intel7084_mdio_rd(0xFA11, 0, 16, &chip_id);
@@ -359,6 +359,73 @@ unsigned char sf_eswitch_init_swdev(struct platform_device *pdev, struct mii_bus
 	}
 #endif
 	return pesw_priv->model;
+}
+
+/**
+ * @brief Get the current node value of global vlan_entries
+ * @param backup_vlan_entries Output parameter, used to save the value of the VLAN entries
+ */
+void sf_eswitch_get_vlan_entries(struct sf_eswitch_priv * pesw_priv,struct vlan_entry *backup_vlan_entries) {
+	struct vlan_entry *entry, *tmp;
+	struct switch_dev *swdev=&pesw_priv->swdev;
+	if (pesw_priv->model != AN8855)
+		return;
+	mutex_lock(&swdev->sw_mutex);
+	INIT_LIST_HEAD(&backup_vlan_entries->entry_list);
+	list_for_each_entry_safe(entry, tmp, &vlan_entries.entry_list, entry_list) {
+		struct vlan_entry *new = kmemdup(entry, sizeof(*new), GFP_KERNEL);
+		list_add_tail(&new->entry_list, &backup_vlan_entries->entry_list);
+	}
+	mutex_unlock(&swdev->sw_mutex);
+}
+
+
+/**
+ * @brief Set global vlan_entries as the backup value
+ * @param backup_vlan_entries Input parameters for restoring VLAN entries
+ */
+void sf_eswitch_set_vlan_entries(struct sf_eswitch_priv * pesw_priv,struct vlan_entry *backup_vlan_entries) {
+    struct switch_dev *swdev=&pesw_priv->swdev;
+	struct vlan_entry *entry, *tmp;
+	struct list_head *pos;
+	int port=0;
+
+	if (pesw_priv->model != AN8855)
+		return;
+
+	mutex_lock(&swdev->sw_mutex);
+    // First, clear the current global VLAN entry
+    list_for_each_entry_safe(entry, tmp, &vlan_entries.entry_list, entry_list) {
+		list_del(&entry->entry_list);
+		kfree(entry);
+    }
+
+	// Deeply copy the backed up entries back to the global vlan_entries
+    list_for_each_entry_safe(entry, tmp, &backup_vlan_entries->entry_list, entry_list) {
+		struct vlan_entry *new = kmemdup(entry, sizeof(*new), GFP_KERNEL);
+		list_add_tail(&new->entry_list, &vlan_entries.entry_list);
+	}
+
+	INIT_LIST_HEAD(&backup_vlan_entries->entry_list);
+
+	list_for_each(pos, &vlan_entries.entry_list) {
+		entry = list_entry(pos, struct vlan_entry, entry_list);
+		printk("Processing VLAN %d: member=0x%x, untag=0x%x\n",
+			entry->vid, entry->member, entry->untag);
+
+		for (port = 0; port < swdev->ports; port++) {
+			if (entry->member & (1 << port)) {
+				if (entry->untag & (1 << port)) {
+					printk("Setting port %d PVID to %d\n", port, entry->vid);
+					swdev->ops->set_port_pvid(swdev, port, entry->vid);
+				} else {
+					printk("Port %d is tagged, skipping PVID set\n", port);
+				}
+			}
+		}
+	}
+	swdev->ops->apply_config(swdev);
+	mutex_unlock(&swdev->sw_mutex);
 }
 
 unsigned int sf_eswitch_read_phy_reg(struct sf_eswitch_priv* priv , int phyNo, int phyReg)
@@ -522,6 +589,8 @@ static int sf_eswitch_probe(struct platform_device *pdev)
 	pesw_priv->deinit_swdev = sf_eswitch_deinit_swdev;
 	pesw_priv->write_phy = sf_eswitch_write_phy_reg;
 	pesw_priv->read_phy = sf_eswitch_read_phy_reg;
+	pesw_priv->get_vlan= sf_eswitch_get_vlan_entries;
+	pesw_priv->set_vlan= sf_eswitch_set_vlan_entries;
 
 #ifdef CONFIG_SFAX8_GENL
 	genl_pdev = platform_device_register_simple("sf_genl",PLATFORM_DEVID_AUTO,NULL,0);

@@ -21,6 +21,8 @@
 #define CHIP_MAX_CASCADE_PORT_NUM           2
 #define CHIP_INVALID_CASCADE_PORT           (0xF)
 #define CHIP_CASCADE_FWD_PORTMASK           ((1UL << CHIP_MAX_PORT_NUM) - 1)
+#define CHIP_JUMBO_SIZE_MAX                 (0x2400)
+#define CHIP_JUMBO_SIZE_MIN                 (0x5EE)
 
 #define CHIP_INTERFACE_SELECT_REG   (0x80394)
 #define CHIP_INTERFACE_CTRL_REG   (0x80028)

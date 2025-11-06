@@ -12,7 +12,7 @@ BOARDNAME:=Siflower board
 SUBTARGETS:=sf19a28-fullmask
 INITRAMFS_EXTRA_FILES:=
 MAINTAINER:=Shanghai Siflower Communication Technology Co., Ltd.
-FEATURES:=fpu usb cpiogz gpio ramdisk squashfs targz separate_ramdisk
+FEATURES:=fpu nand usb usbgadget cpiogz gpio ramdisk squashfs targz separate_ramdisk
 
 KERNEL_PATCHVER:=4.14
 

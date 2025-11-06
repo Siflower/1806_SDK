@@ -1378,6 +1378,45 @@ yt_ret_t fal_tiger_port_cable_diag(yt_unit_t unit, yt_port_t port, yt_port_cable
     return CMM_ERR_FAIL;
 }
 
+yt_ret_t fal_tiger_port_jumbo_size_set(yt_unit_t unit, yt_port_t port, uint32_t size)
+{
+    cmm_err_t ret = CMM_ERR_OK;
+    yt_macid_t mac_id;
+    uint32_t regData;
+    yt_enable_t enable;
+    mac_id = CAL_YTP_TO_MAC(unit, port);
+    if (!fal_tiger_port_jumbo_enable_get(unit, port, &enable))
+    {
+        if (YT_ENABLE == enable)
+        {
+            CMM_ERR_CHK(HAL_MEM_DIRECT_READ(unit, 0x81008+0x1000*mac_id, &regData), ret);
+            regData &= 0xFFC000FF;
+            regData |= (size<<8);
+            CMM_ERR_CHK(HAL_MEM_DIRECT_WRITE(unit, 0x81008+0x1000*mac_id, regData), ret);
+        }
+        else
+        {
+            return CMM_ERR_FORBIDDEN;
+        }
+    }
+    else
+    {
+        return CMM_ERR_FAIL;
+    }
+    return CMM_ERR_OK;
+}
+
+yt_ret_t fal_tiger_port_jumbo_size_get(yt_unit_t unit, yt_port_t port, uint32_t *pSize)
+{
+    cmm_err_t ret = CMM_ERR_OK;
+    yt_macid_t mac_id;
+    uint32_t regData;
+    mac_id = CAL_YTP_TO_MAC(unit, port);
+    CMM_ERR_CHK(HAL_MEM_DIRECT_READ(unit, 0x81008+0x1000*mac_id, &regData), ret);
+    *pSize = ((regData&0x3FFF00)>>8);
+    return CMM_ERR_OK;
+}
+
 yt_ret_t fal_tiger_port_phyTemplate_test_set(yt_unit_t unit, yt_port_t port, yt_utp_template_testmode_t mode)
 {
     cmm_err_t ret = CMM_ERR_OK;

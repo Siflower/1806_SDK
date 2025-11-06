@@ -53,7 +53,7 @@
 /*
  * Data Declaration
  */
-fal_dispatch_t  fal_tiger_dispatch = 
+fal_dispatch_t  fal_tiger_dispatch =
 {
 #ifdef VLAN_INCLUDED
     .vlan_init = fal_tiger_vlan_init,
@@ -242,17 +242,17 @@ fal_dispatch_t  fal_tiger_dispatch =
 #endif
 
 #ifdef STAT_INCLUDED
-    .stat_mib_init = fal_tiger_stat_mib_init,    
-    .stat_mib_enable_set = fal_tiger_stat_mib_enable_set,   
-    .stat_mib_enable_get = fal_tiger_stat_mib_enable_get,   
-    .stat_mib_clear = fal_tiger_stat_mib_clear,    
-    .stat_mib_clear_all = fal_tiger_stat_mib_clear_all,    
-    .stat_mib_port_get = fal_tiger_stat_mib_port_get,    
-    .stat_flow_enable_set = fal_tiger_stat_flow_enable_set, 
+    .stat_mib_init = fal_tiger_stat_mib_init,
+    .stat_mib_enable_set = fal_tiger_stat_mib_enable_set,
+    .stat_mib_enable_get = fal_tiger_stat_mib_enable_get,
+    .stat_mib_clear = fal_tiger_stat_mib_clear,
+    .stat_mib_clear_all = fal_tiger_stat_mib_clear_all,
+    .stat_mib_port_get = fal_tiger_stat_mib_port_get,
+    .stat_flow_enable_set = fal_tiger_stat_flow_enable_set,
     .stat_flow_enable_get = fal_tiger_stat_flow_enable_get,
-    .stat_flow_mode_set = fal_tiger_stat_flow_mode_set,    
-    .stat_flow_mode_get = fal_tiger_stat_flow_mode_get,    
-    .stat_flow_count_set = fal_tiger_stat_flow_count_set,   
+    .stat_flow_mode_set = fal_tiger_stat_flow_mode_set,
+    .stat_flow_mode_get = fal_tiger_stat_flow_mode_get,
+    .stat_flow_count_set = fal_tiger_stat_flow_count_set,
     .stat_flow_count_get = fal_tiger_stat_flow_count_get,
 #endif
 
@@ -480,6 +480,8 @@ fal_dispatch_t  fal_tiger_dispatch =
     .port_eee_enable_get = fal_tiger_port_eee_enable_get,
     .port_jumbo_enable_set = fal_tiger_port_jumbo_enable_set,
     .port_jumbo_enable_get = fal_tiger_port_jumbo_enable_get,
+    .port_jumbo_size_set = fal_tiger_port_jumbo_size_set,
+    .port_jumbo_size_get = fal_tiger_port_jumbo_size_get,
     .port_cable_diag = fal_tiger_port_cable_diag,
     .port_phyTemplate_test_set = fal_tiger_port_phyTemplate_test_set,
 #endif

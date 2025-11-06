@@ -673,6 +673,7 @@ struct siwifi_firmware_debug_info
     volatile uint32_t lmac_src_id;
     volatile uint32_t lmac_evt_record[MAX_DBG_EVT_CNT];
     volatile uint32_t lmac_evt_idx;
+    volatile uint32_t RM_1004887_debug;
 };
 
 // Indexes are defined in the MIB shared structure

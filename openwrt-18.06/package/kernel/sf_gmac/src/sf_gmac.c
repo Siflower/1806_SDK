@@ -1430,10 +1430,18 @@ static int sgmac_recovery(struct net_device *ndev)
 	struct mii_bus *pmdio_bus = priv->bus;
 	unsigned int ret, phy_value;
 
+	//back up:save the value of the VLAN entries
+#if IS_ENABLED(CONFIG_SFAX8_ESWITCH_DRIVER)
+	struct vlan_entry current_vlan;
+#endif
+
+
 	if (priv->phy_node)
 		phy_disconnect(priv->phydev);
 #if IS_ENABLED(CONFIG_SFAX8_ESWITCH_DRIVER)
 	else{
+		memset(&current_vlan, 0, sizeof(current_vlan));
+		priv->pesw_priv->get_vlan(priv->pesw_priv,&current_vlan);
 		priv->pesw_priv->deinit(priv->eswitch_pdev);
 		priv->pesw_priv->pesw_api->vender_deinit(priv->pesw_priv);
 		sf_trigger_eswitch_hwReset(priv);
@@ -1505,6 +1513,8 @@ static int sgmac_recovery(struct net_device *ndev)
 		priv->pesw_priv->pesw_api->vender_init(priv->pesw_priv);
 		priv->pesw_priv->pesw_api->led_init(LED_NORMAL);
 		priv->pesw_priv->init(priv->eswitch_pdev);
+		// restore VLAN entries
+		priv->pesw_priv->set_vlan(priv->pesw_priv,&current_vlan);
 	}
 #endif
 
@@ -3366,6 +3376,12 @@ ssize_t sfax8_gmac_debug_write(struct file *file, const char __user *user_buf,
 		g_start_delay_test = 0;
 	}
 #endif
+	else if(strncmp(str[0], "recovery", 8) == 0){
+		napi_disable(&priv->napi);
+		writel(0, priv->base + GMAC_DMA_INTR_ENA);
+		sgmac_recovery(priv->ndev);
+		netdev_err(priv->ndev, "gmac recovery done\n");
+	}
 	else
 		printk("command not support!!!\n");
 
