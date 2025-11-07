@@ -100,6 +100,8 @@ struct sf_eswitch_priv {
 	void (*deinit_swdev)(struct platform_device *pdev);
 	void (*write_phy)(struct sf_eswitch_priv* priv, int phyNo, int phyReg, int phyData);
 	unsigned int (*read_phy)(struct sf_eswitch_priv* priv , int phyNo, int phyReg);
+	void (*get_vlan)(struct sf_eswitch_priv * pesw_priv,struct vlan_entry* backup_vlan_entries);
+	void (*set_vlan)(struct sf_eswitch_priv * pesw_priv,struct vlan_entry* backup_vlan_entries);
 };
 
 struct sf_eswitch_api_t {

@@ -806,6 +806,52 @@ yt_ret_t yt_port_jumbo_enable_get(yt_unit_t unit, yt_port_t port, yt_enable_t *p
 }
 
 /**
+ * @internal      yt_port_jumbo_size_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     size              -jumbo frame size
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t yt_port_jumbo_size_set(yt_unit_t unit, yt_port_t port, uint32_t size)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
+    CMM_PARAM_CHK((YT_JUMBO_SIZE_MAX < size || size < YT_JUMBO_SIZE_MIN), CMM_ERR_EXCEED_RANGE);
+
+    return YT_DISPATCH(unit)->port_jumbo_size_set(unit, port, size);
+}
+
+/**
+ * @internal      yt_port_jumbo_size_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[out]    pSize             -jumbo frame size
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t yt_port_jumbo_size_get(yt_unit_t unit, yt_port_t port, uint32_t *pSize)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
+    CMM_PARAM_CHK((NULL == pSize), CMM_ERR_NULL_POINT);
+
+    return YT_DISPATCH(unit)->port_jumbo_size_get(unit, port, pSize);
+}
+
+/**
  * @internal      yt_port_cable_diag
  * @endinternal
  *

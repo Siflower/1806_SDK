@@ -348,7 +348,7 @@ int dwc2_core_reset(struct dwc2_hsotg *hsotg, bool skip_wait)
 	do {
 		udelay(1);
 		greset = dwc2_readl(hsotg->regs + GRSTCTL);
-		if (++count > 50) {
+		if (++count > 500000) {
 			dev_warn(hsotg->dev,
 				 "%s() HANG! Soft Reset GRSTCTL=%0x\n",
 				 __func__, greset);

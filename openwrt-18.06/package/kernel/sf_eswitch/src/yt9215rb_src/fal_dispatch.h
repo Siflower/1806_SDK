@@ -35,7 +35,7 @@
 #include "yt_led.h"
 #include "yt_sys.h"
 
-//will add macro  to isolate it 
+//will add macro  to isolate it
 /*
  * Symbol Definition
  */
@@ -47,7 +47,7 @@
 /*
  * Data Type Declaration
  */
-typedef struct fal_dispatch_s 
+typedef struct fal_dispatch_s
 {
     uint8_t is_inited;
 
@@ -223,17 +223,17 @@ typedef struct fal_dispatch_s
     yt_ret_t (*rate_shaping_queue_rate_set)(yt_unit_t, yt_qid_t, yt_qos_two_rate_t);
     yt_ret_t (*rate_shaping_queue_rate_get)(yt_unit_t, yt_qid_t,  yt_qos_two_rate_t *);
 
-    yt_ret_t (*stat_mib_init)(yt_unit_t);     
-    yt_ret_t (*stat_mib_enable_set)(yt_unit_t, yt_enable_t);      
-    yt_ret_t (*stat_mib_enable_get)(yt_unit_t,  yt_enable_t *);      
-    yt_ret_t (*stat_mib_clear)(yt_unit_t, yt_port_t);       
-    yt_ret_t (*stat_mib_clear_all)(yt_unit_t);      
-    yt_ret_t (*stat_mib_port_get)(yt_unit_t, yt_port_t,  yt_stat_mib_port_cnt_t *);     
-    yt_ret_t (*stat_flow_enable_set)(yt_unit_t, uint32_t, yt_enable_t);     
-    yt_ret_t (*stat_flow_enable_get)(yt_unit_t, uint32_t, yt_enable_t *); 
-    yt_ret_t (*stat_flow_mode_set)(yt_unit_t, uint32_t, yt_stat_type_t, yt_stat_mode_t);      
-    yt_ret_t (*stat_flow_mode_get)(yt_unit_t, uint32_t, yt_stat_type_t *, yt_stat_mode_t *);      
-    yt_ret_t (*stat_flow_count_set)(yt_unit_t, uint32_t, uint64);      
+    yt_ret_t (*stat_mib_init)(yt_unit_t);
+    yt_ret_t (*stat_mib_enable_set)(yt_unit_t, yt_enable_t);
+    yt_ret_t (*stat_mib_enable_get)(yt_unit_t,  yt_enable_t *);
+    yt_ret_t (*stat_mib_clear)(yt_unit_t, yt_port_t);
+    yt_ret_t (*stat_mib_clear_all)(yt_unit_t);
+    yt_ret_t (*stat_mib_port_get)(yt_unit_t, yt_port_t,  yt_stat_mib_port_cnt_t *);
+    yt_ret_t (*stat_flow_enable_set)(yt_unit_t, uint32_t, yt_enable_t);
+    yt_ret_t (*stat_flow_enable_get)(yt_unit_t, uint32_t, yt_enable_t *);
+    yt_ret_t (*stat_flow_mode_set)(yt_unit_t, uint32_t, yt_stat_type_t, yt_stat_mode_t);
+    yt_ret_t (*stat_flow_mode_get)(yt_unit_t, uint32_t, yt_stat_type_t *, yt_stat_mode_t *);
+    yt_ret_t (*stat_flow_count_set)(yt_unit_t, uint32_t, uint64);
     yt_ret_t (*stat_flow_count_get)(yt_unit_t, uint32_t,  uint64 *);
 
     yt_ret_t (*stp_state_set)(yt_unit_t, uint8_t, yt_port_t, yt_stp_state_t);
@@ -438,6 +438,8 @@ typedef struct fal_dispatch_s
     yt_ret_t (*port_eee_enable_get)(yt_unit_t, yt_port_t,  yt_enable_t *);
     yt_ret_t (*port_jumbo_enable_set)(yt_unit_t, yt_port_t, yt_enable_t);
     yt_ret_t (*port_jumbo_enable_get)(yt_unit_t, yt_port_t,  yt_enable_t *);
+    yt_ret_t (*port_jumbo_size_set)(yt_unit_t, yt_port_t, uint32_t);
+    yt_ret_t (*port_jumbo_size_get)(yt_unit_t, yt_port_t,  uint32_t *);
     yt_ret_t (*port_cable_diag)(yt_unit_t, yt_port_t,  yt_port_cableDiag_t *);
     yt_ret_t (*port_phyTemplate_test_set)(yt_unit_t, yt_port_t,  yt_utp_template_testmode_t);
 
@@ -497,7 +499,7 @@ typedef struct fal_dispatch_s
     yt_ret_t (*sensor_temp_value_get)(yt_unit_t,  yt_bool_t *,  uint16_t *);
 } fal_dispatch_t;
 
-typedef struct fal_dispatch_info_s 
+typedef struct fal_dispatch_info_s
 {
     uint32_t chip_id;
     uint32_t device_id;

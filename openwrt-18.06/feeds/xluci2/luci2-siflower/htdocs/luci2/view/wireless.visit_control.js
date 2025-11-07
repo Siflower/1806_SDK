@@ -398,16 +398,19 @@ L.ui.view.extend({
 					}
 				}
 			}
-			self.callSet('wireless', 'default_radio0', { 'macfilter': 'deny', 'maclist': macaddr_list });
-			self.callSet('wireless', 'default_radio1', { 'macfilter': 'deny', 'maclist': macaddr_list });
-			self.callCommit('wireless').then(function () {
-				L.ui.setting(true);
-				setTimeout(function () {
-					// L.file.exec('ifup', ['lan']);
-					self.get_black_list();
-					L.ui.setting(false);
-				}, 1000 * 10);
-			})
+			Promise.all([
+				self.callSet('wireless', 'default_radio0', { 'macfilter': 'deny', 'maclist': macaddr_list }),
+				self.callSet('wireless', 'default_radio1', { 'macfilter': 'deny', 'maclist': macaddr_list })
+			]).then(function() {
+				self.callCommit('wireless').then(function () {
+					L.ui.setting(true);
+					setTimeout(function () {
+						// L.file.exec('ifup', ['lan']);
+						self.get_black_list();
+						L.ui.setting(false);
+					}, 1000 * 10);
+				});
+			});
 		});
 	},
 
@@ -428,16 +431,19 @@ L.ui.view.extend({
 					}
 				}
 			}
-			self.callSet('wireless', 'default_radio0', { 'macfilter': 'allow', 'maclist': macaddr_list });
-			self.callSet('wireless', 'default_radio1', { 'macfilter': 'allow', 'maclist': macaddr_list });
-			self.callCommit('wireless').then(function () {
-				L.ui.setting(true);
-				setTimeout(function () {
-					// L.file.exec('ifup', ['lan']);
-					self.get_white_list();
-					L.ui.setting(false);
-				}, 1000 * 10);
-			})
+			Promise.all([
+				self.callSet('wireless', 'default_radio0', { 'macfilter': 'allow', 'maclist': macaddr_list }),
+				self.callSet('wireless', 'default_radio1', { 'macfilter': 'allow', 'maclist': macaddr_list })
+			]).then(function() {
+				self.callCommit('wireless').then(function () {
+					L.ui.setting(true);
+					setTimeout(function () {
+						// L.file.exec('ifup', ['lan']);
+						self.get_white_list();
+						L.ui.setting(false);
+					}, 1000 * 10);
+				});
+			});
 		});
 	},
 

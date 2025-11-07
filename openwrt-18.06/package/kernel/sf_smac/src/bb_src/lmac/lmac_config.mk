@@ -371,10 +371,10 @@ ccflags-y += -DCFG_PS
 ccflags-y += -DCFG_UAPSD
 ccflags-y += -DCFG_CMON
 ccflags-y += -DCFG_MROLE
-#ccflags-y += -DCFG_P2P=2
-#ccflags-y += -DCFG_P2P_DBG
-#ccflags-y += -DCFG_P2P_NOA_GO
-#ccflags-y += -DCFG_P2P_OPPPS_GO
+ccflags-y += -DCFG_P2P=2
+ccflags-y += -DCFG_P2P_DBG
+ccflags-y += -DCFG_P2P_NOA_GO
+ccflags-y += -DCFG_P2P_OPPPS_GO
 #ccflags-y += -DCFG_WAPI
 ifeq ($(CONFIG_A28), y)
 ccflags-$(CONFIG_SIWIFI_BFMER) += -DCFG_BFMER

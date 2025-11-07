@@ -10,6 +10,8 @@
 #include <linux/dma-mapping.h>
 #include <linux/etherdevice.h>
 #include <net/sock.h>
+#include <linux/ip.h>
+#include <linux/tcp.h>
 
 #include "siwifi_defs.h"
 #include "siwifi_utils.h"
@@ -155,6 +157,7 @@ void siwifi_ps_bh_enable(struct siwifi_hw *siwifi_hw, struct siwifi_sta *sta,
     u16 ps_pkg_ready;
     u16 uapsd_pkg_ready;
     bool enable = (ps_state == MM_PS_MODE_ON || ps_state == MM_PS_MODE_ON_DYN);
+    u16 sta_pushed[2] = {0};
 
 #ifdef CONFIG_VDR_HW
     vendor_hook_sta_ps(sta, enable);
@@ -181,6 +184,7 @@ void siwifi_ps_bh_enable(struct siwifi_hw *siwifi_hw, struct siwifi_sta *sta,
 #endif
             sta->ps.pkt_ready[UAPSD_ID] = 0;
             txq->hwq = &siwifi_hw->hwq[SIWIFI_HWQ_VI];
+            txq->ps_active_change++;
         } else {
             int i;
             sta->ps.pkt_ready[LEGACY_PS_ID] = 0;
@@ -198,6 +202,8 @@ void siwifi_ps_bh_enable(struct siwifi_hw *siwifi_hw, struct siwifi_sta *sta,
 #ifdef CONFIG_BRIDGE_ACCELERATE
                 sta->ps.pkt_ready[txq->ps_id] += skb_queue_len(&txq->accel_sk_list);
 #endif
+                sta_pushed[txq->ps_id] += txq->pkt_pushed[SIWIFI_TXQ_POS_ID(txq)];
+                txq->ps_active_change++;
             }
         }
         ps_pkg_ready = sta->ps.pkt_ready[LEGACY_PS_ID];
@@ -261,11 +267,11 @@ void siwifi_ps_bh_enable(struct siwifi_hw *siwifi_hw, struct siwifi_sta *sta,
         uapsd_pkg_ready = sta->ps.pkt_ready[UAPSD_ID];
         spin_unlock_bh(&siwifi_hw->tx_lock);
 
-        if (ps_pkg_ready)
-            siwifi_set_traffic_status(siwifi_hw, sta, false, LEGACY_PS_ID);
+        if (ps_pkg_ready || sta_pushed[LEGACY_PS_ID])
+            siwifi_set_traffic_status(siwifi_hw, sta, true, LEGACY_PS_ID);
 
-        if (uapsd_pkg_ready)
-            siwifi_set_traffic_status(siwifi_hw, sta, false, UAPSD_ID);
+        if (uapsd_pkg_ready || sta_pushed[UAPSD_ID])
+            siwifi_set_traffic_status(siwifi_hw, sta, true, UAPSD_ID);
     }
 }
 
@@ -615,8 +621,6 @@ static inline void siwifi_set_more_data_flag(struct siwifi_hw *siwifi_hw,
 
         if (sta->ps.pkt_ready[txq->ps_id]) {
             sw_txhdr->desc.host.flags |= TXU_CNTRL_MORE_DATA;
-        } else {
-            siwifi_set_traffic_status(siwifi_hw, sta, false, txq->ps_id);
         }
     }
 }
@@ -932,6 +936,145 @@ int siwifi_tx_push_burst(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq, st
 }
 #endif
 
+static void siwifi_static_timer_cb(struct timer_list *t)
+{
+    int i = 0;
+    struct siwifi_hw *siwifi_hw = from_timer(siwifi_hw, t, siwifi_static_timer);
+    int timer_cur = siwifi_hw->siwifi_static_timer_cur;
+
+    if (siwifi_hw->siwifi_static_timer_stop)
+        return;
+
+    for (i = 0; i < SIWIFI_STATIC_INFO_MAX; i++) {
+        struct siwifi_sta *sta = &siwifi_hw->sta_table[i];
+        struct siwifi_txq *txq_t = NULL;
+        int tid_t = 0;
+
+        memcpy(&siwifi_hw->siwifi_static_timeinfo[timer_cur][i], &siwifi_hw->siwifi_static_txinfo[i], sizeof(struct siwifi_static_txinfo));
+
+        foreach_sta_txq(sta, txq_t, tid_t, siwifi_hw) {
+            siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_ready[tid_t]         = skb_queue_len(&txq_t->sk_list);
+            siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_ps_change[tid_t]     = txq_t->ps_active_change;
+            siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_txq_start[tid_t]     = txq_t->siwifi_static_start;
+            siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_txq_stop[tid_t]      = txq_t->siwifi_static_stop;
+            siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_txq_process[tid_t]   = txq_t->siwifi_static_process;
+            siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_pro_in_hwq[tid_t]    = txq_t->siwifi_static_pro_in_hwq;
+            siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_pro_reorder[tid_t]   = txq_t->siwifi_static_pro_reorder;
+            siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_not_ready[tid_t]     = txq_t->siwifi_static_not_ready;
+            txq_t->ps_active_change               = 0;
+            txq_t->siwifi_static_start            = 0;
+            txq_t->siwifi_static_stop             = 0;
+            txq_t->siwifi_static_process          = 0;
+            txq_t->siwifi_static_pro_in_hwq       = 0;
+            txq_t->siwifi_static_pro_reorder      = 0;
+        }
+
+        siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_hwq_process = siwifi_hw->siwifi_static_hwq_process;
+        memcpy(siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_hwq_push, siwifi_hw->siwifi_static_hwq_push, NX_TXQ_CNT * sizeof(uint16_t));
+        memcpy(siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_break_reason, siwifi_hw->siwifi_static_break_reason, 3 * sizeof(uint16_t));
+
+        siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_ps_state = sta->ps.active;
+        siwifi_hw->siwifi_static_timeinfo[timer_cur][i].siwifi_static_use = 1;
+
+        memset(&siwifi_hw->siwifi_static_txinfo[i], 0, sizeof(struct siwifi_static_txinfo));
+    }
+
+    siwifi_hw->siwifi_static_timer_cur   = (timer_cur + 1) % SIWIFI_STATIC_TIME_MAX;
+    siwifi_hw->siwifi_static_hwq_process = 0;
+    memset(siwifi_hw->siwifi_static_hwq_push, 0, NX_TXQ_CNT * sizeof(uint16_t));
+    memset(siwifi_hw->siwifi_static_break_reason, 0, SIWIFI_STATIC_BREAK_REASON_MAX * sizeof(uint16_t));
+
+    if (!siwifi_hw->siwifi_static_timer_stop)
+        mod_timer(&siwifi_hw->siwifi_static_timer, jiffies + SIWIFI_STATIC_INTERVAL);
+}
+
+void siwifi_static_timer_clear(struct siwifi_hw *siwifi_hw)
+{
+    int i = 0;
+    int j = 0;
+
+    siwifi_hw->siwifi_static_timer_stop = 1;
+    printk("clear timer info timer_stop %d \n", siwifi_hw->siwifi_static_timer_stop);
+
+    for (i = 0; i < SIWIFI_STATIC_INFO_MAX; i++) {
+        memset(&siwifi_hw->siwifi_static_txinfo[i], 0, sizeof(struct siwifi_static_txinfo));
+    }
+    for (j = 0; j < SIWIFI_STATIC_TIME_MAX; j++) {
+        for (i = 0; i < SIWIFI_STATIC_INFO_MAX; i++) {
+            memset(&siwifi_hw->siwifi_static_timeinfo[j][i], 0, sizeof(struct siwifi_static_txinfo));
+        }
+    }
+    siwifi_hw->siwifi_static_timer_cur = 0;
+    return;
+}
+
+void siwifi_static_timer_print(struct siwifi_hw *siwifi_hw, int sta_idx)
+{
+    int i = 0, j = 0;
+
+    struct siwifi_sta *sta = &siwifi_hw->sta_table[sta_idx];
+
+    printk("print timer info sta[%d] %pM aid %d \n", sta_idx, sta->mac_addr, sta->aid);
+    printk("[V]time  xmit  push  cfm  ack  ret [att stt]  rx  intxq psdr tidr ps  ready ps_chan start  stop proce  hwq_p  hw1p  inhwq reord notrd reason  cred token.\n");
+//  printk("[-]  --  ----  ---- ---- ---- ---- [       ] ---   ---- ---- ----  - [----] [-----] [----  ----  ----][----- -----][----- ----- -----][----- ----- -----] \n"
+// printk("[%d]  %2d  %4d  %4d %4d %4d %4d [%3d %3d] %3d   %4d %4d %4d  %d [%4d] [%5d] [%4d  %4d  %4d][%5d %5d][%5d %5d %5d][%5d %5d %5d]\n",
+
+    for (j = 0; j < SIWIFI_STATIC_TIME_MAX; j++) {
+        for (i = 1; i < NX_NB_TXQ_PER_STA; i++) {
+            siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_ready[0]       += siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_ready[i];
+            siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_ps_change[0]   += siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_ps_change[i];
+            siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_txq_start[0]   += siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_txq_start[i];
+            siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_txq_stop[0]    += siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_txq_stop[i];
+            siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_txq_process[0] += siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_txq_process[i];
+            siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_pro_in_hwq[0]  += siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_pro_in_hwq[i];
+            siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_pro_reorder[0] += siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_pro_reorder[i];
+            siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_not_ready[0]   += siwifi_hw->siwifi_static_timeinfo[j][sta_idx].siwifi_static_not_ready[i];
+        }
+    }
+
+    for (i = siwifi_hw->siwifi_static_timer_cur, j = 0; j < SIWIFI_STATIC_TIME_MAX; j++, i = (i + 1) % SIWIFI_STATIC_TIME_MAX) {
+        printk("[%d]  %2d  %4d  %4d %4d %4d %4d [%3d %3d] %3d   %4d %4d %4d  %d [%4d] [%5d] [%4d  %4d  %4d][%5d %5d][%5d %5d %5d][%5d %5d %5d]\n",
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_use,
+                j,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_txxmit,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_txpush,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_txcfm,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_cfm_ack,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_cfm_ret,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_a_tt,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_s_tt,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_rx,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_intxq,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_ps_drop,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_drop_skb,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_ps_state,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_ready[0],
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_ps_change[0],
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_txq_start[0],
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_txq_stop[0],
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_txq_process[0],
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_hwq_process,
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_hwq_push[1],
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_pro_in_hwq[0],
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_pro_reorder[0],
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_not_ready[0],
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_break_reason[0],
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_break_reason[1],
+                siwifi_hw->siwifi_static_timeinfo[i][sta_idx].siwifi_static_break_reason[2]
+                );
+    }
+
+    printk("[V]time  xmit  push  cfm  ack  ret [att stt]  rx  intxq psdr tidr ps  ready ps_chan start  stop proce  hwq_p  hw1p  inhwq reord notrd reason  cred token.\n");
+    return;
+}
+
+void siwifi_static_timer_start(struct siwifi_hw *siwifi_hw)
+{
+    siwifi_hw->siwifi_static_timer_stop = 0;
+    printk("start timer info timer_stop %d \n", siwifi_hw->siwifi_static_timer_stop);
+    timer_setup(&siwifi_hw->siwifi_static_timer, siwifi_static_timer_cb, 0);
+    mod_timer(&siwifi_hw->siwifi_static_timer, jiffies + SIWIFI_STATIC_INTERVAL);
+}
 
 
 #ifndef NEW_SCHEDULE
@@ -970,6 +1113,9 @@ int siwifi_tx_push(struct siwifi_hw *siwifi_hw, struct siwifi_txhdr *txhdr, int 
     }
 
     lockdep_assert_held(&siwifi_hw->tx_lock);
+
+    if (sw_txhdr->siwifi_sta)
+        siwifi_hw->siwifi_static_txinfo[sw_txhdr->siwifi_sta->sta_idx].siwifi_static_txpush++;
 
     siwifi_trace_tx_push(siwifi_hw, txq->sta, skb);
     /* RETRY flag is not always set so retest here */
@@ -1038,6 +1184,7 @@ int siwifi_tx_push(struct siwifi_hw *siwifi_hw, struct siwifi_txhdr *txhdr, int 
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
     siwifi_hw->stats.cfm_balance[hw_queue]++;
 #endif
+    siwifi_hw->siwifi_static_hwq_push[hw_queue]++;
     return 0;
 }
 #endif
@@ -1088,6 +1235,8 @@ static void siwifi_tx_retry(struct siwifi_hw *siwifi_hw, struct sk_buff *skb,
 
     /* MORE_DATA will be re-set if needed when pkt will be repushed */
     sw_txhdr->desc.host.flags &= ~TXU_CNTRL_MORE_DATA;
+    /* RM#1004574 wireless: add retry frame flag to avoid add amsdu*/
+    sw_txhdr->flags.retry_frame = 1;
 
     cfm->status.value = 0;
     dma_sync_single_for_device(siwifi_hw->dev, sw_txhdr->dma_addr + peek_off,
@@ -1365,7 +1514,7 @@ static bool siwifi_amsdu_add_subframe(struct siwifi_hw *siwifi_hw, struct sk_buf
         txhdr = (struct siwifi_txhdr *)skb_prev->data;
         sw_txhdr = txhdr->sw_hdr;
         if ((sw_txhdr->amsdu.len) ||
-            (sw_txhdr->desc.host.flags & TXU_CNTRL_RETRY))
+            (sw_txhdr->flags.retry_frame))
             /* previous buffer is already a complete amsdu or a retry */
             goto end;
 
@@ -1420,6 +1569,35 @@ static bool siwifi_amsdu_add_subframe(struct siwifi_hw *siwifi_hw, struct sk_buf
 }
 #endif /* CONFIG_SIWIFI_AMSDUS_TX */
 
+int siwifi_tcp_check(struct sk_buff *skb)
+{
+    struct tcphdr *tcphdr = NULL;
+    struct iphdr *iphdr = NULL;
+    struct ethhdr *ethhdr = (struct ethhdr *)(skb->data);
+    if (ethhdr->h_proto != htons(ETH_P_IP))
+        return 0;
+    iphdr = (struct iphdr *)((char *)ethhdr + sizeof(struct ethhdr));
+    if (iphdr->protocol != IPPROTO_TCP)
+        return 0;
+    // ip地址满足 0x0000a8c0 192.168.*.*
+    if (((iphdr->saddr & 0x0000ffff) != 0x0000a8c0) || ((iphdr->daddr & 0x0000ffff) != 0x0000a8c0))
+        return 0;
+    // ip地址满足 0x0100a8c0 192.168.1.*
+    if (((iphdr->saddr & 0xff00ffff) == 0x0100a8c0) || ((iphdr->daddr & 0xff00ffff) == 0x0100a8c0))
+        return 0;
+    tcphdr = (struct tcphdr *)((char *)iphdr + iphdr->ihl * 4);
+
+    if (tcphdr->rst) {
+        printk("[TCP RST][%pM -> %pM] (%pI4 -> %pI4) port(%5d)->(%5d) fail\n",
+        ethhdr->h_source, ethhdr->h_dest,
+        &iphdr->saddr, &iphdr->daddr,
+        ntohs(tcphdr->source), ntohs(tcphdr->dest));
+        return 1;
+    }
+
+    return 0;
+}
+
 /**
  * netdev_tx_t (*ndo_start_xmit)(struct sk_buff *skb,
  *                               struct net_device *dev);
@@ -1451,6 +1629,7 @@ netdev_tx_t siwifi_start_xmit(struct sk_buff *skb, struct net_device *dev)
 #ifdef CONFIG_SIWIFI_IGMP
     unsigned char *unicast_addr = NULL;
 #endif
+    int siwifi_static_tcp_check = 0;
     struct txdesc_api *desc;
     struct siwifi_sta *sta;
     struct siwifi_txq *txq;
@@ -1489,10 +1668,15 @@ netdev_tx_t siwifi_start_xmit(struct sk_buff *skb, struct net_device *dev)
     }
 
 #ifdef CONFIG_SIWIFI_IGMP
-    unicast_addr = siwifi_multicast_to_unicast(siwifi_hw, skb, dev);
+        if (siwifi_hw->enable_multicast_to_unicast){
+                if(siwifi_vif->enable_multicast_to_unicast){
+                    unicast_addr = siwifi_multicast_to_unicast(siwifi_hw, skb, dev);
+                }
+        }
     }
 #endif
-
+    if (siwifi_hw->siwifi_static_enable_tcp_check == 1)
+        siwifi_static_tcp_check = siwifi_tcp_check(skb);
     /* Retrieve the pointer to the Ethernet data */
     eth = (struct ethhdr *)skb->data;
 #if defined(CONFIG_SF19A28_FULLMASK) && IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER) && IS_ENABLED(CONFIG_NF_FLOW_TABLE)
@@ -1535,6 +1719,23 @@ netdev_tx_t siwifi_start_xmit(struct sk_buff *skb, struct net_device *dev)
         goto free;
     }
 
+    if (siwifi_static_tcp_check && !siwifi_hw->siwifi_static_timer_stop) {
+        struct siwifi_txq *txq_t = NULL;
+        int tid_t = 0;
+        foreach_sta_txq(sta, txq_t, tid_t, siwifi_hw) {
+            printk("tid_t %2d credits %8d ready %8d time_drop %8d last_inhwq %8d \n",
+                tid_t, txq_t->credits, skb_queue_len(&txq_t->sk_list),
+                txq_t->siwifi_static_time_drop, jiffies_to_msecs(jiffies - txq_t->siwifi_static_last_inhwq));
+        }
+        siwifi_static_timer_print(siwifi_hw, sta->sta_idx);
+        siwifi_static_timer_clear(siwifi_hw);
+    }
+
+    siwifi_hw->siwifi_static_txinfo[sta->sta_idx].siwifi_static_txxmit++;
+
+    if (ntohs(eth->h_proto) == ETH_P_ARP) {
+        tid = 5;
+    }
     if(sta->user_tid >= 0 && sta->user_tid != SIWIFI_USER_TID_NOT_SET) {
         tid = sta->user_tid;
     }
@@ -1612,6 +1813,8 @@ netdev_tx_t siwifi_start_xmit(struct sk_buff *skb, struct net_device *dev)
     sw_txhdr->txq       = txq;
     sw_txhdr->txq_init_time = txq->init_time;
     sw_txhdr->mgmt_frame = 0;
+    sw_txhdr->flags.mgmt_frame = 0;
+    sw_txhdr->flags.retry_frame = 0;
     sw_txhdr->siwifi_sta  = sta;
     sw_txhdr->siwifi_vif  = siwifi_vif;
     sw_txhdr->skb       = skb;
@@ -1890,6 +2093,9 @@ int siwifi_start_mgmt_xmit(struct siwifi_vif *vif, struct siwifi_sta *sta,
     sw_txhdr->txq = txq;
     sw_txhdr->txq_init_time = txq->init_time;
     sw_txhdr->mgmt_frame = 1;
+    /* RM#1004574 wireless: Modify the memory usage of mgmt frame and retry frame*/
+    sw_txhdr->flags.mgmt_frame = 1;
+    sw_txhdr->flags.retry_frame = 0;
     sw_txhdr->frame_len = frame_len;
     sw_txhdr->siwifi_sta = sta;
     sw_txhdr->siwifi_vif = vif;
@@ -2191,10 +2397,11 @@ int siwifi_txdatacfm(void *pthis, void *host_id)
     struct siwifi_txq *txq;
     int peek_off = offsetof(struct siwifi_hw_txhdr, cfm);
     int peek_len = sizeof(((struct siwifi_hw_txhdr *)0)->cfm);
+    struct siwifi_sta *sta = NULL;
 
     txhdr = (struct siwifi_txhdr *)skb->data;
     sw_txhdr = txhdr->sw_hdr;
-
+    sta = sw_txhdr->siwifi_sta;
     dma_sync_single_for_cpu(siwifi_hw->dev, sw_txhdr->dma_addr + peek_off,
                             peek_len, DMA_FROM_DEVICE);
 
@@ -2213,6 +2420,19 @@ int siwifi_txdatacfm(void *pthis, void *host_id)
     /* don't use txq->hwq as it may have changed between push and confirm */
     hwq = &siwifi_hw->hwq[sw_txhdr->hw_queue];
 
+     if (sta && !is_multicast_sta(sta->sta_idx) &&
+            !(sw_txhdr->desc.host.flags & TXU_CNTRL_MGMT)) {
+        siwifi_hw->siwifi_static_txinfo[sta->sta_idx].siwifi_static_txcfm++;
+        if (siwifi_txst.tx_successful)
+            siwifi_hw->siwifi_static_txinfo[sta->sta_idx].siwifi_static_cfm_ack++;
+        if (siwifi_txst.sw_retry_required)
+            siwifi_hw->siwifi_static_txinfo[sta->sta_idx].siwifi_static_cfm_ret++;
+        if (siwifi_txst.ampdu_timeout)
+            siwifi_hw->siwifi_static_txinfo[sta->sta_idx].siwifi_static_a_tt++;
+        if (siwifi_txst.single_timeout)
+            siwifi_hw->siwifi_static_txinfo[sta->sta_idx].siwifi_static_s_tt++;
+    }
+
     // This is value is not equal. that means this txq has been reinitialized
     // between skb push and skb confirm
     if (txq->init_time != sw_txhdr->txq_init_time) {
@@ -2226,30 +2446,33 @@ int siwifi_txdatacfm(void *pthis, void *host_id)
 #ifdef TOKEN_ENABLE
     // FIXME, it's better to move this segment code into txq.c
     // just dont want add more parameters to function 'siwifi_txq_confirm_any'
-	if (txq->idx != TXQ_INACTIVE) {
-        BUG_ON(hwq->id >= NX_TXQ_CNT);
-        BUG_ON(txhdr->token_id >= NUM_TX_DESCS_PER_AC);
-		BUG_ON(txq->token_pkt_num[hwq->id][txhdr->token_id] <= 0);
-		txq->token_pkt_num[hwq->id][txhdr->token_id]--;
-		if (!txq->token_pkt_num[hwq->id][txhdr->token_id])
-		{
-			hwq->token_status[txhdr->token_id] = 0;
-			hwq->outstanding_tokens--;
-		}
-	}
+	if (txhdr->token_id < NUM_TX_DESCS_PER_AC) {
+        if (txq->idx != TXQ_INACTIVE) {
+            BUG_ON(hwq->id >= NX_TXQ_CNT);
+            BUG_ON(txhdr->token_id >= NUM_TX_DESCS_PER_AC);
+            BUG_ON(txq->token_pkt_num[hwq->id][txhdr->token_id] <= 0);
+            txq->token_pkt_num[hwq->id][txhdr->token_id]--;
+            if (!txq->token_pkt_num[hwq->id][txhdr->token_id])
+            {
+                hwq->token_status[txhdr->token_id] = 0;
+                hwq->outstanding_tokens--;
+            }
+        }
 
-    if (txq->atf.enable && siwifi_hw->atf.enable == 1 &&
-            !(sw_txhdr->desc.host.flags & TXU_CNTRL_MGMT) &&
-            txhdr->hw_hdr.cfm.rateinfo >= 0 &&
-            txhdr->hw_hdr.cfm.rateinfo <= 3467000 &&
-            txq->atf.record_rateinfo != txhdr->hw_hdr.cfm.rateinfo)
-    {
-        txq->atf.rateinfo = txhdr->hw_hdr.cfm.rateinfo;
-        //There is a new txq, forced update atf
-        if (txq->atf.record_rateinfo == 0)
-            siwifi_update_atf(siwifi_hw, 1);
-        else
-            siwifi_update_atf(siwifi_hw, 0);
+
+        if (txq->atf.enable && siwifi_hw->atf.enable == 1 &&
+                !(sw_txhdr->desc.host.flags & TXU_CNTRL_MGMT) &&
+                txhdr->hw_hdr.cfm.rateinfo >= 0 &&
+                txhdr->hw_hdr.cfm.rateinfo <= 3467000 &&
+                txq->atf.record_rateinfo != txhdr->hw_hdr.cfm.rateinfo)
+        {
+            txq->atf.rateinfo = txhdr->hw_hdr.cfm.rateinfo;
+            //There is a new txq, forced update atf
+            if (txq->atf.record_rateinfo == 0)
+                siwifi_update_atf(siwifi_hw, 1);
+            else
+                siwifi_update_atf(siwifi_hw, 0);
+        }
     }
 
 #endif /* TOKEN_ENABLE */

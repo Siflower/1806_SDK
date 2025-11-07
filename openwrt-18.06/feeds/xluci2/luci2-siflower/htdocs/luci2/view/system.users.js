@@ -72,13 +72,10 @@ L.ui.view.extend({
 				var pw = password.formvalue(sid);
 				var repw = repassword.formvalue(sid);
 				var opw = opassword.formvalue(sid);
+				var pw_crypt = ''
+				return L.ui.cryptPassword(pw).then(function(crypt) {
+					pw_crypt = crypt;
 
-				var pw_crypt = L.uci.get('rpcd', real_sid, 'password');
-				var opw_crypt = ''
-				return L.ui.cryptPassword(opw).then(function(crypt) {
-					opw_crypt = crypt
-					console.log(pw_crypt)
-					console.log(opw_crypt)
 					if(pw == undefined){
 						L.ui.setting(false);
 						L.ui.dialog(L.tr('Tips'), L.tr('Please input a password'), {
@@ -104,17 +101,17 @@ L.ui.view.extend({
 					return;
 					}
 
-					if (pw_crypt == opw_crypt) {
-						return L.ui.cryptPassword(pw).then(function(crypt) {
-							L.uci.set('rpcd', real_sid, 'password', crypt);
-						});
-					} else {
-						L.ui.setting(false);
-						L.ui.dialog(L.tr('Tips'), L.tr('Original password is wrong!'), {
-							style: 'close'
-						});
-						return
-					}
+					L.session.login('root', opw).then(function(result) {
+						console.log(result)
+						if (typeof result === 'object' && Object.keys(result).length > 0) {
+							L.uci.callSet('rpcd', real_sid, {'password': pw_crypt});
+						} else {
+							L.ui.setting(false);
+							L.ui.dialog(L.tr('Tips'), L.tr('Original password is wrong!'), {
+								style: 'close'
+							});
+						}
+					})
 				})
 			};
 

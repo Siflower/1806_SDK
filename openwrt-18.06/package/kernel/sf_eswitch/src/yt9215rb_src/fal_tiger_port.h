@@ -622,6 +622,35 @@ extern yt_ret_t fal_tiger_port_jumbo_enable_set(yt_unit_t unit, yt_port_t port, 
  */
 extern yt_ret_t fal_tiger_port_jumbo_enable_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable);
 
+/**
+ * @internal      fal_tiger_port_jumbo_size_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     size              -jumbo size
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_port_jumbo_size_set(yt_unit_t unit, yt_port_t port, uint32_t size);
+
+
+/**
+ * @internal      fal_tiger_port_jumbo_size_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[out]    pSize             -jumbo size
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_port_jumbo_size_get(yt_unit_t unit, yt_port_t port, uint32_t *pSize);
+
 
 /**
  * @internal      fal_tiger_port_cable_diag

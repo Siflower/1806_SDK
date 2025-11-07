@@ -47,12 +47,19 @@ static const char *const siwifi_mmid2str[MSG_I(MM_MAX)] = {
     [MSG_I(MM_SET_VIF_STATE_CFM)]         = "MM_SET_VIF_STATE_CFM",
     [MSG_I(MM_SET_SLOTTIME_REQ)]          = "MM_SET_SLOTTIME_REQ",
     [MSG_I(MM_SET_SLOTTIME_CFM)]          = "MM_SET_SLOTTIME_CFM",
+#ifdef CONFIG_SIWIFI_ENABLE_BRG
+    [MSG_I(MM_SET_NAV_COUNTER_REQ)]       = "MM_SET_NAV_COUNTER_REQ",
+    [MSG_I(MM_SET_AGCGAIN_REQ)]           = "MM_SET_AGCGAIN_REQ",
+    [MSG_I(MM_SET_AGCGAIN_CFM)]           = "MM_SET_AGCGAIN_CFM",
+#endif
     [MSG_I(MM_SET_IDLE_REQ)]              = "MM_SET_IDLE_REQ",
     [MSG_I(MM_SET_IDLE_CFM)]              = "MM_SET_IDLE_CFM",
     [MSG_I(MM_KEY_ADD_REQ)]               = "MM_KEY_ADD_REQ",
     [MSG_I(MM_KEY_ADD_CFM)]               = "MM_KEY_ADD_CFM",
     [MSG_I(MM_KEY_DEL_REQ)]               = "MM_KEY_DEL_REQ",
     [MSG_I(MM_KEY_DEL_CFM)]               = "MM_KEY_DEL_CFM",
+    [MSG_I(MM_DEFAULT_KEY_ADD_REQ)]       = "MM_DEFAULT_KEY_ADD_REQ",
+    [MSG_I(MM_DEFAULT_KEY_ADD_CFM)]       = "MM_DEFAULT_KEY_ADD_CFM",
     [MSG_I(MM_BA_ADD_REQ)]                = "MM_BA_ADD_REQ",
     [MSG_I(MM_BA_ADD_CFM)]                = "MM_BA_ADD_CFM",
     [MSG_I(MM_BA_DEL_REQ)]                = "MM_BA_DEL_REQ",
@@ -93,16 +100,23 @@ static const char *const siwifi_mmid2str[MSG_I(MM_MAX)] = {
     [MSG_I(MM_P2P_VIF_PS_CHANGE_IND)]     = "MM_P2P_VIF_PS_CHANGE_IND",
     [MSG_I(MM_CSA_COUNTER_IND)]           = "MM_CSA_COUNTER_IND",
     [MSG_I(MM_CHANNEL_SURVEY_IND)]        = "MM_CHANNEL_SURVEY_IND",
+    [MSG_I(MM_BFMER_ENABLE_REQ)]          = "MM_BFMER_ENABLE_REQ",
     [MSG_I(MM_SET_P2P_NOA_REQ)]           = "MM_SET_P2P_NOA_REQ",
     [MSG_I(MM_SET_P2P_OPPPS_REQ)]         = "MM_SET_P2P_OPPPS_REQ",
     [MSG_I(MM_SET_P2P_NOA_CFM)]           = "MM_SET_P2P_NOA_CFM",
     [MSG_I(MM_SET_P2P_OPPPS_CFM)]         = "MM_SET_P2P_OPPPS_CFM",
+    [MSG_I(MM_P2P_NOA_UPD_IND)]           = "MM_P2P_NOA_UPD_IND",
     [MSG_I(MM_CFG_RSSI_REQ)]              = "MM_CFG_RSSI_REQ",
     [MSG_I(MM_RSSI_STATUS_IND)]           = "MM_RSSI_STATUS_IND",
     [MSG_I(MM_CSA_FINISH_IND)]            = "MM_CSA_FINISH_IND",
     [MSG_I(MM_CSA_TRAFFIC_IND)]           = "MM_CSA_TRAFFIC_IND",
     [MSG_I(MM_MU_GROUP_UPDATE_REQ)]       = "MM_MU_GROUP_UPDATE_REQ",
     [MSG_I(MM_MU_GROUP_UPDATE_CFM)]       = "MM_MU_GROUP_UPDATE_CFM",
+    [MSG_I(MM_ANT_DIV_INIT_REQ)]          = "MM_ANT_DIV_INIT_REQ",
+    [MSG_I(MM_ANT_DIV_STOP_REQ)]          = "MM_ANT_DIV_STOP_REQ",
+    [MSG_I(MM_ANT_DIV_UPDATE_REQ)]        = "MM_ANT_DIV_UPDATE_REQ",
+    [MSG_I(MM_SWITCH_ANTENNA_REQ)]        = "MM_SWITCH_ANTENNA_REQ",
+    [MSG_I(MM_PKTLOSS_IND)]               = "MM_PKTLOSS_IND",
     [MSG_I(MM_RF_CTRL_REQ)]               = "MM_RF_CTRL_REQ",
     [MSG_I(MM_RF_CTRL_CFM)]               = "MM_RF_CTRL_CFM",
     [MSG_I(MM_RF_CALI_REQ)]               = "MM_RF_CALI_REQ",
@@ -112,6 +126,7 @@ static const char *const siwifi_mmid2str[MSG_I(MM_MAX)] = {
     [MSG_I(MM_FORCE_IDLE_REQ)]            = "MM_FORCE_IDLE_REQ",
     [MSG_I(MM_SCAN_CHANNEL_START_IND)]    = "MM_SCAN_CHANNEL_START_IND",
     [MSG_I(MM_SCAN_CHANNEL_END_IND)]      = "MM_SCAN_CHANNEL_END_IND",
+    [MSG_I(MM_TBTT_MOVE_REQ)]             = "MM_TBTT_MOVE_REQ",
     [MSG_I(MM_RF_CTRL_DONE)]              = "MM_RF_CTRL_DONE",
     [MSG_I(MM_INIT_COMPLETE)]             = "MM_INIT_COMPLETE",
     [MSG_I(MM_LA_INIT_IND)]               = "MM_LA_INIT_IND",
@@ -124,22 +139,58 @@ static const char *const siwifi_mmid2str[MSG_I(MM_MAX)] = {
     [MSG_I(MM_SET_POWER_LVL_REQ)]         = "MM_SET_POWER_LVL_REQ",
     [MSG_I(MM_SET_ANTENNA_NUMBER_REQ)]	  = "MM_SET_ANTENNA_NUMBER_REQ",
     [MSG_I(MM_COOLING_TEMP_REQ)]          = "MM_COOLING_TEMP_REQ",
+    [MSG_I(MM_CHANGE_POWER_REQ)]          = "MM_CHANGE_POWER_REQ",
+    [MSG_I(MM_VIF_DUMP_REQ)]              = "MM_VIF_DUMP_REQ",
+    [MSG_I(MM_VIF_DUMP_CFM)]              = "MM_VIF_DUMP_CFM",
+    [MSG_I(MM_DYING_GASP_IND)]            = "MM_DYING_GASP_IND",
     [MSG_I(MM_UPDATE_IDLE_TIME_IND)]      = "MM_UPDATE_IDLE_TIME_IND",
+    [MSG_I(MM_SEND_NULL_FRAME_REQ)]       = "MM_SEND_NULL_FRAME_REQ",
+#ifdef CONFIG_SIWIFI_ENABLE_BRG
+    [MSG_I(MM_SET_TX_POWER_BCN_REQ)]      = "MM_SET_TX_POWER_BCN_REQ",
+#endif
+    [MSG_I(MM_GAIN_CONTROL_REQ)]          = "MM_GAIN_CONTROL_REQ",
     [MSG_I(MM_CCA_DROP_STEP_IND)]         = "MM_CCA_DROP_STEP_IND",
+#ifdef CONFIG_SIWIFI_ENABLE_BRG
+    [MSG_I(MM_SET_RSSI_THRES_REQ)]        = "MM_SET_RSSI_THRES_REQ",
+    [MSG_I(MM_SET_DEFAULT_AGCGAIN_REQ)]   = "MM_SET_DEFAULT_AGCGAIN_REQ",
+#endif
+    [MSG_I(MM_GET_CHANNEL_INFO_REQ)]      = "MM_GET_CHANNEL_INFO_REQ",
+    [MSG_I(MM_GET_CHANNEL_INFO_CFM)]      = "MM_GET_CHANNEL_INFO_CFM",
+    [MSG_I(MM_SEND_DEBUG_FRAME_REQ)]      = "MM_SEND_DEBUG_FRAME_REQ",
+    [MSG_I(MM_SEND_DEBUG_FRAME_IND)]      = "MM_SEND_DEBUG_FRAME_IND",
 };
 
 static const char *const siwifi_dbgid2str[MSG_I(DBG_MAX)] = {
-    [MSG_I(DBG_MEM_READ_REQ)]        = "DBG_MEM_READ_REQ",
-    [MSG_I(DBG_MEM_READ_CFM)]        = "DBG_MEM_READ_CFM",
-    [MSG_I(DBG_MEM_WRITE_REQ)]       = "DBG_MEM_WRITE_REQ",
-    [MSG_I(DBG_MEM_WRITE_CFM)]       = "DBG_MEM_WRITE_CFM",
-    [MSG_I(DBG_SET_MOD_FILTER_REQ)]  = "DBG_SET_MOD_FILTER_REQ",
-    [MSG_I(DBG_SET_MOD_FILTER_CFM)]  = "DBG_SET_MOD_FILTER_CFM",
-    [MSG_I(DBG_SET_SEV_FILTER_REQ)]  = "DBG_SET_SEV_FILTER_REQ",
-    [MSG_I(DBG_SET_SEV_FILTER_CFM)]  = "DBG_SET_SEV_FILTER_CFM",
-    [MSG_I(DBG_ERROR_IND)]           = "DBG_ERROR_IND",
-    [MSG_I(DBG_GET_SYS_STAT_REQ)]    = "DBG_GET_SYS_STAT_REQ",
-    [MSG_I(DBG_GET_SYS_STAT_CFM)]    = "DBG_GET_SYS_STAT_CFM",
+    [MSG_I(DBG_MEM_READ_REQ)]             = "DBG_MEM_READ_REQ",
+    [MSG_I(DBG_MEM_READ_CFM)]             = "DBG_MEM_READ_CFM",
+    [MSG_I(DBG_MEM_WRITE_REQ)]            = "DBG_MEM_WRITE_REQ",
+    [MSG_I(DBG_MEM_WRITE_CFM)]            = "DBG_MEM_WRITE_CFM",
+    [MSG_I(DBG_SET_MOD_FILTER_REQ)]       = "DBG_SET_MOD_FILTER_REQ",
+    [MSG_I(DBG_SET_MOD_FILTER_CFM)]       = "DBG_SET_MOD_FILTER_CFM",
+    [MSG_I(DBG_SET_SEV_FILTER_REQ)]       = "DBG_SET_SEV_FILTER_REQ",
+    [MSG_I(DBG_SET_SEV_FILTER_CFM)]       = "DBG_SET_SEV_FILTER_CFM",
+    [MSG_I(DBG_ERROR_IND)]                = "DBG_ERROR_IND",
+    [MSG_I(DBG_GET_SYS_STAT_REQ)]         = "DBG_GET_SYS_STAT_REQ",
+    [MSG_I(DBG_GET_SYS_STAT_CFM)]         = "DBG_GET_SYS_STAT_CFM",
+    [MSG_I(DBG_GET_TX_STAT_REQ)]          = "DBG_GET_TX_STAT_REQ",
+    [MSG_I(DBG_GET_TX_STAT_CFM)]          = "DBG_GET_TX_STAT_CFM",
+    [MSG_I(DBG_GET_RX_STAT_REQ)]          = "DBG_GET_RX_STAT_REQ",
+    [MSG_I(DBG_GET_RX_STAT_CFM)]          = "DBG_GET_RX_STAT_CFM",
+#ifdef NEW_SCHEDULE
+    [MSG_I(DBG_PRINT_TX_BURST_INFO_REQ)]  = "DBG_PRINT_TX_BURST_INFO_REQ",
+    [MSG_I(DBG_PRINT_TX_BURST_INFO_CFM)]  = "DBG_PRINT_TX_BURST_INFO_CFM",
+#endif
+#ifdef CONFIG_VDR_HW
+    [MSG_I(DBG_GET_VDR_INFO_REQ)]         = "DBG_GET_VDR_INFO_REQ",
+    [MSG_I(DBG_GET_VDR_INFO_CFM)]         = "DBG_GET_VDR_INFO_CFM",
+#endif
+    [MSG_I(DBG_VDR_GET_MP_INFO_REQ)]      = "DBG_VDR_GET_MP_INFO_REQ",
+    [MSG_I(DBG_VDR_GET_MP_INFO_CFM)]      = "DBG_VDR_GET_MP_INFO_CFM",
+    [MSG_I(DBG_GET_MGMT_INFO_REQ)]        = "DBG_GET_MGMT_INFO_REQ",
+    [MSG_I(DBG_GET_MGMT_INFO_CFM)]        = "DBG_GET_MGMT_INFO_CFM",
+    [MSG_I(DBG_GET_CTRL_INFO_REQ)]        = "DBG_GET_CTRL_INFO_REQ",
+    [MSG_I(DBG_GET_CTRL_INFO_CFM)]        = "DBG_GET_CTRL_INFO_CFM",
+    [MSG_I(DBG_SET_CCA_PARAMETER_REQ)]    = "DBG_SET_CCA_PARAMETER_REQ",
 };
 
 static const char *const siwifi_scanid2str[MSG_I(SCAN_MAX)] = {
@@ -151,8 +202,8 @@ static const char *const siwifi_scanid2str[MSG_I(SCAN_MAX)] = {
 };
 
 static const char *const siwifi_tdlsid2str[MSG_I(TDLS_MAX)] = {
-    [MSG_I(TDLS_CHAN_SWITCH_CFM)]        = "TDLS_CHAN_SWITCH_CFM",
     [MSG_I(TDLS_CHAN_SWITCH_REQ)]        = "TDLS_CHAN_SWITCH_REQ",
+    [MSG_I(TDLS_CHAN_SWITCH_CFM)]        = "TDLS_CHAN_SWITCH_CFM",
     [MSG_I(TDLS_CHAN_SWITCH_IND)]        = "TDLS_CHAN_SWITCH_IND",
     [MSG_I(TDLS_CHAN_SWITCH_BASE_IND)]   = "TDLS_CHAN_SWITCH_BASE_IND",
     [MSG_I(TDLS_CANCEL_CHAN_SWITCH_REQ)] = "TDLS_CANCEL_CHAN_SWITCH_REQ",
@@ -161,6 +212,8 @@ static const char *const siwifi_tdlsid2str[MSG_I(TDLS_MAX)] = {
     [MSG_I(TDLS_PEER_TRAFFIC_IND_REQ)]   = "TDLS_PEER_TRAFFIC_IND_REQ",
     [MSG_I(TDLS_PEER_TRAFFIC_IND_CFM)]   = "TDLS_PEER_TRAFFIC_IND_CFM",
 };
+
+#ifdef CONFIG_SIWIFI_FULLMAC
 
 static const char *const siwifi_scanuid2str[MSG_I(SCANU_MAX)] = {
     [MSG_I(SCANU_START_REQ)]  = "SCANU_START_REQ",
@@ -184,12 +237,22 @@ static const char *const siwifi_meid2str[MSG_I(ME_MAX)] = {
     [MSG_I(ME_STA_ADD_CFM)]          = "ME_STA_ADD_CFM",
     [MSG_I(ME_STA_DEL_REQ)]          = "ME_STA_DEL_REQ",
     [MSG_I(ME_STA_DEL_CFM)]          = "ME_STA_DEL_CFM",
+    [MSG_I(ME_ASSOC_INSERT_INFO_REQ)]= "ME_ASSOC_INSERT_INFO_REQ",
+    [MSG_I(ME_AUTH_INSERT_INFO_REQ)] = "ME_AUTH_INSERT_INFO_REQ",
     [MSG_I(ME_TX_CREDITS_UPDATE_IND)]= "ME_TX_CREDITS_UPDATE_IND",
     [MSG_I(ME_RC_STATS_REQ)]         = "ME_RC_STATS_REQ",
     [MSG_I(ME_RC_STATS_CFM)]         = "ME_RC_STATS_CFM",
     [MSG_I(ME_RC_SET_RATE_REQ)]      = "ME_RC_SET_RATE_REQ",
     [MSG_I(ME_TRAFFIC_IND_REQ)]      = "ME_TRAFFIC_IND_REQ",
     [MSG_I(ME_TRAFFIC_IND_CFM)]      = "ME_TRAFFIC_IND_CFM",
+    [MSG_I(ME_RC_STATS_REQ)]         = "ME_RC_STATS_REQ",
+    [MSG_I(ME_RC_STATS_CFM)]         = "ME_RC_STATS_CFM",
+    [MSG_I(ME_RC_SET_RATE_REQ)]      = "ME_RC_SET_RATE_REQ",
+    [MSG_I(ME_RC_SET_NO_SS_REQ)]     = "ME_RC_SET_NO_SS_REQ",
+    [MSG_I(ME_CONFIG_MONITOR_REQ)]   = "ME_CONFIG_MONITOR_REQ",
+    [MSG_I(ME_CONFIG_MONITOR_CFM)]   = "ME_CONFIG_MONITOR_CFM",
+    [MSG_I(ME_ATE_TOOLS_OP_REQ)]     = "ME_ATE_TOOLS_OP_REQ",
+    [MSG_I(ME_ATE_TOOLS_OP_CFM)]     = "ME_ATE_TOOLS_OP_CFM",
 };
 
 static const char *const siwifi_smid2str[MSG_I(SM_MAX)] = {
@@ -205,14 +268,16 @@ static const char *const siwifi_smid2str[MSG_I(SM_MAX)] = {
 };
 
 static const char *const siwifi_apmid2str[MSG_I(APM_MAX)] = {
-    [MSG_I(APM_START_REQ)]     = "APM_START_REQ",
-    [MSG_I(APM_START_CFM)]     = "APM_START_CFM",
-    [MSG_I(APM_STOP_REQ)]      = "APM_STOP_REQ",
-    [MSG_I(APM_STOP_CFM)]      = "APM_STOP_CFM",
-    [MSG_I(APM_START_CAC_REQ)] = "APM_START_CAC_REQ",
-    [MSG_I(APM_START_CAC_CFM)] = "APM_START_CAC_CFM",
-    [MSG_I(APM_STOP_CAC_REQ)]  = "APM_STOP_CAC_REQ",
-    [MSG_I(APM_STOP_CAC_CFM)]  = "APM_STOP_CAC_CFM",
+    [MSG_I(APM_START_REQ)]        = "APM_START_REQ",
+    [MSG_I(APM_START_CFM)]        = "APM_START_CFM",
+    [MSG_I(APM_STOP_REQ)]         = "APM_STOP_REQ",
+    [MSG_I(APM_STOP_CFM)]         = "APM_STOP_CFM",
+    [MSG_I(APM_START_CAC_REQ)]    = "APM_START_CAC_REQ",
+    [MSG_I(APM_START_CAC_CFM)]    = "APM_START_CAC_CFM",
+    [MSG_I(APM_STOP_CAC_REQ)]     = "APM_STOP_CAC_REQ",
+    [MSG_I(APM_STOP_CAC_CFM)]     = "APM_STOP_CAC_CFM",
+    [MSG_I(APM_SEND_DEASSOC_REQ)] = "APM_SEND_DEASSOC_REQ",
+    [MSG_I(APM_SEND_DEAUTH_REQ)]  = "APM_SEND_DEAUTH_REQ",
 };
 
 static const char *const siwifi_meshid2str[MSG_I(MESH_MAX)] = {
@@ -222,6 +287,8 @@ static const char *const siwifi_meshid2str[MSG_I(MESH_MAX)] = {
     [MSG_I(MESH_STOP_CFM)]         = "MESH_STOP_CFM",
     [MSG_I(MESH_UPDATE_REQ)]       = "MESH_UPDATE_REQ",
     [MSG_I(MESH_UPDATE_CFM)]       = "MESH_UPDATE_CFM",
+    [MSG_I(MESH_PEER_INFO_REQ)]    = "MESH_PEER_INFO_REQ",
+    [MSG_I(MESH_PEER_INFO_CFM)]    = "MESH_PEER_INFO_CFM",
     [MSG_I(MESH_PATH_CREATE_REQ)]  = "MESH_PATH_CREATE_REQ",
     [MSG_I(MESH_PATH_CREATE_CFM)]  = "MESH_PATH_CREATE_CFM",
     [MSG_I(MESH_PATH_UPDATE_REQ)]  = "MESH_PATH_UPDATE_REQ",
@@ -232,14 +299,18 @@ static const char *const siwifi_meshid2str[MSG_I(MESH_MAX)] = {
     [MSG_I(MESH_PROXY_UPDATE_IND)] = "MESH_PROXY_UPDATE_IND",
 };
 
+#endif /* CONFIG_SIWIFI_FULLMAC */
+
 const char *const *siwifi_id2str[TASK_LAST_EMB + 1] = {
     [TASK_MM]    = siwifi_mmid2str,
     [TASK_DBG]   = siwifi_dbgid2str,
     [TASK_SCAN]  = siwifi_scanid2str,
     [TASK_TDLS]  = siwifi_tdlsid2str,
+#ifdef CONFIG_SIWIFI_FULLMAC
     [TASK_SCANU] = siwifi_scanuid2str,
     [TASK_ME]    = siwifi_meid2str,
     [TASK_SM]    = siwifi_smid2str,
     [TASK_APM]   = siwifi_apmid2str,
     [TASK_MESH]  = siwifi_meshid2str,
+#endif
 };

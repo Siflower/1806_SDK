@@ -422,13 +422,14 @@ int sfax8_set_gmac_delay_mtd(const char *name, unsigned short gmac_delay)
 }
 EXPORT_SYMBOL_GPL(sfax8_set_gmac_delay_mtd);
 
-#define SUPPORT_WIFI_VIF_CNT 4
 
 void handle_macaddr_internal(struct device_node *np,struct sfax8_factory_read_context *priv)
 {
 	//last char of wifi base address must be 4 aligned in current version
 	unsigned int last_char = (unsigned int)priv->macaddr[5];
+#ifndef FIXED_MACADDRESS_ALLOC
 	unsigned int inc_lb = (SUPPORT_WIFI_VIF_CNT - (last_char % SUPPORT_WIFI_VIF_CNT)) % SUPPORT_WIFI_VIF_CNT;
+#endif
 	int rc = 0;
 
 	if (!is_valid_ether_addr(priv->macaddr)) {
@@ -443,42 +444,11 @@ void handle_macaddr_internal(struct device_node *np,struct sfax8_factory_read_co
 	memcpy(priv->wifi_hb_macaddr,priv->macaddr,MACADDR_SIZE);
 	memcpy(priv->lan_macaddr,priv->macaddr,MACADDR_SIZE);
 	memcpy(priv->wan_macaddr,priv->macaddr,MACADDR_SIZE);
-#ifdef CONFIG_SFAX8_HNAT_MULTI_WAN
-	memcpy(priv->lan2_macaddr,priv->macaddr,MACADDR_SIZE);
-	memcpy(priv->wwan_macaddr,priv->macaddr,MACADDR_SIZE);
-#endif
+#ifndef FIXED_MACADDRESS_ALLOC
 	//for lb wifi address
 	if(inc_lb != 0) inc_sf_mac_addr(priv->wifi_lb_macaddr,inc_lb);
 	//for hb wifi address
 	inc_sf_mac_addr(priv->wifi_hb_macaddr,inc_lb + SUPPORT_WIFI_VIF_CNT);
-#ifdef CONFIG_SFAX8_HNAT_MULTI_WAN
-	//move eth address to end to avoid conflict with wifi address
-	if(inc_lb == 0){
-		//pick the last 4 address as lan1/lan2/wan/wwan address
-		inc_sf_mac_addr(priv->macaddr, 8);
-		inc_sf_mac_addr(priv->lan2_macaddr, 9);
-		inc_sf_mac_addr(priv->wan_macaddr, 10);
-		inc_sf_mac_addr(priv->wwan_macaddr,11);
-	}else if(inc_lb == 1){
-		//pick the first address as lan1
-		//pick the last 3 address as lan2/wan/wwan address
-		inc_sf_mac_addr(priv->lan2_macaddr, 9);
-		inc_sf_mac_addr(priv->wan_macaddr, 10);
-		inc_sf_mac_addr(priv->wwan_macaddr, 11);
-	}else if(inc_lb == 2){
-		//pick the first 2 addres as lan1/lan2
-		//pick the last 2 addres as wan/wwan
-		inc_sf_mac_addr(priv->lan2_macaddr, 1);
-		inc_sf_mac_addr(priv->wan_macaddr, 10);
-		inc_sf_mac_addr(priv->wwan_macaddr, 11);
-	}else if(inc_lb == 3){
-		//pick the first 3 addres as lan1/lan2/wan
-		//pick the last addres as wwan
-		inc_sf_mac_addr(priv->lan2_macaddr, 1);
-		inc_sf_mac_addr(priv->wan_macaddr, 2);
-		inc_sf_mac_addr(priv->wwan_macaddr, 11);
-	}
-#else
 	//move eth address to end to avoid conflict with wifi address
 	if(inc_lb == 0){
 		//pick the last 2 address as lan/wan address
@@ -492,13 +462,18 @@ void handle_macaddr_internal(struct device_node *np,struct sfax8_factory_read_co
 		//pick the first addres as lan
 		//pick the last addres as wan
 		inc_sf_mac_addr(priv->wan_macaddr,9);
-	}
-#endif
-	else{
+	}else{
 		printk("handle_macaddr_internal should nerver get here %d!!!\n",inc_lb);
 	}
+#else
+	inc_sf_mac_addr(priv->lan_macaddr, MACADDR_LAN_OFFSET);
+	inc_sf_mac_addr(priv->wan_macaddr, MACADDR_WAN_OFFSET);
+	inc_sf_mac_addr(priv->wifi_lb_macaddr, MACADDR_WIFI_LB_OFFSET);
+	inc_sf_mac_addr(priv->wifi_hb_macaddr, MACADDR_WIFI_HB_OFFSET);
+#endif
 }
 EXPORT_SYMBOL_GPL(handle_macaddr_internal);
+
 
 static void factory_print_string(const char *info, const unsigned char *str, int len)
 {

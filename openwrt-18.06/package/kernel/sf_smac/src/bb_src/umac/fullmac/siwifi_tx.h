@@ -28,7 +28,7 @@
 #define SIWIFI_HWQ_ALL_ACS_BIT ( BIT(SIWIFI_HWQ_BK) | BIT(SIWIFI_HWQ_BE) |    \
                                BIT(SIWIFI_HWQ_VI) | BIT(SIWIFI_HWQ_VO) )
 
-#define SIWIFI_TX_LIFETIME_MS             100
+#define SIWIFI_TX_LIFETIME_MS             3000
 #define SIWIFI_TX_MAX_RATES               NX_TX_MAX_RATES
 
 #define SIWIFI_SWTXHDR_ALIGN_SZ           4
@@ -97,6 +97,22 @@ struct siwifi_amsdu {
 };
 
 /**
+* struct siwifi_frame_flag - Bitfield of flags
+ *
+ * @mgmt_frame: BIT0 indicates MGMT frame.
+ * @retry_frame: BIT1 indicates retry frame.
+ * @reserved: Reserved.
+ */
+union siwifi_frame_flag {
+    struct {
+        u8 mgmt_frame : 1;
+        u8 retry_frame : 1;
+        u8 reserved : 6;
+    };
+    u8 value;
+};
+
+/**
  * struct siwifi_sw_txhdr - Software part of tx header
  *
  * @siwifi_sta sta to which this buffer is addressed
@@ -114,6 +130,7 @@ struct siwifi_amsdu {
  * @map_len  Length mapped for DMA (only siwifi_hw_txhdr and data are mapped)
  * @dma_addr DMA address after mapping
  * @desc Buffer description that will be copied in shared mem for FW
+ * @flags BIT0 indicates MGMT frame, BIT1 indicates retry frame
  */
 struct siwifi_sw_txhdr {
     struct siwifi_sta *siwifi_sta;
@@ -134,6 +151,7 @@ struct siwifi_sw_txhdr {
     struct txdesc_api desc;
     u64 push_to_lmac_time;
     u64 confirm_time;
+    union siwifi_frame_flag flags;
 };
 
 /**

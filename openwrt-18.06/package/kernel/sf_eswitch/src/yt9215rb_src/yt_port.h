@@ -26,6 +26,8 @@ extern "C" {
 #define YT_MAX_CASCADE_PORT_NUM     CAL_MAX_CASCADE_PORT_NUM
 #define YT_INVALID_CASCADE_PORT     CAL_INVALID_CASCADE_PORT
 #define YT_CASCADE_FWD_PORTMASK     CAL_CASCADE_FWD_PORTMASK
+#define YT_JUMBO_SIZE_MAX           CAL_JUMBO_SIZE_MAX
+#define YT_JUMBO_SIZE_MIN           CAL_JUMBO_SIZE_MIN
 
 typedef enum yt_extif_mode_e
 {
@@ -325,7 +327,7 @@ extern yt_ret_t yt_port_macAutoNeg_enable_get(yt_unit_t unit, yt_port_t port, yt
  * @internal      yt_port_mac_force_set
  * @endinternal
  *
- * @brief         set mac force control configuration.should disable mac AN first. 
+ * @brief         set mac force control configuration.should disable mac AN first.
  * @note          APPLICABLE DEVICES  -Tiger
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
@@ -642,6 +644,34 @@ extern yt_ret_t yt_port_jumbo_enable_set(yt_unit_t unit, yt_port_t port, yt_enab
  */
 extern yt_ret_t yt_port_jumbo_enable_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable);
 
+/**
+ * @internal      yt_port_jumbo_size_set
+ * @endinternal
+ *
+ * @brief          set jumbo frame size on port,9kB max length by default
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     size              -jumbo frame size
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t yt_port_jumbo_size_set(yt_unit_t unit, yt_port_t port, uint32_t size);
+
+
+/**
+ * @internal      yt_port_jumbo_size_get
+ * @endinternal
+ *
+ * @brief         get jumbo frame size on port
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[out]    pSize             -jumbo frame size
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t yt_port_jumbo_size_get(yt_unit_t unit, yt_port_t port, uint32_t *pSize);
 
 /**
  * @internal      yt_port_cable_diag

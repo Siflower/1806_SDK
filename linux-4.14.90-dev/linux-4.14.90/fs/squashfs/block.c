@@ -88,7 +88,7 @@ static struct buffer_head *get_block_length(struct super_block *sb,
  * generated a larger block - this does occasionally happen with compression
  * algorithms).
  */
-int squashfs_read_data(struct super_block *sb, u64 index, int length,
+static inline int __squashfs_read_data(struct super_block *sb, u64 index, int length,
 		u64 *next_index, struct squashfs_page_actor *output)
 {
 	struct squashfs_sb_info *msblk = sb->s_fs_info;
@@ -214,4 +214,46 @@ read_failure:
 					(unsigned long long) index);
 	kfree(bh);
 	return -EIO;
+}
+
+
+/*
+ * If some kind of error is detected, block into this loop rather than crashing
+ * the process that requested the data, since it can be `init` and crashing it
+ * will lead to a kernel panic. If the read still failing, the process is doomed
+ * to crash anyway.
+ *
+ * This only makes SQUASHFS more error resistant by avoiding the poisoning of
+ * the "front" cache if the first attempt failed.
+ *
+ */
+int squashfs_read_data(struct super_block *sb, u64 index, int length,
+		u64 *next_index, struct squashfs_page_actor *output)
+{
+	int ret = 0, attempts = 0;
+	unsigned long long block = (unsigned long long) index;
+	u64 saved_next_index;
+
+	if (next_index)
+		saved_next_index = *next_index;
+
+	ret = __squashfs_read_data(sb, index, length, next_index, output);
+
+	while (ret < 0 && attempts < 5) {  // Retry 5 times, a total of 6 attempts
+		attempts++;
+		TRACE("failed to read block [%llx], retry attempt %d\n",
+			block, attempts);
+		if (next_index)
+			*next_index = saved_next_index;
+		ret = __squashfs_read_data(sb, index, length, next_index, output);
+	}
+
+	if (attempts > 0 && ret >= 0)
+		TRACE("read_data: success after %d attempts to read block [%llx]\n",
+			 attempts, block);
+	else if (attempts > 0 && ret < 0)
+		ERROR("read_data: failed after %d attempts to read block [%llx]\n",
+			  attempts + 1);
+
+	return ret;
 }

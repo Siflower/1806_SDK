@@ -351,6 +351,10 @@ struct siwifi_vif {
 #ifdef CONFIG_SIWIFI_REPEATER
     struct repeater_info * rp_info;
 #endif
+
+#ifdef CONFIG_SIWIFI_IGMP
+    uint32_t enable_multicast_to_unicast;
+#endif
     int wds_success;
 };
 
@@ -571,6 +575,43 @@ struct siwifi_sta {
     u16 update_time_count;
     int user_tid;
 };
+#define SIWIFI_STATIC_INFO_MAX 36
+#define SIWIFI_STATIC_TIME_MAX 60
+#define SIWIFI_STATIC_INTERVAL (1 * HZ) // 1s
+#define SIWIFI_STATIC_BREAK_REASON_MAX 3
+struct siwifi_static_txinfo {
+    uint16_t siwifi_static_txxmit;
+    uint16_t siwifi_static_txpush;
+    uint16_t siwifi_static_txcfm;
+    uint16_t siwifi_static_cfm_ack;
+    uint16_t siwifi_static_cfm_ret;
+    uint16_t siwifi_static_a_tt;
+    uint16_t siwifi_static_s_tt;
+    uint16_t siwifi_static_rx;
+
+    uint16_t siwifi_static_drop_skb;
+    uint16_t siwifi_static_intxq;
+    uint16_t siwifi_static_ps_drop;
+    uint16_t siwifi_static_ps_change[NX_NB_TXQ_PER_STA];
+    uint16_t siwifi_static_ready[NX_NB_TXQ_PER_STA];
+    uint8_t  siwifi_static_ps_state;
+
+    uint16_t siwifi_static_txq_start[NX_NB_TXQ_PER_STA];
+    uint16_t siwifi_static_txq_stop[NX_NB_TXQ_PER_STA];
+    uint16_t siwifi_static_txq_process[NX_NB_TXQ_PER_STA];
+    uint16_t siwifi_static_pro_in_hwq[NX_NB_TXQ_PER_STA];
+    uint16_t siwifi_static_pro_reorder[NX_NB_TXQ_PER_STA];
+    uint16_t siwifi_static_not_ready[NX_NB_TXQ_PER_STA];
+
+    uint16_t siwifi_static_hwq_process;
+    uint16_t siwifi_static_hwq_push[NX_TXQ_CNT];
+    uint16_t siwifi_static_break_reason[SIWIFI_STATIC_BREAK_REASON_MAX];
+
+    uint8_t  siwifi_static_use;
+};
+void siwifi_static_timer_clear(struct siwifi_hw *siwifi_hw);
+void siwifi_static_timer_start(struct siwifi_hw *siwifi_hw);
+void siwifi_static_timer_print(struct siwifi_hw *siwifi_hw, int sta_idx);
 
 static inline const u8 *siwifi_sta_addr(struct siwifi_sta *siwifi_sta) {
     return siwifi_sta->mac_addr;
@@ -1171,6 +1212,7 @@ struct siwifi_hw {
 #endif
 #ifdef CONFIG_SIWIFI_IGMP
     struct multicast_group *mul_group;
+    uint32_t enable_multicast_to_unicast;
 #endif
 #ifdef CONFIG_SIWIFI_TEMPERATURE_CONTROL
 struct siwifi_temp_ctl temp_ctl;
@@ -1226,6 +1268,19 @@ struct siwifi_temp_ctl temp_ctl;
 #ifdef CONFIG_SIWIFI_EASYMESH
     sf_sta_timer_info sta_timer_info;
 #endif /* CONFIG_SIWIFI_EASYMESH */
+    // statistics for debugging
+    int siwifi_static_enable_tcp_check;
+    int siwifi_static_timer_cur;
+    int siwifi_static_timer_stop;
+    struct timer_list siwifi_static_timer;
+    struct siwifi_static_txinfo siwifi_static_txinfo[SIWIFI_STATIC_INFO_MAX];
+    struct siwifi_static_txinfo siwifi_static_timeinfo[SIWIFI_STATIC_TIME_MAX][SIWIFI_STATIC_INFO_MAX];
+    uint16_t siwifi_static_hwq_process;
+    uint16_t siwifi_static_hwq_push[NX_TXQ_CNT];
+    uint16_t siwifi_static_break_reason[SIWIFI_STATIC_BREAK_REASON_MAX];
+    uint16_t ave_speed_cnt_thres;
+    uint16_t ave_speed_credits_low;
+    uint16_t ave_speed_credits_up;
 };
 
 #ifdef CONFIG_SF_SKB_POOL

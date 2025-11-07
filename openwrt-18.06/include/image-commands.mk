@@ -325,6 +325,11 @@ metadata_json = \
 			"board": "$(call json_quote,$(BOARD))" \
 		} \
 	}'
+ifeq ($(CONFIG_NAND_SUPPORT), y)
+define Build/append-sf-metadata
+	echo $(call metadata_json,$(SUPPORTED_DEVICES)) | fwtool -I - $@
+endef
+endif
 
 define Build/append-metadata
 	$(if $(SUPPORTED_DEVICES),-echo $(call metadata_json,$(SUPPORTED_DEVICES)) | fwtool -I - $@)

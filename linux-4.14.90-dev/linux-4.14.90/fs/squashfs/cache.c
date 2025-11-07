@@ -125,8 +125,12 @@ struct squashfs_cache_entry *squashfs_cache_get(struct super_block *sb,
 
 			spin_lock(&cache->lock);
 
-			if (entry->length < 0)
+			if (entry->length < 0) {
 				entry->error = entry->length;
+				WARNING("Invalidated %s cache entry [%llx]\n", cache->name,
+					entry->block);
+				entry->block = SQUASHFS_INVALID_BLK;
+			}
 
 			entry->pending = 0;
 

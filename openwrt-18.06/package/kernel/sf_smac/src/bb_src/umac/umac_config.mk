@@ -58,7 +58,6 @@ CONFIG_SIWIFI_CMDSTR = y
 
 ifeq ($(CONFIG_WIFI_LITE_MEMORY),y)
 CONFIG_SIWIFI_TESTMODE = n
-CONFIG_SIWIFI_CMDSTR = n
 CONFIG_ERROR_DUMP = n
 subdir-ccflags-y += -DCONFIG_WIFI_LITE_MEMORY
 # Support fw software and hardware diags trace

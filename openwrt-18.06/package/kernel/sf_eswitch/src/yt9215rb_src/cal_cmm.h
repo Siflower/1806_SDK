@@ -36,6 +36,8 @@ typedef enum cal_port_type_e {
 #define CAL_MAX_CASCADE_PORT_NUM        CHIP_MAX_CASCADE_PORT_NUM
 #define CAL_INVALID_CASCADE_PORT        CHIP_INVALID_CASCADE_PORT
 #define CAL_CASCADE_FWD_PORTMASK        CHIP_CASCADE_FWD_PORTMASK
+#define CAL_JUMBO_SIZE_MAX              CHIP_JUMBO_SIZE_MAX
+#define CAL_JUMBO_SIZE_MIN              CHIP_JUMBO_SIZE_MIN
 
 #define CAL_UNIT_COUNT  (gBoardInfo.switch_count)
 #define CAL_PORT_NUM_ON_UNIT(unit)  (UNITINFO(unit)->port_num)

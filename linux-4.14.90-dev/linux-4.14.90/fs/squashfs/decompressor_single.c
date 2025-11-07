@@ -72,10 +72,6 @@ int squashfs_decompress(struct squashfs_sb_info *msblk, struct buffer_head **bh,
 		offset, length, output);
 	mutex_unlock(&stream->mutex);
 
-	if (res < 0)
-		ERROR("%s decompression failed, data probably corrupt\n",
-			msblk->decompressor->name);
-
 	return res;
 }
 

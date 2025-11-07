@@ -90,7 +90,7 @@
 #if (NX_NB_TXQ >= TXQ_INACTIVE)
 #error("Need to increase struct siwifi_txq->idx size")
 #endif
-
+#define NX_TXQ_INITIAL_CREDITS_TID0 32
 #define NX_TXQ_INITIAL_CREDITS 4
 
 #define MAX_NUM_HWQ_TOKENS 4
@@ -106,8 +106,21 @@ extern const int nx_tid_prio[NX_NB_TID_PER_STA];
 //by us. To be safe, here we still use a big value
 #define MAX_EARLY_SKB_LEN 160
 
-#define NUM_TX_DESCS_PER_AC 2
+#define NUM_TX_DESCS_PER_AC 8
+#define NUM_TX_DESCS_PER_AC_L 2
 #define NUM_PER_HWQ_RECORD 320
+
+#define AVE_SPEED_CNT_THRES 4
+#define AVE_SPEED_CREDITS_LOW 16
+#define AVE_SPEED_CREDITS_UP  32
+struct siwifi_ave_speed  {
+    uint8_t  ave_speed_enable;
+    uint8_t  as_txq_cnt;
+    uint32_t as_rate_total;
+    uint32_t as_pkt_total;
+    uint32_t as_ave_pkt_total;
+};
+
 /**
  * struct siwifi_hwq - Structure used to save information relative to
  *                   an AC TX queue (aka HW queue)
@@ -159,6 +172,7 @@ struct siwifi_hwq {
 #ifdef NEW_SCHEDULE
     u8 max_skb_per_desc[CONFIG_USER_MAX];
 #endif
+    struct siwifi_ave_speed ave_speed;
 };
 
 /**
@@ -365,12 +379,29 @@ struct siwifi_txq {
     //statistics in timer time(SIWIFI_TXQ_STAT_TIME_MS), updated by txq_stat_handler
     struct txq_time_stat last_timer_time_stat;
     struct txq_atf atf;
+    u32 ps_active_change;
+    //  statistics for debugging
+    u32 siwifi_static_time_drop;
+    u64 siwifi_static_last_inhwq;
+    u64 siwifi_static_last_process;
+    u16 siwifi_static_start;
+    u16 siwifi_static_stop;
+    u16 siwifi_static_process;
+    u16 siwifi_static_pro_in_hwq;
+    u16 siwifi_static_pro_reorder;
+    u16 siwifi_static_not_ready;
+    u32 as_ave_pkt;
+    u32 as_enable_pkt;
+    u32 as_disable_pkt;
 };
 
 struct siwifi_sta;
 struct siwifi_vif;
 struct siwifi_hw;
 struct siwifi_sw_txhdr;
+#ifdef TOKEN_ENABLE
+extern int tx_descs_num;
+#endif
 
 #ifdef CONFIG_SIWIFI_MUMIMO_TX
 #define SIWIFI_TXQ_GROUP_ID(txq) ((txq)->mumimo_info & 0x3f)
@@ -558,5 +589,7 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq);
 void siwifi_hwq_process_all(struct siwifi_hw *siwifi_hw);
 
 int siwifi_adjust_hwq_credits(struct siwifi_hw *siwifi_hw,s16 credit_dec);
-
+#ifdef TOKEN_ENABLE
+int siwifi_get_num_tx_descs_per_ac(struct siwifi_hw *siwifi_hw);
+#endif
 #endif /* _SIWIFI_TXQ_H_ */

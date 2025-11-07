@@ -9,6 +9,9 @@
 #include <linux/of_mdio.h>
 #include <linux/gpio/consumer.h>
 #include <linux/switch.h>
+#include <linux/if_ether.h>
+#include <linux/netdevice.h>
+#include <net/net_namespace.h>
 
 #include "cal_bprofile.h"
 #include "cal_cmm.h"
@@ -675,6 +678,34 @@ void yt9215rb_port_vlan_init(uint32_t cpu_port)
 	}
 }
 
+unsigned int get_mtu_by_devname(const char *dev_name)
+{
+	struct net_device *dev;
+	unsigned int mtu = 1500;
+
+	dev = dev_get_by_name(&init_net, dev_name);
+	if (dev) {
+		mtu = dev->mtu;
+		dev_put(dev);
+	}
+
+	return mtu;
+}
+
+void yt9215rb_port_jumbo_size_init(void)
+{
+	int i;
+	unsigned int mtu, jumbo_size;
+
+	mtu = get_mtu_by_devname("eth0");
+	jumbo_size = mtu + ETH_HLEN + ETH_FCS_LEN;
+	for(i = 0; i < YT9215RB_PHY_PORT_NUM; i++)
+	{
+		yt_port_jumbo_enable_set(0, i, YT_ENABLE);
+		yt_port_jumbo_size_set(0, i, jumbo_size);
+	}
+}
+
 void yt9215rb_init(struct sf_eswitch_priv *pesw_priv)
 {
 	int err;
@@ -694,6 +725,7 @@ void yt9215rb_init(struct sf_eswitch_priv *pesw_priv)
 
 	yt9215rb_extPort_rgmii_init(yt9215_cpu_port);
 	yt9215rb_port_vlan_init(yt9215_cpu_port);
+	yt9215rb_port_jumbo_size_init();
 
 	//yt_port_enable_set(0, 5, YT_ENABLE);
 	//yt_stat_mib_enable_set(0, YT_ENABLE);

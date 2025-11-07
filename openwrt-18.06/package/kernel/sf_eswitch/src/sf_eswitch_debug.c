@@ -8,6 +8,7 @@
 #include "realtek8367c_src/l2.h"
 #include "air.h"
 #include "yt9215rb_src/yt_stat.h"
+#include "yt9215rb_src/yt_port.h"
 
 extern int check_port_in_portlist(struct sf_eswitch_priv *pesw_priv, int port);
 
@@ -513,7 +514,32 @@ ssize_t sf_eswitch_debug_write(struct file *file, const char __user *user_buf,
 		} else {
 			return -EOPNOTSUPP;
 		}
-	} else if (strncmp(str[0], "disableBridgeRedirect", sizeof(str[0])) == 0) {
+	} else if (strncmp(str[0], "setdelay", 8) == 0) {
+			unsigned int tx_delay=0, rx_delay=0, enable=1;
+			ret = kstrtou32(str[1], 0, &tx_delay);
+			ret = kstrtou32(str[2], 0, &rx_delay);
+			ret = kstrtou32(str[3], 0, &enable);
+			SF_MDIO_LOCK();
+			int err = yt_port_extif_rgmii_delay_set(0, 6, rx_delay, tx_delay, enable);
+			SF_MDIO_UNLOCK();
+			if (err < 0) {
+				printk("error set delay tx:%d rx:%d\n", tx_delay, rx_delay);
+				return err;
+			}
+	} else if (strncmp(str[0], "getdelay", 8) == 0) {
+			u8 tx_delay, rx_delay;
+			yt_enable_t ret;
+			SF_MDIO_LOCK();
+			int err = yt_port_extif_rgmii_delay_get(0, 6, &rx_delay, &tx_delay, &ret);
+			SF_MDIO_UNLOCK();
+			if (err < 0) {
+				printk("error get delay \n");
+				return err;
+			}
+			if (ret)
+				printk("get delay tx:%d rx:%d\n", tx_delay, rx_delay);
+	}
+	else if (strncmp(str[0], "disableBridgeRedirect", sizeof(str[0])) == 0) {
 		if (pesw_priv->model == INTEL7084 || pesw_priv->model == INTEL7082) {
 			int err = intel7084_bridge_redirect_disable();
 

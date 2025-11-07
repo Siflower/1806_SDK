@@ -1,0 +1,628 @@
+Index: hostapd-2019-08-08-ca8c2bd2/src/ap/acs.c
+===================================================================
+--- hostapd-2019-08-08-ca8c2bd2.orig/src/ap/acs.c
++++ hostapd-2019-08-08-ca8c2bd2/src/ap/acs.c
+@@ -241,6 +241,76 @@
+  * [1] http://en.wikipedia.org/wiki/Near_and_far_field
+  */
+ 
++enum bw_type {
++	ACS_BW40,
++	ACS_BW80,
++	ACS_BW160,
++};
++
++struct bw_item {
++	int first;
++	int last;
++	int center_chan;
++};
++
++static const struct bw_item bw_40[] = {
++	{ 5180, 5200, 38 }, { 5220, 5240, 46 }, { 5260, 5280, 54 },
++	{ 5300, 5320, 62 }, { 5500, 5520, 102 }, { 5540, 5560, 110 },
++	{ 5580, 5600, 118 }, { 5620, 5640, 126 }, { 5660, 5680, 134 },
++	{ 5700, 5720, 142 }, { 5745, 5765, 151 }, { 5785, 5805, 159 },
++	{ 5825, 5845, 167 }, { 5865, 5885, 175 },
++	{ 5955, 5975, 3 }, { 5995, 6015, 11 }, { 6035, 6055, 19 },
++	{ 6075, 6095, 27 }, { 6115, 6135, 35 }, { 6155, 6175, 43 },
++	{ 6195, 6215, 51 }, { 6235, 6255, 59 }, { 6275, 6295, 67 },
++	{ 6315, 6335, 75 }, { 6355, 6375, 83 }, { 6395, 6415, 91 },
++	{ 6435, 6455, 99 }, { 6475, 6495, 107 }, { 6515, 6535, 115 },
++	{ 6555, 6575, 123 }, { 6595, 6615, 131 }, { 6635, 6655, 139 },
++	{ 6675, 6695, 147 }, { 6715, 6735, 155 }, { 6755, 6775, 163 },
++	{ 6795, 6815, 171 }, { 6835, 6855, 179 }, { 6875, 6895, 187 },
++	{ 6915, 6935, 195 }, { 6955, 6975, 203 }, { 6995, 7015, 211 },
++	{ 7035, 7055, 219 }, { 7075, 7095, 227}, { -1, -1, -1 }
++};
++
++static const struct bw_item bw_80[] = {
++	{ 5180, 5240, 42 }, { 5260, 5320, 58 }, { 5500, 5560, 106 },
++	{ 5580, 5640, 122 }, { 5660, 5720, 138 }, { 5745, 5805, 155 },
++	{ 5825, 5885, 171},
++	{ 5955, 6015, 7 }, { 6035, 6095, 23 }, { 6115, 6175, 39 },
++	{ 6195, 6255, 55 }, { 6275, 6335, 71 }, { 6355, 6415, 87 },
++	{ 6435, 6495, 103 }, { 6515, 6575, 119 }, { 6595, 6655, 135 },
++	{ 6675, 6735, 151 }, { 6755, 6815, 167 }, { 6835, 6895, 183 },
++	{ 6915, 6975, 199 }, { 6995, 7055, 215 }, { -1, -1, -1 }
++};
++
++static const struct bw_item bw_160[] = {
++	{ 5180, 5320, 50 }, { 5500, 5640, 114 }, { 5745, 5885, 163 },
++	{ 5955, 6095, 15 }, { 6115, 6255, 47 }, { 6275, 6415, 79 },
++	{ 6435, 6575, 111 }, { 6595, 6735, 143 },
++	{ 6755, 6895, 175 }, { 6915, 7055, 207 }, { -1, -1, -1 }
++};
++
++static const struct bw_item *bw_desc[] = {
++	[ACS_BW40] = bw_40,
++	[ACS_BW80] = bw_80,
++	[ACS_BW160] = bw_160,
++};
++
++#define ACS_SIGNAL_STRENGTH_THRESHOLD -70
++
++struct channel_usage {
++	int freq;
++	u8 used;
++};
++
++struct channel_usage channel_usage_24G[13] = {
++	{2412, 0}, {2417, 0}, {2422, 0}, {2427, 0}, {2432, 0}, {2437, 0}, {2442, 0},
++	{2447, 0}, {2452, 0}, {2457, 0}, {2462, 0}, {2467, 0}, {2472, 0}
++};
++struct channel_usage channel_usage_5G[12]= {
++	{5180, 0}, {5200, 0}, {5220, 0}, {5240, 0},
++	{5260, 0}, {5280, 0}, {5300, 0}, {5320, 0},
++	{5745, 0}, {5765, 0}, {5785, 0}, {5805, 0},
++};
+ 
+ static int acs_request_scan(struct hostapd_iface *iface);
+ static int acs_survey_is_sufficient(struct freq_survey *survey);
+@@ -359,8 +429,10 @@ acs_survey_chan_interference_factor(stru
+ 
+ static int acs_usable_ht40_chan(const struct hostapd_channel_data *chan)
+ {
+-	const int allowed[] = { 36, 44, 52, 60, 100, 108, 116, 124, 132, 149,
+-				157, 184, 192 };
++	const int allowed[] = { 36, 40, 44, 48, 52, 56, 60, 64,  100, 104,
++	                        108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
++	                        149, 153, 157, 161, 165, 184, 192 };
++
+ 	unsigned int i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(allowed); i++)
+@@ -373,7 +445,9 @@ static int acs_usable_ht40_chan(const st
+ 
+ static int acs_usable_vht80_chan(const struct hostapd_channel_data *chan)
+ {
+-	const int allowed[] = { 36, 52, 100, 116, 132, 149 };
++	const int allowed[] = { 36, 40, 44, 48, 52, 56, 60, 64, 100, 104,
++	                        108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
++	                        149, 153, 157, 161 };
+ 	unsigned int i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(allowed); i++)
+@@ -386,7 +460,7 @@ static int acs_usable_vht80_chan(const s
+ 
+ static int acs_usable_vht160_chan(const struct hostapd_channel_data *chan)
+ {
+-	const int allowed[] = { 36, 100 };
++	const int allowed[] = { 36, 40, 44, 48, 52, 56, 60, 64, 100 };
+ 	unsigned int i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(allowed); i++)
+@@ -397,6 +471,35 @@ static int acs_usable_vht160_chan(const
+ }
+ 
+ 
++static int acs_get_bw_center_chan(int freq, enum bw_type bw)
++{
++	unsigned int i = 0;
++
++	while (bw_desc[bw][i].first != -1) {
++		if (freq >= bw_desc[bw][i].first &&
++		    freq <= bw_desc[bw][i].last)
++			return bw_desc[bw][i].center_chan;
++		i++;
++	}
++
++	return 0;
++}
++
++static const struct bw_item *acs_get_bw_item(int freq, enum bw_type bw)
++{
++	unsigned int i = 0;
++
++	while (bw_desc[bw][i].first != -1) {
++		if (freq >= bw_desc[bw][i].first &&
++		    freq <= bw_desc[bw][i].last)
++			return &bw_desc[bw][i];
++		i++;
++	}
++
++	return NULL;
++}
++
++
+ static int acs_survey_is_sufficient(struct freq_survey *survey)
+ {
+ 	if (!(survey->filled & SURVEY_HAS_NF)) {
+@@ -565,6 +668,280 @@ static int is_common_24ghz_chan(int chan
+ #define ACS_24GHZ_PREFER_1_6_11 0.8
+ #endif /* ACS_24GHZ_PREFER_1_6_11 */
+ 
++static int acs_have_unused_channel(struct hostapd_iface *iface, struct hostapd_channel_data *chan, u32 bw, u8 *is_unused)
++{
++	int i, j, have_unused_chan = 0;
++	struct hostapd_channel_data *tmp_chan = NULL;
++
++	*is_unused = 0;
++	if (!is_24ghz_mode(iface->current_mode->mode)) {
++		for (i = 0; i < sizeof(channel_usage_5G) / sizeof(struct channel_usage); i++) {
++			/* Get Corresponding channel data */
++			for (j = 0; j < iface->current_mode->num_channels; j++) {
++				tmp_chan = &iface->current_mode->channels[j];
++				if (tmp_chan->freq == channel_usage_5G[i].freq)
++					break;
++			}
++
++			if (!chan_bw_allowed(tmp_chan, bw, 1, 1)) {
++				wpa_printf(MSG_INFO, "ACS: Channel %d: BW %u is not supported", tmp_chan->chan, bw);
++				continue;
++			}
++
++			if (channel_usage_5G[i].used)
++				continue;
++
++			have_unused_chan = 1;
++			if (channel_usage_5G[i].freq == chan->freq) {
++				wpa_printf(MSG_INFO, "ACS: Channel %d: BW %u is unused", chan->chan, bw);
++				*is_unused = 1;
++			}
++		}
++	} else {
++		for (i = 0; i < sizeof(channel_usage_24G) / sizeof(struct channel_usage); i++) {
++			/* Get Corresponding channel data */
++			for (j = 0; j < iface->current_mode->num_channels; j++) {
++				tmp_chan = &iface->current_mode->channels[j];
++				if (tmp_chan->freq == channel_usage_24G[i].freq)
++					break;
++			}
++
++			if (!chan_bw_allowed(tmp_chan, bw, 1, 1)) {
++				wpa_printf(MSG_INFO, "ACS: Channel %d: BW %u is not supported", tmp_chan->chan, bw);
++				continue;
++			}
++
++			if (channel_usage_24G[i].used)
++				continue;
++
++			have_unused_chan = 1;
++			if (channel_usage_24G[i].freq == chan->freq) {
++				wpa_printf(MSG_INFO, "ACS: Channel %d: BW %u is unused", chan->chan, bw);
++				*is_unused = 1;
++			}
++		}
++	}
++
++	return have_unused_chan;
++}
++
++static void acs_record_channel_usage(struct hostapd_iface *iface, int freq, enum nr_chan_width bw, int secondary_channel_offset)
++{
++	struct hostapd_channel_data *chan = NULL;
++	struct bw_item *bw_item = NULL;
++	u16 secondary_channel_freq = 0;
++	u8 n_chans;
++	int i, j;
++
++	switch (bw) {
++		case NR_CHAN_WIDTH_160:
++			n_chans = 8;
++			break;
++		case NR_CHAN_WIDTH_80:
++			n_chans = 4;
++			break;
++		case NR_CHAN_WIDTH_40:
++			n_chans = 2;
++			break;
++		case NR_CHAN_WIDTH_20:
++		default:
++			n_chans = 1;
++			break;
++	}
++
++	if (!is_24ghz_mode(iface->current_mode->mode)) {
++		if (bw == NR_CHAN_WIDTH_20) {
++			chan = acs_find_chan(iface, freq);
++			if (!chan) {
++				wpa_printf(MSG_ERROR, "ACS: Failed to find channel, freq:%d\n", freq);
++				return;
++			}
++
++			for (i = 0; i < sizeof(channel_usage_5G) / sizeof(struct channel_usage); i++) {
++				if (channel_usage_5G[i].freq == chan->freq)
++					channel_usage_5G[i].used = 1;
++			}
++		} else {
++			/* "bw - 1" to convert type of band width in enum nr_chan_width to enum bw_type */
++			bw_item = acs_get_bw_item(freq, (enum bw_type)(bw - 1));
++			if (!bw_item) {
++				wpa_printf(MSG_ERROR, "ACS: Failed to get bw_item, freq:%d, bw:%d\n", freq, bw);
++				return;
++			}
++
++			for (i = 0; i < n_chans; i++) {
++				chan = acs_find_chan(iface, bw_item->first + i * 20);
++				if (!chan) {
++					wpa_printf(MSG_ERROR, "ACS: Failed to find channel, first freq:%d\n", bw_item->first);
++					return;
++				}
++
++				for (j = 0; j < sizeof(channel_usage_5G) / sizeof(struct channel_usage); j++) {
++					if (channel_usage_5G[j].freq == chan->freq)
++						channel_usage_5G[j].used = 1;
++				}
++			}
++		}
++	} else {
++		/* For 2.4G, only focus on the primary channel. */
++		for (i = 0; i < n_chans; i++) {
++			chan = acs_find_chan(iface, freq + (i * secondary_channel_offset * 20) - 5);
++			if (chan) {
++				for (j = 0; j < sizeof(channel_usage_24G) / sizeof(struct channel_usage); j++) {
++					if (channel_usage_24G[j].freq == chan->freq)
++						channel_usage_24G[j].used = 1;
++				}
++			}
++
++			chan = acs_find_chan(iface, freq + (i * secondary_channel_offset * 20) - 10);
++			if (chan) {
++				for (j = 0; j < sizeof(channel_usage_24G) / sizeof(struct channel_usage); j++) {
++					if (channel_usage_24G[j].freq == chan->freq)
++						channel_usage_24G[j].used = 1;
++				}
++			}
++
++			chan = acs_find_chan(iface, freq + (i * secondary_channel_offset * 20));
++			if (chan) {
++				for (j = 0; j < sizeof(channel_usage_24G) / sizeof(struct channel_usage); j++) {
++					if (channel_usage_24G[j].freq == chan->freq)
++						channel_usage_24G[j].used = 1;
++				}
++			}
++
++			chan = acs_find_chan(iface, freq + (i * secondary_channel_offset * 20) + 5);
++			if (chan) {
++				for (j = 0; j < sizeof(channel_usage_24G) / sizeof(struct channel_usage); j++) {
++					if (channel_usage_24G[j].freq == chan->freq)
++						channel_usage_24G[j].used = 1;
++				}
++			}
++
++			chan = acs_find_chan(iface, freq + (i * secondary_channel_offset * 20) + 10);
++			if (chan) {
++				for (j = 0; j < sizeof(channel_usage_24G) / sizeof(struct channel_usage); j++) {
++					if (channel_usage_24G[j].freq == chan->freq)
++						channel_usage_24G[j].used = 1;
++				}
++			}
++		}
++	}
++}
++
++static void acs_get_bss_info(struct hostapd_iface *iface)
++{
++	struct ieee80211_vht_capabilities *vht_cap = NULL;
++	struct ieee80211_he_capabilities *he_cap = NULL;
++	struct ieee80211_ht_capabilities *ht_cap = NULL;
++	struct ieee80211_ht_operation* ht_oper = NULL;
++	struct wpa_scan_results *scan_res = NULL;
++	struct ieee802_11_elems elems;
++	int i, secondary_channel_offset = 0;
++	enum nr_chan_width bw;
++	u8 *pos = NULL;
++
++	scan_res = hostapd_driver_get_scan_results(iface->bss[0]);
++	if (scan_res == NULL) {
++		wpa_printf(MSG_ERROR, "ACS: Failed to get scan results\n");
++		return;
++	}
++
++	for (i = 0; i < scan_res->num; i++) {
++		struct wpa_scan_res *res = scan_res->res[i];
++		pos = (u8 *) res + sizeof(*res);
++
++		/* Exclude the impact of APs with weak signals */
++		if (res->level < ACS_SIGNAL_STRENGTH_THRESHOLD) {
++			wpa_printf(MSG_INFO, "ACS: BSSID(%02x:%02x:%02x:%02x:%02x:%02x) signal strength(%d) is too weak, signal strength threshold(%d)\n",
++				res->bssid[0], res->bssid[1], res->bssid[2], res->bssid[3], res->bssid[4], res->bssid[5], res->level, ACS_SIGNAL_STRENGTH_THRESHOLD);
++			continue;
++		}
++
++		if (ieee802_11_parse_elems(pos, res->ie_len, &elems, 0) == ParseFailed) {
++			wpa_printf(MSG_ERROR, "ACS: Failed to parse scan results, BSSID(%02x:%02x:%02x:%02x:%02x:%02x)\n",
++					res->bssid[0], res->bssid[1], res->bssid[2], res->bssid[3], res->bssid[4], res->bssid[5]);
++			continue;
++		}
++
++		/* Get Band Width Information */
++		if (elems.he_capabilities && !is_24ghz_mode(iface->current_mode->mode)) {
++			he_cap = (struct ieee80211_he_capabilities *) elems.he_capabilities;
++			wpa_printf(MSG_INFO, "ACS: HE PHY Capabilities info:%x\n", he_cap->he_phy_capab_info[0]);
++
++			if (he_cap->he_phy_capab_info[0] & HE_PHYCAP_CHANNEL_WIDTH_SET_80PLUS80MHZ_IN_5G)
++				bw = NR_CHAN_WIDTH_80P80;
++			else if (he_cap->he_phy_capab_info[0] & HE_PHYCAP_CHANNEL_WIDTH_SET_160MHZ_IN_5G)
++				bw = NR_CHAN_WIDTH_160;
++			else if (he_cap->he_phy_capab_info[0] & HE_PHYCAP_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G)
++				bw = NR_CHAN_WIDTH_80;
++			else
++				bw = NR_CHAN_WIDTH_80;	/* 80MHz for default */
++		} else if (elems.vht_capabilities && !is_24ghz_mode(iface->current_mode->mode)) {
++			vht_cap = (struct ieee80211_vht_capabilities *) elems.vht_capabilities;
++			wpa_printf(MSG_INFO, "ACS: VHT Capabilities info:%x\n", vht_cap->vht_capabilities_info);
++
++			if (vht_cap->vht_capabilities_info & VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ)
++				bw = NR_CHAN_WIDTH_80P80;
++			else if (vht_cap->vht_capabilities_info & VHT_CAP_SUPP_CHAN_WIDTH_160MHZ)
++				bw = NR_CHAN_WIDTH_160;
++			else
++				bw = NR_CHAN_WIDTH_80;	/* 80MHz for default */
++		} else if (elems.ht_capabilities) {
++			ht_cap = (struct ieee80211_ht_capabilities *) elems.ht_capabilities;
++			wpa_printf(MSG_INFO, "ACS: HT Capabilities info:%x\n", ht_cap->ht_capabilities_info);
++			if (ht_cap->ht_capabilities_info & HT_CAP_INFO_SUPP_CHANNEL_WIDTH_SET) {
++				bw = NR_CHAN_WIDTH_40;
++
++			/* For 40MHz bandwidth, temporarily ignore the secondary channel; the code below can be enabled if needed. */
++#if 0
++				secondary_channel_offset = 1; /* HT40+ for default */
++				if (elems.ht_operation) {
++					ht_oper = (struct ieee80211_ht_operation *) elems.ht_operation;
++					wpa_printf(MSG_INFO,"ACS: HT INFORMATION: %x\n", ht_oper->ht_param);
++					switch (ht_oper->ht_param & HT_INFO_HT_PARAM_SECONDARY_CHNL_OFF_MASK) {
++						case 1:
++							secondary_channel_offset = 1; /* HT40+ */
++							break;
++						case 3:
++							secondary_channel_offset = -1; /* HT40- */
++							break;
++						default:
++							break;
++					}
++				}
++#endif
++			} else {
++				bw = NR_CHAN_WIDTH_20;
++				secondary_channel_offset = 0;
++			}
++		} else {
++			if (is_24ghz_mode(iface->current_mode->mode)) {
++				bw = NR_CHAN_WIDTH_20;	/* 20MHz for 2.4G default */
++				secondary_channel_offset = 0;
++			}
++			else
++				bw = NR_CHAN_WIDTH_80;	/* 80MHz for 5G default */
++		}
++
++		wpa_printf(MSG_INFO, "ACS: BSSID(%02x:%02x:%02x:%02x:%02x:%02x) freq:%d bw:%d, second:%d\n",
++							res->bssid[0], res->bssid[1], res->bssid[2], res->bssid[3], res->bssid[4],
++											res->bssid[5], res->freq, bw, secondary_channel_offset);
++		/* Record Channel Usage */
++		acs_record_channel_usage(iface, res->freq, bw, secondary_channel_offset);
++	}
++
++	/* Dump Channel Usage for Debug */
++	if (!is_24ghz_mode(iface->current_mode->mode)) {
++		for (i = 0; i < sizeof(channel_usage_5G) / sizeof(struct channel_usage); i++) {
++			wpa_printf(MSG_INFO, "ACS: 5G Channel(%d) Usage(%d)\n", channel_usage_5G[i].freq, channel_usage_5G[i].used);
++		}
++	} else {
++		for (i = 0; i < sizeof(channel_usage_24G) / sizeof(struct channel_usage); i++) {
++			wpa_printf(MSG_INFO, "ACS: 24G Channel(%d) Usage(%d)\n", channel_usage_24G[i].freq, channel_usage_24G[i].used);
++		}
++	}
++}
++
+ /*
+  * At this point it's assumed chan->interface_factor has been computed.
+  * This function should be reusable regardless of interference computation
+@@ -581,6 +958,8 @@ acs_find_ideal_chan(struct hostapd_iface
+ 	int n_chans = 1;
+ 	u32 bw;
+ 	unsigned int k;
++	struct bw_item *bw_item = NULL;
++	u8 is_unused = 0;
+ 
+ 	/* TODO: HT40- support */
+ 
+@@ -643,7 +1022,7 @@ acs_find_ideal_chan(struct hostapd_iface
+ 		if (!chan_pri_allowed(chan))
+ 			continue;
+ 
+-		if (acs_radar_chan(chan))
++		if (acs_radar_chan(chan) && iface->conf->acs_exclude_dfs)
+ 			continue;
+ 
+ 		if (!is_in_chanlist(iface, chan))
+@@ -660,31 +1039,38 @@ acs_find_ideal_chan(struct hostapd_iface
+ 		 * 11n Annex J */
+ 		if (iface->current_mode->mode == HOSTAPD_MODE_IEEE80211A &&
+ 		    iface->conf->ieee80211n &&
+-		    iface->conf->secondary_channel &&
+-		    !acs_usable_ht40_chan(chan)) {
+-			wpa_printf(MSG_DEBUG, "ACS: Channel %d: not allowed as primary channel for HT40",
+-				   chan->chan);
+-			continue;
++		    iface->conf->secondary_channel) {
++
++			bw_item = acs_get_bw_item(chan->freq, ACS_BW40);
++		    if (!acs_usable_ht40_chan(chan)) {
++				wpa_printf(MSG_DEBUG, "ACS: Channel %d: not allowed as primary channel for HT40",
++					   chan->chan);
++				continue;
++			}
+ 		}
+ 
+ 		if (iface->current_mode->mode == HOSTAPD_MODE_IEEE80211A &&
+ 		    (iface->conf->ieee80211ac || iface->conf->ieee80211ax)) {
+ 			if (hostapd_get_oper_chwidth(iface->conf) ==
+-			    CHANWIDTH_80MHZ &&
+-			    !acs_usable_vht80_chan(chan)) {
+-				wpa_printf(MSG_DEBUG,
+-					   "ACS: Channel %d: not allowed as primary channel for VHT80",
+-					   chan->chan);
+-				continue;
++			    CHANWIDTH_80MHZ) {
++				bw_item = acs_get_bw_item(chan->freq, ACS_BW80);
++			    if (!acs_usable_vht80_chan(chan)) {
++					wpa_printf(MSG_DEBUG,
++						   "ACS: Channel %d: not allowed as primary channel for VHT80",
++					   	chan->chan);
++					continue;
++				}
+ 			}
+ 
+ 			if (hostapd_get_oper_chwidth(iface->conf) ==
+-			    CHANWIDTH_160MHZ &&
+-			    !acs_usable_vht160_chan(chan)) {
+-				wpa_printf(MSG_DEBUG,
+-					   "ACS: Channel %d: not allowed as primary channel for VHT160",
+-					   chan->chan);
+-				continue;
++			    CHANWIDTH_160MHZ) {
++				bw_item = acs_get_bw_item(chan->freq, ACS_BW160);
++			    if (!acs_usable_vht160_chan(chan)) {
++					wpa_printf(MSG_DEBUG,
++						   "ACS: Channel %d: not allowed as primary channel for VHT160",
++					   	chan->chan);
++					continue;
++				}
+ 			}
+ 		}
+ 
+@@ -704,7 +1090,16 @@ acs_find_ideal_chan(struct hostapd_iface
+ 		total_weight = 1;
+ 
+ 		for (j = 1; j < n_chans; j++) {
+-			adj_chan = acs_find_chan(iface, chan->freq + (j * 20));
++			if (!is_24ghz_mode(iface->current_mode->mode)) {
++				if (!bw_item) {
++					wpa_printf(MSG_DEBUG, "ACS: not found bw_item, chan:%d(freq:%d)\n", chan->chan, chan->freq);
++					break;
++				}
++				adj_chan = acs_find_chan(iface, bw_item->first + (j * 20));
++			} else {
++				adj_chan = acs_find_chan(iface, chan->freq + (j * 20));
++			}
++
+ 			if (!adj_chan)
+ 				break;
+ 
+@@ -803,8 +1198,15 @@ acs_find_ideal_chan(struct hostapd_iface
+ 
+ 		if (acs_usable_chan(chan) &&
+ 		    (!ideal_chan || factor < ideal_factor)) {
+-			ideal_factor = factor;
+-			ideal_chan = chan;
++			if (acs_have_unused_channel(iface, chan, bw, &is_unused)) {
++				if (is_unused) {
++					ideal_chan = chan;
++					ideal_factor = factor;
++				}
++			} else {
++				ideal_factor = factor;
++				ideal_chan = chan;
++			}
+ 		}
+ 
+ 		/* This channel would at least be usable */
+@@ -822,21 +1224,50 @@ acs_find_ideal_chan(struct hostapd_iface
+ }
+ 
+ 
++static void acs_adjust_secondary(struct hostapd_iface *iface)
++{
++	unsigned int i;
++
++	/* When working with bandwidth over 20 MHz on the 5 GHz or 6 GHz band,
++	 * ACS can return a secondary channel which is not the first channel of
++	 * the segment and we need to adjust. */
++	if (!iface->conf->secondary_channel ||
++	    iface->current_mode->mode != HOSTAPD_MODE_IEEE80211A)
++		return;
++
++	wpa_printf(MSG_DEBUG, "ACS: Adjusting HT/VHT secondary frequency");
++
++	for (i = 0; bw_desc[ACS_BW40][i].first != -1; i++) {
++		if (iface->freq == bw_desc[ACS_BW40][i].first)
++			iface->conf->secondary_channel = 1;
++		else if (iface->freq == bw_desc[ACS_BW40][i].last)
++			iface->conf->secondary_channel = -1;
++	}
++}
++
++
+ static void acs_adjust_center_freq(struct hostapd_iface *iface)
+ {
+-	int offset;
++	int center;
+ 
+ 	wpa_printf(MSG_DEBUG, "ACS: Adjusting VHT center frequency");
+ 
+ 	switch (hostapd_get_oper_chwidth(iface->conf)) {
+ 	case CHANWIDTH_USE_HT:
+-		offset = 2 * iface->conf->secondary_channel;
++		if (is_24ghz_mode(iface->current_mode->mode)) {
++			center = iface->conf->channel + 2 * iface->conf->secondary_channel;
++		} else {
++			if (iface->conf->secondary_channel)
++				center = acs_get_bw_center_chan(iface->freq, ACS_BW40);
++			else
++				center = iface->conf->channel;
++		}
+ 		break;
+ 	case CHANWIDTH_80MHZ:
+-		offset = 6;
++		center = acs_get_bw_center_chan(iface->freq, ACS_BW80);
+ 		break;
+ 	case CHANWIDTH_160MHZ:
+-		offset = 14;
++		center = acs_get_bw_center_chan(iface->freq, ACS_BW160);
+ 		break;
+ 	default:
+ 		/* TODO: How can this be calculated? Adjust
+@@ -846,8 +1277,7 @@ static void acs_adjust_center_freq(struc
+ 		return;
+ 	}
+ 
+-	hostapd_set_oper_centr_freq_seg0_idx(iface->conf,
+-					     iface->conf->channel + offset);
++	hostapd_set_oper_centr_freq_seg0_idx(iface->conf, center);
+ }
+ 
+ 
+@@ -865,6 +1295,7 @@ static int acs_study_survey_based(struct
+ 		return -1;
+ 	}
+ 
++	acs_get_bss_info(iface);
+ 	acs_survey_all_chans_intereference_factor(iface);
+ 	return 0;
+ }
+@@ -901,9 +1332,12 @@ static void acs_study(struct hostapd_ifa
+ 	}
+ 
+ 	iface->conf->channel = ideal_chan->chan;
++	iface->freq = ideal_chan->freq;
++	acs_adjust_secondary(iface);
+ 
+-	if (iface->conf->ieee80211ac || iface->conf->ieee80211ax)
++	if (iface->conf->ieee80211ac || iface->conf->ieee80211ax) {
+ 		acs_adjust_center_freq(iface);
++	}
+ 
+ 	err = 0;
+ fail:

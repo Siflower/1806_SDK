@@ -16,10 +16,14 @@ set_config(){
 	fi
 	if [ "$device" == "radio0" ];then
 		ossid=`uci get wireless.default_radio0.ossid`
-		uci set wireless.default_radio0.ssid=$ossid
+		if [ -n "$ossid" ]; then
+			uci set wireless.default_radio0.ssid=$ossid
+		fi
 	else
 		ossid=`uci get wireless.default_radio1.ossid`
-		uci set wireless.default_radio1.ssid=$ossid
+		if [ -n "$ossid" ]; then
+			uci set wireless.default_radio1.ssid=$ossid
+		fi
 	fi
 
 	uci commit
@@ -38,6 +42,23 @@ check_lan_ip(){
 				/etc/init.d/dnsmasq stop
 			fi
 			sh /sbin/internet_detect.sh 3
+			def0_disabled=$(uci get wireless.default_radio0.disabled_hostapd 2>/dev/null)
+			def1_disabled=$(uci get wireless.default_radio1.disabled_hostapd 2>/dev/null)
+			if [ "${def0_disabled}" = "1" ];then
+				uci set wireless.default_radio0.disabled_hostapd=0
+				ifname0=$(uci get wireless.default_radio0.ifname 2>/dev/null)
+				if [ -n "${ifname0}" ];then
+					hostapd_cli -i $ifname0 enable
+				fi
+			fi
+			if [ "${def1_disabled}" = "1" ];then
+				uci set wireless.default_radio1.disabled_hostapd=0
+				ifname1=$(uci get wireless.default_radio1.ifname 2>/dev/null)
+				if [ -n "${ifname1}" ];then
+					hostapd_cli -i $ifname1 enable
+				fi
+			fi
+			uci commit;
 			exit 0
 		else
 			sleep 5
@@ -59,7 +80,7 @@ while [ $loop_count -gt 0 ]; do
     else
         status=`cat /sys/kernel/debug/ieee80211/phy1/siwifi/repeater_status`
     fi
-    
+
     encryption=`uci get wireless.wps.encryption`
 
     if [ "$encryption" == "" ] && [ "$status" == "repeater assoc!" ]; then

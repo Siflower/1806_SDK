@@ -160,9 +160,9 @@ static const struct radar_detector_specs fcc_radar_ref_types_riu[] = {
     FCC_PATTERN(1,  0,   8,  518, 3066, 1, 102, RADAR_WAVEFORM_WEATHER),
     FCC_PATTERN(2,  0,   8,  150,  230, 1,  23, RADAR_WAVEFORM_SHORT),
     FCC_PATTERN(3,  6,  20,  200,  500, 1,  16, RADAR_WAVEFORM_SHORT),
-    FCC_PATTERN(4, 10,  28,  200,  500, 1,  12, RADAR_WAVEFORM_SHORT),
-    FCC_PATTERN(5, 50, 110, 1000, 2000, 1,   8, RADAR_WAVEFORM_LONG),
-    FCC_PATTERN(6,  0,   8,  333,  333, 1,   9, RADAR_WAVEFORM_SHORT),
+    FCC_PATTERN(4, 10,  36,  200,  500, 1,  12, RADAR_WAVEFORM_SHORT),
+    FCC_PATTERN(5, 45, 110, 1000, 2000, 1,   8, RADAR_WAVEFORM_LONG),
+        FCC_PATTERN(6,  0,   8,  333,  333, 1,   9, RADAR_WAVEFORM_SHORT),
 };
 
 static const struct radar_detector_specs fcc_radar_ref_types_fcu[] = {
@@ -170,8 +170,8 @@ static const struct radar_detector_specs fcc_radar_ref_types_fcu[] = {
     FCC_PATTERN(1,  0,   8,  518, 3066, 1, 102, RADAR_WAVEFORM_WEATHER),
     FCC_PATTERN(2,  0,   8,  150,  230, 1,  23, RADAR_WAVEFORM_SHORT),
     FCC_PATTERN(3,  6,  12,  200,  500, 1,  16, RADAR_WAVEFORM_SHORT),
-    FCC_PATTERN(4, 10,  22,  200,  500, 1,  12, RADAR_WAVEFORM_SHORT),
-    FCC_PATTERN(5, 50, 104, 1000, 2000, 1,   8, RADAR_WAVEFORM_LONG),
+    FCC_PATTERN(4, 10,  36,  200,  500, 1,  12, RADAR_WAVEFORM_SHORT),
+    FCC_PATTERN(5, 45, 104, 1000, 2000, 1,   8, RADAR_WAVEFORM_LONG),
     FCC_PATTERN(6,  0,   8,  333,  333, 1,   9, RADAR_WAVEFORM_SHORT),
 };
 
@@ -244,6 +244,7 @@ struct pri_sequence {
     u64 last_ts;
     u64 deadline_ts;
     u8 ppb_thresh;
+    u16 last_len;
 };
 
 
@@ -820,6 +821,7 @@ struct pri_sequence *pde_long_add_pulse(struct pri_detector *pde,
         ps->last_ts = ts;
         ps->deadline_ts = ts + pde->window_size;
         ps->pri = 0;
+        ps->last_len = len;
         INIT_LIST_HEAD(&ps->head);
         list_add(&ps->head, &pde->sequences);
         pulse_queue_enqueue(pde, ts);
@@ -831,10 +833,9 @@ struct pri_sequence *pde_long_add_pulse(struct pri_detector *pde,
         delta_ts = ts - ps->last_ts;
         ps->last_ts = ts;
 
-        if (delta_ts < rs->pri_max) {
+         if (delta_ts < rs->pri_max && (ps->last_len == len)) {
             /* ignore pulse too close from previous one */
-        } else if  ((delta_ts >= rs->pri_min) &&
-              (delta_ts <= rs->pri_max)) {
+        } else if  ((delta_ts >= rs->pri_min) && (ps->last_len == len)) {
             /* this is a new pulse in the current burst, ignore it
                (i.e don't queue it) */
             ps->count_falses++;
@@ -843,6 +844,7 @@ struct pri_sequence *pde_long_add_pulse(struct pri_detector *pde,
             /* not enough time between burst, ignore pulse */
         } else {
             /* a new burst */
+            ps->last_len == len;
             ps->count++;
             ps->count_falses = 1;
 
@@ -866,7 +868,7 @@ struct pri_sequence *pde_long_add_pulse(struct pri_detector *pde,
             /* valid radar if enough burst detected and delta with first burst
                is at least duration/2 */
             if (ps->count > pde->rs->ppb_thresh &&
-                (ts - ps->first_ts) > (pde->window_size / 2)) {
+                (ts - ps->first_ts) > (pde->window_size / 3)) {
                 return ps;
             } else {
                 pulse_queue_enqueue(pde, ts);
@@ -1413,12 +1415,12 @@ static void siwifi_radar_process_pulse(struct work_struct *ws)
                 radar->dpd[chain]->total_pulses.index = 0;
             radar->dpd[chain]->total_pulses.count ++;
 
-            if (p->rep < RADAR_MIN_REP)
+            if (p->rep < RADAR_MIN_REP && (radar->dpd[chain]->region == NL80211_DFS_ETSI))
                 radar->dpd[chain]->consecutive_too_short_count ++;
             else
                 radar->dpd[chain]->consecutive_too_short_count = 0;
             if (dfs_pattern_detector_add_pulse(radar->dpd[chain], chain,
-                                               (s16)freq + (2 * p->freq),
+                                               (s16)freq + (p->freq),
                                                p->rep, RADAR_LENGTH(p->len), now)) {
                 u16 idx = radar->detected[chain].index;
                 printk("radar detected success pulses count %d last 32 pulses: \n", radar->dpd[chain]->total_pulses.count);

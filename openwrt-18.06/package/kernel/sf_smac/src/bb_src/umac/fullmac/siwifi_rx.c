@@ -1786,6 +1786,7 @@ u8 siwifi_rxdataind(void *pthis, void *hostid)
 				sta->stats.idle = ktime_get_seconds();
 
                 siwifi_rx_statistic(siwifi_hw, hw_rxhdr, sta);
+                siwifi_hw->siwifi_static_txinfo[sta->sta_idx].siwifi_static_rx++;
 
                 if (sta != NULL && sta->valid) {
                     struct ethhdr eth;
