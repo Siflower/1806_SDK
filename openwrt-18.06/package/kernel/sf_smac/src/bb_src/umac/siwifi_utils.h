@@ -21,7 +21,12 @@
 #define SIWIFI_DBG(a...) do {} while (0)
 #endif
 
+#ifdef DEBUG_EARLY_SKB
+/*  #define SIWIFI_DBG(format, arg...) pr_warn(format, ## arg) */
+#define SIWIFI_DBG_EARLY_SKB printk
+#else
 #define SIWIFI_DBG_EARLY_SKB(a...) do {} while (0)
+#endif
 
 #ifdef CONFIG_SIWIFI_DBG_ASSERT
 #define SIWIFI_DBG_ASSERT_BLOCK(x) do { \

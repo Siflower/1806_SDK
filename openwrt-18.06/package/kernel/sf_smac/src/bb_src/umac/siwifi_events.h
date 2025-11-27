@@ -433,6 +433,7 @@ DEFINE_EVENT(txq_template, txq_del_from_hw,
              TP_PROTO(struct siwifi_txq *txq),
              TP_ARGS(txq));
 
+
 DEFINE_EVENT(txq_template, txq_flowctrl_stop,
              TP_PROTO(struct siwifi_txq *txq),
              TP_ARGS(txq));
@@ -440,6 +441,7 @@ DEFINE_EVENT(txq_template, txq_flowctrl_stop,
 DEFINE_EVENT(txq_template, txq_flowctrl_restart,
              TP_PROTO(struct siwifi_txq *txq),
              TP_ARGS(txq));
+
 
 TRACE_EVENT(
     process_txq,
@@ -529,6 +531,9 @@ TRACE_EVENT(
         __field(u32, flag)
         __field(s16, txq_cred)
         __field(u8, hwq_cred)
+#ifdef CONFIG_SIWIFI_SOFTMAC
+        __field(u16, sn)
+#endif
         __field(u16, pkt_cnt)
         __field(u8, mu_info)
                      ),

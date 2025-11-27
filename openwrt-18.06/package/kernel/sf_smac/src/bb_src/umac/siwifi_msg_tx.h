@@ -48,13 +48,13 @@ int siwifi_send_start(struct siwifi_hw *siwifi_hw);
 int siwifi_send_version_req(struct siwifi_hw *siwifi_hw, struct mm_version_cfm *cfm);
 int siwifi_send_add_if(struct siwifi_hw *siwifi_hw, const unsigned char *mac,
                      enum nl80211_iftype iftype, bool p2p, bool use_4addr, struct mm_add_if_cfm *cfm);
-int siwifi_send_remove_if(struct siwifi_hw *siwifi_hw, u8 vif_index);
-int siwifi_send_set_channel(struct siwifi_hw *siwifi_hw, int phy_idx,
-                          struct mm_set_channel_cfm *cfm);
 #ifdef CONFIG_SIWIFI_CH_OFFSET
 int siwifi_send_set_channel_offset(struct siwifi_hw *siwifi_hw, int phy_idx,
                           struct mm_set_channel_cfm *cfm, int ch_offset);
 #endif
+int siwifi_send_remove_if(struct siwifi_hw *siwifi_hw, u8 vif_index);
+int siwifi_send_set_channel(struct siwifi_hw *siwifi_hw, int phy_idx,
+                          struct mm_set_channel_cfm *cfm);
 int siwifi_send_set_channel_for_macbypass_tx(struct siwifi_hw *siwifi_hw, int phy_idx,struct mm_set_channel_cfm *cfm,struct cfg80211_chan_def *chandef);
 int siwifi_send_key_add(struct siwifi_hw *siwifi_hw, u8 vif_idx, u8 sta_idx, bool pairwise,
                       u8 *key, u8 key_len, u8 key_idx, u8 cipher_suite,
@@ -125,11 +125,12 @@ int siwifi_send_me_sta_del(struct siwifi_hw *siwifi_hw, u8 sta_idx, bool tdls_st
 int siwifi_send_me_traffic_ind(struct siwifi_hw *siwifi_hw, u8 sta_idx, bool uapsd, u8 tx_status);
 int siwifi_send_me_rc_stats(struct siwifi_hw *siwifi_hw, u8 sta_idx,
                           struct me_rc_stats_cfm *cfm);
-int siwifi_send_assoc_req_insert_info(struct siwifi_hw *siwifi_hw);
 int siwifi_send_me_rc_set_rate(struct siwifi_hw *siwifi_hw,
                              u8 sta_idx,
                              u16 rate_idx);
 int siwifi_send_me_rc_set_no_ss(struct siwifi_hw *siwifi_hw, u8 no_ss);
+int siwifi_send_assoc_insert_info(struct siwifi_hw *siwifi_hw);
+int siwifi_send_auth_insert_info(struct siwifi_hw *siwifi_hw);
 int siwifi_send_sm_connect_req(struct siwifi_hw *siwifi_hw,
                              struct siwifi_vif *siwifi_vif,
                              struct cfg80211_connect_params *sme,
@@ -172,6 +173,7 @@ int siwifi_send_mesh_path_update_req(struct siwifi_hw *siwifi_hw, struct siwifi_
 void siwifi_send_mesh_proxy_add_req(struct siwifi_hw *siwifi_hw, struct siwifi_vif *vif, u8 *p_ext_addr);
 
 #ifdef CONFIG_SIWIFI_BFMER
+
 void siwifi_send_bfmer_enable(struct siwifi_hw *siwifi_hw, struct siwifi_sta *siwifi_sta,
                             const struct ieee80211_vht_cap *vht_cap);
 #ifdef CONFIG_SIWIFI_MUMIMO_TX
@@ -181,6 +183,7 @@ int siwifi_send_mu_group_update_req(struct siwifi_hw *siwifi_hw, struct siwifi_s
 
 /* Debug messages */
 int siwifi_send_debug_frame(struct siwifi_hw *siwifi_hw, struct mm_send_debug_frame_req *params, uint8_t *payload);
+
 int siwifi_send_dbg_trigger_req(struct siwifi_hw *siwifi_hw, char *msg ,uint8_t type);
 int siwifi_send_dbg_mem_read_req(struct siwifi_hw *siwifi_hw, u32 mem_addr,
                                struct dbg_mem_read_cfm *cfm);
@@ -207,7 +210,7 @@ int siwifi_send_vif_dump(struct siwifi_hw *siwifi_hw);
 int siwifi_send_dbg_print_burst_info(struct siwifi_hw *siwifi_hw, int ac);
 #endif
 
-#ifdef CONFIG_VDR_HW
+#if defined CONFIG_VDR_HW
 int siwifi_send_dbg_get_vendor_info_req(struct siwifi_hw *siwifi_hw,
         struct dbg_get_vendor_info_cfm *cfm, uint32_t clear, uint8_t vif_idx, uint8_t sta_idx);
 #endif
@@ -222,7 +225,4 @@ int siwifi_send_probe_client(struct siwifi_hw *siwifi_hw, u8 sta_idx);
 int siwifi_send_dbg_get_mgmt_info_req(struct siwifi_hw *siwifi_hw, struct dbg_get_mgmt_info_cfm *cfm, uint32_t clear);
 int siwifi_send_dbg_get_ctrl_info_req(struct siwifi_hw *siwifi_hw, struct dbg_get_ctrl_info_cfm *cfm, uint32_t clear);
 int siwifi_send_dbg_set_cca_parameter_req(struct siwifi_hw *siwifi_hw, uint32_t *param);
-#ifdef CONFIG_ENABLE_RFGAINTABLE
-int siwifi_send_dbg_set_rf_gain_tb_idx(struct siwifi_hw *siwifi_hw, uint8_t *tb_idx);
-#endif /* CONFIG_ENABLE_RFGAINTABLE */
 #endif /* _SIWIFI_MSG_TX_H_ */

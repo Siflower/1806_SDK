@@ -87,37 +87,44 @@ int siwifi_acs_report_ideal_chan(struct siwifi_hw *siwifi_hw, struct hostapd_acs
 
 int siwifi_calc_acs_select_chan(struct siwifi_hw *siwifi_hw, struct siwifi_vif *vif)
 {
-    struct siwifi_survey_info *survey;
-    struct ieee80211_channel *chan;
-    int i, idx, freq, ideal_freq, tmp_nd, chidx = 1;
+	struct siwifi_survey_info *survey;
+	struct ieee80211_channel *chan;
+	int i, idx, freq, ideal_freq, tmp_nd, chidx = 1;
+
 #ifdef CONFIG_SIWIFI_ACS
-    struct hostapd_acs_chan_param *rep_params;
+	struct hostapd_acs_chan_param *rep_params;
     uint32_t sec_freq;
 #endif
-    //TODO: find ideal channel by scan result.
-    ideal_freq = 0;
-    tmp_nd = 0;
-    for (i = 0; i < siwifi_hw->acs_request->n_channels; i++) {
-        freq = ((struct ieee80211_channel *)siwifi_hw->acs_request->channels[i])->center_freq;
-        //jump radar channel
+
+	//TODO: find ideal channel by scan result.
+	ideal_freq = 0;
+	tmp_nd = 0;
+
+	for (i = 0; i < siwifi_hw->acs_request->n_channels; i++) {
+		freq = ((struct ieee80211_channel *)siwifi_hw->acs_request->channels[i])->center_freq;
+		//jump radar channel
         //if(siwifi_hw->acs_dfs_ctrl) {
-        if (freq >= 5220 && freq <= 5500)
-            continue;
+		    if (freq >= 5220 && freq <= 5500)
+			    continue;
         //}
-        idx = siwifi_freq_to_idx(siwifi_hw, freq);
-        if (idx > SCAN_CHANNEL_MAX) {
-            printk("channel center frequency error, freq:%d, idx:%d\n", freq, idx);
-            return -EINVAL;
-        }
-        survey = &siwifi_hw->survey[idx];
-        if ((tmp_nd > survey->chan_time_busy_ms) || (i == 0)) {
-            tmp_nd = survey->chan_time_busy_ms;
-            ideal_freq = freq;
-            chidx = i;
-        }
-        printk("ACS complete: freq: %d , noise: %d cca_busy_time: %d \n", freq, survey->noise_dbm, survey->chan_time_busy_ms);
-    }
-    chan = ieee80211_get_channel(siwifi_hw->wiphy, ideal_freq);
+		idx = siwifi_freq_to_idx(siwifi_hw, freq);
+		if (idx > SCAN_CHANNEL_MAX) {
+			printk("channel center frequency error, freq:%d, idx:%d\n", freq, idx);
+			return -EINVAL;
+		}
+		survey = &siwifi_hw->survey[idx];
+
+		if ((tmp_nd > survey->chan_time_busy_ms) || (i == 0)) {
+			tmp_nd = survey->chan_time_busy_ms;
+			ideal_freq = freq;
+			chidx = i;
+		}
+
+		printk("ACS complete: freq: %d , noise: %d cca_busy_time: %d \n", freq, survey->noise_dbm, survey->chan_time_busy_ms);
+	}
+
+	chan = ieee80211_get_channel(siwifi_hw->wiphy, ideal_freq);
+
 #ifdef CONFIG_SIWIFI_ACS_INTERNAL
     if (siwifi_hw->acs_internal) {
         uint32_t ch_width = (siwifi_hw->mod_params->is_hb) ? 3 : 2;
@@ -131,13 +138,13 @@ int siwifi_calc_acs_select_chan(struct siwifi_hw *siwifi_hw, struct siwifi_vif *
     } else {
 #endif
 #ifdef CONFIG_SIWIFI_ACS
-        rep_params = &siwifi_hw->acs_params[vif->vif_index];
-        rep_params->primary_chan = ieee80211_frequency_to_channel(ideal_freq);
-        switch (rep_params->ch_width)
-        {
+	    rep_params = &siwifi_hw->acs_params[vif->vif_index];
+	    rep_params->primary_chan = ieee80211_frequency_to_channel(ideal_freq);
+	    switch (rep_params->ch_width)
+	    {
             case 20:
             case 40:
-            case 80:
+			case 80:
                 if ((chidx < (siwifi_hw->acs_request->n_channels - 2)) && (rep_params->primary_chan != 48)
                         && (rep_params->primary_chan != 64) && (rep_params->primary_chan != 161)) {
                     sec_freq = ((struct ieee80211_channel *)siwifi_hw->acs_request->channels[chidx + 1])->center_freq;
@@ -173,7 +180,7 @@ int siwifi_calc_acs_select_chan(struct siwifi_hw *siwifi_hw, struct siwifi_vif *
 #ifdef CONFIG_SIWIFI_ACS_INTERNAL
     }
 #endif
-    return 0;
+	return 0;
 }
 
 int siwifi_acs_scan_done(struct siwifi_hw *siwifi_hw)
@@ -417,8 +424,8 @@ void siwifi_set_vendor_commands(struct wiphy *wiphy)
 	wiphy->vendor_events = siwifi_vendor_events;
 	wiphy->n_vendor_events = ARRAY_SIZE(siwifi_vendor_events);
 }
-
 #endif
+
 #ifdef CONFIG_SIWIFI_ACS_INTERNAL
 int siwifi_do_acs(struct siwifi_hw *siwifi_hw, struct siwifi_vif *siwifi_vif)
 {
@@ -855,6 +862,7 @@ static int siwifi_acs_channel_switch(struct siwifi_hw *siwifi_hw, struct siwifi_
         printk("**** err: vif is not ap\n");
     else
         vif->ap.channel_switching = true;
+
     /* Send new Beacon. FW will extract channel and count from the beacon */
     error = siwifi_send_bcn_change(siwifi_hw, vif->vif_index, elem.dma_addr,
             bcn->len, bcn->head_len, bcn->tim_len, csa_oft);
@@ -975,8 +983,10 @@ int siwifi_fast_channel_switch(struct siwifi_hw *siwifi_hw)
     int ret = 0, current_freq = 0, select_freq = 0;
     uint32_t current_second = ktime_get_seconds();
     int random_num = current_second & 0x3;
+
     if (!siwifi_hw->mod_params->is_hb)
         return 0;
+
     if (current_second - siwifi_hw->fast_csa_time < 5) {
         printk("skip fast csa: less than 5 seconds have passed since the last csa\n");
         return 0;
@@ -992,7 +1002,8 @@ int siwifi_fast_channel_switch(struct siwifi_hw *siwifi_hw)
             ret = -1;
         }
     }
-    if (ret || !current_freq) {
+    if (ret || !current_freq)
+    {
         spin_unlock_bh(&siwifi_hw->cb_lock);
         return 0;
     }

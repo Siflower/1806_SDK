@@ -27,8 +27,7 @@
 #include "ipc_host.h"
 #include "siwifi_compat.h"
 #include "siwifi_mem.h"
-//CFG_AMSDU_8K
-#define SIWIFI_MAX_AMSDU_RX 7935
+
 //riu reg
 #define RIU_SIWIFIFECTRL0_ADDR   (REG_RIU_BASE_ADDR+0xB100)
 #define RIU_SIWIFIFECTRL1_ADDR   (REG_RIU_BASE_ADDR+0xB104)
@@ -124,6 +123,7 @@ __INLINE void nxmac_max_rx_length_set(struct siwifi_hw *siwifi_hw,uint32_t value
 #define TXQ_IDX_UKS 364
 
 #define RF_BASE_ADDR    0xB1C00000
+
 #define SFCFG_CMD_ATE_TXVECTOR_PARAM 0x20
 #define TXVECTOR_PARAM_MAX 0xF
 
@@ -535,6 +535,11 @@ static int siwifi_ioctl_do_ate_start(struct siwifi_hw *siwifi_hw,
     struct siwifi_vif *siwifi_vif;
     struct phy_aetnensis_cfg_tag *phy_tag;
     siwifi_hw->ate_env.ate_start = true;
+#ifdef CONFIG_SIWIFI_EASYMESH
+    if (timer_pending(&siwifi_hw->sta_timer_info.timer)) {
+        del_timer_sync(&siwifi_hw->sta_timer_info.timer);
+    }
+#endif
 #if 0
     if(siwifi_hardware_status_save(siwifi_hw)){//save the status before "ate start".
         status = SIWIFI_IOCTL_RET_FAILURE;
@@ -1037,6 +1042,10 @@ static int siwifi_build_trx_test_environment(struct siwifi_hw *siwifi_hw)
         return -1;
     }
     printk("SIWIFI_VIF_TYPE(siwifi_vif):%d\n", SIWIFI_VIF_TYPE(siwifi_vif));
+    if(SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_STATION) {
+        siwifi_src_filter_hash_free(siwifi_vif);
+        del_timer(&(siwifi_vif->src_filter_timer));
+    }
     SIWIFI_VIF_TYPE(siwifi_vif) = NL80211_IFTYPE_AP;
     //step3.creat chantx & add chanctx
     siwifi_vif->roc_tdls = 1;
@@ -1742,7 +1751,7 @@ static int siwifi_ioctl_do_save_data_to_mtd(struct siwifi_hw *siwifi_hw,
 static int _siwifi_ioctl_do_get_factory_power(struct siwifi_hw *siwifi_hw, struct siwifi_ioctl_cfg *cfg, struct iwreq *iwr)
 {
     char *tmp_data = (char *)(&cfg->data[0]);
-    int channel, mode, rate, bw, gain_mode, ant;
+    int channel, mode, rate, bw;
     int power;
     char part[] = "factory";
     struct mtd_info *mtd;
@@ -1752,7 +1761,7 @@ static int _siwifi_ioctl_do_get_factory_power(struct siwifi_hw *siwifi_hw, struc
     int offset = 0;
 
     //printk("enter into the ioctl  get factory power\r\n");
-    sscanf(tmp_data, "%d %d %d %d %d %d", &channel, &bw, &mode, &rate, &gain_mode, &ant);
+    sscanf(tmp_data, "%d %d %d %d", &channel, &bw, &mode, &rate);
     //printk("channel : %d,bw :%d,mode :%d,rate:%d", channel, bw, mode, rate);
     if (channel < 3000) {
         offset = (channel - 2412) / 5 * 28;
@@ -1865,12 +1874,7 @@ static int _siwifi_ioctl_do_get_factory_power(struct siwifi_hw *siwifi_hw, struc
                 break;
         }
     }
-    if (ant == 1) {
-        offset += 2052;
-    }
-    else if (ant == 2) {
-        offset += 3741;
-    }
+    offset += 2052;
     //get related mtd block
     mtd = get_mtd_device_nm(part);
     if (IS_ERR(mtd))
@@ -3084,7 +3088,7 @@ static int siwifi_ioctl_do_ate_macbypass_tx_start(struct siwifi_hw *siwifi_hw,
     struct phy_aetnensis_cfg_tag *phy_tag;
     phy_tag=(struct phy_aetnensis_cfg_tag *)&siwifi_hw->phy_config;
     if ((phy_tag->flag & DUAL_ANTENNA_CALIBRATE)){
-        SFAX8_THERMAL_POWERMAX = SFAX8_THERMAL_POWERMAX_FOR_DUAL;
+	    SFAX8_THERMAL_POWERMAX = SFAX8_THERMAL_POWERMAX_FOR_DUAL;
     }
 #endif
 #endif
@@ -3116,7 +3120,6 @@ static int siwifi_ioctl_do_ate_macbypass_tx_start(struct siwifi_hw *siwifi_hw,
     REG_PL_WR(REG_MDM_CFG_BASE_ADDR(siwifi_hw->mod_params->is_hb) + 0x0888, 0x1111); //mdm_swreset_set(0x1111);
     udelay(100);
     REG_PL_WR(REG_MDM_CFG_BASE_ADDR(siwifi_hw->mod_params->is_hb) + 0x0888, 0); //mdm_swreset_set(0);
-
 
     if (siwifi_hw->ate_env.conf.pkg.macbypass_interval != 0)
         delay = siwifi_hw->ate_env.conf.pkg.macbypass_interval;
@@ -3179,6 +3182,118 @@ static int siwifi_ioctl_do_ate_macbypass_tx_start(struct siwifi_hw *siwifi_hw,
     udelay(100);
     REG_PL_WR(MACBYP_CTRL_ADDR(siwifi_hw->mod_params->is_hb), 0x301); //macbyp_ctrl_set(0x301);
     siwifi_hw->ate_env.tx_macbypass_start = true;
+#else
+    //step5: do test
+    mdelay(100);
+    if (chandef->chan->band) {
+        base_addr = 0xB1400000;
+    }
+
+    REG_PL_WR(base_addr + 0x00160000, 0);               //macbyp_ctrl_set(0);
+    REG_PL_WR(base_addr + 0x00100000 + 0x0888, 0x1111); //mdm_swreset_set(0x1111);
+    udelay(100);
+    REG_PL_WR(base_addr + 0x00100000 + 0x0888, 0);                                  //mdm_swreset_set(0);
+    REG_PL_WR(base_addr + 0x00160000 + 0x0048, 0x300);                              //macbyp_pre_tx_delay_set(0x300);
+    REG_PL_WR(base_addr + 0x00160000 + 0x0200, siwifi_hw->ate_env.siwifi_vif->txpower); //macbyp_txv0_set(pow);
+    switch (siwifi_hw->ate_env.conf.pkg.frame_bw) {
+        case 0:
+            REG_PL_WR(base_addr + 0x00160000 + 0x0204, 0x00); //macbyp_txv1_set(0x00);//20M:0x00;40M:0x40;80M:0x80
+            break;
+        case 1:
+            REG_PL_WR(base_addr + 0x00160000 + 0x0204, 0x00); //macbyp_txv1_set(0x00);//20M:0x00;40M:0x40;80M:0x80
+            break;
+        case 2:
+            REG_PL_WR(base_addr + 0x00160000 + 0x0204, 0x40); //macbyp_txv1_set(0x00);//20M:0x00;40M:0x40;80M:0x80
+            break;
+        case 3:
+            REG_PL_WR(base_addr + 0x00160000 + 0x0204, 0x80); //macbyp_txv1_set(0x00);//20M:0x00;40M:0x40;80M:0x80
+            break;
+        default:
+            status = SIWIFI_IOCTL_RET_FAILURE;
+            break;
+    }
+    REG_PL_WR(base_addr + 0x00160000 + 0x0208, 0x3);                                        //macbyp_txv2_set(0x3);
+    REG_PL_WR(base_addr + 0x00160000 + 0x020C, 0);                                          //macbyp_txv3_set(0x0);
+    REG_PL_WR(base_addr + 0x00160000 + 0x0210, siwifi_hw->ate_env.conf.rate.rate_idx);        //macbyp_txv4_set(0x7);//mcs
+    REG_PL_WR(base_addr + 0x00160000 + 0x0214, siwifi_hw->ate_env.conf.rate.mode);            //macbyp_txv5_set(0x2);//NO-HT:0x0;HT-MM:0x2;VHT:0x4
+    REG_PL_WR(base_addr + 0x00160000 + 0x0218, 0xff & siwifi_hw->ate_env.conf.pkg.frame_len); //macbyp_txv6_set(0xf0);
+    if (base_addr == 0xB1000000) {
+        if (siwifi_hw->ate_env.conf.rate.rate_idx <= 3) {
+            REG_PL_WR(base_addr + 0x00160000 + 0x021C, ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8) | (siwifi_hw->ate_env.conf.rate.rate_idx << 4)); //macbyp_txv7_set(0xcf);//54Mbps//0xcf
+        } else {
+            switch (siwifi_hw->ate_env.conf.rate.rate_idx) {
+                case 4:
+                    REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xb0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                    break;
+                case 5:
+                    REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xf0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                    break;
+                case 6:
+                    REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xa0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                    break;
+                case 7:
+                    REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xe0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                    break;
+                case 8:
+                    REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0x90 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                    break;
+                case 9:
+                    REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xd0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                    break;
+                case 10:
+                    REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0x80 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                    break;
+                case 11:
+                    REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xc0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                    break;
+                default:
+                    printk("2.4G rate error\n");
+                    status = SIWIFI_IOCTL_RET_FAILURE;
+                    goto DONE;
+            }
+        }
+    } else {
+        switch (siwifi_hw->ate_env.conf.rate.rate_idx) {
+            case 0:
+                REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xb0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                break;
+            case 1:
+                REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xf0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                break;
+            case 2:
+                REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xa0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                break;
+            case 3:
+                REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xe0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                break;
+            case 4:
+                REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0x90 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                break;
+            case 5:
+                REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xd0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                break;
+            case 6:
+                REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0x80 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                break;
+            case 7:
+                REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xc0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                break;
+            default:
+                REG_PL_WR(base_addr + 0x00160000 + 0x021C, 0xc0 | ((0x0f00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8));
+                break;
+        }
+    }
+    REG_PL_WR(base_addr + 0x00160000 + 0x0220, 0);                                                                                                                 //macbyp_txv8_set(0x00);
+    REG_PL_WR(base_addr + 0x00160000 + 0x0224, 0);                                                                                                                 //macbyp_txv9_set(0x00);
+    REG_PL_WR(base_addr + 0x00160000 + 0x0228, 0xff & siwifi_hw->ate_env.conf.pkg.frame_len);                                                                        //macbyp_txv10_set(0xf0);//HTlength
+    REG_PL_WR(base_addr + 0x00160000 + 0x022C, (0xff00 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 8);                                                               //macbyp_txv11_set(0xf0);//HTlength
+    REG_PL_WR(base_addr + 0x00160000 + 0x0230, ((0xf0000 & siwifi_hw->ate_env.conf.pkg.frame_len) >> 16) | (0x40 & (siwifi_hw->ate_env.conf.rate.use_short_gi << 6))); //macbyp_txv12_set(0x00);//VHTlength
+    REG_PL_WR(base_addr + 0x00160000 + 0x0234, 0x1);                                                                                                               //macbyp_txv13_set(0x1);
+    REG_PL_WR(base_addr + 0x00160000 + 0x0238, 0x0);                                                                                                               //macbyp_txv14_set(0x0);
+    REG_PL_WR(base_addr + 0x00160000 + 0x023C, 0x0);                                                                                                               //macbyp_txv14_set(0x0);
+    REG_PL_WR(base_addr + 0x00160000, 0x300);                                                                                                                      //macbyp_ctrl_set(0x300);
+    udelay(100);
+    REG_PL_WR(base_addr + 0x00160000, 0x301); //macbyp_ctrl_set(0x301);
 #endif
 DONE:
     siwifi_ioctl_response_to_user(cfg, iwr, status);
@@ -3212,6 +3327,14 @@ static int siwifi_ioctl_do_ate_macbypass_tx_stop(struct siwifi_hw *siwifi_hw,
     REG_PL_WR(REG_MACBYPASS_BASE_ADDR(siwifi_hw->mod_params->is_hb) + 0x0888, 0x1111); //mdm_swreset_set(0x1111);
     udelay(100);
     REG_PL_WR(REG_MACBYPASS_BASE_ADDR(siwifi_hw->mod_params->is_hb) + 0x0888, 0); //mdm_swreset_set(0)
+#else
+    if (chandef->chan->band)
+        base_addr = 0xB1400000;
+
+    REG_PL_WR(base_addr + 0x00160000, 0);               //macbyp_ctrl_set(0);
+    REG_PL_WR(base_addr + 0x00100000 + 0x0888, 0x1111); //mdm_swreset_set(0x1111);
+    udelay(100);
+    REG_PL_WR(base_addr + 0x00100000 + 0x0888, 0); //mdm_swreset_set(0);
 #endif
     //	if (siwifi_hw->ate_env.vif_ctx_flag) {
     //		struct me_ate_tools_op_cfm op_cfm;
@@ -3377,7 +3500,6 @@ static int siwifi_ioctl_do_ate_tx_tone_start(struct siwifi_hw *siwifi_hw,
         status = SIWIFI_IOCTL_RET_FAILURE;
         goto DONE;
     }
-
 #ifdef CONFIG_SFA28_FULLMASK
     printk("path set %d\n",txvector.antennaSet);
     if (siwifi_hw->ate_env.conf.chandef.chan->center_freq <= 3072) {
@@ -3702,7 +3824,6 @@ void siwifi_ate_rx_cb(struct siwifi_hw *siwifi_hw)
         }
     }
 }
-
 
 void siwifi_ate_rx_cb_rssi(struct siwifi_hw *siwifi_hw, struct sk_buff *skb)
 {

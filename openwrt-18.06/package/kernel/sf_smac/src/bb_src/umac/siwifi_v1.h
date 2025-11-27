@@ -37,7 +37,6 @@
 #define SIWIFI_HB_TXPOWER_GAIN_TABLE_NAME   "hb_txpower_table.ini"
 #define SIWIFI_LB_TXPOWER_GAIN_EXPA_TABLE_NAME   "lb_txpower_table_expa.ini"
 #define SIWIFI_HB_TXPOWER_GAIN_EXPA_TABLE_NAME   "hb_txpower_table_expa.ini"
-#define SIWIFI_RF_GAIN_TABLE_NAME           "rf_gain_table.ini"
 #define SIWIFI_TEMPERATURE_CONTROL_NAME        "temperature_control.ini"
 
 //CLK TYPE

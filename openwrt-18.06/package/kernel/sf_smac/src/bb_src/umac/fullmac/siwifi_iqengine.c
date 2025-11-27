@@ -23,8 +23,6 @@
 #include "reg_access.h"
 #include "siwifi_mem.h"
 #include "siwifi_iqengine.h"
-
-static int iqe_buffer[SIWIFI_IQ_BUFFER_MAX];
 static irqreturn_t iqe_handle_irq(int irq, void *dev_id)
 {
     uint32_t value;
@@ -33,27 +31,29 @@ static irqreturn_t iqe_handle_irq(int irq, void *dev_id)
     if (value & 0xC)
     {
         if (value == 4)
-            printk("Recorder over, 0x%x\n", value);
+			printk("Recorder over, 0x%x\n", value);
         else if (value == 8)
             printk("Player over, 0x%x\n", value);
-        siwifi_hw->iqe.error = value;
+		siwifi_hw->iqe.error = value;
         //clear the iq error
         REG_PL_WR8(0xB9E03C98, 0xC);
     }
     return IRQ_HANDLED;
 }
-/**
- *  func: init iq engine to make it can record or player iq while combined with RF or bb
- *  params:
- *      <priv>          siwifi_hw context
- *      <iqlength>      how many iq we need to play or record
- *      <mode>          IQE_BB_PLAYER   baseband player
- *                      IQE_RF_PLAYER   rf player
- *                      IQE_BB_RECORDER baseband recorder
- *                      IQE_RF_RECORDER rf recorder
- *  return:
- *      0  initilization is OK, otherwise failure
+/*
+func: init iq engine to make it can record or player iq while combined with RF or bb
+params:
+    <priv>          siwifi_hw context
+    <iqlength>      how many iq we need to play or record
+    <mode>          IQE_BB_PLAYER   baseband player
+                    IQE_RF_PLAYER   rf player
+                    IQE_BB_RECORDER baseband recorder
+                    IQE_RF_RECORDER rf recorder
+return:
+    0  initilization is OK, otherwise failure
  */
+//struct siwifi_hw *siwifi_hw;
+
 int iqe_init(struct siwifi_hw *priv, uint32_t iqlength, int mode)
 {
     struct siwifi_iqe *iqe = &priv->iqe;
@@ -65,8 +65,9 @@ int iqe_init(struct siwifi_hw *priv, uint32_t iqlength, int mode)
         printk("iqe has bene already initialized\n");
         return 0;
     }
-    buf = (void *)iqe_buffer;
-    memset(buf, 0, iqlength);
+    // allocate physical memory
+#ifndef SIWIFI_IQ_USE_RESERVED_ADDR
+    buf = siwifi_kmalloc(iqlength, GFP_ATOMIC);
     if (!buf)
     {
         printk("can not alloc memory with size : %d\n", iqlength);
@@ -78,14 +79,26 @@ int iqe_init(struct siwifi_hw *priv, uint32_t iqlength, int mode)
         siwifi_kfree(buf);
         return -1;
     }
+#else
+    buf = (char *)CKSEG1ADDR(SIWIFI_IQ_BUFFER_BASE_ADDR);
+    iq_buffer_phy = SIWIFI_IQ_BUFFER_BASE_ADDR;
+#endif
     iqe->iq_buffer = (void*)buf;
     iqe->iq_buffer_len = iqlength;
     iqe->iq_buffer_phy = iq_buffer_phy;
     iqe->mode = mode;
-    printk("phy addr:%x buf addr: %p length: %d\n", iqe->iq_buffer_phy, iqe->iq_buffer, iqlength);
-    // load iq text into allocated memory
+#ifdef SIWIFI_IQ_DEBUG
+    {
+        int jj = 0;
+        for (; jj < (iqe->iq_buffer_len < 20 ? iqe->iq_buffer_len : 20); jj++) {
+            buf[jj] = 0xAA;
+        }
+    }
+#endif
+    // load iq text into allocated memory!!
     // if we are recorder, write the iq to file system
-    if (iqe->mode == IQE_BB_PLAYER || iqe->mode == IQE_RF_PLAYER)
+    if (iqe->mode == IQE_BB_PLAYER ||
+            iqe->mode == IQE_RF_PLAYER)
     {
         mm_segment_t old_fs;
         loff_t pos = 0;
@@ -117,8 +130,11 @@ int iqe_init(struct siwifi_hw *priv, uint32_t iqlength, int mode)
         printk("read %lld bytes into file\n", pos);
         set_fs(old_fs);
         filp_close(file, 0);
+#ifndef SIWIFI_IQ_USE_RESERVED_ADDR
+        //sync data to ddr
         dma_sync_single_for_device(priv->dev, iqe->iq_buffer_phy,
                 iqlength, DMA_BIDIRECTIONAL);
+#endif
     }
     //1, config fe clock as recorder' write clock
     //2, config b2m3 bus0 clock as recorder's read clock
@@ -150,12 +166,12 @@ int iqe_init(struct siwifi_hw *priv, uint32_t iqlength, int mode)
         REG_PL_WR8(0xB9E03C14, iqe->iq_buffer_phy & 0xFF);
         REG_PL_WR8(0xB9E03C18, (iqe->iq_buffer_phy & 0xFF00) >> 8);
         REG_PL_WR8(0xB9E03C1C, (iqe->iq_buffer_phy & 0xFF0000) >> 16);
-        REG_PL_WR8(0xB9E03C20, ((iqe->iq_buffer_phy + SIWIFI_IQ_BASE_ADDR) & 0xFF000000) >> 24);
+        REG_PL_WR8(0xB9E03C20, ((iqe->iq_buffer_phy + 0x20000000) & 0xFF000000) >> 24);
     } else {
         REG_PL_WR8(0xB9E03C04, iqe->iq_buffer_phy & 0xFF);
         REG_PL_WR8(0xB9E03C08, (iqe->iq_buffer_phy & 0xFF00) >> 8);
         REG_PL_WR8(0xB9E03C0C, (iqe->iq_buffer_phy & 0xFF0000) >> 16);
-        REG_PL_WR8(0xB9E03C10, ((iqe->iq_buffer_phy + SIWIFI_IQ_BASE_ADDR) & 0xFF000000) >> 24);
+        REG_PL_WR8(0xB9E03C10, ((iqe->iq_buffer_phy + 0x20000000) & 0xFF000000) >> 24);
     }
     //8, config iq overflow interrupt
     iqe->iq_irq = platform_get_irq(priv->plat->pdev, 2);
@@ -218,10 +234,8 @@ void iqe_enable(struct siwifi_hw *priv, int enable)
     iqe->init = false;
     //stop iqe
     REG_PL_WR8(0xB9E03C28, 0x0);
-    REG_PL_WR8(priv->mod_params->is_hb ? 0xB9E0C440 : 0xB9E08040, 0x0);
     // free irq
     free_irq(iqe->iq_irq, priv);
-    dma_unmap_single(priv->dev, iqe->iq_buffer_phy, iqe->iq_buffer_len, DMA_TO_DEVICE);
     // if we are recorder, write the iq to file system
     if (iqe->mode == IQE_BB_RECORDER ||
             iqe->mode == IQE_RF_RECORDER)
@@ -258,7 +272,11 @@ RELEASE:
     //free IQ memory
     if (iqe->iq_buffer)
     {
+#ifndef SIWIFI_IQ_USE_RESERVED_ADDR
+        dma_unmap_single(priv->dev, iqe->iq_buffer_phy, iqe->iq_buffer_len, DMA_TO_DEVICE);
+        siwifi_kfree(iqe->iq_buffer);
         iqe->iq_buffer = NULL;
         iqe->iq_buffer_phy = 0;
+#endif
     }
 }

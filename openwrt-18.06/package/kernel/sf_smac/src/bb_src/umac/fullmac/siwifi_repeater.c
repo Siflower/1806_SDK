@@ -1004,11 +1004,12 @@ int repeater_unregister(struct repeater_info *rp_info)
         if (pos == rp_info) {
             repeater_clear_sta(rp_info);
             for (i = 0; i < IPTYPE; i++) {
-                kfree(pos->ip_head[i]);
+                if (pos->ip_head[i])
+                    kfree(pos->ip_head[i]);
             }
             kfree(pos->mac_head);
             list_del(&pos->list);
-            del_timer_sync(&pos->expires);
+            del_timer(&pos->expires);
             kfree(pos);
             break;
         }
@@ -1109,6 +1110,7 @@ int repeater_init(void)
     ret = register_netdevice_notifier(&repeater_netdev_event);
     return ret;
 }
+
 void repeater_exit(void)
 {
     remove_proc_entry("repeater_debug", NULL);

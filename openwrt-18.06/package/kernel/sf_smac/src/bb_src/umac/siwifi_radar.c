@@ -157,21 +157,21 @@ static const struct radar_types etsi_radar_types_v17 = {
 
 static const struct radar_detector_specs fcc_radar_ref_types_riu[] = {
     FCC_PATTERN(0,  0,   8, 1428, 1428, 1,  18, RADAR_WAVEFORM_SHORT),
-    FCC_PATTERN(1,  0,   8,  518, 3066, 1, 102, RADAR_WAVEFORM_WEATHER),
+    FCC_PATTERN(1,  0,   8,  518, 3100, 1, 40, RADAR_WAVEFORM_WEATHER),
     FCC_PATTERN(2,  0,   8,  150,  230, 1,  23, RADAR_WAVEFORM_SHORT),
     FCC_PATTERN(3,  6,  20,  200,  500, 1,  16, RADAR_WAVEFORM_SHORT),
     FCC_PATTERN(4, 10,  36,  200,  500, 1,  12, RADAR_WAVEFORM_SHORT),
-    FCC_PATTERN(5, 45, 110, 1000, 2000, 1,   8, RADAR_WAVEFORM_LONG),
-        FCC_PATTERN(6,  0,   8,  333,  333, 1,   9, RADAR_WAVEFORM_SHORT),
+    FCC_PATTERN(5, 45, 110, 1000, 2000, 1,   4, RADAR_WAVEFORM_LONG),
+    FCC_PATTERN(6,  0,   8,  333,  333, 1,   9, RADAR_WAVEFORM_SHORT),
 };
 
 static const struct radar_detector_specs fcc_radar_ref_types_fcu[] = {
     FCC_PATTERN(0,  0,   8, 1428, 1428, 1,  18, RADAR_WAVEFORM_SHORT),
-    FCC_PATTERN(1,  0,   8,  518, 3066, 1, 102, RADAR_WAVEFORM_WEATHER),
+    FCC_PATTERN(1,  0,   8,  518, 3100, 1, 40, RADAR_WAVEFORM_WEATHER),
     FCC_PATTERN(2,  0,   8,  150,  230, 1,  23, RADAR_WAVEFORM_SHORT),
     FCC_PATTERN(3,  6,  12,  200,  500, 1,  16, RADAR_WAVEFORM_SHORT),
     FCC_PATTERN(4, 10,  36,  200,  500, 1,  12, RADAR_WAVEFORM_SHORT),
-    FCC_PATTERN(5, 45, 104, 1000, 2000, 1,   8, RADAR_WAVEFORM_LONG),
+    FCC_PATTERN(5, 45, 104, 1000, 2000, 1,   4, RADAR_WAVEFORM_LONG),
     FCC_PATTERN(6,  0,   8,  333,  333, 1,   9, RADAR_WAVEFORM_SHORT),
 };
 
@@ -833,9 +833,9 @@ struct pri_sequence *pde_long_add_pulse(struct pri_detector *pde,
         delta_ts = ts - ps->last_ts;
         ps->last_ts = ts;
 
-         if (delta_ts < rs->pri_max && (ps->last_len == len)) {
+        if (delta_ts < rs->pri_max && (ps->last_len == len)) {
             /* ignore pulse too close from previous one */
-        } else if  ((delta_ts >= rs->pri_min) && (ps->last_len == len)) {
+        } else if  ((delta_ts >= rs->pri_min) && (delta_ts <= rs->pri_max) && (ps->last_len == len)) {
             /* this is a new pulse in the current burst, ignore it
                (i.e don't queue it) */
             ps->count_falses++;
@@ -844,7 +844,7 @@ struct pri_sequence *pde_long_add_pulse(struct pri_detector *pde,
             /* not enough time between burst, ignore pulse */
         } else {
             /* a new burst */
-            ps->last_len == len;
+            ps->last_len = len;
             ps->count++;
             ps->count_falses = 1;
 
@@ -867,8 +867,8 @@ struct pri_sequence *pde_long_add_pulse(struct pri_detector *pde,
 
             /* valid radar if enough burst detected and delta with first burst
                is at least duration/2 */
-            if (ps->count > pde->rs->ppb_thresh &&
-                (ts - ps->first_ts) > (pde->window_size / 3)) {
+            if (ps->count > pde->rs->ppb_thresh) {
+//                (ts - ps->first_ts) > (pde->window_size / 3)) {
                 return ps;
             } else {
                 pulse_queue_enqueue(pde, ts);
@@ -1306,7 +1306,6 @@ void siwifi_radar_detected(struct siwifi_hw *siwifi_hw)
     siwifi_radar_cancel_cac(&siwifi_hw->radar);
     spin_unlock_bh(&siwifi_hw->cb_lock);
     cfg80211_radar_event(siwifi_hw->wiphy, &chan_def, GFP_KERNEL);
-
 }
 
 /*
@@ -1386,7 +1385,8 @@ static void siwifi_radar_process_pulse(struct work_struct *ws)
 
         freq = siwifi_radar_get_center_freq(siwifi_hw, chain);
 
-        if (!freq) {
+        if (!freq)
+        {
             printk("current freq is 0, skip radar detected \n");
             break;
         }
@@ -1429,6 +1429,7 @@ static void siwifi_radar_process_pulse(struct work_struct *ws)
                 if (chain == SIWIFI_RADAR_RIU) {
                     /* operating chain, inform upper layer to change channel */
                     if (radar->dpd[chain]->enabled == SIWIFI_RADAR_DETECT_REPORT) {
+
                         list_for_each_entry(siwifi_vif, &siwifi_hw->vifs, list) {
                             if(SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_STATION && siwifi_vif->wds_success == 1){
                                 wds_mode = 1;
@@ -1439,7 +1440,7 @@ static void siwifi_radar_process_pulse(struct work_struct *ws)
 
                         if(siwifi_hw->mod_params->radar_debugmode || wds_mode)
                         {
-                            printk("radar detected but in radar debugmode or wdsmode, just print this msg,will not switch channel\n");
+                            printk("radar detected but in radar debugmode or wdsmode,just print this msg,will not switch channel\n");
                             break;
                         }
                         siwifi_radar_detected(siwifi_hw);
@@ -1489,11 +1490,11 @@ static void siwifi_radar_cac_work(struct work_struct *ws)
     }
 
     ctxt = &siwifi_hw->chanctx_table[radar->cac_vif->ch_index];
+    spin_unlock_bh(&siwifi_hw->cb_lock);
+    siwifi_send_apm_stop_cac_req(siwifi_hw, radar->cac_vif);
+    spin_lock_bh(&siwifi_hw->cb_lock);
     cfg80211_cac_event(radar->cac_vif->ndev, &ctxt->chan_def,
                        NL80211_RADAR_CAC_FINISHED, GFP_KERNEL);
-	spin_unlock_bh(&siwifi_hw->cb_lock);
-    siwifi_send_apm_stop_cac_req(siwifi_hw, radar->cac_vif);
-	spin_lock_bh(&siwifi_hw->cb_lock);
     siwifi_chanctx_unlink(radar->cac_vif);
 
     radar->cac_vif = NULL;
@@ -1524,8 +1525,6 @@ bool siwifi_radar_detection_init(struct siwifi_radar *radar)
 
 void siwifi_radar_detection_deinit(struct siwifi_radar *radar)
 {
-    cancel_delayed_work_sync(&radar->cac_work);
-    cancel_work_sync(&radar->detection_work);
     if (radar->dpd[SIWIFI_RADAR_RIU]) {
         dfs_pattern_detector_exit(radar->dpd[SIWIFI_RADAR_RIU]);
         radar->dpd[SIWIFI_RADAR_RIU] = NULL;
@@ -1582,7 +1581,7 @@ void siwifi_radar_cancel_cac(struct siwifi_radar *radar)
         return;
     }
 
-    if (cancel_delayed_work_sync(&radar->cac_work)) {
+    if (cancel_delayed_work(&radar->cac_work)) {
         struct siwifi_chanctx *ctxt;
         ctxt = &siwifi_hw->chanctx_table[radar->cac_vif->ch_index];
 		spin_unlock_bh(&siwifi_hw->cb_lock);

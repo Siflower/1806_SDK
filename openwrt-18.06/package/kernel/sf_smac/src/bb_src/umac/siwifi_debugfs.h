@@ -297,6 +297,7 @@ struct siwifi_debugfs {
     unsigned int skb_drop_cnt;
 };
 
+
 // Max duration in msecs to save rate config for a sta after disconnection
 #define RC_CONFIG_DUR 600000
 

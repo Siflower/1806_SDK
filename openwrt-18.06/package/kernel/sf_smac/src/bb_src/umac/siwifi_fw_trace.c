@@ -181,7 +181,7 @@ void siwifi_fw_trace_deinit(struct siwifi_fw_trace *trace)
     if (trace->buf.data == NULL)
         return;
     trace->closing = true;
-    cancel_delayed_work_sync(&trace->work);
+    flush_delayed_work(&trace->work);
     trace->buf.data = NULL;
 }
 

@@ -29,7 +29,6 @@
 
 #ifdef WORKAROUND_7577
 #include "reg_access.h"
-
 #define EDCA_AC_1_ADDR(band) (WIFI_BASE_ADDR(band) + 0x00080000 + 0x0204)
 #define WORKAROUND_RM7577(a)   \
 {   \
@@ -48,6 +47,7 @@
     }   \
 }
 #endif
+
 
 #ifdef TOKEN_ENABLE
 int tx_descs_num = NUM_TX_DESCS_PER_AC_L;
@@ -126,13 +126,11 @@ static void siwifi_txq_init(struct siwifi_txq *txq, int idx, u8 status,
                           struct siwifi_hw *siwifi_hw
                           )
 {
-    int i;
-	int j;
-#ifdef CONFIG_SIWIFI_SOFTMAC
-    int txq_tid = tid;
-#else
-    int txq_tid = (idx < NX_FIRST_VIF_TXQ_IDX) ? (idx - (sta->sta_idx * NX_NB_TXQ_PER_STA)) : 1;
+#ifdef TOKEN_ENABLE
+    int i, j = 0;
 #endif
+
+    int txq_tid = (idx < NX_FIRST_VIF_TXQ_IDX) ? (idx - (sta->sta_idx * NX_NB_TXQ_PER_STA)) : 1;
     txq->idx = idx;
     txq->status = status;
     txq->credits = ((txq_tid == 0) ? NX_TXQ_INITIAL_CREDITS_TID0 : NX_TXQ_INITIAL_CREDITS);
@@ -140,6 +138,9 @@ static void siwifi_txq_init(struct siwifi_txq *txq, int idx, u8 status,
     txq->pkt_send_total = 0;
     txq->pkt_send_success = 0;
     skb_queue_head_init(&txq->sk_list);
+#ifdef KEEP_EARLY_SKB
+    skb_queue_head_init(&txq->early_sk_list);
+#endif
 #ifdef CONFIG_BRIDGE_ACCELERATE
     skb_queue_head_init(&txq->accel_sk_list);
 #endif
@@ -195,11 +196,13 @@ static void siwifi_txq_init(struct siwifi_txq *txq, int idx, u8 status,
     txq->amsdu_len = 0;
     txq->amsdu_maxnb = 0;
 #endif /* CONFIG_SIWIFI_AMSDUS_TX */
+#ifdef TOKEN_ENABLE
 	for (j = 0;j < NX_TXQ_CNT;j ++)
 	{
 		for (i = 0;i < NUM_TX_DESCS_PER_AC;i ++)
 			txq->token_pkt_num[j][i] = 0;
 	}
+#endif
     txq->stop_num = 0;
     txq->wake_num = 0;
     // increase txq init time, if the txq init time is changed
@@ -278,13 +281,11 @@ void siwifi_txq_ps_drop_skb(struct siwifi_hw *siwifi_hw, struct siwifi_txq *txq)
     int drop_num = 0;
     struct sk_buff_head sk_list_retry;
     skb_queue_head_init(&sk_list_retry);
-
 #ifdef CONFIG_BRIDGE_ACCELERATE
     accel_skb_len = skb_queue_len(&txq->accel_sk_list);
 #endif
     BUG_ON(txq->ndev == NULL);
     vif = netdev_priv(txq->ndev);
-#ifdef CONFIG_BRIDGE_ACCELERATE
     // first drop accelerate frame, all this frame should data application frame
     if (accel_skb_len > 0) {
         while ((skb = skb_dequeue(&txq->accel_sk_list)) != NULL)
@@ -301,7 +302,6 @@ void siwifi_txq_ps_drop_skb(struct siwifi_hw *siwifi_hw, struct siwifi_txq *txq)
     }
     // drop the normal skb list, but skip the key skb
     drop_num = 0;
-#endif
     while ((skb = skb_dequeue(&txq->sk_list)) != NULL)
     {
         if (txq->nb_retry) {
@@ -317,10 +317,12 @@ void siwifi_txq_ps_drop_skb(struct siwifi_hw *siwifi_hw, struct siwifi_txq *txq)
         if (skb_queue_len(&txq->sk_list) <= SIWIFI_NDEV_FLOW_CTRL_RESTART)
             break;
     }
+
     while ((skb = skb_dequeue(&sk_list_retry)) != NULL) {
         skb_queue_head(&txq->sk_list, skb);
         txq->nb_retry++;
     }
+
     if (txq->nb_retry == 0 ||
             !skb_queue_len(&txq->sk_list)) {
         txq->last_retry_skb = NULL;
@@ -377,6 +379,7 @@ void siwifi_txq_flush(struct siwifi_hw *siwifi_hw, struct siwifi_txq *txq)
             // Reduce the memroy usage
             vif->lm_ctl[txq->ndev_idx].tx_memory_usage -= skb->truesize;
             vif->lm_ctl[txq->ndev_idx].tx_cnt --;
+
             if (unlikely(txq->sta && txq->sta->ps.active))
                 txq->sta->ps.pkt_ready[txq->ps_id]--;
             siwifi_txq_free_skb(siwifi_hw, skb);
@@ -489,7 +492,6 @@ void siwifi_txq_vif_init(struct siwifi_hw *siwifi_hw, struct siwifi_vif *siwifi_
     idx = siwifi_txq_vif_idx(siwifi_vif, NX_UNK_TXQ_TYPE);
     siwifi_txq_init(txq, idx, status, &siwifi_hw->hwq[SIWIFI_HWQ_VO],
                   NULL, siwifi_vif->ndev, siwifi_hw);
-
 }
 
 /**
@@ -507,7 +509,6 @@ void siwifi_txq_vif_deinit(struct siwifi_hw * siwifi_hw, struct siwifi_vif *siwi
 
     txq = siwifi_txq_vif_get(siwifi_vif, NX_UNK_TXQ_TYPE);
     siwifi_txq_deinit(siwifi_hw, txq);
-
 }
 
 
@@ -529,6 +530,7 @@ void siwifi_txq_sta_init(struct siwifi_hw *siwifi_hw, struct siwifi_sta *siwifi_
 {
     struct siwifi_txq *txq;
     int tid, idx;
+
     struct siwifi_vif *siwifi_vif = siwifi_hw->vif_table[siwifi_sta->vif_idx];
     idx = siwifi_txq_sta_idx(siwifi_sta, 0);
 
@@ -538,10 +540,10 @@ void siwifi_txq_sta_init(struct siwifi_hw *siwifi_hw, struct siwifi_sta *siwifi_
     foreach_sta_txq(siwifi_sta, txq, tid, siwifi_hw) {
         siwifi_txq_init(txq, idx, status, &siwifi_hw->hwq[siwifi_tid2hwq[tid]],
                       siwifi_sta, siwifi_vif->ndev, siwifi_hw);
+
         txq->ps_id = siwifi_sta->uapsd_tids & (1 << tid) ? UAPSD_ID : LEGACY_PS_ID;
         idx++;
     }
-
 }
 
 /**
@@ -704,8 +706,6 @@ void siwifi_txq_add_to_hw_list(struct siwifi_txq *txq)
 {
     _siwifi_txq_add_to_hw_list(txq, 0);
 }
-
-
 /**
  * siwifi_txq_del_from_hw_list - Delete TX queue from a HW queue schedule list.
  *
@@ -812,7 +812,9 @@ void siwifi_txq_stop(struct siwifi_txq *txq, u16 reason, u16 pos)
  * added to the HW queue list
  * To be called with tx_lock hold
  */
-void siwifi_txq_sta_start(struct siwifi_sta *siwifi_sta, u16 reason, struct siwifi_hw *siwifi_hw)
+void siwifi_txq_sta_start(struct siwifi_sta *siwifi_sta, u16 reason
+                        , struct siwifi_hw *siwifi_hw
+                        )
 {
     struct siwifi_txq *txq;
     int tid;
@@ -841,7 +843,9 @@ void siwifi_txq_sta_start(struct siwifi_sta *siwifi_sta, u16 reason, struct siwi
  * Any TX queue present in a HW queue list will be removed from this list.
  * To be called with tx_lock hold
  */
-void siwifi_txq_sta_stop(struct siwifi_sta *siwifi_sta, u16 reason, struct siwifi_hw *siwifi_hw)
+void siwifi_txq_sta_stop(struct siwifi_sta *siwifi_sta, u16 reason
+                       , struct siwifi_hw *siwifi_hw
+                       )
 {
     struct siwifi_txq *txq;
     int tid;
@@ -952,7 +956,6 @@ void siwifi_txq_vif_start(struct siwifi_vif *siwifi_vif, u16 reason,
     siwifi_txq_start(txq, reason);
 
 end:
-
     spin_unlock_bh(&siwifi_hw->tx_lock);
 }
 
@@ -988,7 +991,6 @@ void siwifi_txq_vif_stop(struct siwifi_vif *siwifi_vif, u16 reason,
     siwifi_txq_stop(txq, reason, SIWIFI_TXQ_STOP_POS_VIF_STOP);
 
 end:
-
     spin_unlock_bh(&siwifi_hw->tx_lock);
 }
 
@@ -1041,6 +1043,22 @@ void siwifi_txq_sta_switch_vif(struct siwifi_sta *sta, struct siwifi_vif *old_vi
 /******************************************************************************
  * TXQ queue/schedule functions
  *****************************************************************************/
+#ifdef KEEP_EARLY_SKB
+int siwifi_txq_queue_early_skb(struct sk_buff *skb, struct siwifi_txq *txq,
+                struct siwifi_hw *siwifi_hw, u16 anchor_fsn)
+{
+    /* add buffer in the early skb list*/
+    if (skb_queue_len(&txq->early_sk_list) >= MAX_EARLY_SKB_LEN) {
+        SIWIFI_DBG_EARLY_SKB("early skb list is full\n");
+        //DUMP ALL early skb sequence number
+        return -1;
+    }
+    skb_queue_tail(&txq->early_sk_list, skb);
+    txq->anchor_fsn = anchor_fsn;
+
+    return 0;
+}
+#endif
 
 static bool siwifi_txq_check_flow_ctrl(struct siwifi_hw *siwifi_hw, struct siwifi_txq *txq, bool retry)
 {
@@ -1124,7 +1142,7 @@ int siwifi_txq_queue_skb(struct sk_buff *skb, struct siwifi_txq *txq,
 #if DEBUG_ARRAY_CHECK
         BUG_ON(txq->ps_id >= 2);
 #endif
-         if (txq->sta->ps.pkt_ready[txq->ps_id] > SIWIFI_NDEV_PS_ACTIVE_DROP && !retry)
+        if (txq->sta->ps.pkt_ready[txq->ps_id] > SIWIFI_NDEV_PS_ACTIVE_DROP && !retry)
         {
             struct siwifi_sw_txhdr *hdr = ((struct siwifi_txhdr *)skb->data)->sw_hdr;
             //drop the this skb
@@ -1219,13 +1237,15 @@ void siwifi_txq_confirm_any(struct siwifi_hw *siwifi_hw, struct siwifi_txq *txq,
 
 #endif /* CONFIG_SIWIFI_MUMIMO_TX */
 
-
     if (txq && txq->pkt_pushed[user]) {
         struct siwifi_sta *sta = sw_txhdr->siwifi_sta;
         txq->pkt_pushed[user]--;
         if ((!txq->pkt_pushed) && sta && sta->ps.active && !sta->ps.pkt_ready[txq->ps_id])
             siwifi_set_traffic_status(siwifi_hw, sta, false, txq->ps_id);
     }
+
+    if (txq && txq->pkt_pushed[user])
+        txq->pkt_pushed[user]--;
 
     if (release_hwq) {
     	hwq->credits[user]++;
@@ -1400,6 +1420,9 @@ bool siwifi_txq_get_skb_to_push(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *
 {
     bool res = false;
     int nb_ready = skb_queue_len(&txq->sk_list);
+#ifdef KEEP_EARLY_SKB
+    int nb_early_ready = skb_queue_len(&txq->early_sk_list);
+#endif
 #ifdef CONFIG_BRIDGE_ACCELERATE
     int nb_accel = skb_queue_len(&txq->accel_sk_list);
 #endif
@@ -1412,13 +1435,21 @@ bool siwifi_txq_get_skb_to_push(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *
 #endif /* TOKEN_ENABLE */
 #endif /* NEW_SCHEDULE */
 
+#ifdef KEEP_EARLY_SKB
+    struct sk_buff_head early_skbs;
+    int left_credits;
+#endif
     __skb_queue_head_init(sk_list_push);
+
     if (hwq->ave_speed.ave_speed_enable) {
         credits = min_t(int, txq->as_ave_pkt, credits);
     }
 
     if (credits <= 0) {
         if (nb_ready == 0
+#ifdef KEEP_EARLY_SKB
+                && nb_early_ready == 0
+#endif
 #ifdef CONFIG_BRIDGE_ACCELERATE
                 && nb_accel == 0
 #endif
@@ -1427,6 +1458,71 @@ bool siwifi_txq_get_skb_to_push(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *
 
         return false;
     }
+#if defined KEEP_EARLY_SKB && defined CONFIG_SIWIFI_AGG_TX
+    //skb process priority
+    //1,early skbs
+    //2,pending skbs
+    //TODO: try to split sk list into 2 list, process retry frames first.
+    left_credits = credits;
+
+    if (nb_early_ready) {
+        struct sk_buff *skb, *tmp;
+        struct siwifi_sw_txhdr *sw_txhdr;
+        int early_pushed = 0;
+
+        __skb_queue_head_init(&early_skbs);
+        SIWIFI_DBG_EARLY_SKB("txq credits : %d, hwq credits : %d, nb_early_ready : %d, txq->anchor_fsn : %d, sk len : %d\n",
+                        siwifi_txq_get_credits(txq), hwq->credits[user], nb_early_ready, txq->anchor_fsn, nb_ready);
+#ifdef CONFIG_SIWIFI_DBG_OOBAWS
+        siwifi_dump_baw(&txq->baw, BAW_STATE_MAX);
+#endif
+        skb_queue_walk_safe(&txq->early_sk_list, skb, tmp)
+        {
+            sw_txhdr = (struct siwifi_sw_txhdr *)(((struct siwifi_txhdr *)skb->data)->sw_hdr);
+            //check if this skb in baw or not
+            if (txq->baw.agg_on &&
+                            sw_txhdr->ba_idx == txq->baw.ba_idx &&
+                            !siwifi_is_in_baw(&txq->baw, sw_txhdr->sn))
+                continue;
+            __skb_unlink(skb, &txq->early_sk_list);
+            __skb_queue_tail(&early_skbs, skb);
+            early_pushed++;
+            //still have some left early skbs in the list, but credits is full now
+            if (early_pushed >= left_credits) {
+                SIWIFI_DBG_EARLY_SKB("early_pushed : %d, left early skbs : %d\n", early_pushed, skb_queue_len(&txq->early_sk_list));
+                break;
+            }
+        }
+        skb_queue_splice_tail(&early_skbs, sk_list_push);
+        left_credits -= early_pushed;
+        credits = early_pushed;
+    } else {
+        credits = 0;
+    }
+
+    if (left_credits > 0 && nb_ready > 0) {
+        //process pending list
+        if (left_credits >= nb_ready) {
+            skb_queue_splice_tail_init(&txq->sk_list, sk_list_push);
+            res = true;
+            credits += nb_ready;
+        } else {
+            skb_queue_extract(&txq->sk_list, sk_list_push, left_credits);
+            credits += left_credits;
+        }
+    } else if (nb_ready <= 0 && skb_queue_empty(&txq->early_sk_list)) {
+        res = true;
+    }
+
+    if (!res &&
+            txq->push_limit &&
+            credits == txq->push_limit ) {
+        /* When processing PS service period (i.e. push_limit != 0), no longer
+           process this txq if the buffers extracted will complete the SP for
+           this txq */
+            res = true;
+    }
+#else //defined KEEP_EARLY_SKB && defined CONFIG_SIWIFI_AGG_TX
 
 #ifdef CONFIG_BRIDGE_ACCELERATE
     //FIXME:
@@ -1477,7 +1573,9 @@ bool siwifi_txq_get_skb_to_push(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *
     }
 #endif //CONFIG_BRIDGE_ACCELERATE
 
-    if (hwq->ave_speed.ave_speed_enable) {
+#endif //defined KEEP_EARLY_SKB && defined CONFIG_SIWIFI_AGG_TX
+
+     if (hwq->ave_speed.ave_speed_enable) {
         txq->as_ave_pkt -= credits;
         hwq->ave_speed.as_ave_pkt_total -= credits;
         if (!(skb_queue_len(&txq->sk_list) + skb_queue_len(&txq->accel_sk_list))) {
@@ -1485,6 +1583,7 @@ bool siwifi_txq_get_skb_to_push(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *
             txq->as_ave_pkt = 0;
         }
     }
+
     siwifi_mu_set_active_sta(siwifi_hw, siwifi_txq_2_sta(txq), credits);
 
     return res;
@@ -1696,7 +1795,6 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
     int siwifi_static_break_reason = 0;
     trace_process_hw_queue(hwq);
     siwifi_hw->siwifi_static_hwq_process++;
-
 #ifdef NEW_SCHEDULE
     for (; i < CONFIG_USER_MAX; i++)
         total_credits |= hwq->credits[i];
@@ -1722,7 +1820,7 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
         siwifi_hw->atf.max_rateinfo = hwq_max_rateinfo;
     }
 
-     hwq->ave_speed.as_txq_cnt = 0;
+    hwq->ave_speed.as_txq_cnt = 0;
     list_for_each_entry_safe(txq, next, &hwq->list, sched_list) {
         hwq->ave_speed.as_txq_cnt++;
         as_ave_pkt_total_now += txq->as_ave_pkt;
@@ -1785,7 +1883,6 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
 
 		trace_process_txq(txq);
         txq->siwifi_static_process++;
-
 		/* sanity check for debug */
 		BUG_ON(!(txq->status & SIWIFI_TXQ_IN_HWQ_LIST));
 		BUG_ON(txq->idx == TXQ_INACTIVE);
@@ -1809,7 +1906,7 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
         // skb to be processed or transmitted by lmac, so break here, encourage aggregation
 
 		//must use txq->hwq->id, can not use hwq->id, txq->hwq may have been changed
-  if (!hwq->ave_speed.ave_speed_enable) {
+        if (!hwq->ave_speed.ave_speed_enable) {
 #if DEBUG_ARRAY_CHECK
             BUG_ON(txq->hwq->id >= NX_TXQ_CNT);
 #endif
@@ -1824,7 +1921,6 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
                 continue;
         }
 #endif /* TOKEN_ENABLE */
-
 
         BUG_ON(hwq != txq->hwq);
 		txq_empty = siwifi_txq_get_skb_to_push(siwifi_hw, hwq, txq, user,
@@ -1851,7 +1947,7 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
         }
 #else //NEW_SCHEDULE
 		while ((skb = __skb_dequeue(&sk_list_push)) != NULL) {
-            txq->siwifi_static_last_process = jiffies;
+			txq->siwifi_static_last_process = jiffies;
 			txhdr = (struct siwifi_txhdr *)skb->data;
 			BUG_ON(skb != txhdr->sw_hdr->skb);
 			pushed_total++;
@@ -1880,8 +1976,8 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
 #if DEBUG_ARRAY_CHECK
                 BUG_ON(txhdr->sw_hdr->txq->hwq->id >= NX_TXQ_CNT);
                 BUG_ON(token_id >= NUM_TX_DESCS_PER_AC);
-                }
 #endif
+                }
 
 				//must use txhdr->sw_hdr->txq->hwq->id,can not use hwq->id,txq->hwq may have been changed
 				txq->token_pkt_num[txhdr->sw_hdr->txq->hwq->id][token_id] ++;
@@ -1891,7 +1987,7 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
 			}
 		}
 #ifdef TOKEN_ENABLE
-       if (!hwq->ave_speed.ave_speed_enable && ((token_id > 0) && token_id < NUM_TX_DESCS_PER_AC))
+        if (!hwq->ave_speed.ave_speed_enable && ((token_id > 0) && token_id < NUM_TX_DESCS_PER_AC))
             siwifi_txq_tokens_record(hwq, txq, token_id);
 #endif
 #endif /*NEW_SCHEDULE*/
@@ -1950,7 +2046,7 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
                 // it must has stopped the ndevq, so here make the queues_starts be correct.
                 netif_wake_subqueue(txq->ndev, txq->ndev_idx);
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
-                siwifi_hw->stats.queues_starts++;
+                //siwifi_hw->stats.queues_starts++;
 #endif
             }
 
@@ -1977,14 +2073,13 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
 #ifndef NEW_SCHEDULE
     if (pushed_total != 0 && push_success == 0) {
         SIWIFI_DBG("set need_processing(%d) case all pushed fail pushed_total=%d\n",
-                siwifi_hw->mod_params->is_hb, pushed_total);
+                        siwifi_hw->mod_params->is_hb, pushed_total);
         hwq->need_processing = true;
     }
 #endif
-
     if (mu_enable)
         siwifi_txq_release_mu_lock(siwifi_hw);
-     siwifi_hw->siwifi_static_break_reason[siwifi_static_break_reason]++;
+    siwifi_hw->siwifi_static_break_reason[siwifi_static_break_reason]++;
 }
 
 //40 senconds
@@ -2068,10 +2163,11 @@ void siwifi_hwq_process_all(struct siwifi_hw *siwifi_hw)
  */
 void siwifi_hwq_init(struct siwifi_hw *siwifi_hw)
 {
-    int i, j;
+    int i = 0;
 #ifdef TOKEN_ENABLE
-    tx_descs_num = NUM_TX_DESCS_PER_AC_L;
+    int j = 0;
 #endif
+    tx_descs_num = NUM_TX_DESCS_PER_AC_L;
 #ifdef CONFIG_DEBUG_TXQ_STOP
     memset(g_txq_record, 0 ,sizeof(g_txq_record));
 #endif
@@ -2087,6 +2183,7 @@ void siwifi_hwq_init(struct siwifi_hw *siwifi_hw)
         hwq->id = i;
         hwq->size = nx_txdesc_cnt[i];
         INIT_LIST_HEAD(&hwq->list);
+
 		siwifi_hw->hwq_credits_dec[i] = 0;
 
 #ifdef TOKEN_ENABLE
@@ -2101,7 +2198,7 @@ void siwifi_hwq_init(struct siwifi_hw *siwifi_hw)
 
 		hwq->current_record_num = 0;
 #endif
-		hwq->cfm_cnt = 0;
+		hwq->cfm_cnt = 0; 
 		hwq->push_cnt = 0;
         hwq->ave_speed.ave_speed_enable = 0;
     }

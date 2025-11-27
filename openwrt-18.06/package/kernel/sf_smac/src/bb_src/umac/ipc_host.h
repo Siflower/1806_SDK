@@ -113,7 +113,6 @@ struct ipc_host_env_tag
     /// Store the number of RX Descriptors
     uint16_t rxdesc_nb;
 
-    /// Fields for Data Rx handling
     // Index used for ipc_host_rxbuf_array to point to current buffer
     uint16_t ipc_host_rxbuf_idx;
     // Store the number of Rx Data buffers
@@ -140,6 +139,7 @@ struct ipc_host_env_tag
 #endif
 
     struct siwifi_mod_params *mod_params;
+
     ///Fields for Unsupported frame handling
     // Global array used to store the hostid and hostbuf addresses
     struct ipc_hostbuf ipc_host_unsuprxvecbuf_array[IPC_UNSUPRXVECBUF_CNT];
@@ -511,6 +511,7 @@ void ipc_host_dbginfobuf_push(struct ipc_host_env_tag *env, uint32_t infobuf);
 /** @addtogroup IPC_MISC
  *  @{
  */
+
 void ipc_host_dying_gasp_addr_push(struct ipc_host_env_tag *env, uint32_t addr);
 
 /**

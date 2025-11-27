@@ -123,9 +123,25 @@ enum {
 #define REG_SW_CLEAR_PROFILING_CHAN(env, bit)          do {} while (0)
 #endif
 
+#ifdef CONFIG_SIWIFI_SW_PROFILING
+/* Macros for SW PRofiling registers access */
+#define REG_SW_SET_PROFILING(env, bit)                  \
+    siwifi_prof_set((struct siwifi_hw*)env, BIT(bit))
+
+#define REG_SW_SET_HOSTBUF_IDX_PROFILING(env, val)      \
+    siwifi_prof_set((struct siwifi_hw*)env, val<<(SW_PROF_HOSTBUF_IDX))
+
+#define REG_SW_CLEAR_PROFILING(env, bit)                \
+    siwifi_prof_clear((struct siwifi_hw*)env, BIT(bit))
+
+#define REG_SW_CLEAR_HOSTBUF_IDX_PROFILING(env)                         \
+    siwifi_prof_clear((struct siwifi_hw*)env,0x0F<<(SW_PROF_HOSTBUF_IDX))
+
+#else
 #define REG_SW_SET_PROFILING(env, value)            do {} while (0)
 #define REG_SW_CLEAR_PROFILING(env, value)          do {} while (0)
 #define REG_SW_SET_HOSTBUF_IDX_PROFILING(env, val)  do {} while (0)
 #define REG_SW_CLEAR_HOSTBUF_IDX_PROFILING(env)     do {} while (0)
+#endif
 
 #endif /* _SIWIFI_PROF_H_ */

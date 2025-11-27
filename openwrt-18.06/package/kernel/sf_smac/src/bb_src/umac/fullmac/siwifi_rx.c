@@ -236,6 +236,10 @@ static void siwifi_rx_statistic(struct siwifi_hw *siwifi_hw, struct hw_rxhdr *hw
                 mcs = rxvect->mcs % 8;
                 nss = rxvect->mcs / 8;
                 sgi = rxvect->short_gi;
+#else
+                mcs = rxvect->ht.mcs % 8;
+                nss = rxvect->ht.mcs / 8;
+                sgi = rxvect->ht.short_gi;
 #endif
                 rate_idx = 16 + nss * 32 + mcs * 4 +  bw * 2 + sgi;
                 break;
@@ -244,13 +248,15 @@ static void siwifi_rx_statistic(struct siwifi_hw *siwifi_hw, struct hw_rxhdr *hw
                 mcs = rxvect->mcs & 0x0F;
                 nss = rxvect->stbc ? rxvect->n_sts/2 : rxvect->n_sts;
                 sgi = rxvect->short_gi;
+#else
+                mcs = rxvect->vht.mcs;
+                nss = rxvect->vht.nss;
+                sgi = rxvect->vht.short_gi;
 #endif
                 rate_idx = 144 + nss * 80 + mcs * 8 + bw * 2 + sgi;
                 break;
             default:
-#ifdef CONFIG_SFA28_FULLMASK
                 return;
-#endif
                 break;
         }
     } else {
@@ -374,7 +380,6 @@ static bool siwifi_rx_data_skb(struct siwifi_hw *siwifi_hw, struct siwifi_vif *s
     struct sk_buff *rx_skb = NULL;
 
     struct rx_skb_element *rx_elt = NULL;
-    uint8_t skip_after_eth_hdr = 0;
 
     skb->dev = siwifi_vif->ndev;
     rx_elt = (struct rx_skb_element *)siwifi_kmalloc(sizeof(struct rx_skb_element), GFP_ATOMIC);
@@ -395,10 +400,10 @@ static bool siwifi_rx_data_skb(struct siwifi_hw *siwifi_hw, struct siwifi_vif *s
          (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_AP_VLAN) ||
          (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_P2P_GO)) &&
         !(siwifi_vif->ap.flags & SIWIFI_AP_ISOLATE)) {
-        const struct ethhdr *eth;
-        rx_skb = skb_peek(&rx_elt->skb_list);
-        skb_reset_mac_header(rx_skb);
-        eth = eth_hdr(rx_skb);
+		const struct ethhdr *eth;
+		rx_skb = skb_peek(&rx_elt->skb_list);
+		skb_reset_mac_header(rx_skb);
+		eth = eth_hdr(rx_skb);
 
         if (unlikely(is_multicast_ether_addr(eth->h_dest))) {
             /* broadcast pkt need to be forwared to upper layer and resent
@@ -423,25 +428,6 @@ static bool siwifi_rx_data_skb(struct siwifi_hw *siwifi_hw, struct siwifi_vif *s
         skb_reset_mac_header(rx_skb);
         eth = eth_hdr(rx_skb);
 
-        if (rxhdr->flags_dst_idx != SIWIFI_INVALID_STA) {
-            //resend = true;
-            if (is_multicast_ether_addr(eth->h_dest)) {
-                // MC/BC frames are uploaded with mesh control and LLC/snap
-                // (so they can be mesh forwarded) that need to be removed.
-                uint8_t *mesh_ctrl = (uint8_t *)(eth + 1);
-                skip_after_eth_hdr = 8 + 6;
-
-                if ((*mesh_ctrl & MESH_FLAGS_AE) == MESH_FLAGS_AE_A4)
-                    skip_after_eth_hdr += ETH_ALEN;
-                else if ((*mesh_ctrl & MESH_FLAGS_AE) == MESH_FLAGS_AE_A5_A6)
-                    skip_after_eth_hdr += 2 * ETH_ALEN;
-            } else {
-                forward = false;
-                resend = true;
-            }
-        }
-
-#if 0
         if (!is_multicast_ether_addr(eth->h_dest)) {
             /* unicast pkt for STA inside the BSS, no need to forward to upper
                layer simply resend on wireless interface */
@@ -451,7 +437,6 @@ static bool siwifi_rx_data_skb(struct siwifi_hw *siwifi_hw, struct siwifi_vif *s
                 resend = true;
             }
         }
-#endif
     }
 
     if (!sta && (rxhdr->flags_sta_idx < (NX_REMOTE_STA_MAX + NX_VIRT_DEV_MAX))) {
@@ -518,70 +503,67 @@ static bool siwifi_rx_data_skb(struct siwifi_hw *siwifi_hw, struct siwifi_vif *s
     struct sk_buff_head list;
     struct sk_buff *rx_skb;
     bool resend = false, forward = true;
-	struct siwifi_sta *sta = NULL;
-	struct siwifi_sta *dst_sta = NULL;
+    struct siwifi_sta *sta = NULL;
+    struct siwifi_sta *dst_sta = NULL;
     uint32_t tx_dropped = 0;
     uint32_t tx_errors = 0;
     uint32_t forward_len = 0;
     uint32_t forward_num = 0;
-    uint8_t skip_after_eth_hdr = 0;
 
     skb->dev = siwifi_vif->ndev;
     if (!siwifi_rx_get_skb_list(siwifi_hw, siwifi_vif,
                 skb, rxhdr, amsdu_skb, &list))
         return false;
 
-    while (!skb_queue_empty(&list)) {
-        struct ethhdr *eth = NULL;
-        resend = false;
-        forward = true;
-        dst_sta = NULL;
-        rx_skb = __skb_dequeue(&list);
+    if (((SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_AP) ||
+         (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_AP_VLAN) ||
+         (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_P2P_GO)) &&
+        !(siwifi_vif->ap.flags & SIWIFI_AP_ISOLATE)) {
+		const struct ethhdr *eth;
+		rx_skb = skb_peek(&list);
+		skb_reset_mac_header(rx_skb);
+		eth = eth_hdr(rx_skb);
 
-        skb_reset_mac_header(rx_skb);
-        eth = eth_hdr(rx_skb);
-
-        if (((SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_AP) ||
-             (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_AP_VLAN) ||
-             (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_P2P_GO)) &&
-            !(siwifi_vif->ap.flags & SIWIFI_AP_ISOLATE)) {
-
-            if (unlikely(is_multicast_ether_addr(eth->h_dest))) {
-                /* broadcast pkt need to be forwared to upper layer and resent
-                   on wireless interface */
-                resend = true;
-            } else {
-                /* unicast pkt for STA inside the BSS, no need to forward to upper
-                   layer simply resend on wireless interface */
-                dst_sta = siwifi_get_sta(siwifi_hw, eth->h_dest);
-                if (dst_sta && dst_sta->valid && (dst_sta->vlan_idx == siwifi_vif->vif_index))
+        if (unlikely(is_multicast_ether_addr(eth->h_dest))) {
+            /* broadcast pkt need to be forwared to upper layer and resent
+               on wireless interface */
+            resend = true;
+        } else {
+            /* unicast pkt for STA inside the BSS, no need to forward to upper
+               layer simply resend on wireless interface */
+            if (rxhdr->flags_dst_idx < (NX_REMOTE_STA_MAX + NX_VIRT_DEV_MAX))
+            {
+                dst_sta = &siwifi_hw->sta_table[rxhdr->flags_dst_idx];
+                if (dst_sta->valid && (dst_sta->vlan_idx == siwifi_vif->vif_index))
                 {
                     forward = false;
                     resend = true;
                 }
             }
-        } else if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_MESH_POINT) {
-            if (is_multicast_ether_addr(eth->h_dest)) {
-                // MC/BC frames are uploaded with mesh control and LLC/snap
-                // (so they can be mesh forwarded) that need to be removed.
-                uint8_t *mesh_ctrl = (uint8_t *)(eth + 1);
-                skip_after_eth_hdr = 8 + 6;
+        }
+    } else if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_MESH_POINT) {
+        const struct ethhdr *eth;
+        rx_skb = skb_peek(&list);
+        skb_reset_mac_header(rx_skb);
+        eth = eth_hdr(rx_skb);
 
-                if ((*mesh_ctrl & MESH_FLAGS_AE) == MESH_FLAGS_AE_A4)
-                    skip_after_eth_hdr += ETH_ALEN;
-                else if ((*mesh_ctrl & MESH_FLAGS_AE) == MESH_FLAGS_AE_A5_A6)
-                    skip_after_eth_hdr += 2 * ETH_ALEN;
-            } else {
+        if (!is_multicast_ether_addr(eth->h_dest)) {
+            /* unicast pkt for STA inside the BSS, no need to forward to upper
+               layer simply resend on wireless interface */
+            if (rxhdr->flags_dst_idx != SIWIFI_INVALID_STA)
+            {
                 forward = false;
                 resend = true;
             }
         }
+    }
 
-        sta = siwifi_get_sta(siwifi_hw, eth->h_source);
+    if (!sta && (rxhdr->flags_sta_idx < (NX_REMOTE_STA_MAX + NX_VIRT_DEV_MAX))) {
+        sta = &siwifi_hw->sta_table[rxhdr->flags_sta_idx];
+    }
 
-        if (sta != NULL && sta->valid) {
-            siwifi_rx_sta_stats(sta, rxhdr);
-        }
+    while (!skb_queue_empty(&list)) {
+        rx_skb = __skb_dequeue(&list);
 
 #ifdef CONFIG_SIWIFI_REPEATER
         if (siwifi_vif->rp_info) {
@@ -670,14 +652,6 @@ FORWARD:
             memset(rx_skb->cb, 0, sizeof(rx_skb->cb));
             siwifi_trace_rx_in(siwifi_hw, sta, rx_skb);
             rx_skb->protocol = eth_type_trans(rx_skb, siwifi_vif->ndev);
-            // Special case for MESH when BC/MC is uploaded and resend
-            if (unlikely(skip_after_eth_hdr)) {
-                memmove(skb_mac_header(rx_skb) + skip_after_eth_hdr,
-                        skb_mac_header(rx_skb), sizeof(struct ethhdr));
-                __skb_pull(rx_skb, skip_after_eth_hdr);
-                skb_reset_mac_header(rx_skb);
-                skip_after_eth_hdr = 0;
-            }
 #ifdef CONFIG_SIWIFI_IGMP
             siwifi_check_igmp(siwifi_hw, rx_skb);
 #endif
@@ -726,7 +700,7 @@ FORWARD:
 
         siwifi_vif->net_stats.rx_packets += forward_num;
         siwifi_vif->net_stats.rx_bytes += forward_len;
-        if (sta != NULL && sta->valid) {
+        if (sta->valid) {
             sta->stats.rx_packets += forward_num;
             sta->stats.rx_bytes += forward_len;
             if (tx_dropped) {
@@ -755,8 +729,8 @@ FORWARD:
  */
 static void siwifi_easymesh_mgmt_rx_hook(struct ieee80211_mgmt *mgmt, struct sk_buff *skb)
 {
-    /* Declare and initialize an instance of sf_notify_event_data. */
-    sf_notify_event_data event_data;
+    /* Declare and initialize an instance of sf_wifi_event_data. */
+    sf_wifi_event_data event_data;
     bool matched = false;
 
     /* Check if the received frame is an Association Request. */
@@ -782,6 +756,9 @@ static void siwifi_easymesh_mgmt_rx_hook(struct ieee80211_mgmt *mgmt, struct sk_
                     } else if (action_code == WLAN_WNM_BTM_QUERY) {
                         event_data.data.mgmt_rx_event.frame_type = SF_TUNNELED_MSG_BTM_QUERY;
                         matched = true;
+                    } else if (action_code == WLAN_WNM_BTM_RESPONSE) {
+                        event_data.data.mgmt_rx_event.frame_type = SF_TUNNELED_MSG_BTM_RESPONSE;
+                        matched = true;
                     }
                     break;
                 case WLAN_CATEGORY_PUBLIC:
@@ -790,6 +767,12 @@ static void siwifi_easymesh_mgmt_rx_hook(struct ieee80211_mgmt *mgmt, struct sk_
                         matched = true;
                     }
                     break;
+                case WLAN_CATEGORY_RADIO_MEASUREMENT:
+                    action_code = mgmt->u.action.u.measurement.action_code;
+                    if (action_code == RADIO_MEASUREMENT_REPORT) {
+                        event_data.data.mgmt_rx_event.frame_type = SF_TUNNELED_MSG_RADIO_MEASUREMENT_REPORT;
+                        matched = true;
+                    }
                 default:
                     break;
             }
@@ -799,7 +782,7 @@ static void siwifi_easymesh_mgmt_rx_hook(struct ieee80211_mgmt *mgmt, struct sk_
     /* If a match was found, report the event to EasyMesh. */
     if (matched) {
         /* Safely copy management frame data. */
-        event_data.type = SF_NOTIFY_MGMT_RX_EVENT;
+        event_data.type = SF_NOTIFY_WIFI_MGMT_RX_EVENT;
         event_data.data.mgmt_rx_event.frame_length = skb->len;
 
         /* Allocate memory for frame data copy. */
@@ -817,7 +800,7 @@ static void siwifi_easymesh_mgmt_rx_hook(struct ieee80211_mgmt *mgmt, struct sk_
         }
 
         /* Report the management frame reception event. */
-        report_sf_notify_event(&event_data);
+        siwifi_report_event_to_easymesh(&event_data);
 
         /* Free allocated memory for frame data copy. */
         kfree(event_data.data.mgmt_rx_event.frame_data);
@@ -844,23 +827,19 @@ static void siwifi_rx_mgmt(struct siwifi_hw *siwifi_hw, struct siwifi_vif *siwif
     siwifi_trace_mgmt_rx_in(siwifi_hw, skb);
 
 #ifdef CONFIG_SIWIFI_EASYMESH
+    /* Check if the connection should be blocked. */
+    if (siwifi_check_connection_block(siwifi_hw, mgmt))
+        return;
+
+    /* Check if the STA is blocked on the current BSS. */
+    /* If the STA is blocked, return immediately and do not process further. */
+    if (siwifi_easymesh_is_sta_blocked(siwifi_hw, mgmt->sa, mgmt->bssid))
+        return;
+
+    /* Call the EasyMesh management frame receive hook. */
+
     siwifi_easymesh_mgmt_rx_hook(mgmt, skb);
 #endif
-    if (siwifi_hw->enable_dbg_sta_conn) {
-        if (ieee80211_is_auth(mgmt->frame_control)) {
-            printk("rcv auth from [%pM] status code %d\n", mgmt->sa, mgmt->u.auth.status_code);
-        } else if (ieee80211_is_assoc_req(mgmt->frame_control)) {
-            printk("rcv assoc_req from [%pM]\n", mgmt->sa);
-        } else if (ieee80211_is_assoc_resp(mgmt->frame_control)) {
-            printk("rcv assoc_resp from [%pM] status code %d\n", mgmt->sa, mgmt->u.assoc_resp.status_code);
-        } else if (ieee80211_is_reassoc_resp(mgmt->frame_control)) {
-            printk("rcv reassoc_resp from [%pM] status code %d\n", mgmt->sa, mgmt->u.reassoc_resp.status_code);
-        } else if (ieee80211_is_deauth(mgmt->frame_control)) {
-            printk("rcv deauth from [%pM] reasoncode: %d\n", mgmt->sa, mgmt->u.deauth.reason_code);
-        } else if (ieee80211_is_disassoc(mgmt->frame_control)) {
-            printk("rcv disassoc from [%pM] reasoncode: %d\n", mgmt->sa, mgmt->u.disassoc.reason_code);
-        }
-    }
 
     if (ieee80211_is_deauth(mgmt->frame_control) ||
                 ieee80211_is_disassoc(mgmt->frame_control)){
@@ -988,6 +967,13 @@ static u8 siwifi_rx_rtap_hdrlen(struct rx_vector_1 *rxvect,
     if (!(has_vend_rtap) && ((rxvect->format_mod >= FORMATMOD_VHT) ||
                              ((rxvect->format_mod > FORMATMOD_NON_HT_DUP_OFDM) &&
                                                      (rxvect->aggregation)))) {
+        rtap_len = ALIGN(rtap_len, 4);
+        rtap_len += 8;
+    }
+#else
+    if (!(has_vend_rtap) && ((rxvect->format_mod >= FORMATMOD_VHT) ||
+                             ((rxvect->format_mod > FORMATMOD_NON_HT_DUP_OFDM) &&
+                                                     (rxvect->ht.aggregation)))) {
         rtap_len = ALIGN(rtap_len, 4);
         rtap_len += 8;
     }
@@ -1119,6 +1105,10 @@ static void siwifi_rx_add_rtap_hdr(struct siwifi_hw* siwifi_hw,
         rate_idx = rxvect->mcs;
         fec_coding = rxvect->fec_coding;
         stbc = rxvect->stbc;
+#else
+        rate_idx = rxvect->he.mcs;
+        fec_coding = rxvect->he.fec;
+        stbc = rxvect->he.stbc;
 #endif
         aggregation = true;
         *pos = 0;
@@ -1128,6 +1118,11 @@ static void siwifi_rx_add_rtap_hdr(struct siwifi_hw* siwifi_hw,
         fec_coding = rxvect->fec_coding;
         short_gi = rxvect->short_gi;
         stbc = rxvect->stbc;
+#else
+        rate_idx = rxvect->vht.mcs;
+        fec_coding = rxvect->vht.fec;
+        short_gi = rxvect->vht.short_gi;
+        stbc = rxvect->vht.stbc;
 #endif
         aggregation = true;
         *pos = 0;
@@ -1138,6 +1133,12 @@ static void siwifi_rx_add_rtap_hdr(struct siwifi_hw* siwifi_hw,
         short_gi = rxvect->short_gi;
         stbc = rxvect->stbc;
         aggregation = rxvect->aggregation;
+#else
+        rate_idx = rxvect->ht.mcs;
+        fec_coding = rxvect->ht.fec;
+        short_gi = rxvect->ht.short_gi;
+        stbc = rxvect->ht.stbc;
+        aggregation = rxvect->ht.aggregation;
 #endif
         *pos = 0;
     } else {
@@ -1224,6 +1225,8 @@ static void siwifi_rx_add_rtap_hdr(struct siwifi_hw* siwifi_hw,
                           IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH;
 #ifdef CONFIG_SFA28_FULLMASK
         u8 vht_nss = (rxvect->stbc ? rxvect->n_sts/2 : rxvect->n_sts) + 1;
+#else
+        u8 vht_nss = rxvect->vht.nss + 1;
 #endif
 
         rtap->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_VHT);
@@ -1595,10 +1598,9 @@ u8 siwifi_rxdataind(void *pthis, void *hostid)
         return -1;
     }
 
-    // The address of dma_pool_alloc does not need to be flush cache
     /* Get the ownership of the descriptor */
-    //dma_sync_single_for_cpu(siwifi_hw->dev, elem->dma_addr,
-    //                        sizeof(struct rxdesc_tag), DMA_FROM_DEVICE);
+    dma_sync_single_for_cpu(siwifi_hw->dev, elem->dma_addr,
+                            sizeof(struct rxdesc_tag), DMA_FROM_DEVICE);
 
     rxdesc = elem->addr;
     status = rxdesc->status;
@@ -1606,10 +1608,9 @@ u8 siwifi_rxdataind(void *pthis, void *hostid)
 
     /* check that frame is completely uploaded */
     if (!status) {
-        // The address of dma_pool_alloc does not need to be flush cache
         /* Get the ownership of the descriptor */
-        //dma_sync_single_for_device(siwifi_hw->dev, elem->dma_addr,
-        //                           sizeof(struct rxdesc_tag), DMA_FROM_DEVICE);
+        dma_sync_single_for_device(siwifi_hw->dev, elem->dma_addr,
+                                   sizeof(struct rxdesc_tag), DMA_FROM_DEVICE);
         return -1;
     }
 
@@ -1955,15 +1956,6 @@ static void siwifi_rx_thread_process_skbs(struct siwifi_hw *siwifi_hw, struct rx
     uint32_t forward_len = 0;
     uint32_t forward_num = 0;
 
-    vif = rx_elt->vif;
-    if (!vif) {
-        while ((rx_skb = __skb_dequeue(&rx_elt->skb_list))) {
-            dev_kfree_skb(rx_skb);
-            siwifi_hw->total_rx ++;
-        }
-        return;
-    }
-
     while ((rx_skb = __skb_dequeue(&rx_elt->skb_list))) {
         spin_lock_bh(&siwifi_hw->cb_lock);
         if (rx_elt->sta != NULL && rx_elt->sta->valid) {
@@ -1983,12 +1975,12 @@ static void siwifi_rx_thread_process_skbs(struct siwifi_hw *siwifi_hw, struct rx
         } else
 #endif
         {
-            if (SIWIFI_VIF_TYPE(vif) == NL80211_IFTYPE_STATION) {
+            if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_STATION) {
                 struct ethhdr *sf_eth = NULL;
                 struct siwifi_src_filter *src_filter = NULL;
                 skb_reset_mac_header(rx_skb);
                 sf_eth = eth_hdr(rx_skb);
-                src_filter = siwifi_src_filter_hash_search(vif, sf_eth->h_source);
+                src_filter = siwifi_src_filter_hash_search(siwifi_vif, sf_eth->h_source);
                 if (src_filter) {
                     src_filter->drop_count++;
                     dev_kfree_skb(rx_skb);
@@ -2054,37 +2046,31 @@ FORWARD:
             siwifi_check_igmp(siwifi_hw, rx_skb);
 #endif
             spin_lock_bh(&siwifi_hw->cb_lock);
-            rx_skb->protocol = eth_type_trans(rx_skb, vif->ndev);
-            // Special case for MESH when BC/MC is uploaded and resend
-            if (unlikely(rx_elt->skip_len)) {
-                memmove(skb_mac_header(rx_skb) + rx_elt->skip_len,
-                        skb_mac_header(rx_skb), sizeof(struct ethhdr));
-                __skb_pull(rx_skb, rx_elt->skip_len);
-                skb_reset_mac_header(rx_skb);
-                rx_elt->skip_len = 0;
-            }
+            list_for_each_entry(vif, &siwifi_hw->vifs, list) {
+                if (rx_elt->vif != vif)
+                    continue;
+                rx_skb->protocol = eth_type_trans(rx_skb, vif->ndev);
 #if defined(CONFIG_SF19A28_FULLMASK) && IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER) && IS_ENABLED(CONFIG_NF_FLOW_TABLE)
-            phnat_priv = vif->phnat_priv;
-            hnat_pdev = vif->hnat_pdev;
-            if (phnat_priv) {
-                phnat_priv->search(hnat_pdev, rx_skb);
-            }
+                phnat_priv = vif->phnat_priv;
+                hnat_pdev = vif->hnat_pdev;
+                if (phnat_priv) {
+                    phnat_priv->search(hnat_pdev, rx_skb);
+                }
 #endif
+            }
             spin_unlock_bh(&siwifi_hw->cb_lock);
             REG_SW_SET_PROFILING(siwifi_hw, SW_PROF_IEEE80211RX);
 
             forward_num ++;
             forward_len += rx_skb->len;
 
-            local_bh_disable();
             netif_receive_skb(rx_skb);
-            local_bh_enable();
             REG_SW_CLEAR_PROFILING(siwifi_hw, SW_PROF_IEEE80211RX);
         }
         if (!rx_elt->forward && !rx_elt->resend)
             dev_kfree_skb(rx_skb);
         siwifi_hw->total_rx ++;
-        vif->total_rx ++;
+        rx_elt->vif->total_rx ++;
     }
 
     // update statiscs
@@ -2092,25 +2078,29 @@ FORWARD:
     siwifi_hw->stats.total_rx += forward_num;
 #endif
     spin_lock_bh(&siwifi_hw->cb_lock);
-    if (tx_dropped) {
-        vif->net_stats.rx_dropped += tx_dropped;
-        vif->net_stats.tx_dropped += tx_dropped;
-    }
-    if (tx_errors) {
-        vif->net_stats.tx_errors += tx_errors;
-    }
-
-    vif->net_stats.rx_packets += forward_num;
-    vif->net_stats.rx_bytes += forward_len;
-    if (rx_elt->sta && rx_elt->sta->valid) {
-        rx_elt->sta->stats.rx_packets += forward_num;
-        rx_elt->sta->stats.rx_bytes += forward_len;
+    list_for_each_entry(vif, &siwifi_hw->vifs, list) {
+        if (vif != rx_elt->vif)
+            continue;
         if (tx_dropped) {
-            rx_elt->sta->stats.rx_dropped += tx_dropped;
-            rx_elt->sta->stats.tx_dropped += tx_dropped;
+            vif->net_stats.rx_dropped += tx_dropped;
+            vif->net_stats.tx_dropped += tx_dropped;
         }
-        if (tx_errors)
-            rx_elt->sta->stats.tx_failed += tx_errors;
+        if (tx_errors) {
+            vif->net_stats.tx_errors += tx_errors;
+        }
+
+        vif->net_stats.rx_packets += forward_num;
+        vif->net_stats.rx_bytes += forward_len;
+        if (rx_elt->sta && rx_elt->sta->valid) {
+            rx_elt->sta->stats.rx_packets += forward_num;
+            rx_elt->sta->stats.rx_bytes += forward_len;
+            if (tx_dropped) {
+                rx_elt->sta->stats.rx_dropped += tx_dropped;
+                rx_elt->sta->stats.tx_dropped += tx_dropped;
+            }
+            if (tx_errors)
+                rx_elt->sta->stats.tx_failed += tx_errors;
+        }
     }
     spin_unlock_bh(&siwifi_hw->cb_lock);
 }

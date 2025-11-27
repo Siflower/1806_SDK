@@ -44,11 +44,6 @@ int siwifi_parse_digtable_configfile(struct siwifi_hw *siwifi_hw, const char *fi
 int siwifi_parse_txpower_gain_table_configfile(struct siwifi_hw *siwifi_hw, int ext_pa);
 #endif
 
-#ifdef CONFIG_ENABLE_RFGAINTABLE
-int siwifi_parse_rf_gain_table_configfile(struct siwifi_hw *siwifi_hw);
-int update_rf_gain_table_configfile(struct siwifi_hw *siwifi_hw, uint8_t *tb_idx);
-#endif
-
 int siwifi_update_txpower_offset_configfile(char *txpower_list, int txpower_mode, int lb, struct siwifi_hw *siwifi_hw, int second_antenna);
 int siwifi_update_txpower_lvl(struct siwifi_hw *siwifi_hw, int txpower_lvl);
 int siwifi_update_antenna_number(struct siwifi_hw *siwifi_hw, int antenna_number);

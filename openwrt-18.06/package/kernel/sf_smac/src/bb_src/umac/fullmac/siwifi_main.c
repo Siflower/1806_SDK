@@ -402,16 +402,12 @@ static const int siwifi_hwq2uapsd[NL80211_NUM_ACS] = {
     [SIWIFI_HWQ_BK] = IEEE80211_WMM_IE_STA_QOSINFO_AC_BK,
 };
 
-static int32_t siwifi_wiphy_addmask[9]  = {
+static int32_t siwifi_wiphy_addmask[5]  = {
     0,
     1,
     1,
     3,
-    3,
-    7,
-    7,
-    7,
-    7
+    3
 };
 
 /* For calculating legacy rate */
@@ -443,7 +439,6 @@ static uint32_t siwifi_calculate_legrate(uint8_t legrate, bool is_tx)
     else
         rate_idx = legrates_lut[legrate];
 
-    rate_idx = legrates_lut[legrate];
     if (rate_idx < 0 || rate_idx > 11) {
         printk("%s invalid legrate: %u\n", __func__, legrate);
         return rate_kbps;
@@ -510,6 +505,10 @@ u8 *siwifi_build_bcn(struct siwifi_bcn *bcn, struct cfg80211_beacon_data *new, u
 {
     u8 *buf, *pos;
 
+    if(!new){
+        goto change;
+    }
+
     if (new->head) {
         u8 *head = siwifi_kmalloc(new->head_len, GFP_KERNEL);
 
@@ -537,6 +536,7 @@ u8 *siwifi_build_bcn(struct siwifi_bcn *bcn, struct cfg80211_beacon_data *new, u
         memcpy(bcn->tail, new->tail, new->tail_len);
     }
 
+change:
     if (!bcn->head)
         return NULL;
 
@@ -569,6 +569,78 @@ u8 *siwifi_build_bcn(struct siwifi_bcn *bcn, struct cfg80211_beacon_data *new, u
     return buf;
 }
 
+int set_bcn_ies(struct net_device *dev, int ie_len, u8 *ie)
+{
+    int ret = -1;
+    struct siwifi_hw *siwifi_hw = NULL;
+    struct siwifi_bcn *bcn = NULL;
+    struct siwifi_vif *siwifi_vif = netdev_priv(dev);
+    struct siwifi_ipc_elem_var elem;
+    u8 *buf;
+    u8 *ies;
+    u8 *real_addr;
+
+    if (siwifi_vif == NULL) {
+        printk(" no vif \n");
+        return ret;
+    }
+
+    siwifi_hw = siwifi_vif->siwifi_hw;
+    if (siwifi_hw == NULL) {
+        printk("no siwifi hw\n");
+        return ret;
+    }
+
+    bcn = &siwifi_vif->ap.bcn;
+    if (!bcn) {
+        printk("no siwifi bcn\n");
+        return ret;
+    }
+
+    if (!ie || !ie_len) {
+        bcn->ies = NULL;
+        bcn->ies_len = 0;
+        if(siwifi_hw->beacon_insert_info){
+            siwifi_kfree(siwifi_hw->beacon_insert_info);
+            siwifi_hw->beacon_insert_info = NULL;
+        }
+        siwifi_hw->beacon_insert_info_len = 0;
+    } else {
+        siwifi_hw->beacon_insert_info = (char *)siwifi_kzalloc(ie_len, GFP_KERNEL);
+        ies = siwifi_kmalloc(ie_len, GFP_KERNEL);
+        if (!ies || !siwifi_hw->beacon_insert_info){
+            return ret;
+        }
+        if (bcn->ies){
+            siwifi_kfree(bcn->ies);
+        }
+        siwifi_hw->beacon_insert_info_len = ie_len;
+        memcpy(siwifi_hw->beacon_insert_info, ie, ie_len);
+
+        bcn->ies = ies;
+        bcn->ies_len = ie_len;
+        memcpy(bcn->ies, ie, ie_len);
+    }
+
+    // Build the beacon
+    buf = siwifi_build_bcn(bcn, NULL, &real_addr);
+    if (!buf)
+        return -ENOMEM;
+
+    // Sync buffer for FW
+    if ((ret = siwifi_ipc_elem_var_allocs(siwifi_hw, &elem, bcn->len, DMA_TO_DEVICE,
+                                          buf, NULL, NULL, real_addr)))
+        goto dealloc;
+
+    // Forward the information to the LMAC
+    ret = siwifi_send_bcn_change(siwifi_hw, siwifi_vif->vif_index, elem.dma_addr,
+                                 bcn->len, bcn->head_len, bcn->tim_len, NULL);
+dealloc:
+    siwifi_ipc_elem_var_deallocs(siwifi_hw, &elem);
+
+    return ret;
+}
+
 /*
  *  @start: Called before the first netdevice attached to the hardware
  *  s enabled. The message is sent by the timer from the umac to lmac .
@@ -585,7 +657,7 @@ extern void siwifi_dump_lmac_debug_info(struct ipc_shared_env_tag *shared_env_pt
 
 static void heart_beat_handler(struct work_struct *wk)
 {
-    struct siwifi_hw *siwifi_hw = container_of(wk, struct siwifi_hw, heart_work.work);
+    struct siwifi_hw *siwifi_hw = container_of(wk, struct siwifi_hw, heart_work);
 #ifdef CONFIG_SEND_ERR
     int err = 0;
 #endif
@@ -600,7 +672,7 @@ static void heart_beat_handler(struct work_struct *wk)
 #endif
                     ) {
         mutex_unlock(&siwifi_hw->dbgdump_elem.mutex);
-        schedule_delayed_work(&siwifi_hw->heart_work, MSECS(SIWIFI_HEART_BEAT_TIME_MS));
+        mod_timer(&siwifi_hw->heart_timer, jiffies + MSECS(SIWIFI_HEART_BEAT_TIME_MS));
         return;
     } else {
         if (siwifi_send_heart(siwifi_hw)) {
@@ -628,12 +700,19 @@ static void heart_beat_handler(struct work_struct *wk)
             //SIWIFI_DBG(SIWIFI_FN_EXIT_STR);
         }
     }
-    schedule_delayed_work(&siwifi_hw->heart_work, MSECS(SIWIFI_HEART_BEAT_TIME_MS));
+
+    mod_timer(&siwifi_hw->heart_timer, jiffies + MSECS(SIWIFI_HEART_BEAT_TIME_MS));
     mutex_unlock(&siwifi_hw->dbgdump_elem.mutex);
     if(!(siwifi_hw->ate_env.ate_start))
         siwifi_channel_recovery_check(siwifi_hw);
 }
+static void heart_beat_timer(unsigned long data)
+{
+    struct siwifi_hw *siwifi_hw = (struct siwifi_hw *)data;
+    schedule_work(&siwifi_hw->heart_work);
+}
 #endif
+
 
 static void siwifi_del_bcn(struct siwifi_bcn *bcn)
 {
@@ -659,6 +738,7 @@ static void siwifi_del_bcn(struct siwifi_bcn *bcn)
     bcn->len = 0;
 }
 
+
 /**
  * Check whether the sta channel is the same as the current vif channel
  */
@@ -670,8 +750,10 @@ static int siwifi_check_vif_channel_same(struct siwifi_vif *vif, u8 ch_idx,
     struct siwifi_vif *vif_sta = NULL;
     struct cfg80211_chan_def *chandef_sta = NULL;
     struct siwifi_chanctx *ctxt_sta = NULL;
+
     struct siwifi_vif *vif_tmp = NULL;
     struct siwifi_chanctx *ctxt2 = NULL;
+
     if (SIWIFI_VIF_TYPE(vif) == NL80211_IFTYPE_STATION) {
         vif_sta = vif;
         sta_ch_idx = ch_idx;
@@ -690,6 +772,7 @@ static int siwifi_check_vif_channel_same(struct siwifi_vif *vif, u8 ch_idx,
     if (!vif_sta || !chandef_sta || !ctxt_sta || (vif_sta->ch_index == SIWIFI_CH_NOT_SET)){
         return 1;
     }
+
     list_for_each_entry(vif_tmp, &vif_sta->siwifi_hw->vifs, list) {
         if (vif_tmp == vif_sta){
             continue;
@@ -698,6 +781,7 @@ static int siwifi_check_vif_channel_same(struct siwifi_vif *vif, u8 ch_idx,
         if (ctxt2->chan_def.chan == NULL || chandef_sta->chan == NULL) {
             continue;
         }
+
         if (ctxt2->chan_def.chan->center_freq != chandef_sta->chan->center_freq || vif_tmp->ch_index != sta_ch_idx){
             printk("NL80211_IFTYPE_AP(%s freq %d ch_idx %d) should follow NL80211_IFTYPE_STATION (%s freq %d ch_idx %d) \n",
                     vif_tmp->ndev->name, ctxt2->chan_def.chan->center_freq, vif_tmp->ch_index,
@@ -713,6 +797,7 @@ static int siwifi_check_vif_channel_same(struct siwifi_vif *vif, u8 ch_idx,
     }
     return 0;
 }
+
 /**
  * Link channel ctxt to a vif and thus increments count for this context.
  */
@@ -733,7 +818,6 @@ void siwifi_chanctx_link(struct siwifi_vif *vif, u8 ch_idx,
     // For now chandef is NULL for STATION interface
     if (chandef) {
         ctxt->chan_def = *chandef;
-
         siwifi_check_vif_channel_same(vif, ch_idx, chandef, ctxt);
     }
 }
@@ -916,7 +1000,8 @@ static int siwifi_open(struct net_device *dev)
 	siwifi_send_set_power_lvl(siwifi_hw, (u8)siwifi_hw->mod_params->txpower_lvl);
     /* Fix the problem that web page relay cannot take effect after private fields are set */
     if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_STATION) {
-        siwifi_send_assoc_req_insert_info(siwifi_hw);
+        siwifi_send_assoc_insert_info(siwifi_hw);
+        siwifi_send_auth_insert_info(siwifi_hw);
     }
     /* Save the index retrieved from LMAC */
     spin_lock_bh(&siwifi_hw->cb_lock);
@@ -1172,6 +1257,895 @@ static void siwifi_netdev_setup(struct net_device *dev)
 	dev->hw_features = 0;
 }
 
+#ifdef CONFIG_SIWIFI_EASYMESH
+/* ============================ Handle events triggered by the easymesh driver ====================================== */
+static int siwifi_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev);
+static int siwifi_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev,
+                                       struct station_del_parameters *params);
+
+/**
+ * siwifi_easymesh_send_disconnect_frame - Sends a disconnection frame to a specified station.
+ *
+ * @param siwifi_hw: Pointer to the hardware structure.
+ * @param siwifi_vif: Pointer to the virtual interface structure.
+ * @param siwifi_sta: Pointer to the station structure.
+ * @param del_params: Pointer to the station deletion parameters.
+ * @param del_prev: Flag indicating whether the deauth to notify the previous station to del sta.
+ *
+ * This function sends a disconnection frame (either disassociation or deauthentication) to a specified station based on
+ * the provided parameters. The frame is constructed according to the subtype (0xa0 for disassociation, others for
+ * deauthentication) and sent using the management frame transmission function.
+ */
+static void siwifi_easymesh_send_disconnect_frame(struct siwifi_hw *siwifi_hw, struct siwifi_vif *siwifi_vif,
+                                                  struct siwifi_sta *siwifi_sta,
+                                                  struct station_del_parameters *del_params, bool del_prev)
+{
+    struct ieee80211_mgmt mgmt;
+    struct cfg80211_mgmt_tx_params tx_params;
+    u64 cookie;
+
+    /* Initialize with zeros. */
+    memset(&mgmt, 0, sizeof(mgmt));
+    memset(&tx_params, 0, sizeof(tx_params));
+
+    /* Set the frame control field with the appropriate management type and subtype. */
+    mgmt.frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+                                     (del_params->subtype == 0xa0 ? IEEE80211_STYPE_DISASSOC : IEEE80211_STYPE_DEAUTH));
+
+    /* Set the destination address, source address, and BSSID in the management frame. */
+    memcpy(mgmt.da, del_params->mac, ETH_ALEN);
+    if (del_prev)
+        memcpy(mgmt.bssid, del_params->mac, ETH_ALEN);
+    else
+        memcpy(mgmt.bssid, siwifi_vif->ndev->dev_addr, ETH_ALEN);
+    memcpy(mgmt.bssid, siwifi_vif->ndev->dev_addr, ETH_ALEN);
+
+    /* Fill the management frame's reason code based on the subtype. */
+    if (del_params->subtype == 0xa0) {
+        mgmt.u.disassoc.reason_code = del_params->reason_code;
+        tx_params.len = sizeof(struct ieee80211_hdr_3addr) + sizeof(mgmt.u.disassoc);
+    } else {
+        mgmt.u.deauth.reason_code = del_params->reason_code;
+        tx_params.len = sizeof(struct ieee80211_hdr_3addr) + sizeof(mgmt.u.deauth);
+    }
+
+    /* Set the management frame buffer to the constructed frame. */
+    tx_params.buf = (void *)&mgmt;
+
+    /* Transmit the management frame, with locking to ensure exclusive access to callback handling. */
+    spin_lock_bh(&siwifi_hw->cb_lock);
+    if (siwifi_start_mgmt_xmit(siwifi_vif, siwifi_sta, &tx_params, false, &cookie))
+        printk("Failed to send %s frame\n", del_params->subtype == 0xa0 ? "disassociation" : "deauthentication");
+    spin_unlock_bh(&siwifi_hw->cb_lock);
+}
+
+/**
+ * siwifi_easymesh_del_station - Deletes a station from the network.
+ *
+ * @param event_data: Pointer to the event data structure.
+ *
+ * This function deletes a station from the network. It sends a disconnection frame to the station and waits for a
+ * confirmation before proceeding to remove the station from the network. If the station is successfully deleted.
+ *
+ * Return: 0 on success, -1 on failure.
+ */
+static int siwifi_easymesh_del_station(sf_easymesh_event_data *event_data)
+{
+    struct net_device *dev = event_data->data.sta_del_event.dev;
+    struct siwifi_vif *siwifi_vif = netdev_priv(dev);
+    struct siwifi_hw *siwifi_hw = siwifi_vif->siwifi_hw;
+    struct siwifi_sta *siwifi_sta = NULL, *temp_sta = NULL;
+    struct station_del_parameters del_params;
+    unsigned long timeout = 2 * HZ;
+    uint8_t sta_mac[ETH_ALEN];
+    bool del_prev = false;
+
+    memcpy(sta_mac, event_data->data.sta_del_event.mac, ETH_ALEN);
+
+    /* Find the station in the AP's station list. */
+    list_for_each_entry (temp_sta, &siwifi_vif->ap.sta_list, list) {
+        if (!memcmp(temp_sta->mac_addr, sta_mac, ETH_ALEN)) {
+            siwifi_sta = temp_sta;
+            break;
+        }
+    }
+
+    /* If station is not found, send deauth to notify the upper AP to delete the STA. */
+    if (!siwifi_sta) {
+        struct siwifi_vif *sta_vif = NULL;
+
+        spin_lock_bh(&siwifi_hw->cb_lock);
+        /* Iterate over all virtual interfaces. */
+        list_for_each_entry (sta_vif, &siwifi_hw->vifs, list) {
+            /*  Continue if the VIF is not of type Access Point (STA). */
+            if (SIWIFI_VIF_TYPE(sta_vif) != NL80211_IFTYPE_STATION)
+                continue;
+
+            siwifi_vif = sta_vif;
+            siwifi_sta = sta_vif->sta.ap;
+            memcpy(sta_mac, siwifi_sta->mac_addr, ETH_ALEN);
+            spin_unlock_bh(&siwifi_hw->cb_lock);
+            del_prev = true;
+            goto del;
+
+        }
+        spin_unlock_bh(&siwifi_hw->cb_lock);
+        printk("Invalid station MAC address %pM.\n", sta_mac);
+        return -1;
+    }
+
+del:
+    /* Mark the station for removal and send a disconnection frame. */
+    siwifi_sta->remove_sta = true;
+    siwifi_hw->remove_sta_receive_cfm = false;
+    siwifi_hw->remove_sta_success = false;
+    del_params.subtype = 0x0c;
+    del_params.reason_code = 2;
+    del_params.mac = sta_mac;
+    siwifi_easymesh_send_disconnect_frame(siwifi_hw, siwifi_vif, siwifi_sta, &del_params, del_prev);
+
+    if (del_prev)
+        return 0;
+
+    /* Wait for disconnection confirmation. */
+    wait_event_interruptible_timeout(siwifi_hw->del_sta_wq, siwifi_hw->remove_sta_receive_cfm, timeout);
+    siwifi_sta->remove_sta = false;
+    /* Check whether confirmation is successful. */
+    if (siwifi_hw->remove_sta_success) {
+        /* After sending successfully, delete the sta from the local. */
+        if (siwifi_cfg80211_del_station(siwifi_hw->wiphy, dev, &del_params)) {
+            printk("Failed to delete station %pM.\n", sta_mac);
+            return -1;
+        }
+
+        return 0;
+    }
+
+    return -1;
+}
+
+/**
+ * siwifi_destroy_blocked_sta_list - Safely destroy the linked list of blocked STAs.
+ *
+ * @param siwifi_hw: Pointer to the hardware structure that contains the blocked STA list and its lock.
+ *
+ * This function acquires the lock, iterates through the blocked STA list, safely removes each entry
+ * from the list, stops any associated timers, and frees the allocated memory. The lock is released
+ * after the list has been fully processed.
+ */
+static void siwifi_destroy_blocked_sta_list(struct siwifi_hw *siwifi_hw)
+{
+    sf_block_sta_info *info = NULL, *tmp = NULL;
+
+    /* Acquire the spin lock to ensure exclusive access to the blocked STA list. */
+    spin_lock_bh(&siwifi_hw->blocked_sta_list_lock);
+
+    /* Iterate over the blocked STA list and safely delete each entry. */
+    list_for_each_entry_safe (info, tmp, &siwifi_hw->blocked_sta_list, list) {
+        /* Remove the entry from the list. */
+        list_del(&info->list);
+        /* Stop and delete the associated timer. */
+        del_timer_sync(&info->timer.timer);
+        /* Free the memory allocated for the blocked STA. */
+        siwifi_kfree(info);
+    }
+
+    /* Release the spin lock after the list has been cleared. */
+    spin_unlock_bh(&siwifi_hw->blocked_sta_list_lock);
+}
+
+/**
+ * siwifi_block_sta_timer_callback - Timer callback function to handle the blocked station timeout.
+ *
+ * @param timer: Pointer to the timer structure.
+ *
+ * This function is called when the block timer expires. It removes the station
+ * from the blocked station list and frees the associated memory.
+ */
+static void siwifi_block_sta_timer_callback(struct timer_list *timer)
+{
+    sf_sta_timer_info *info = container_of(timer, sf_sta_timer_info, timer);
+    struct siwifi_hw *siwifi_hw = info->siwifi_hw;
+    sf_block_sta_info *block_sta_info = container_of(info, sf_block_sta_info, timer);
+
+    /* Print information (for debugging purposes). */
+    printk("Block time over, mac:%pM, bssid:%pM.\n", block_sta_info->mac, block_sta_info->bssid);
+
+    /* Remove the blocked station from the list. */
+    spin_lock_bh(&siwifi_hw->blocked_sta_list_lock);
+    list_del(&block_sta_info->list);
+    spin_unlock_bh(&siwifi_hw->blocked_sta_list_lock);
+
+    /* Free the memory allocated for the blocked station information. */
+    kfree(block_sta_info);
+}
+
+/**
+ * siwifi_easymesh_is_sta_blocked - Check if a station with the given MAC and BSSID is already blocked.
+ *
+ * @param siwifi_hw: Pointer to the hardware structure containing the blocked STA list.
+ * @param mac: MAC address of the station to check.
+ * @param bssid: BSSID of the AP to check.
+ *
+ * Return: true if the station is already blocked, false otherwise.
+ */
+bool siwifi_easymesh_is_sta_blocked(struct siwifi_hw *siwifi_hw, const uint8_t *mac, const uint8_t *bssid)
+{
+    sf_block_sta_info *info = NULL;
+    bool is_blocked = false;
+
+    /* Acquire the spin lock to ensure exclusive access to the blocked STA list. */
+    spin_lock_bh(&siwifi_hw->blocked_sta_list_lock);
+
+    /* Iterate through the blocked STA list. */
+    list_for_each_entry (info, &siwifi_hw->blocked_sta_list, list) {
+        /* Check if both the source address and BSSID match the blocked STA on the current BSS. */
+        if (!memcmp(mac, info->mac, ETH_ALEN) && !memcmp(bssid, info->bssid, ETH_ALEN)) {
+            is_blocked = true;
+            break;
+        }
+    }
+
+    /* Release the spin lock after the list has been processed. */
+    spin_unlock_bh(&siwifi_hw->blocked_sta_list_lock);
+
+    return is_blocked;
+}
+
+/**
+ * siwifi_easymesh_add_block_station - Adds stations to the block list and sets a timer for each.
+ *
+ * @param event_data: Pointer to the event data structure.
+ *
+ * This function adds each specified station to the blocked station list, if it is not already present. It sets up a
+ * timer for each station to automatically remove it from the list after the specified block duration.
+ */
+static void siwifi_easymesh_add_block_station(sf_easymesh_event_data *event_data)
+{
+    struct net_device *dev = event_data->data.sta_block_event.dev;
+    struct siwifi_vif *siwifi_vif = netdev_priv(dev);
+    struct siwifi_hw *siwifi_hw = siwifi_vif->siwifi_hw;
+    sf_block_sta_info *block_sta = NULL;
+    uint8_t count = event_data->data.sta_block_event.count;
+    uint8_t timeout = event_data->data.sta_block_event.timeout;
+    uint8_t **sta_mac = event_data->data.sta_block_event.sta_mac;
+    int i;
+
+    /* Iterate over each MAC address to be blocked. */
+    for (i = 0; i < count; i++) {
+        /* Check if the station is already blocked. */
+        if (siwifi_easymesh_is_sta_blocked(siwifi_hw, sta_mac[i], dev->dev_addr)) {
+            printk("[%s]: Station %pM is already blocked.\n", __func__, sta_mac[i]);
+            continue;
+        }
+
+        /* Allocate memory for the block station info structure. */
+        block_sta = siwifi_kzalloc(sizeof(sf_block_sta_info), GFP_KERNEL);
+        if (!block_sta) {
+            printk("[%s]: Failed to allocate memory for blocking station %pM.\n", __func__, sta_mac[i]);
+            continue;
+        }
+
+        /* Copy MAC and BSSID addresses into the block station info structure. */
+        memcpy(block_sta->mac, sta_mac[i], ETH_ALEN);
+        memcpy(block_sta->bssid, dev->dev_addr, ETH_ALEN);
+
+        /* Add to the blocked list. */
+        spin_lock_bh(&siwifi_hw->blocked_sta_list_lock);
+        list_add_tail(&block_sta->list, &siwifi_hw->blocked_sta_list);
+        spin_unlock_bh(&siwifi_hw->blocked_sta_list_lock);
+
+        /* Initialize and start the timer for blocking the station. */
+        block_sta->timer.timeout = timeout;
+        block_sta->timer.siwifi_hw = siwifi_hw;
+        timer_setup(&block_sta->timer.timer, siwifi_block_sta_timer_callback, 0);
+        mod_timer(&block_sta->timer.timer, jiffies + msecs_to_jiffies(timeout * 1000));
+    }
+}
+
+/**
+ * siwifi_easymesh_trigger_scan - Perform a WiFi scan operation.
+ *
+ * @param event_data: Pointer to the event data structure.
+ *
+ * This function initiates a new WiFi scan operation, scanning the specified list of channels. If a scan is already in
+ * progress, the function will return with a failure code to avoid overlap.
+ *
+ * @return 0 on success, -1 on failure.
+ */
+static int siwifi_easymesh_trigger_scan(sf_easymesh_event_data *event_data)
+{
+    struct net_device *dev = event_data->data.trigger_scan_event.dev;
+    struct siwifi_vif *siwifi_vif = netdev_priv(dev);
+    struct siwifi_hw *siwifi_hw = siwifi_vif->siwifi_hw;
+    struct wiphy *wiphy = siwifi_hw->wiphy;
+    struct cfg80211_scan_request *request;
+    enum nl80211_band band;
+    uint8_t scan_chan_count = event_data->data.trigger_scan_event.scan_chan_count;
+    uint8_t *scan_chan_list = event_data->data.trigger_scan_event.scan_chan_list;
+    uint8_t bssid[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+    int count = 0, ret = 0;
+    int i, j;
+
+    /* Check if a scan operation is already in progress. */
+    if (siwifi_hw->scaning || siwifi_hw->easymesh_scan_enbale) {
+        printk("[%s]: Scan already in progress.\n", __func__);
+        return -1;
+    }
+
+    /* Set easymesh scan to true. */
+    siwifi_hw->easymesh_scan_enbale = true;
+
+    /* Determine the frequency band based on the first channel. */
+    band = (scan_chan_list[0] <= 14) ? NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
+
+    /* Allocate memory for the scan request. */
+    request = siwifi_kzalloc(sizeof(*request) + sizeof(struct ieee80211_channel) * scan_chan_count, GFP_ATOMIC);
+    if (!request) {
+        printk("[%s]: Failed to allocate memory for scan request.\n", __func__);
+        siwifi_hw->easymesh_scan_enbale = false;
+        return -1;
+    }
+
+    /* Populate the scan request with channels to be scanned. */
+    for (i = 0; i < wiphy->bands[band]->n_channels; i++) {
+        struct ieee80211_channel *chan = &wiphy->bands[band]->channels[i];
+
+        /* Skip disabled channels. */
+        if (chan->flags & IEEE80211_CHAN_DISABLED)
+            continue;
+
+        /* Match requested channels to available channels. */
+        for (j = 0; j < scan_chan_count; j++) {
+            if (ieee80211_channel_to_frequency(scan_chan_list[j], band) == chan->center_freq) {
+                request->channels[count++] = chan;
+                break;
+            }
+        }
+    }
+
+    /* Set the number of channels to be scanned. */
+    request->n_channels = count;
+    request->n_ssids = 0;
+    request->ie = NULL;
+    request->wdev = &siwifi_vif->wdev;
+    request->wiphy = wiphy;
+    memcpy(request->bssid, bssid, ETH_ALEN);
+
+    /* Send the scan request. */
+    ret = siwifi_send_scanu_req(siwifi_hw, siwifi_vif, request);
+
+    /* Free allocated memory for the scan request. */
+    siwifi_kfree(request);
+
+    /* Reset EasyMesh scan enable flag if scan failed. */
+    if (ret) {
+        siwifi_hw->easymesh_scan_enbale = false;
+    }
+
+    return ret;
+}
+
+/**
+ * siwifi_easymesh_unblock_connect - Handle the unblocking of connections in the EasyMesh network.
+ *
+ * @param event_data: Pointer to the event data structure.
+ *
+ * This function processes the `SF_NOTIFY_EASYMESH_UNBLOCK_CONNECT_EVENT` event,
+ * removing any restrictions that were previously in place, and allowing all stations (STAs)
+ * to connect to the network.
+ */
+static void siwifi_easymesh_unblock_connect(sf_easymesh_event_data *event_data)
+{
+    struct net_device *dev = event_data->data.unblock_connect_event.dev;
+    struct siwifi_vif *siwifi_vif = netdev_priv(dev);
+    struct siwifi_hw *siwifi_hw = siwifi_vif->siwifi_hw;
+
+    /**
+     * Set the `block_connection` flag to false to allow all connections.
+     * This flag controls whether new connections are allowed (false) or blocked (true).
+     */
+    siwifi_hw->block_connection = false;
+}
+
+/**
+ * siwifi_easymesh_del_apvlan - Delete the AP_VLAN interfaces from the device.
+ *
+ * @param event_data: Pointer to the event data structure.
+ *
+ * This function iterates through the list of virtual interfaces (vifs) managed by the
+ * hardware. It finds an interface of type AP_VLAN that is currently up, deletes it from
+ * the bridge, and removes its configuration from the hardware.
+ */
+static void siwifi_easymesh_del_apvlan(sf_easymesh_event_data *event_data)
+{
+    struct net_device *dev = event_data->data.ap_vlan_del_event.dev;
+    struct net_device *br_dev = event_data->data.ap_vlan_del_event.br_dev;
+    struct siwifi_vif *siwifi_vif = netdev_priv(dev);
+    struct siwifi_hw *siwifi_hw = siwifi_vif->siwifi_hw;
+    struct siwifi_vif *tmp = NULL, *vif = NULL;
+
+    /* Iterate through all virtual interfaces managed by the hardware. */
+    list_for_each_entry_safe(vif, tmp, &siwifi_hw->vifs, list) {
+        /* Skip interfaces that are not up. */
+        if (!vif || vif->up)
+            continue;
+
+        /* Check if the current interface is of type AP_VLAN. */
+        if (SIWIFI_VIF_TYPE(vif) == NL80211_IFTYPE_AP_VLAN) {
+            /* Lock the RTNL (Routing NetLink) to safely modify the network device. */
+            rtnl_lock();
+
+            /* Remove the AP_VLAN interface from the bridge. */
+            br_dev->netdev_ops->ndo_del_slave(br_dev, vif->ndev);
+
+            /* Remove the AP_VLAN interface's configuration from the hardware. */
+            siwifi_cfg80211_del_iface(siwifi_hw->wiphy, &vif->wdev);
+
+            /* Unlock the RTNL after modifications are complete. */
+            rtnl_unlock();
+        }
+    }
+}
+
+/**
+ * siwifi_process_easymesh_event - Process notification events from the EasyMesh driver.
+ *
+ * @param event_data: Pointer to the event data structure (sf_easymesh_event_data) containing details about the
+ * notification event.
+ *
+ * This function handles notification events received from the EasyMesh driver, processing them based on the event type.
+ *
+ * Return: 0 if success, non-zero otherwise.
+ */
+int siwifi_process_easymesh_event(sf_easymesh_event_data *event_data)
+{
+    int ret = 0;
+
+    printk("Processing EasyMesh event: %d.\n", event_data->type);
+
+    switch (event_data->type) {
+        case SF_NOTIFY_EASYMESH_STA_DEL_EVENT:
+            ret = siwifi_easymesh_del_station(event_data);
+            break;
+        case SF_NOTIFY_EASYMESH_STA_BLOCK_EVENT:
+            siwifi_easymesh_add_block_station(event_data);
+            break;
+        case SF_NOTIFY_EASYMESH_TRIGGER_SCAN_EVENT:
+            ret = siwifi_easymesh_trigger_scan(event_data);
+            break;
+        case SF_NOTIFY_EASYMESH_UNBLOCK_CONNECT_EVENT:
+            siwifi_easymesh_unblock_connect(event_data);
+            break;
+        case SF_NOTIFY_EASYMESH_AP_VLAN_DEL_EVENT:
+            siwifi_easymesh_del_apvlan(event_data);
+            break;
+        default:
+            printk("Unhandled EasyMesh event type: %d.\n", event_data->type);
+            break;
+    }
+
+    return ret;
+}
+EXPORT_SYMBOL(siwifi_process_easymesh_event);
+
+/* ============================ Trigger events to the easymesh driver =============================================== */
+/**
+ * report_event_to_easymesh - Global callback function pointer for EasyMesh WiFi events.
+ *
+ * This variable holds the callback function pointer used for handling WiFi events
+ * within the EasyMesh module. It is initialized to NULL by default and can be set
+ * using the `siwifi_set_notify` function.
+ */
+siwifi_event_callback report_event_to_easymesh = NULL;
+
+/**
+ * siwifi_set_notify - Set the callback function for handling WiFi events within EasyMesh.
+ *
+ * @param ptr: Pointer to the callback function of type `siwifi_event_callback`.
+ *
+ * This function allows setting the callback function to handle WiFi events within the EasyMesh module.
+ * The provided callback function (`ptr`) will be assigned to the global variable `report_event_to_easymesh`.
+ */
+void siwifi_set_notify(siwifi_event_callback ptr)
+{
+    report_event_to_easymesh = ptr;
+}
+EXPORT_SYMBOL(siwifi_set_notify);
+
+/**
+ * siwifi_report_event_to_easymesh - Report a WiFi notification event to the registered callback function.
+ *
+ * @param event_data: Pointer to the sf_wifi_event_data structure containing the event details.
+ *
+ * This function checks if the callback function `report_event_to_easymesh` is registered.
+ * If the callback is registered, it is invoked with the provided event data.
+ * If the callback is not registered, the function simply returns.
+ */
+void siwifi_report_event_to_easymesh(sf_wifi_event_data *event_data)
+{
+    /* Check if the callback function `report_event_to_easymesh` is registered. */
+    if (!report_event_to_easymesh) {
+        return;
+    }
+
+    /* Invoke the callback with the provided event data. */
+    report_event_to_easymesh(event_data);
+}
+/**
+ * siwifi_easymesh_sta_change_hook - Hook function to handle STA (station) change events.
+ *
+ * @param mac: Pointer to the current MAC address of the station.
+ * @param prev_mac: Pointer to the previous MAC address of the station.
+ * @param change: Boolean indicating whether the station connection state has changed (true for connect, false for
+ * disconnect).
+ *
+ * This function is used as a hook to handle STA change events within the siwifi EasyMesh module. It creates and
+ * populates an instance of sf_wifi_event_data representing the STA change event,then reports the event by invoking
+ * siwifi_report_event_to_easymesh with the event data.
+ */
+static void siwifi_easymesh_sta_change_hook(const uint8_t *mac, uint8_t *prev_mac, bool change)
+{
+    /* Declare and initialize an instance of sf_wifi_event_data. */
+    sf_wifi_event_data event_data;
+
+    /* Populate the event data structure. */
+    event_data.type = SF_NOTIFY_WIFI_STA_CHANGE_EVENT;
+    memcpy(event_data.data.sta_change_event.sta_mac, mac, ETH_ALEN);
+    memcpy(event_data.data.sta_change_event.prev_mac, prev_mac, ETH_ALEN);
+    event_data.data.sta_change_event.updown = change;
+
+    /* Report the STA change event. */
+    siwifi_report_event_to_easymesh(&event_data);
+}
+
+/**
+ * siwifi_easymesh_sta_info_hook - Hook function to handle STA info events for EasyMesh.
+ *
+ * @param vif: Pointer to the virtual interface structure.
+ * @param sta: Pointer to the station structure.
+ */
+static void siwifi_easymesh_sta_info_hook(struct siwifi_vif *vif, struct siwifi_sta *sta)
+{
+    /* Declare and initialize an instance of sf_wifi_event_data. */
+    sf_wifi_event_data event_data;
+
+    /* Populate the event data structure. */
+    event_data.type = SF_NOTIFY_WIFI_STA_INFO_EVENT;
+    memcpy(event_data.data.sta_info_event.sta_mac, sta->mac_addr, ETH_ALEN);
+    memcpy(event_data.data.sta_info_event.prev_mac, vif->ndev->dev_addr, ETH_ALEN);
+    event_data.data.sta_info_event.rssi = sta->stats.last_rx.rx_vect1.rssi1;
+
+    /* Report the STA change event. */
+    siwifi_report_event_to_easymesh(&event_data);
+}
+
+/**
+ * siwifi_notify_sta_info_timer_callback - Timer callback function to notify STA information periodically.
+ *
+ * @param timer Pointer to the timer_list structure.
+ */
+void siwifi_notify_sta_info_timer_callback(struct timer_list *timer)
+{
+    sf_sta_timer_info *info = container_of(timer, sf_sta_timer_info, timer);
+    struct siwifi_hw *siwifi_hw = info->siwifi_hw;
+    struct siwifi_vif *vif;
+    struct siwifi_sta *sta;
+
+    spin_lock_bh(&siwifi_hw->cb_lock);
+    /* Iterate over all virtual interfaces. */
+    list_for_each_entry (vif, &siwifi_hw->vifs, list) {
+        /*  Continue if the VIF is not of type Access Point (AP). */
+        if (SIWIFI_VIF_TYPE(vif) != NL80211_IFTYPE_AP)
+            continue;
+
+        /* Iterate over all stations associated with the AP VIF and notify STA info. */
+        list_for_each_entry (sta, &vif->ap.sta_list, list) {
+            siwifi_easymesh_sta_info_hook(vif, sta);
+        }
+    }
+
+    spin_unlock_bh(&siwifi_hw->cb_lock);
+    /* Reschedule the timer for the next expiration. */
+    mod_timer(&siwifi_hw->sta_timer_info.timer, jiffies + msecs_to_jiffies(info->timeout * 1000));
+}
+
+/**
+ * siwifi_easymesh_release_scan_results - Release and free the scan results.
+ *
+ * @param siwifi_hw: Pointer to the hardware structure that contains the scan results list.
+ *
+ * This function iterates through the scan results list, safely removes each entry from the list, and frees the
+ * associated memory. It ensures thread safety using a spin lock.
+ */
+static void siwifi_easymesh_release_scan_results(struct siwifi_hw *siwifi_hw)
+{
+    sf_easymesh_scan_result *result = NULL, *tmp = NULL;
+
+    /* Acquire the spin lock to ensure exclusive access to the scan results list. */
+    spin_lock_bh(&siwifi_hw->easymesh_scan_list_lock);
+
+    /* Iterate over the scan results list and safely delete each entry. */
+    list_for_each_entry_safe (result, tmp, &siwifi_hw->easymesh_scan_list, list) {
+        /* Remove the entry from the list. */
+        list_del(&result->list);
+        /* Free the memory allocated for the scan result. */
+        kfree(result);
+    }
+
+    /* Release the spin lock after the list has been cleared. */
+    spin_unlock_bh(&siwifi_hw->easymesh_scan_list_lock);
+}
+
+/**
+ * siwifi_easymesh_parse_scan_frame_ies - Parse scan result from a management frame.
+ *
+ * @mgmt: Pointer to the received management frame.
+ * @result: Pointer to the structure to store parsed scan result.
+ * @len: Length of the management frame body.
+ *
+ * This function parses the SSID, HT/VHT capabilities, and BSS load elements from the management frame and stores them
+ * in the provided scan result structure.
+ */
+static void siwifi_easymesh_parse_scan_frame_ies(struct ieee80211_mgmt *mgmt, sf_easymesh_scan_result *result,
+                                                 uint16_t len)
+{
+    u8 *variable = NULL;
+    const u8 *temp_ie = NULL;
+    u16 ht_capa;
+    u32 vht_capa;
+
+    /* Determine the start of the variable part of the management frame. */
+    if (ieee80211_is_probe_resp(mgmt->frame_control))
+        variable = mgmt->u.probe_resp.variable;
+    else if (ieee80211_is_beacon(mgmt->frame_control))
+        variable = mgmt->u.beacon.variable;
+    else
+        return;
+
+    /* Adjust length to exclude fixed fields. */
+    len -= 24;
+
+    /* Parse SSID Element. */
+    temp_ie = cfg80211_find_ie(WLAN_EID_SSID, variable, len);
+    if (temp_ie) {
+        result->ssid_len = temp_ie[1];
+        /* Copy SSID and ensure null-termination. */
+        if (result->ssid_len < sizeof(result->ssid)) {
+            memcpy(result->ssid, &temp_ie[2], result->ssid_len);
+            /* Null-terminate the SSID. */
+            result->ssid[result->ssid_len] = '\0';
+        } else {
+            memcpy(result->ssid, &temp_ie[2], sizeof(result->ssid) - 1);
+            /* Null-terminate with max size. */
+            result->ssid[sizeof(result->ssid) - 1] = '\0';
+            result->ssid_len = sizeof(result->ssid) - 1;
+        }
+    } else {
+        result->ssid_len = 0;
+        /* Ensure SSID is null-terminated. */
+        result->ssid[0] = '\0';
+    }
+
+    /* Parse current channel number. */
+    temp_ie = cfg80211_find_ie(WLAN_EID_DS_PARAMS, variable, len);
+    /* Default to 0 if not found. */
+    result->channel = temp_ie ? temp_ie[2] : 0;
+
+    /* Parse current operation class number. */
+    temp_ie = cfg80211_find_ie(WLAN_EID_SUPPORTED_REGULATORY_CLASSES, variable, len);
+    /* Default to 0 if not found. */
+    result->oper_class = temp_ie ? temp_ie[2] : 0;
+
+    /* Parse HT/VHT Capabilities Element. */
+    temp_ie = cfg80211_find_ie(WLAN_EID_VHT_CAPABILITY, variable, len);
+    if (temp_ie) {
+        memcpy(&vht_capa, &temp_ie[2], sizeof(vht_capa));
+        if (vht_capa & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ) {
+            strncpy(result->chan_bw, "80+80", sizeof(result->chan_bw));
+            result->chan_bw_len = 5;
+        } else if (vht_capa & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ) {
+            strncpy(result->chan_bw, "160", sizeof(result->chan_bw));
+            result->chan_bw_len = 3;
+        } else {
+            strncpy(result->chan_bw, "80", sizeof(result->chan_bw));
+            result->chan_bw_len = 2;
+        }
+    } else if ((temp_ie = cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, variable, len))) {
+        memcpy(&ht_capa, &temp_ie[2], sizeof(ht_capa));
+        if ((ht_capa & IEEE80211_HT_CAP_SUP_WIDTH_20_40) && !(ht_capa & IEEE80211_HT_CAP_40MHZ_INTOLERANT)) {
+            strncpy(result->chan_bw, "40", sizeof(result->chan_bw));
+            result->chan_bw_len = 2;
+        } else {
+            strncpy(result->chan_bw, "20", sizeof(result->chan_bw));
+            result->chan_bw_len = 2;
+        }
+    } else {
+        /* Default minimum bandwidth is 20 */
+        strncpy(result->chan_bw, "20", sizeof(result->chan_bw));
+        result->chan_bw_len = 2;
+    }
+
+    /* Parse BSS Load Element. */
+    temp_ie = cfg80211_find_ie(WLAN_EID_QBSS_LOAD, variable, len);
+    if (temp_ie) {
+        result->has_bss_load = 1;
+        result->sta_count = get_unaligned_le16(&temp_ie[2]);
+        result->chan_util = temp_ie[4];
+    } else {
+        result->has_bss_load = 0;
+    }
+}
+
+/**
+ * siwifi_easymesh_update_scan_result - Update or add a new scan result.
+ *
+ * @siwifi_hw: Pointer to the siwifi hardware structure.
+ * @ind: Pointer to the scan result indication structure containing the new scan data.
+ *
+ * This function checks if a scan result with the same BSSID already exists. If it exists, the function updates the
+ * existing entry with the new data. If it does not exist, the function adds a new entry to the scan results list.
+ */
+void siwifi_easymesh_update_scan_result(struct siwifi_hw *siwifi_hw, struct scanu_result_ind *ind)
+{
+    struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)ind->payload;
+    sf_easymesh_scan_result *result = NULL;
+
+    /* Acquire the spin lock to protect the scan results list. */
+    spin_lock_bh(&siwifi_hw->easymesh_scan_list_lock);
+
+    /* Check if a scan result for the same BSSID already exists. */
+    list_for_each_entry (result, &siwifi_hw->easymesh_scan_list, list) {
+        if (!memcmp(result->bssid, mgmt->bssid, ETH_ALEN)) {
+            /* BSSID already exists, update the scan result. */
+            siwifi_easymesh_parse_scan_frame_ies(mgmt, result, ind->length);
+            result->rssi = ind->rssi;
+            spin_unlock_bh(&siwifi_hw->easymesh_scan_list_lock);
+            return;
+        }
+    }
+
+    /* BSSID does not exist, allocate memory and add a new scan result. */
+    result = kzalloc(sizeof(sf_easymesh_scan_result), GFP_ATOMIC);
+    if (!result) {
+        printk("[%s]: Failed to allocate memory for new scan result.\n", __func__);
+        spin_unlock_bh(&siwifi_hw->easymesh_scan_list_lock);
+        return;
+    }
+
+    /* Parse and populate the new scan result. */
+    siwifi_easymesh_parse_scan_frame_ies(mgmt, result, ind->length);
+    memcpy(result->bssid, mgmt->bssid, ETH_ALEN);
+    result->rssi = ind->rssi;
+
+    /* Add the new scan result to the list. */
+    list_add_tail(&result->list, &siwifi_hw->easymesh_scan_list);
+
+    /* Release the spin lock after updating the scan results list. */
+    spin_unlock_bh(&siwifi_hw->easymesh_scan_list_lock);
+}
+
+/**
+ * siwifi_easymesh_scan_done_hook - Hook function to handle scan done events.
+ *
+ * @param siwifi_hw: Pointer to the hardware structure containing scan results.
+ *
+ * This function is used as a hook to handle scan done events within the siwifi EasyMesh module.
+ * It collects scan results, populates an instance of sf_wifi_event_data with the scan information,
+ * and then reports the event by invoking siwifi_report_event_to_easymesh with the event data.
+ */
+void siwifi_easymesh_scan_done_hook(struct siwifi_hw *siwifi_hw)
+{
+    /* Declare and initialize an instance of sf_wifi_event_data. */
+    sf_wifi_event_data event_data;
+
+    /* Populate the event data structure. */
+    event_data.type = SF_NOTIFY_WIFI_SCAN_DONE_EVENT;
+    event_data.data.scan_done_event.band = siwifi_hw->mod_params->is_hb;
+    event_data.data.scan_done_event.list = &siwifi_hw->easymesh_scan_list;
+    event_data.data.scan_done_event.lock = &siwifi_hw->easymesh_scan_list_lock;
+
+    /* Report the Scan done event. */
+    siwifi_report_event_to_easymesh(&event_data);
+
+    /* Release scan results after reporting the event. */
+    siwifi_easymesh_release_scan_results(siwifi_hw);
+
+    /* Set easymesh scan to false. */
+    siwifi_hw->easymesh_scan_enbale = false;
+}
+
+/**
+ * siwifi_block_connect_event - Handle the event where WiFi connections are blocked.
+ *
+ * @param siwifi_hw: Pointer to the hardware structure managing the WiFi connections.
+ *
+ * This function is responsible for blocking all incoming WiFi connections by setting the `block_connection` flag within
+ * the hardware structure. Once this flag is set to true, no new WiFi connections will be permitted. The function then
+ * reports this blocking event to the EasyMesh system using the appropriate event reporting mechanism.
+ */
+static void siwifi_block_connect_event(struct siwifi_hw *siwifi_hw)
+{
+    /* Declare and initialize an instance of sf_wifi_event_data to hold event details. */
+    sf_wifi_event_data event_data;
+
+    /* Set the event type to indicate that connections are being blocked. */
+    event_data.type = SF_NOTIFY_WIFI_BLOCK_CONNECT_EVENT;
+
+    /**
+     * Set the `block_connection` flag to true to block all connections.
+     * This flag determines whether new connections are allowed (false) or blocked (true).
+     */
+    siwifi_hw->block_connection = true;
+
+    /* Report the connection blocking event to the EasyMesh system. */
+    siwifi_report_event_to_easymesh(&event_data);
+}
+
+/**
+ * siwifi_bbss_block_check_event - Handle the event to check if a STA is blocked from connecting to the BBSS.
+ *
+ * @param siwifi_hw: Pointer to the hardware structure.
+ * @param mgmt: Pointer to the management frame.
+ *
+ * @return: Returns true if the STA is blocked from connecting to the BBSS; otherwise, false.
+ *
+ * This function checks if a specific station (STA) is blocked from connecting to the Basic
+ * Service Set (BBSS). It initializes and populates the `sf_wifi_event_data` structure with the
+ * relevant event data, including the STA's MAC address, the BSSID, and the connection band.
+ * The event is then reported to the EasyMesh system, which will determine if the STA should
+ * be blocked. The function returns a boolean value indicating the result of this check.
+ *
+ * Return: True if the connection should be blocked, otherwise false.
+ */
+static bool siwifi_bbss_block_check_event(struct siwifi_hw *siwifi_hw, struct ieee80211_mgmt *mgmt)
+{
+    /* Declare and initialize an instance of sf_wifi_event_data to hold event details. */
+    sf_wifi_event_data event_data;
+    bool block = false;
+
+    /* Populate the event data structure with the STA's MAC address, BSSID, and band. */
+    event_data.type = SF_NOTIFY_WIFI_BBSS_BLOCK_CHECK_EVENT;
+    memcpy(event_data.data.bbss_block_check_event.sta_mac, mgmt->sa, ETH_ALEN);
+    memcpy(event_data.data.bbss_block_check_event.bssid, mgmt->bssid, ETH_ALEN);
+    event_data.data.bbss_block_check_event.band = siwifi_hw->mod_params->is_hb;
+    event_data.data.bbss_block_check_event.block = &block;
+
+    /* Report the BBSS block check event to the EasyMesh system. */
+    siwifi_report_event_to_easymesh(&event_data);
+    siwifi_hw->block_connection = block;
+    /* Return the result of the block check. */
+    return block;
+}
+
+/**
+ * siwifi_check_connection_block - Check if the connection should be blocked based on the management frame.
+ *
+ * @siwifi_hw: Pointer to the hardware structure.
+ * @mgmt: Pointer to the management frame.
+ *
+ * This function checks incoming management frames (association request, reassociation request, or
+ * authentication frame) to determine if the connection should be blocked based on the current settings.
+ *
+ * Return: True if the connection should be blocked, otherwise false.
+ */
+bool siwifi_check_connection_block(struct siwifi_hw *siwifi_hw, struct ieee80211_mgmt *mgmt)
+{
+    /* Check if the frame is an association request, reassociation request, or authentication frame. */
+    if ((ieee80211_is_assoc_req(mgmt->frame_control) || ieee80211_is_reassoc_req(mgmt->frame_control) ||
+        ieee80211_is_auth(mgmt->frame_control)) && report_event_to_easymesh != NULL) {
+        /* If connections are blocked, return true to indicate that the connection should be blocked. */
+        if (siwifi_hw->block_connection) {
+            return true;
+        } else {
+            return siwifi_bbss_block_check_event(siwifi_hw, mgmt);
+        }
+    }
+
+    /* Return false if the connection should not be blocked. */
+    return false;
+}
+#endif /* CONFIG_SIWIFI_EASYMESH */
 
 /*********************************************************************
  * Cfg80211 callbacks (and helper)
@@ -1452,8 +2426,10 @@ static struct wireless_dev *siwifi_cfg80211_add_iface(struct wiphy *wiphy,
 #ifdef CONFIG_SIWIFI_REPEATER
     if (NL80211_IFTYPE_STATION == type) {
         struct siwifi_vif *vif = container_of(wdev, struct siwifi_vif, wdev);
-        if ((params) && (params->use_4addr))
+
+        if((params) && (params->use_4addr))
             return wdev;
+
         repeater_register(&vif->rp_info, vif->ndev, 64);
     }
 #endif
@@ -1525,7 +2501,7 @@ static int siwifi_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *w
 
     if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_STATION) {
 	    siwifi_src_filter_hash_free(siwifi_vif);
-        del_timer_sync(&(siwifi_vif->src_filter_timer));
+        del_timer(&(siwifi_vif->src_filter_timer));
     }
 
 	siwifi_vif->ndev = NULL;
@@ -1550,10 +2526,6 @@ static int siwifi_cfg80211_change_iface(struct wiphy *wiphy,
     struct siwifi_vif *vif = netdev_priv(dev);
 
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
-
-    // If the STA is already a four address STA, there is no need to change it.
-    if ((type == NL80211_IFTYPE_STATION) && (vif->use_4addr) && (params->use_4addr == 1) && (vif->up))
-        return 0;
 
     if (vif->up)
         return (-EBUSY);
@@ -1644,6 +2616,13 @@ static int siwifi_cfg80211_scan(struct wiphy *wiphy,
 #endif
 
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
+#ifdef CONFIG_SIWIFI_EASYMESH
+    /* Check if an easymesh scan request is currently in progress. */
+    if (siwifi_hw->easymesh_scan_enbale) {
+        printk("Easymesh scan is in progress. New scan requests are rejected until the scan is completed.\n");
+        return -1;
+    }
+#endif /* CONFIG_SIWIFI_EASYMESH */
 
 #ifdef CONFIG_SIWIFI_SORT_SCAN
     /*unlink the bss last scanned*/
@@ -1659,6 +2638,11 @@ static int siwifi_cfg80211_scan(struct wiphy *wiphy,
         memset(siwifi_hw->bss_results, 0, sizeof(siwifi_hw->bss_results));
     }
 #endif
+
+    if(siwifi_hw->probe_insert_info && siwifi_hw->probe_insert_info_len){
+        request->ie = siwifi_hw->probe_insert_info;
+        request->ie_len = siwifi_hw->probe_insert_info_len;
+    }
 
     if ((error = siwifi_send_scanu_req(siwifi_hw, siwifi_vif, request)))
         return error;
@@ -1722,6 +2706,9 @@ static int siwifi_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netde
 #endif
 
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
+
+    if (SIWIFI_VIF_TYPE(vif) == NL80211_IFTYPE_AP_VLAN)
+        return 0;
 
     if (!params)
         return -EINVAL;
@@ -1880,6 +2867,11 @@ static int siwifi_cfg80211_del_key(struct wiphy *wiphy, struct net_device *netde
 #endif
         if (siwifi_key->valid)
             netdev_info(netdev, "Del key for vif(%d), key index : %d\n", vif->vif_index, key_index);
+
+#ifdef CONFIG_SIWIFI_EASYMESH
+        if (siwifi_key->valid && SIWIFI_VIF_TYPE(vif) == NL80211_IFTYPE_STATION)
+            siwifi_block_connect_event(siwifi_hw);
+#endif /* CONFIG_SIWIFI_EASYMESH */
     }
 
     if (siwifi_key->valid) {
@@ -2077,120 +3069,6 @@ int siwifi_vif_sta_count(struct siwifi_hw *siwifi_hw)
     return count_sta;
 }
 
-#ifdef CONFIG_SIWIFI_EASYMESH
-/**
- * siwifi_notify_easymesh - Global callback function pointer for EasyMesh WiFi events.
- *
- * This variable holds the callback function pointer used for handling WiFi events
- * within the EasyMesh module. It is initialized to NULL by default and can be set
- * using the `siwifi_set_notify` function.
- */
-siwifi_event_callback siwifi_notify_easymesh = NULL;
-
-/**
- * siwifi_set_notify - Set the callback function for handling WiFi events within EasyMesh.
- *
- * @param ptr: Pointer to the callback function of type `siwifi_event_callback`.
- *
- * This function allows setting the callback function to handle WiFi events within the EasyMesh module.
- * The provided callback function (`ptr`) will be assigned to the global variable `siwifi_notify_easymesh`.
- */
-void siwifi_set_notify(siwifi_event_callback ptr)
-{
-    siwifi_notify_easymesh = ptr;
-}
-EXPORT_SYMBOL(siwifi_set_notify);
-
-/**
- * report_sf_notify_event - Report a WiFi notify event to the registered callback function.
- * @event_data: Pointer to the sf_notify_event_data structure representing the event to report.
- *
- * Reports a WiFi notify event by invoking the registered callback function with the event data.
- */
-void report_sf_notify_event(const sf_notify_event_data *event_data)
-{
-    if (siwifi_notify_easymesh)
-        siwifi_notify_easymesh(event_data);
-}
-
-/**
- * siwifi_easymesh_sta_change_hook - Hook function to handle STA (station) change events.
- *
- * @param mac: Pointer to the current MAC address of the station.
- * @param prev_mac: Pointer to the previous MAC address of the station.
- * @param change: Boolean indicating whether the station connection state has changed (true for connect, false for
- * disconnect).
- *
- * This function is used as a hook to handle STA change events within the siwifi EasyMesh module. It creates and
- * populates an instance of sf_notify_event_data representing the STA change event,then reports the event by invoking
- * report_sf_notify_event with the event data.
- */
-static void siwifi_easymesh_sta_change_hook(const uint8_t *mac, uint8_t *prev_mac, bool change)
-{
-    /* Declare and initialize an instance of sf_notify_event_data. */
-    sf_notify_event_data event_data;
-
-    /* Populate the event data structure. */
-    event_data.type = SF_NOTIFY_STA_CHANGE_EVENT;
-    event_data.data.sta_change_event.sta_mac = mac;
-    event_data.data.sta_change_event.prev_mac = prev_mac;
-    event_data.data.sta_change_event.updown = change;
-
-    /* Report the STA change event. */
-    report_sf_notify_event(&event_data);
-}
-
-/**
- * siwifi_easymesh_sta_info_hook - Hook function to handle STA info events for EasyMesh.
- *
- * @param vif: Pointer to the virtual interface structure.
- * @param sta: Pointer to the station structure.
- */
-static void siwifi_easymesh_sta_info_hook(struct siwifi_vif *vif, struct siwifi_sta *sta)
-{
-    /* Declare and initialize an instance of sf_notify_event_data. */
-    sf_notify_event_data event_data;
-
-    /* Populate the event data structure. */
-    event_data.type = SF_NOTIFY_STA_INFO_EVENT;
-    event_data.data.sta_info_event.sta_mac = sta->mac_addr;
-    event_data.data.sta_info_event.prev_mac = vif->ndev->dev_addr;
-    event_data.data.sta_info_event.rssi = sta->stats.last_rx.rx_vect1.rssi1;
-
-    /* Report the STA change event. */
-    report_sf_notify_event(&event_data);
-}
-
-/**
- * siwifi_notify_sta_info_timer_callback - Timer callback function to notify STA information periodically.
- *
- * @param timer Pointer to the timer_list structure.
- */
-void siwifi_notify_sta_info_timer_callback(struct timer_list *timer)
-{
-    sf_sta_timer_info *info = container_of(timer, sf_sta_timer_info, timer);
-    struct siwifi_hw *siwifi_hw = info->siwifi_hw;
-    struct siwifi_vif *vif;
-    struct siwifi_sta *sta;
-
-    /* Iterate over all virtual interfaces. */
-    list_for_each_entry (vif, &siwifi_hw->vifs, list) {
-        /*  Continue if the VIF is not of type Access Point (AP) */
-        if (SIWIFI_VIF_TYPE(vif) != NL80211_IFTYPE_AP)
-            continue;
-
-        /* Iterate over all stations associated with the AP VIF. */
-        list_for_each_entry (sta, &vif->ap.sta_list, list) {
-            /* Hook to handle STA info event for each STA. */
-            siwifi_easymesh_sta_info_hook(vif, sta);
-        }
-    }
-
-    /* Reschedule the timer for the next expiration. */
-    mod_timer(&siwifi_hw->sta_timer_info.timer, jiffies + msecs_to_jiffies(info->timeout * 1000));
-}
-#endif /* CONFIG_SIWIFI_EASYMESH */
-
 /**
  * @add_station: Add a new station.
  */
@@ -2248,7 +3126,9 @@ static int siwifi_cfg80211_add_station(struct wiphy *wiphy, struct net_device *d
             sta->vlan_idx = sta->vif_idx;
             sta->qos = (params->sta_flags_set & BIT(NL80211_STA_FLAG_WME)) != 0;
             sta->ht = params->ht_capa ? 1 : 0;
-            sta->vht = params->vht_capa ? 1 : 0;
+            sta->vht = (params->vht_capa || (params->supported_channels &&
+                                            siwifi_params_5g_channel_check(params->supported_channels,
+                                            params->supported_channels_len))) ? 1 : 0;
 			sta->stats.connected_time = ktime_get_seconds();
 			sta->stats.count = 0;
 			memset(sta->stats.data_rssi_old, 0 , sizeof(sta->stats.data_rssi_old));
@@ -2300,6 +3180,11 @@ static int siwifi_cfg80211_add_station(struct wiphy *wiphy, struct net_device *d
 #endif
             sta->valid = true;
             sta->update_time_count = 0;
+
+#ifdef CONFIG_SIWIFI_EASYMESH
+            sta->remove_sta = false;
+#endif /* CONFIG_SIWIFI_EASYMESH */
+
             if (sta->ps.active ||
                     me_sta_add_cfm.pm_state == MM_PS_MODE_ON ||
                     me_sta_add_cfm.pm_state == MM_PS_MODE_ON_DYN)
@@ -2335,6 +3220,7 @@ static int siwifi_cfg80211_add_station(struct wiphy *wiphy, struct net_device *d
 #endif
 
 #ifdef CONFIG_SIWIFI_EASYMESH
+            /* Notify EasyMesh of STA connection. */
             siwifi_easymesh_sta_change_hook(mac, dev->dev_addr, true);
 #endif /* CONFIG_SIWIFI_EASYMESH */
 
@@ -2344,9 +3230,11 @@ static int siwifi_cfg80211_add_station(struct wiphy *wiphy, struct net_device *d
             error = -EBUSY;
             break;
     }
+
 #ifdef TOKEN_ENABLE
     tx_descs_num = siwifi_get_num_tx_descs_per_ac(siwifi_hw);
 #endif /* TOKEN_ENABLE */
+
     siwifi_hw->adding_sta = false;
 
     return error;
@@ -2435,6 +3323,7 @@ static int siwifi_cfg80211_del_station_compat(struct wiphy *wiphy,
             spin_unlock_bh(&siwifi_hw->cb_lock);
 
 #ifdef CONFIG_SIWIFI_EASYMESH
+            /* Notify EasyMesh of STA disconnection. */
             siwifi_easymesh_sta_change_hook(cur->mac_addr, dev->dev_addr, false);
 #endif /* CONFIG_SIWIFI_EASYMESH */
 
@@ -2615,7 +3504,7 @@ static int siwifi_cfg80211_change_station(struct wiphy *wiphy, struct net_device
                 vif->ap_vlan.sta_4a = sta;
             }
 
-            if ((old_vif) && (SIWIFI_VIF_TYPE(old_vif) == NL80211_IFTYPE_AP_VLAN) &&
+            if ((SIWIFI_VIF_TYPE(old_vif) == NL80211_IFTYPE_AP_VLAN) &&
                 (old_vif->use_4addr)) {
                 old_vif->ap_vlan.sta_4a = NULL;
             }
@@ -2767,7 +3656,6 @@ static int siwifi_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
 
     return error;
 }
-
 
 /**
  * @change_beacon: Change the beacon parameters for an access point mode
@@ -3145,12 +4033,6 @@ siwifi_cfg80211_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev
         /* Set the cookie value */
         *cookie = (u64)(siwifi_hw->roc_cookie_cnt);
         spin_lock_bh(&siwifi_hw->tx_lock);
-        // RM#14170 siwifi_rx_remain_on_channel_exp_ind may have happened
-        if (siwifi_hw->roc_elem == NULL) {
-            spin_unlock_bh(&siwifi_hw->tx_lock);
-            spin_unlock_bh(&siwifi_hw->cb_lock);
-            return -EPERM;
-        }
         /* Initialize the OFFCHAN TX queue to allow off-channel transmissions */
         siwifi_txq_offchan_init(siwifi_vif);
         spin_unlock_bh(&siwifi_hw->tx_lock);
@@ -3464,7 +4346,6 @@ int siwifi_cfg80211_channel_switch(struct wiphy *wiphy,
     u8 *buf;
     u8 *real_addr;
     int i, error = 0;
-
 
     if (vif->ap.csa)
         return -EBUSY;
@@ -3847,7 +4728,7 @@ tag:
 			// Todo: add HE
 			if (found_sta->stats.format_mod == FORMATMOD_NON_HT || \
 					found_sta->stats.format_mod == FORMATMOD_NON_HT_DUP_OFDM){
-                sinfo->rxrate.legacy = siwifi_calculate_legrate(found_sta->stats.leg_rate & 0xF, 0);
+				sinfo->rxrate.legacy = siwifi_calculate_legrate(found_sta->stats.leg_rate & 0xF, 0);
 			}
 			else{
 				//HT and VHT
@@ -3893,11 +4774,11 @@ tag:
 		sinfo->tx_retries = siwifi_hw->stats.tx_retry;
 		sinfo->tx_failed = siwifi_hw->stats.tx_failed;
 		if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_AP || SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_STATION){
-            r_cfg = (union siwifi_rate_ctrl_info *)(&(found_sta->stats.last_tx_rate_config));
+			r_cfg = (union siwifi_rate_ctrl_info *)(&(found_sta->stats.last_tx_rate_config));
 			mcs_index = (union siwifi_mcs_index *)(&(found_sta->stats.last_tx_rate_config));
 			if (r_cfg->formatModTx == FORMATMOD_NON_HT || \
 					r_cfg->formatModTx == FORMATMOD_NON_HT_DUP_OFDM){
-                sinfo->txrate.legacy = siwifi_calculate_legrate(mcs_index->legacy & 0xF, 1);
+				sinfo->txrate.legacy = siwifi_calculate_legrate(mcs_index->legacy & 0xF, 1);
 			}else {
 				sinfo->txrate.flags = 0;
 				if (r_cfg->giAndPreTypeTx){
@@ -4041,87 +4922,68 @@ tag:
 static int siwifi_cfg80211_get_station(struct wiphy *wiphy, struct net_device *dev,
 		const u8 *mac, struct station_info *sinfo)
 {
-    struct siwifi_vif *siwifi_vif = netdev_priv(dev);
-    struct siwifi_hw *siwifi_hw = wiphy_priv(wiphy);
-    struct siwifi_sta *found_sta = NULL;
-
-    if (!siwifi_vif)
-        return -ENOENT;
-
-    if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_MONITOR)
-        return -EINVAL;
-
-    if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_STATION ||
-        SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_P2P_CLIENT) {
-        if (siwifi_vif->sta.ap && ether_addr_equal(siwifi_vif->sta.ap->mac_addr, mac))
-            found_sta = siwifi_vif->sta.ap;
-    } else if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_AP_VLAN) {
-        if (siwifi_vif->ap_vlan.sta_4a && ether_addr_equal(siwifi_vif->ap_vlan.sta_4a->mac_addr, mac))
-            found_sta = siwifi_vif->ap_vlan.sta_4a;
-    } else {
-        struct siwifi_sta *sta;
-        spin_lock_bh(&siwifi_hw->cb_lock);
-        list_for_each_entry(sta, &siwifi_vif->ap.sta_list, list) {
-            if (sta->valid || ether_addr_equal(sta->mac_addr, mac)){
-                found_sta = sta;
-                break;
-            }
-        }
-        spin_unlock_bh(&siwifi_hw->cb_lock);
-    }
-
-    if (found_sta)
-        return siwifi_dump_station_info(dev, wiphy, (u8 *)mac, found_sta, sinfo);
-
-    return -EINVAL;
+	struct siwifi_vif *siwifi_vif = netdev_priv(dev);
+	struct siwifi_hw *siwifi_hw = wiphy_priv(wiphy);
+	struct siwifi_sta *found_sta = NULL;
+	struct siwifi_sta *sta;
+	if ((!siwifi_vif))
+		return -ENOENT;
+	if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_STATION || SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_P2P_CLIENT)
+	{
+		found_sta = siwifi_vif->sta.ap;
+	}else {
+		spin_lock_bh(&siwifi_hw->cb_lock);
+		list_for_each_entry(sta, &siwifi_vif->ap.sta_list, list) {
+			if ((!mac) || (!memcmp(sta->mac_addr, mac, ETH_ALEN))){
+				found_sta = sta;
+				break;
+			}
+		}
+		spin_unlock_bh(&siwifi_hw->cb_lock);
+	}
+	return siwifi_dump_station_info(dev,wiphy,(u8 *)mac,found_sta,sinfo);
 }
 
 /**
  * @dump_station: dump station callback -- resume dump at index @idx
  */
 static int siwifi_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
-        int idx, u8 *mac, struct station_info *sinfo)
+		int idx, u8 *mac, struct station_info *sinfo)
 {
-    struct siwifi_vif *siwifi_vif = netdev_priv(dev);
-    struct siwifi_hw *siwifi_hw = wiphy_priv(wiphy);
-    struct siwifi_sta *found_sta = NULL;
+	struct siwifi_vif *siwifi_vif = netdev_priv(dev);
+	struct siwifi_hw *siwifi_hw = wiphy_priv(wiphy);
+	struct siwifi_sta *found_sta = NULL;
+	struct siwifi_sta *sta;
+	int i = 0;
+	int status = -ENOENT;
 
-    if (!siwifi_vif)
-        return -ENOENT;
-
-    if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_MONITOR)
-        return -EINVAL;
-
-    if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_STATION ||
-        SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_P2P_CLIENT) {
-        // One sta will only connect to one ap.
-        if ((idx == 0) && siwifi_vif->sta.ap && siwifi_vif->sta.ap->valid)
-		    found_sta = siwifi_vif->sta.ap;
+	if ((!siwifi_vif))
+		return -ENOENT;
+	if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_STATION || SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_P2P_CLIENT)
+	{
+		// One sta will only connect to one ap.
+		if (idx > 0) {
+			return status;
+		}
+		found_sta = siwifi_vif->sta.ap;
 	} else if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_AP_VLAN) {
         // One AP_VLAN will only connect to one sta.
-		if ((idx == 0) && siwifi_vif->ap_vlan.sta_4a && siwifi_vif->ap_vlan.sta_4a->valid)
-            found_sta = siwifi_vif->ap_vlan.sta_4a;
+        if (idx > 0)
+            return status;
+        found_sta = siwifi_vif->ap_vlan.sta_4a;
 	} else {
-        struct siwifi_sta *sta;
-        int i = 0;
 		spin_lock_bh(&siwifi_hw->cb_lock);
 		list_for_each_entry(sta, &siwifi_vif->ap.sta_list, list) {
-			if (i == idx) {
-                found_sta = sta;
-                break;
+			if (i < idx) {
+				i++;
+				continue;
 			}
-			i++;
+			found_sta = sta;
+			break;
 		}
 		spin_unlock_bh(&siwifi_hw->cb_lock);
 	}
-
-    if (found_sta == NULL)
-        return -ENOENT;
-
-    /* Copy peer mac address*/
-    memcpy(mac, &found_sta->mac_addr, ETH_ALEN);
-
-	return siwifi_dump_station_info(dev, wiphy, mac, found_sta, sinfo);
+	return siwifi_dump_station_info(dev,wiphy,mac,found_sta,sinfo);
 }
 
 /**
@@ -4803,6 +5665,7 @@ static int siwifi_start_driver(struct siwifi_hw *siwifi_hw)
     memset(siwifi_hw->scan_results, 0, sizeof(siwifi_hw->scan_results));
     memset(siwifi_hw->bss_results, 0, sizeof(siwifi_hw->bss_results));
 #endif
+
     // Start the FW
     if ((error = siwifi_send_start(siwifi_hw)))
         return error;
@@ -4955,6 +5818,11 @@ static int siwifi_start_driver(struct siwifi_hw *siwifi_hw)
         }
     }
 
+#ifdef CONFIG_SIWIFI_EASYMESH
+    /* Restart timer again. */
+    mod_timer(&siwifi_hw->sta_timer_info.timer, jiffies + msecs_to_jiffies(5 * 1000));
+#endif /* CONFIG_SIWIFI_EASYMESH */
+
     SIWIFI_DBG("start driver end \n");
 
     return 0;
@@ -4993,6 +5861,25 @@ static void siwifi_restart_driver(struct work_struct *ws)
     }
     siwifi_radar_cancel_cac(&siwifi_hw->radar);
 
+#ifdef CONFIG_SIWIFI_EASYMESH
+    /* Delete the timer for reporting sta information. */
+    del_timer_sync(&siwifi_hw->sta_timer_info.timer);
+
+    /* Destroy the linked list of block sta. */
+    siwifi_destroy_blocked_sta_list(siwifi_hw);
+
+    /* Check if an easymesh scan request is currently in progress. */
+    if (siwifi_hw->easymesh_scan_enbale) {
+        siwifi_hw->easymesh_scan_enbale = false;
+        /* Destroy the linked list of scan results. */
+        siwifi_easymesh_release_scan_results(siwifi_hw);
+    }
+
+    /* Wake up all waiting queues and set the condition to true, avoiding waiting. */
+    siwifi_hw->remove_sta_receive_cfm = true;
+    wake_up_interruptible(&siwifi_hw->del_sta_wq);
+#endif /* CONFIG_SIWIFI_EASYMESH */
+
     list_for_each_entry_safe(siwifi_vif, __siwifi_vif, &siwifi_hw->vifs, list)
     {
         //dump_vif(siwifi_vif);
@@ -5029,7 +5916,9 @@ static void siwifi_restart_driver(struct work_struct *ws)
 #endif
                 cur->valid = false;
             }
-            siwifi_del_bcn(&siwifi_vif->ap.bcn);
+            if (!siwifi_vif->ap.bcn.ies) {
+                siwifi_del_bcn(&siwifi_vif->ap.bcn);
+            }
             siwifi_del_csa(siwifi_vif);
         } else if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_STATION) {
             if (siwifi_vif->sta.ap) {
@@ -5241,7 +6130,6 @@ static void inc_sf_mac_addr(char *mac, int inc)
 #ifdef CONFIG_SF_SKB_POOL
 bool sfmac_skb_pool_alloc_fail(struct net_device *ndev, unsigned int size){
     unsigned long long free_mem;
-
     free_mem = global_zone_page_state(NR_FREE_PAGES) << (PAGE_SHIFT -10);
     if (free_mem > SIWIFI_RX_LOW_MEM_SIZE) {
         return 1;
@@ -5293,21 +6181,25 @@ int siwifi_cfg80211_init(struct siwifi_plat *siwifi_plat, void **platform_data)
     siwifi_hw->tx_ctrl = 0;
     siwifi_hw->rx_ctrl = 0;
     siwifi_hw->debug_get_survey = 0;
-    siwifi_hw->disable_wmm_edca = 1;
+    siwifi_hw->disable_wmm_edca = 0;
     siwifi_hw->disable_cca_channel_switch = 1;
-    siwifi_hw->amsdu_threshold = AMSDU_THRESHOLD_M;
+    if(siwifi_hw->mod_params->is_hb)
+        siwifi_hw->amsdu_threshold = AMSDU_THRESHOLD_L;
+    else
+        siwifi_hw->amsdu_threshold = AMSDU_THRESHOLD_M;
     siwifi_hw->wmm_edca_interval = EDCA_CHECK_INTERVAL;
     siwifi_hw->wmm_edca_counter_drop = EDCA_WMM_COUNTER;
     siwifi_hw->wmm_edca_pkt_threshold = EDCA_BE_THRESHOLD;
     siwifi_hw->wmm_debug_enable = 0;
-    siwifi_hw->amsdu_nb_disable = 0;
-    siwifi_hw->amsdu_nb_percent = 10;
-    siwifi_hw->amsdu_nb_cleanup = 2;
-    siwifi_hw->amsdu_nb_threshold = 2000;
+    siwifi_hw->beacon_insert_info = NULL;
+    siwifi_hw->auth_insert_info = NULL;
+    siwifi_hw->assoc_insert_info = NULL;
+    siwifi_hw->probe_insert_info = NULL;
+    siwifi_hw->probe_insert_info_len = 0;
+    siwifi_hw->beacon_insert_info_len = 0;
 #endif
     siwifi_hw->scan_timeout = 5000;
-    siwifi_hw->enable_dbg_sta_conn = 0;
-    siwifi_hw->atf.enable = 0;
+    siwifi_hw->atf.enable = 1;
 #ifdef CONFIG_SIWIFI_PROCFS
     siwifi_hw->procfsdir = proc_mkdir(siwifi_hw->mod_params->is_hb ? "hb" : "lb", NULL);
 #endif
@@ -5316,12 +6208,14 @@ int siwifi_cfg80211_init(struct siwifi_plat *siwifi_plat, void **platform_data)
     siwifi_hw->ave_speed_credits_low = AVE_SPEED_CREDITS_LOW;
     siwifi_hw->ave_speed_credits_up  = AVE_SPEED_CREDITS_UP;
     siwifi_trace_init(siwifi_hw);
+
 #ifdef CONFIG_BRIDGE_ACCELERATE
     if(siwifi_hw->mod_params->is_hb){
         siwifi_device_traffic_init();
         siwifi_hook_xmit_reigster();
     }
 #endif
+
     /* set device pointer for wiphy */
     set_wiphy_dev(wiphy, siwifi_hw->dev);
 
@@ -5340,7 +6234,7 @@ int siwifi_cfg80211_init(struct siwifi_plat *siwifi_plat, void **platform_data)
 #else
     if (eth_platform_get_mac_address(siwifi_hw->dev, init_conf.mac_addr) >= 0) {
 #endif
-        //init_conf.mac_addr[ETH_ALEN - 1] = (init_conf.mac_addr[ETH_ALEN - 1] + (((1 << siwifi_hw->mod_params->is_hb) == LB_MODULE) ? 2 : 3)) & 0xFF;
+        //init_conf.mac_addr[ETH_ALEN - 1] = (init_conf.mac_addr[ETH_ALEN - 1] + (((1 << CONFIG_BAND_TYPE) == LB_MODULE) ? 2 : 3)) & 0xFF;
         inc_sf_mac_addr(&init_conf.mac_addr[0], (((1 << siwifi_hw->mod_params->is_hb) == LB_MODULE) ? 2 : 6));
     } else {
         //use random address if fail get mac address
@@ -5357,6 +6251,7 @@ int siwifi_cfg80211_init(struct siwifi_plat *siwifi_plat, void **platform_data)
     siwifi_hw->adding_sta = false;
 
     siwifi_hw->scan_ie.addr = NULL;
+
 #ifdef CONFIG_SIWIFI_TEMPERATURE_CONTROL
     siwifi_parse_temperature_control_configfile(siwifi_hw, SIWIFI_TEMPERATURE_CONTROL_NAME);
     siwifi_hw->temp_ctl.temp_ctl_level = 0;
@@ -5506,7 +6401,7 @@ int siwifi_cfg80211_init(struct siwifi_plat *siwifi_plat, void **platform_data)
 #endif
 #ifdef CONFIG_SF_SKB_POOL
     // this skb_size equal bufsz add  increate size in __netdev_alloc_skb
-	//  len += NET_SKB_PAD; len = SKB_DATA_ALIGN(len);  len += SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
+    //  len += NET_SKB_PAD; len = SKB_DATA_ALIGN(len);  len += SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
     siwifi_hw->skb_pool_dev_param = skb_pool_init((((1 << siwifi_hw->mod_params->is_hb) == LB_MODULE) ? SKB_POOL_WIFI_LB_ID : SKB_POOL_WIFI_HB_ID),
             (((1 << siwifi_hw->mod_params->is_hb) == LB_MODULE) ? 500 : 700),
             MAX_WIFI_POOL_SKB_RAW_SIZE);
@@ -5563,12 +6458,19 @@ int siwifi_cfg80211_init(struct siwifi_plat *siwifi_plat, void **platform_data)
 
 #ifdef CONFIG_HEART_BEAT
     siwifi_hw->recovery_hb_num = 0;
-    INIT_DELAYED_WORK(&siwifi_hw->heart_work, heart_beat_handler);
-    schedule_delayed_work(&siwifi_hw->heart_work, MSECS(SIWIFI_HEART_BEAT_TIME_MS));
+    INIT_WORK(&siwifi_hw->heart_work, heart_beat_handler);
+    init_timer(&siwifi_hw->heart_timer);
+    setup_timer(&siwifi_hw->heart_timer, heart_beat_timer, (unsigned long)siwifi_hw);
+    siwifi_hw->heart_timer.expires = jiffies + MSECS(SIWIFI_HEART_BEAT_TIME_MS);
+    INIT_WORK(&siwifi_hw->heart_work, heart_beat_handler);
+    add_timer(&siwifi_hw->heart_timer);
 #endif
 
-    INIT_DELAYED_WORK(&siwifi_hw->txq_stat_work, txq_stat_handler);
-    schedule_delayed_work(&siwifi_hw->txq_stat_work, MSECS(SIWIFI_TXQ_STAT_TIME_MS));
+    init_timer(&siwifi_hw->txq_stat_timer);
+    setup_timer(&siwifi_hw->txq_stat_timer, txq_stat_timer, (unsigned long)siwifi_hw);
+    siwifi_hw->txq_stat_timer.expires = jiffies + MSECS(SIWIFI_TXQ_STAT_TIME_MS);
+    INIT_WORK(&siwifi_hw->txq_stat_work, txq_stat_handler);
+    add_timer(&siwifi_hw->txq_stat_timer);
 
 #ifdef CONFIG_ENABLE_DIGGAINTABLE
     phy_tag = (struct phy_aetnensis_cfg_tag *)&siwifi_hw->phy_config;
@@ -5584,10 +6486,6 @@ int siwifi_cfg80211_init(struct siwifi_plat *siwifi_plat, void **platform_data)
         siwifi_parse_txpower_gain_table_configfile(siwifi_hw,0);
     else
         siwifi_parse_txpower_gain_table_configfile(siwifi_hw,1);
-#endif
-
-#ifdef CONFIG_ENABLE_RFGAINTABLE
-    siwifi_parse_rf_gain_table_configfile(siwifi_hw);
 #endif
 
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
@@ -5618,11 +6516,28 @@ int siwifi_cfg80211_init(struct siwifi_plat *siwifi_plat, void **platform_data)
 #endif
 
 #ifdef CONFIG_SIWIFI_EASYMESH
-    /* Timer is used to notify the easymesh driver of the connection information to sta, such as RSSI, bitrate etc. */
+    /* Initialize the timer to report sta related information to the agent, such as RSSI, bitrate etc. */
     siwifi_hw->sta_timer_info.timeout = 1;
     siwifi_hw->sta_timer_info.siwifi_hw = siwifi_hw;
     timer_setup(&siwifi_hw->sta_timer_info.timer, siwifi_notify_sta_info_timer_callback, 0);
-    // mod_timer(&siwifi_hw->sta_timer_info.timer, jiffies + msecs_to_jiffies(5 * 1000));
+    mod_timer(&siwifi_hw->sta_timer_info.timer, jiffies + msecs_to_jiffies(5 * 1000));
+
+    /* Initialize the list head and spin lock for block sta. */
+    spin_lock_init(&siwifi_hw->blocked_sta_list_lock);
+    INIT_LIST_HEAD(&siwifi_hw->blocked_sta_list);
+
+    /* Initialize the list head and spin lock for scanning. */
+    spin_lock_init(&siwifi_hw->easymesh_scan_list_lock);
+    INIT_LIST_HEAD(&siwifi_hw->easymesh_scan_list);
+    siwifi_hw->easymesh_scan_enbale = false;
+
+    /* Initialize the queue head to delete sta. */
+    init_waitqueue_head(&siwifi_hw->del_sta_wq);
+    siwifi_hw->remove_sta_receive_cfm = false;
+    siwifi_hw->remove_sta_success = false;
+
+    /* Block connection by default. */
+    siwifi_hw->block_connection = true;
 #endif /* CONFIG_SIWIFI_EASYMESH */
 
 #ifdef CONFIG_SIWIFI_ACS_INTERNAL
@@ -5634,10 +6549,6 @@ err_add_interface:
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
 err_debugfs:
 #endif
-#ifdef CONFIG_HEART_BEAT
-    cancel_delayed_work_sync(&siwifi_hw->heart_work);
-#endif
-    cancel_delayed_work_sync(&siwifi_hw->txq_stat_work);
     wiphy_unregister(siwifi_hw->wiphy);
 err_register_wiphy:
 err_lmac_reqs:
@@ -5670,13 +6581,30 @@ void siwifi_cfg80211_deinit(struct siwifi_hw *siwifi_hw)
 #ifdef CONFIG_WIFI_RX_THREAD
     siwifi_rx_thread_release(siwifi_hw);
 #endif
+
 #ifdef CONFIG_SIWIFI_EASYMESH
-    del_timer(&siwifi_hw->sta_timer_info.timer);
+    /* Delete the timer for reporting sta information. */
+    del_timer_sync(&siwifi_hw->sta_timer_info.timer);
+
+    /* Destroy the linked list of block sta. */
+    siwifi_destroy_blocked_sta_list(siwifi_hw);
+
+    /* Check if an easymesh scan request is currently in progress. */
+    if (siwifi_hw->easymesh_scan_enbale) {
+        siwifi_hw->easymesh_scan_enbale = false;
+        /* Destroy the linked list of scan results. */
+        siwifi_easymesh_release_scan_results(siwifi_hw);
+    }
+
+    /* Wake up all waiting queues and set the condition to true, avoiding waiting. */
+    siwifi_hw->remove_sta_receive_cfm = true;
+    wake_up_interruptible(&siwifi_hw->del_sta_wq);
 #endif /* CONFIG_SIWIFI_EASYMESH */
+
 #ifdef CONFIG_HEART_BEAT
-    cancel_delayed_work_sync(&siwifi_hw->heart_work);
+    del_timer(&siwifi_hw->heart_timer);
 #endif
-    cancel_delayed_work_sync(&siwifi_hw->txq_stat_work);
+    del_timer(&siwifi_hw->txq_stat_timer);
 #ifdef CONFIG_SF19A28_WIFI_LED
     if (of_get_named_gpio(siwifi_hw->dev->of_node, LED_GPIO_LABEL, 0) >= 0)
         siwifi_led_deinit(siwifi_hw);
@@ -5684,8 +6612,18 @@ void siwifi_cfg80211_deinit(struct siwifi_hw *siwifi_hw)
 #ifdef CONFIG_SIWIFI_IGMP
     siwifi_mcg_free(NULL, siwifi_hw, FREE_MCG_ALL);
 #endif
-    if (siwifi_hw->assoc_req_insert_info)
-        siwifi_kfree(siwifi_hw->assoc_req_insert_info);
+    if (siwifi_hw->assoc_insert_info) {
+        siwifi_kfree(siwifi_hw->assoc_insert_info);
+    }
+    if(siwifi_hw->auth_insert_info) {
+        siwifi_kfree(siwifi_hw->auth_insert_info);
+    }
+    if(siwifi_hw->probe_insert_info) {
+        siwifi_kfree(siwifi_hw->probe_insert_info);
+    }
+    if(siwifi_hw->beacon_insert_info){
+        siwifi_kfree(siwifi_hw->beacon_insert_info);
+    }
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
     siwifi_dbgfs_unregister(siwifi_hw);
 #endif
@@ -5709,14 +6647,21 @@ void siwifi_cfg80211_deinit(struct siwifi_hw *siwifi_hw)
  */
 static int __init siwifi_mod_init(void)
 {
+    int ret = 0;
+    SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
+    siwifi_print_version();
+    siwifi_init_debug_mem();
+
 #ifdef CONFIG_SIWIFI_REPEATER
-    if (repeater_init())
-       printk("repeater_init failed\n");
+    ret = repeater_init();
+    if (ret)
+        return ret;
 #endif
 
 #ifdef CONFIG_SIWIFI_AMSDUS_TX
     traffic_info_init();
 #endif
+
 #ifdef CONFIG_SIWIFI_CACHE_ALLOC
     /* Create cache to allocate sw_txhdr */
     sw_txhdr_cache = KMEM_CACHE(siwifi_sw_txhdr, 0);
@@ -5725,6 +6670,7 @@ static int __init siwifi_mod_init(void)
         return -ENOMEM;
     }
 #endif
+
     return siwifi_platform_register_drv();
 }
 
@@ -5739,9 +6685,12 @@ static void __exit siwifi_mod_exit(void)
     repeater_exit();
 #endif
     siwifi_platform_unregister_drv();
+    siwifi_deinit_debug_mem();
+
 #ifdef CONFIG_SIWIFI_CACHE_ALLOC
     kmem_cache_destroy(sw_txhdr_cache);
 #endif
+
 }
 
 module_init(siwifi_mod_init);

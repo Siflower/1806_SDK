@@ -393,9 +393,8 @@ void siwifi_ipc_rxdesc_elem_repush(struct siwifi_hw *siwifi_hw,
 {
     struct rxdesc_tag *rxdesc = elem->addr;
     rxdesc->status = 0;
-    // The address of dma_pool_alloc does not need to be flush cache
-    //dma_sync_single_for_device(siwifi_hw->dev, elem->dma_addr,
-    //                           sizeof(struct rxdesc_tag), DMA_BIDIRECTIONAL);
+    dma_sync_single_for_device(siwifi_hw->dev, elem->dma_addr,
+                               sizeof(struct rxdesc_tag), DMA_BIDIRECTIONAL);
     ipc_host_rxdesc_push(siwifi_hw->ipc_env, elem, (u32)elem->dma_addr);
 }
 
@@ -424,12 +423,6 @@ int siwifi_ipc_rxbuf_elem_allocs(struct siwifi_hw *siwifi_hw)
 #ifdef CONFIG_SF_SKB_POOL
     skb = __netdev_alloc_skb_from_pool(NULL, size, GFP_ATOMIC, siwifi_hw->skb_pool_dev_param);
 #else
-    unsigned long long free_mem;
-    free_mem = global_zone_page_state(NR_FREE_PAGES) << (PAGE_SHIFT -10);
-    if (free_mem < SIWIFI_RX_LOW_MEM_SIZE) {
-        siwifi_hw->rx_skb_alloc_fail_cnt++;
-        return 1;
-    }
     skb = siwifi_dev_alloc_rxskb(size);
 #endif  //
 
@@ -453,7 +446,7 @@ int siwifi_ipc_rxbuf_elem_allocs(struct siwifi_hw *siwifi_hw)
 
     if (unlikely(dma_mapping_error(siwifi_hw->dev, dma_addr))) {
         dev_err(siwifi_hw->dev, "Failed to map rx buffer\n");
-        siwifi_hw->rx_skb_alloc_fail_cnt++;
+		siwifi_hw->rx_skb_alloc_fail_cnt++;
         goto err_skb;
     }
 
@@ -478,7 +471,7 @@ int siwifi_ipc_rxbuf_elem_allocs(struct siwifi_hw *siwifi_hw)
         printk("siwifi_hw->reord_alloc_cnt = %d, siwifi_hw->reord_release_cnt = %d\n", siwifi_hw->reord_alloc_cnt, siwifi_hw->reord_release_cnt);
 
     if (WARN((nb == SIWIFI_RXBUFF_MAX), "No more free space for rxbuff")) {
-        siwifi_hw->rx_skb_alloc_fail_cnt++;
+		siwifi_hw->rx_skb_alloc_fail_cnt++;
         goto err_dma;
     }
 
@@ -553,8 +546,8 @@ static int siwifi_ipc_rxbuf_elems_allocs(struct siwifi_hw *siwifi_hw)
 
     for (i = 0; i < nb; i++) {
         if (siwifi_ipc_rxbuf_elem_allocs(siwifi_hw)) {
-            //dev_err(siwifi_hw->dev, "Failed to allocate rx buf %d/%d\n",
-            //        i + 1, nb);
+        //    dev_err(siwifi_hw->dev, "Failed to allocate rx buf %d/%d\n",
+        //            i + 1, nb);
             return -ENOMEM;
         }
     }
@@ -814,16 +807,19 @@ static int siwifi_elems_allocs(struct siwifi_hw *siwifi_hw)
                                   "siwifi_ipc_e2arxdesc_pool",
                                   ipc_host_rxdesc_push))
         goto err_alloc;
+
     if (siwifi_ipc_elem_var_allocs(siwifi_hw, &siwifi_hw->dbg_mgmt_info_elem,
                                     sizeof(struct dbg_mgmt_info),
                                     DMA_FROM_DEVICE,
                                     NULL, NULL, NULL, NULL))
         goto err_alloc;
+
     if (siwifi_ipc_elem_var_allocs(siwifi_hw, &siwifi_hw->dbg_ctrl_info_elem,
                                     sizeof(struct dbg_ctrl_info),
                                     DMA_FROM_DEVICE,
                                     NULL, NULL, NULL, NULL))
         goto err_alloc;
+
 #ifdef NEW_SCHEDULE
     if (siwifi_ipc_txdesc_allocs(siwifi_hw))
         goto err_alloc;
@@ -1022,7 +1018,6 @@ radar_no_push:
  */
 static void siwifi_prim_tbtt_ind(void *pthis)
 {
-    return;
 }
 
 /**
@@ -1179,6 +1174,7 @@ int siwifi_ipc_rxbuf_init(struct siwifi_hw *siwifi_hw, uint32_t rx_bufsz)
 int siwifi_ipc_init(struct siwifi_hw *siwifi_hw, u8 *shared_ram, void *reg_base)
 {
     struct ipc_host_cb_tag cb;
+    //struct ipc_host_env_tag *env;
 
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
 
@@ -1200,6 +1196,7 @@ int siwifi_ipc_init(struct siwifi_hw *siwifi_hw, u8 *shared_ram, void *reg_base)
     /* set the IPC environment */
     siwifi_hw->ipc_env = (struct ipc_host_env_tag *)
                        siwifi_kzalloc(sizeof(struct ipc_host_env_tag), GFP_KERNEL);
+
     siwifi_hw->ipc_env->mod_params = siwifi_hw->mod_params;
     /* call the initialization of the IPC */
     ipc_host_init(siwifi_hw->ipc_env, &cb,
@@ -1436,10 +1433,9 @@ void siwifi_ipc_rxbuf_elem_fail_check(struct siwifi_hw *siwifi_hw)
         if (siwifi_ipc_rxbuf_elem_allocs(siwifi_hw)) {
             printk("rx_skb_alloc_fail_check still cannot alloc skb! \n");
             break;
-        }
-    }
+		}
+	}
 }
-
 void siwifi_sta_hash_add(struct siwifi_vif *vif, struct siwifi_sta *sta)
 {
 	int hash_idx = STA_HASH(sta->mac_addr);
@@ -1585,7 +1581,8 @@ struct siwifi_src_filter *siwifi_src_filter_hash_search(struct siwifi_vif *siwif
 //Drop the RX skb whose src is the recorded macaddr
 void siwifi_update_src_filter(struct siwifi_vif *siwifi_vif, unsigned char *src_mac)
 {
-    int hash_idx = STA_HASH(src_mac);
+    //int hash_idx = STA_HASH(src_mac);
+    int hash_idx;
     struct siwifi_src_filter *src_filter = NULL;
     struct siwifi_src_filter *src_filter_prev = NULL;
     if (siwifi_vif == NULL || src_mac == NULL)
@@ -1596,6 +1593,7 @@ void siwifi_update_src_filter(struct siwifi_vif *siwifi_vif, unsigned char *src_
         src_filter->last_use = jiffies;
         return;
     }
+    hash_idx = STA_HASH(src_mac);
     src_filter = (struct siwifi_src_filter *)siwifi_kzalloc(sizeof(struct siwifi_src_filter), GFP_ATOMIC);
     if (src_filter)
         memcpy(src_filter->src_macaddr, src_mac, ETH_ALEN);
@@ -1703,31 +1701,105 @@ int siwifi_check_skb_is_dhcp(struct sk_buff *skb)
     return 0;
 }
 
+int siwifi_set_assoc_insert_info(struct siwifi_hw *siwifi_hw, char *insert_info, int insert_length)
+{
+    u32_l dma_addr;
+
+    if (!siwifi_hw || !insert_info || !insert_length) {
+        if (siwifi_hw->assoc_insert_info){
+            siwifi_kfree(siwifi_hw->assoc_insert_info);
+            siwifi_hw->assoc_insert_info = NULL;
+        }
+
+        siwifi_hw->assoc_insert.info_dmaaddr = 0;
+        siwifi_hw->assoc_insert.info_dmalength = 0;
+        siwifi_send_assoc_insert_info(siwifi_hw);
+        return 0;
+    }
+
+    if (siwifi_hw->assoc_insert_info)
+        siwifi_kfree(siwifi_hw->assoc_insert_info);
+
+    // TODO:Check the correctness of ie field
+    siwifi_hw->assoc_insert_info = (char *)siwifi_kzalloc(insert_length, GFP_KERNEL);
+    if (!siwifi_hw->assoc_insert_info)
+        return 0;
+
+    memcpy(siwifi_hw->assoc_insert_info, insert_info, insert_length);
+    siwifi_hw->assoc_insert.info_dmalength = insert_length;
+    dma_addr = dma_map_single(siwifi_hw->dev, siwifi_hw->assoc_insert_info, siwifi_hw->assoc_insert.info_dmalength, DMA_BIDIRECTIONAL);
+    if (dma_mapping_error(siwifi_hw->dev, dma_addr))
+        return 0;
+
+    siwifi_hw->assoc_insert.info_dmaaddr = dma_addr;
+    siwifi_send_assoc_insert_info(siwifi_hw);
+
+    return 1;
+}
+
+int siwifi_set_auth_insert_info(struct siwifi_hw *siwifi_hw, char *insert_info, int insert_length)
+{
+    u32_l dma_addr;
+
+    if (!siwifi_hw || !insert_info || !insert_length){
+        if (siwifi_hw->auth_insert_info){
+            siwifi_kfree(siwifi_hw->auth_insert_info);
+            siwifi_hw->auth_insert_info = NULL;
+        }
+
+        siwifi_hw->auth_insert.info_dmaaddr = 0;
+        siwifi_hw->auth_insert.info_dmalength = 0;
+        siwifi_send_auth_insert_info(siwifi_hw);
+        return 0;
+    }
+
+    if (siwifi_hw->auth_insert_info)
+        siwifi_kfree(siwifi_hw->auth_insert_info);
+
+    // TODO:Check the correctness of ie field
+    siwifi_hw->auth_insert_info = (char *)siwifi_kzalloc(insert_length, GFP_KERNEL);
+    if (!siwifi_hw->auth_insert_info)
+        return 0;
+
+    memcpy(siwifi_hw->auth_insert_info, insert_info, insert_length);
+    siwifi_hw->auth_insert.info_dmalength = insert_length;
+    dma_addr = dma_map_single(siwifi_hw->dev, siwifi_hw->auth_insert_info, siwifi_hw->auth_insert.info_dmalength, DMA_BIDIRECTIONAL);
+    if (dma_mapping_error(siwifi_hw->dev, dma_addr))
+        return 0;
+
+    siwifi_hw->auth_insert.info_dmaaddr = dma_addr;
+    siwifi_send_auth_insert_info(siwifi_hw);
+
+    return 1;
+}
+
+int siwifi_set_probe_insert_info(struct siwifi_hw *siwifi_hw, char *insert_info, int insert_length)
+{
+    if (!siwifi_hw || !insert_info || !insert_length) {
+        if (siwifi_hw->probe_insert_info){
+            siwifi_kfree(siwifi_hw->probe_insert_info);
+            siwifi_hw->probe_insert_info = NULL;
+        }
+
+        siwifi_hw->probe_insert_info_len = 0;
+        return 0;
+    }
+
+    siwifi_hw->probe_insert_info = (char *)siwifi_kzalloc(insert_length, GFP_KERNEL);
+
+    if (!siwifi_hw->probe_insert_info)
+        return 0;
+
+    memcpy(siwifi_hw->probe_insert_info, insert_info, insert_length);
+    siwifi_hw->probe_insert_info_len = insert_length;
+
+    return 1;
+}
+
 void set_repeater_status(struct siwifi_vif *siwifi_vif, u8 status)
 {
     if (SIWIFI_VIF_TYPE(siwifi_vif) == NL80211_IFTYPE_STATION)
         siwifi_vif->repeater_status = status;
-}
-
-int siwifi_set_assoc_req_insert_info(struct siwifi_hw *siwifi_hw, char *insert_info, int insert_length)
-{
-    u32_l dma_addr;
-    if (!siwifi_hw || !insert_info || !insert_length)
-        return 0;
-    if (siwifi_hw->assoc_req_insert_info)
-        siwifi_kfree(siwifi_hw->assoc_req_insert_info);
-    // TODO:Check the correctness of ie field
-    siwifi_hw->assoc_req_insert_info = (char *)siwifi_kzalloc(insert_length, GFP_KERNEL);
-    if (!siwifi_hw->assoc_req_insert_info)
-        return 0;
-    memcpy(siwifi_hw->assoc_req_insert_info, insert_info, insert_length);
-    siwifi_hw->assoc_insert.info_dmalength = insert_length;
-    dma_addr = dma_map_single(siwifi_hw->dev, siwifi_hw->assoc_req_insert_info, siwifi_hw->assoc_insert.info_dmalength, DMA_BIDIRECTIONAL);
-    if (dma_mapping_error(siwifi_hw->dev, dma_addr))
-        return 0;
-    siwifi_hw->assoc_insert.info_dmaaddr = dma_addr;
-    siwifi_send_assoc_req_insert_info(siwifi_hw);
-    return 1;
 }
 
 extern int siwifi_send_get_channel_info_req(struct siwifi_hw *siwifi_hw, struct mm_get_channel_info_cfm *cfm);
@@ -1804,7 +1876,8 @@ int siwifi_channel_recovery_check(struct siwifi_hw *siwifi_hw)
     }
     if (channel_freq != siwifi_hw->chanctx_table[vif_sta->ch_index].chan_def.chan->center_freq ||
             channel_width != siwifi_hw->chanctx_table[vif_sta->ch_index].chan_def.width ||
-            channel_idx != vif_sta->ch_index) {
+            channel_idx != vif_sta->ch_index)
+    {
         struct cfg80211_chan_def chandef;
         struct ieee80211_channel *chan;
         printk("ERROR: ch_freq %d width %d idx %d is different from vif_sta(%s) freq %d width %d idx %d \n",
@@ -1868,4 +1941,22 @@ int siwifi_channel_recovery_check(struct siwifi_hw *siwifi_hw)
     }
     spin_unlock_bh(&siwifi_hw->cb_lock);
     return 1;
+}
+
+bool siwifi_params_5g_channel_check(const uint8_t *data, uint8_t len)
+{
+    uint8_t i = 0, j = 0, temp_chan;
+    uint8_t chan_array[24] = {36, 40, 44, 48, 52, 56, 60, 64, 100,
+                            104, 108, 112, 116, 120, 124, 128, 132,
+                            136, 140, 149, 153, 157, 161, 165};
+
+    for (i = 0; i * 2 < len; i++) {
+        temp_chan = *(data + i * 2);
+        for (j = 0; j < 24; j++) {
+            if(temp_chan == chan_array[j]) {
+                return true;
+            }
+        }
+    }
+    return false;
 }

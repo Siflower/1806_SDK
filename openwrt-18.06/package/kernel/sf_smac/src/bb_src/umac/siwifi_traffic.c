@@ -29,59 +29,21 @@ void traffic_info_init(void)
 
 void traffic_detect_for_amsdu(struct siwifi_hw *siwifi_hw, struct siwifi_txq *txq, u8 tid)
 {
-#ifdef CONFIG_SIWIFI_AMSDUS_TX
+#if defined CONFIG_SIWIFI_AMSDUS_TX
     uint32_t amsdu_threshold = AMSDU_THRESHOLD_M;
-    int amsdu_maxnb = 0;
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
-    uint32_t amsdu_nb_per = 10;
-    uint32_t amsdu_nb_min = 2000;
-    int i, per = 0;
-    struct siwifi_sta *sta = NULL;
-    struct siwifi_vif *vif = NULL;
     amsdu_threshold = siwifi_hw->amsdu_threshold;
-    amsdu_nb_per = siwifi_hw->amsdu_nb_percent;
-    amsdu_nb_min = siwifi_hw->amsdu_nb_threshold;
 #endif
     if (tid >= AMSDU_MAX_TID) return;
-    if (!txq) return;
 
     traffic_info[tid].pkt_cnt++;
     if (time_after(jiffies, traffic_info[tid].next_jiffies)) {
         traffic_info[tid].next_jiffies = jiffies + AMSDU_CHECK_INTERVAL;
         if (traffic_info[tid].pkt_cnt > amsdu_threshold) {
-            amsdu_maxnb = AMSDU_NB_V;
+            txq->amsdu_maxnb = AMSDU_NB_V;
         } else {
-            amsdu_maxnb = AMSDU_NB_L;
+            txq->amsdu_maxnb = AMSDU_NB_L;
         }
-        sta = txq->sta;
-
-#if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
-        if (!siwifi_hw->amsdu_nb_disable && txq->ndev) {
-            vif = netdev_priv(txq->ndev);
-            if (sta && (amsdu_maxnb == AMSDU_NB_V) && (SIWIFI_VIF_TYPE(vif) == NL80211_IFTYPE_AP)) {
-                for (i = NX_TX_PAYLOAD_MAX - 1; i > 0; i--) {
-                    if ((sta->stats.amsdus[i].done + sta->stats.amsdus[i].failed) > amsdu_nb_min) {
-                        per = DIV_ROUND_UP((sta->stats.amsdus[i].failed) * 100, sta->stats.amsdus[i].done);
-                        if (per > amsdu_nb_per){
-                            if (amsdu_maxnb > 0)
-                                amsdu_maxnb --;
-                        } else {
-                            break;
-                        }
-
-                    }
-                }
-            }
-        }
-        if (time_after(jiffies, sta->stats.last_set_amsdu_tp) && sta) {
-            for (i = 0; i < NX_TX_PAYLOAD_MAX; i++) {
-                sta->stats.amsdus[i].failed = 0;
-                sta->stats.amsdus[i].done = 0;
-            }
-            sta->stats.last_set_amsdu_tp = jiffies + (siwifi_hw->amsdu_nb_cleanup * 100);
-        }
-#endif
-        txq->amsdu_maxnb = amsdu_maxnb;
         traffic_info[tid].pkt_cnt = 0;
     }
     if(txq->amsdu_maxnb == 0) {
@@ -191,8 +153,8 @@ void traffic_detect_be_edca(struct siwifi_hw *siwifi_hw, struct siwifi_vif *siwi
 			hw_wmm_counter = 0;
 			step = 1;
 		} else if (hw_be_cnt > EDCA_VI_THRESHOLD && (hw_vi_cnt > EDCA_VI_THRESHOLD || hw_vo_cnt > EDCA_VI_THRESHOLD)) {
-			writel(EDCA_BK_DEFAULT, (void*)EDCA_AC_1_ADDR(siwifi_hw->mod_params->is_hb));
-            hw_wmm_counter = 0;
+            writel(EDCA_BK_DEFAULT, (void*)EDCA_AC_1_ADDR(siwifi_hw->mod_params->is_hb));
+			hw_wmm_counter = 0;
 			step = 2;
 		} else {
 			if(hw_wmm_counter < counter_max)
@@ -243,7 +205,7 @@ struct siwifi_device_traffic
     u16 vlan_tci;
 };
 
-#define SIWIFI_DEV_MAX 8
+#define SIWIFI_DEV_MAX (NX_VIRT_DEV_MAX * 2)
 struct siwifi_device_traffic g_siwifi_dev_traffic[SIWIFI_DEV_MAX];
 
 void siwifi_device_traffic_init(void)
@@ -258,31 +220,37 @@ void siwifi_device_traffic_init(void)
 
 int siwifi_xmit_hook(struct sk_buff *skb, struct net_device *outdev)
 {
-    u16 protocol = 0;
-    struct iphdr *ip4h;
+	u16 protocol = 0;
+	struct iphdr *ip4h;
+	struct vlan_ethhdr *veth;
 	struct siwifi_sta *sta = NULL;
 	struct siwifi_vif *vif = NULL;
 	u8 *eth_header = skb->data - ETH_HLEN;
 	struct net_device *dev = g_crrent_accel_dev;
-    //u16 vlan_tci;
+	//u16 vlan_tci;
 
-    if(!accel_enable) return NET_RX_DROP;
-    if(!g_crrent_accel_dev) {
+	if(!accel_enable) return NET_RX_DROP;
+	if(!g_crrent_accel_dev) {
 		return NET_RX_DROP;
 	} else if (g_crrent_accel_dev != outdev){
 		return NET_RX_DROP;
 	}
-    // skip too small packet or skb_shared or unvlan packets
-    if (skb->len < MIN_XMIT_SKB_LEN || skb_shared(skb) ||
-            skb->protocol != cpu_to_be16(ETH_P_8021Q))
-        return NET_RX_DROP;
+	// skip too small packet or skb_shared
+	if (skb->len < MIN_XMIT_SKB_LEN || skb_shared(skb))
+		return NET_RX_DROP;
 
-    // only handle ipv4 udp/tcp
-    protocol = ((skb->data[2] << 8) | skb->data[3]);
-    ip4h = (struct iphdr *)(skb->data + VLAN_HLEN);
-    if (protocol != ETH_P_IP || (ip4h->protocol != IPPROTO_TCP &&
-                ip4h->protocol != IPPROTO_UDP)) {
-        return NET_RX_DROP;
+	// only handle ipv4 udp/tcp
+	if(skb->protocol != cpu_to_be16(ETH_P_8021Q)) {
+		ip4h = (struct iphdr *)(skb->data);
+		protocol = skb->protocol;
+	} else {
+		veth = (struct vlan_ethhdr *) (skb->head + skb->mac_header);
+		ip4h = (struct iphdr *)(skb->data + VLAN_HLEN);
+		protocol = veth->h_vlan_encapsulated_proto;
+	}
+	if (protocol != cpu_to_be16(ETH_P_IP) || (ip4h->protocol != IPPROTO_TCP &&
+		ip4h->protocol != IPPROTO_UDP)) {
+		return NET_RX_DROP;
 	}
 
 	//struct ethhdr *eth;
@@ -292,14 +260,15 @@ int siwifi_xmit_hook(struct sk_buff *skb, struct net_device *outdev)
 	vif = netdev_priv(dev);
 	if (!vif)
 		return NET_RX_DROP;
+
 	if (SIWIFI_VIF_TYPE(vif) == NL80211_IFTYPE_AP) {
 		sta = siwifi_sta_hash_get(vif, eth_header);
 		if (!sta)
 			return NET_RX_DROP;
 	} else if (SIWIFI_VIF_TYPE(vif) != NL80211_IFTYPE_STATION) {
 		return NET_RX_DROP;
-    }
-    
+	}
+
 	accelerate_cnt++;
 	// struct vlan_hdr *vhdr;
 	// vhdr = (struct vlan_hdr *)skb->data;
@@ -311,8 +280,12 @@ int siwifi_xmit_hook(struct sk_buff *skb, struct net_device *outdev)
 	g_siwifi_dev_traffic[g_crrent_accel_dev_idx].src_dev = skb->dev;
 	// g_siwifi_dev_traffic[g_crrent_accel_dev_idx].vlan_tci = vlan_tci;
 	//untag tci
-	memmove(eth_header + VLAN_HLEN, eth_header, 2 * ETH_ALEN);
-	skb_push(skb, ETH_HLEN - VLAN_HLEN);
+	if(skb->protocol != cpu_to_be16(ETH_P_8021Q))
+		skb_push(skb, ETH_HLEN);
+	else {
+		memmove(eth_header + VLAN_HLEN, eth_header, 2 * ETH_ALEN);
+		skb_push(skb, ETH_HLEN - VLAN_HLEN);
+	}
 	//mark skb as accel
 	skb->cb[SF_WIFI_ACCEL] = SF_WIFI_ACCEL_FLAG;
 	dev->netdev_ops->ndo_start_xmit(skb, dev);

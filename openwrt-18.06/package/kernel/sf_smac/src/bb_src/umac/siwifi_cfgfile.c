@@ -240,7 +240,7 @@ int siwifi_parse_phy_configfile(struct siwifi_hw *siwifi_hw, const char *filenam
     return 0;
 }
 
-#ifdef CONFIG_SIWIFI_TEMPERATURE_CONTROL
+#if defined(CONFIG_SIWIFI_TEMPERATURE_CONTROL)
 void readline_temperature_control_configfile(struct siwifi_hw *siwifi_hw, const struct firmware *config_fw,
                                                 const char *tag_name, int i){
     const u8 *tag_ptr;
@@ -436,7 +436,7 @@ int siwifi_parse_txpower_gain_table_configfile(struct siwifi_hw *siwifi_hw, int 
 	int i;
 
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
-    if(siwifi_hw->mod_params->is_hb){
+    if (siwifi_hw->mod_params->is_hb) {
 		filename = ext_pa ? SIWIFI_HB_TXPOWER_GAIN_EXPA_TABLE_NAME : SIWIFI_HB_TXPOWER_GAIN_TABLE_NAME;
 
         sprintf(filename_path, "%s%s", "/lib/firmware/", filename);
@@ -479,25 +479,25 @@ int siwifi_parse_txpower_gain_table_configfile(struct siwifi_hw *siwifi_hw, int 
 		tag_ptr = siwifi_find_tag(config_fw->data, config_fw->size, tag_name, strlen("00"));
 		if (tag_ptr != NULL) {
 			if (sscanf(tag_ptr,"%d",digtable) != 1){
-                if(siwifi_hw->mod_params->is_hb){
+				if(siwifi_hw->mod_params->is_hb){
 					siwifi_hw->phy_config.hb_power_gain_tb[i] = DEFAULT_VALUE_TXPOWER_GAIN_TABLE;
 				}else
 					siwifi_hw->phy_config.lb_power_gain_tb[i] = DEFAULT_VALUE_TXPOWER_GAIN_TABLE;
 			}
 			else{
-                if(siwifi_hw->mod_params->is_hb){
+				if(siwifi_hw->mod_params->is_hb){
 					memcpy(&siwifi_hw->phy_config.hb_power_gain_tb[i],digtable,sizeof(digtable[0]));
 				}else
 					memcpy(&siwifi_hw->phy_config.lb_power_gain_tb[i],digtable,sizeof(digtable[0]));
 			}
 		} else{
-            if(siwifi_hw->mod_params->is_hb){
+			if(siwifi_hw->mod_params->is_hb){
 				siwifi_hw->phy_config.hb_power_gain_tb[i] = DEFAULT_VALUE_TXPOWER_GAIN_TABLE;
 			}else
 				siwifi_hw->phy_config.lb_power_gain_tb[i] = DEFAULT_VALUE_TXPOWER_GAIN_TABLE;
 		}
 #ifdef CONFIG_SIWIFI_DBG
-        if(siwifi_hw->mod_params->is_hb){
+		if(siwifi_hw->mod_params->is_hb){
 			printk("file HB TX power %d dbm gain is %d \n", i, siwifi_hw->phy_config.hb_power_gain_tb[i]);
 		} else {
 			printk("file LB TX power %d dbm gain is %d \n", i, siwifi_hw->phy_config.lb_power_gain_tb[i]);
@@ -510,138 +510,6 @@ int siwifi_parse_txpower_gain_table_configfile(struct siwifi_hw *siwifi_hw, int 
 
 	return 0;
 }
-#endif
-
-#ifdef CONFIG_ENABLE_RFGAINTABLE
-
-#define DEFAULT_VALUE_RF_GAIN_TABLE 0
-/**
- * Parse the rf_gain_table to gain Config file used at init time
- */
-int siwifi_parse_rf_gain_table_configfile(struct siwifi_hw *siwifi_hw) {
-    const struct firmware *config_fw;
-    unsigned int tb_idx[2];
-    const u8 *tag_ptr;
-    char tag_name[16];
-    const char *filename = SIWIFI_RF_GAIN_TABLE_NAME;
-    int ret;
-    int i;
-
-    SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
-
-#ifdef CONFIG_SIWIFI_DBG
-    printk(" %s parse file: %s \n", __func__, filename);
-#endif
-
-    if ((ret = request_firmware(&config_fw, filename, siwifi_hw->dev))) {
-        printk(KERN_CRIT "%s: Failed to get %s (%d)\n", __func__, filename, ret);
-        return ret;
-    }
-    for (i = 0; i < 4; i++) {
-        if(siwifi_hw->mod_params->is_hb){
-            sprintf(tag_name, "HBBAND%d=", i);
-        } else {
-            sprintf(tag_name, "LBBAND%d=", i);
-        }
-        tag_ptr = siwifi_find_tag(config_fw->data, config_fw->size, tag_name, strlen("00"));
-        if (tag_ptr != NULL) {
-            if (sscanf(tag_ptr,"%d",tb_idx) != 1) {
-                if(siwifi_hw->mod_params->is_hb) {
-                    siwifi_hw->phy_config.hb_rf_gain_tb_idx[i] = DEFAULT_VALUE_RF_GAIN_TABLE;
-                } else
-                    siwifi_hw->phy_config.lb_rf_gain_tb_idx[i] = DEFAULT_VALUE_RF_GAIN_TABLE;
-            }
-            else{
-                if(siwifi_hw->mod_params->is_hb) {
-                    memcpy(&siwifi_hw->phy_config.hb_rf_gain_tb_idx[i],tb_idx,sizeof(tb_idx[0]));
-                } else
-                    memcpy(&siwifi_hw->phy_config.lb_rf_gain_tb_idx[i],tb_idx,sizeof(tb_idx[0]));
-            }
-        } else {
-            if(siwifi_hw->mod_params->is_hb) {
-                siwifi_hw->phy_config.hb_rf_gain_tb_idx[i] = DEFAULT_VALUE_RF_GAIN_TABLE;
-            } else
-                siwifi_hw->phy_config.lb_rf_gain_tb_idx[i] = DEFAULT_VALUE_RF_GAIN_TABLE;
-        }
-
-        if(siwifi_hw->mod_params->is_hb) {
-            printk("file HB BAND %d use rf gain table offset %d \n", i, siwifi_hw->phy_config.hb_rf_gain_tb_idx[i]);
-        } else {
-            printk("file LB BAND %d use rf gain table offset %d \n", i, siwifi_hw->phy_config.lb_rf_gain_tb_idx[i]);
-        }
-
-    }
-
-    /* Release the configuration file */
-    release_firmware(config_fw);
-
-    return 0;
-}
-
-int update_rf_gain_table_configfile(struct siwifi_hw *siwifi_hw, uint8_t *tb_idx) {
-    const char *filename = SIWIFI_RF_GAIN_TABLE_NAME;
-    char tag_name[16];
-    char full_path[64];
-    char line[256] = "\0";
-    int i, ret;
-    struct file *file;
-    loff_t pos;
-    size_t data_start;
-    char *tag_position;
-
-    sprintf(full_path, "lib/firmware/%s", filename);
-
-
-    file = filp_open(full_path, O_RDWR, 0777);
-    if (IS_ERR(file)) {
-        printk("%s: Failed to open file %s\n", __func__, filename);
-        return PTR_ERR(file);
-    }
-
-    for (i = 0; i < 4; i++) {
-        if (siwifi_hw->mod_params->is_hb) {
-            sprintf(tag_name, "HBBAND%d=", i);
-        } else {
-            sprintf(tag_name, "LBBAND%d=", i);
-        }
-
-        // Move file pointer to the beginning
-        ret = vfs_fsync(file, 0);
-        if (ret < 0) {
-            printk("%s: Failed to sync file %s (%d)\n", __func__, filename, ret);
-            return ret;
-        }
-
-        // Find tag position in the file
-        pos = 0;
-        while (kernel_read(file, line, sizeof(line), &pos) > 0) {
-            tag_position = strstr(line, tag_name);
-            if (tag_position != NULL) {
-                // Calculate the position to start writing new data
-                data_start = tag_position - line + strlen(tag_name);
-
-                // Move file pointer to the beginning of the line
-                pos -= strlen(line);
-
-                // Write new data to the file
-                sprintf(line + data_start, "%02d", tb_idx[i]);
-                ret = kernel_write(file, line, strlen(line), &pos);
-                if (ret < 0) {
-                    printk("%s: Failed to write to file %s (%d)\n", __func__, filename, ret);
-                    return ret;
-                }
-
-                // Exit the loop after finding the tag
-                break;
-            }
-        }
-    }
-
-    filp_close(file, NULL);
-
-    return 0;
-}
-
 #endif
 
 // (channel) 13 * (one channel gain num) 28

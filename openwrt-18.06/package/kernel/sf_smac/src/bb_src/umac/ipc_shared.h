@@ -164,6 +164,7 @@ struct hostdesc
     /// Size of the payload
     u16_l packet_len;
 #endif //(NX_AMSDU_TX)
+
     /// Address of the status descriptor in host memory (used for confirmation upload)
     u32_l status_desc_addr;
     /// Destination Address
