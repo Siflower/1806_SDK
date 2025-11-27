@@ -12,7 +12,7 @@
 #define AMSDU_NB_L 1
 #define AMSDU_NB_M 2
 #define AMSDU_NB_H 4
-#define AMSDU_NB_V NX_TX_PAYLOAD_MAX
+#define AMSDU_NB_V 4
 #else
 #define AMSDU_NB_L 2
 #define AMSDU_NB_M 2
@@ -25,7 +25,6 @@
 #define AMSDU_THRESHOLD_H 2000
 
 #define EDCA_AC_1_ADDR(band) (WIFI_BASE_ADDR(band) + 0x00080000 + 0x0204)
-// only tid 0 ~ 4(BE/BK/BK/BE) allow enable amsdu
 #define AMSDU_MAX_TID 8
 #define AMSDU_CHECK_INTERVAL 10
 

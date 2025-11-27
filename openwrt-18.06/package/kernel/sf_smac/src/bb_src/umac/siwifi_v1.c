@@ -18,9 +18,7 @@
 #include <sf19a28.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
-#ifdef CONFIG_SFA28_FULLMASK
 #include <sf19a28.h>
-#endif
 #ifdef CONFIG_SFAX8_FACTORY_READ
 #include <sfax8_factory_read.h>
 #endif
@@ -149,7 +147,7 @@ extern int sf_wifi_rf_get_feature(int8_t band);
 #define SFAX8_THERMAL_POWERMAX_SINGLE 31
 #define SFAX8_THERMAL_POWERMIN_1  0
 
-#ifdef CONFIG_SIWIFI_TEMPERATURE_CONTROL
+#if defined CONFIG_SIWIFI_TEMPERATURE_CONTROL
 #define TEMP_CTL_MAX_LIMIT 64
 void siwifi_set_temp_ctl_level(struct siwifi_hw *siwifi_hw){
     int hwq_limit = 0;
@@ -189,7 +187,7 @@ void siwifi_set_temp_ctl_level(struct siwifi_hw *siwifi_hw){
     spin_unlock_bh(&siwifi_hw->tx_lock);
     return;
 }
-#endif // CONFIG_SIWIFI_TEMPERATURE_CONTROL
+#endif
 
 static int sf_wifi_rf_callback(void *data, uint32_t event, uint32_t flags, void *parameter)
 {
@@ -364,7 +362,7 @@ static int sf_wifi_rf_callback(void *data, uint32_t event, uint32_t flags, void 
                 ((struct rf_get_temp *)parameter)->value = cfm.value;
                 return RF_RET_OK;
             }
-#ifdef CONFIG_SIWIFI_TEMPERATURE_CONTROL
+#if defined CONFIG_SIWIFI_TEMPERATURE_CONTROL
         case RF_EVENT_TEMP_CTL:
             {
                 struct rf_cooling_temp_set * temp_set = (struct rf_cooling_temp_set *)parameter;
@@ -405,8 +403,8 @@ static int sf_wifi_rf_callback(void *data, uint32_t event, uint32_t flags, void 
 
                 return RF_RET_OK;
             }
-#endif // CONFIG_SIWIFI_TEMPERATURE_CONTROL
-#ifdef CONFIG_SIWIFI_COOLING_TEMP
+#endif
+#if defined CONFIG_SIWIFI_COOLING_TEMP
         case RF_EVENT_COOLING_TEMP:
             if (parameter == NULL) {
                 printk("Error: parameter is null!\n");
@@ -475,10 +473,45 @@ static int sf_wifi_rf_callback(void *data, uint32_t event, uint32_t flags, void 
                     REG_PL_WR((priv->base + 0x00160000 + 0x0200),txpower_tmp);
                 }
 #endif
+/*
+#else // defined CONFIG_SFA28_FULLMASK
+                enum sfax8_rf_cooling_state cool_state;
+
+                cool_state = ((struct rf_cooling_temp_set *)parameter)->cool_state;
+                siwifi_hw->max_txpower_idx = ((struct rf_cooling_temp_set *)parameter)->max_index[CONFIG_BAND_TYPE];
+                if (test_bit(SIWIFI_DEV_STARTED, &siwifi_hw->drv_flags)) {
+                    if(siwifi_send_cooling_temp_req(siwifi_hw)) {
+                        printk("set max idx to LMAC failed!\n");
+                        return RF_RET_FAILED;
+                    }
+                } else {
+                    return RF_RET_FAILED;
+                }
+                if (cool_state != siwifi_hw->cool_state) {
+                    s16 credit_dec = 0;
+                    spin_lock_bh(&siwifi_hw->tx_lock);
+                    if (cool_state == RF_COOLING_STATE_NORMAL) {
+                        credit_dec = 0;
+                    } else {
+                        credit_dec = -1;
+                    }
+                    siwifi_adjust_hwq_credits(siwifi_hw, credit_dec);
+                    spin_unlock_bh(&siwifi_hw->tx_lock);
+                    siwifi_hw->cool_state = ((struct rf_cooling_temp_set *)parameter)->cool_state;
+                }
+
+#ifdef CONFIG_SF16A18_WIFI_ATE_TOOLS
+                if (siwifi_hw->ate_env.tx_macbypass_start){
+                    REG_PL_WR((priv->base + 0x00160000 + 0x0200),siwifi_hw->max_txpower_idx);
+                    printk("WRITE POWER : %d\n",siwifi_hw->max_txpower_idx);
+                }
+                //  REG_PL_WR((priv->base + 0x00160000 + 0x0200), siwifi_hw->max_txpower_idx); //macbyp_txv0_set(pow);
 #endif
+*/
+#endif //defined CONFIG_SFA28_FULLMASK
                 return RF_RET_OK;
             }
-#endif // CONFIG_SIWIFI_COOLING_TEMP
+#endif // defined CONFIG_SIWIFI_COOLING_TEMP
         default:
             {
                 printk("unknown event from RF!\n");
@@ -737,26 +770,19 @@ static void sf_wifi_lmac_share_ram_take(struct v1_plat_data *priv)
         tmp &= ~(1 << 1);
     else
         tmp &= ~(1 << 0);
+#else
+    if (priv->band & LB_MODULE)
+        tmp |= (1 << 0);
+    else
+        tmp |= (1 << 1);
 #endif
     writeb(tmp, (void *)REG_SYSM_SHARE_RAM_SEL);
 }
 
 static void sf_wifi_lmac_share_ram_leave(struct v1_plat_data *priv)
 {
-#ifdef CONFIG_SFA28_FULLMASK
-    uint8_t tmp = 0;
-#endif
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
     printk("Now leave band %s\n", priv->band == 1 ? "2.4G" : "5G");
-#ifdef CONFIG_SFA28_FULLMASK
-    tmp = readb((void *)REG_SYSM_SHARE_RAM_SEL);
-
-    if (priv->band & LB_MODULE)
-        tmp &= ~(1 << 0);
-    else
-        tmp &= ~(1 << 1);
-    writeb(tmp, (void *)REG_SYSM_SHARE_RAM_SEL);
-#endif
     hold_reset(SF_IRAM_SOFT_RESET);
 }
 
@@ -820,6 +846,7 @@ static void sf_wifi_lmac_platform_reset(struct siwifi_hw *siwifi_hw, struct v1_p
         value &= 0xF7;
         set_module_clk_gate((priv->band & LB_MODULE) ? SF_WIFI_2_SOFT_RESET : SF_WIFI_1_SOFT_RESET, value, 0);
 #endif
+
     } else {
         hold_reset(offset);
 #if (defined(CONFIG_SF16A18_WIFI_LA_ENABLE) && (defined(CFG_A28_V_LA_CLK_BUG) || defined(CFG_A28_FULLMASK_LA_BUG)))
@@ -1033,7 +1060,7 @@ int siwifi_tasks_create(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
 #ifdef CONFIG_SF16A18_WIFI_ATE_TOOLS
     tasklet_init(&siwifi_hw->ate_env.tx_task, siwifi_ate_task, (unsigned long)siwifi_hw);
 #endif
-    return 0;
+    return lmac_glue_start(siwifi_hw, priv);
 }
 
 void siwifi_tasks_destory(struct siwifi_hw *siwifi_hw, struct v1_plat_data *priv)
@@ -1245,11 +1272,12 @@ int siwifi_platform_restart(struct siwifi_hw *siwifi_hw)
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
     siwifi_hw->debugfs.trace_prst = false;
 #endif
-    /*Step1: unregister IRQ & disable irq*/
-    siwifi_irqs_deinit(siwifi_hw, priv);
 
-    /*Step2: disable & destroy the LMAC task*/
+    /*Step1: disable & destroy the LMAC task*/
     siwifi_tasks_destory(siwifi_hw, priv);
+
+    /*Step2: unregister IRQ & disable irq*/
+    siwifi_irqs_deinit(siwifi_hw, priv);
 
     /*Step3: deinit ipc*/
     siwifi_ipc_deinit(siwifi_hw);
@@ -1305,23 +1333,23 @@ int siwifi_platform_restart(struct siwifi_hw *siwifi_hw)
     }
 #endif
 
-    /*Step7: create the lmac task & enable it*/
-    if ((ret = siwifi_tasks_create(siwifi_hw, priv))) {
-        printk("can not create lmac task!, return %d\n", ret);
-        goto error_ipc_init;
-    }
-
-    /*Step8: register & enable irq*/
+    /*Step7: register & enable irq*/
     if ((ret = siwifi_irqs_init(siwifi_hw, priv))) {
         printk("siwifi_irq_init failed, ret = %d!\n", ret);
         goto error_ipc_init;
     }
 
-    lmac_glue_start(siwifi_hw, priv);
+    //lmac_glue_start(siwifi_hw, priv);
 
     //RM#7889 load agc ram when recovery to avoid RIU_IRQMACCCATIMEOUTMASKED_BIT
     if ((ret = siwifi_agc_load(siwifi_hw, priv))) {
         printk("siwifi_agc_load failed, ret = %d!\n", ret);
+        goto error_ipc_init;
+    }
+
+    /*Step8: create the lmac task & enable it*/
+    if ((ret = siwifi_tasks_create(siwifi_hw, priv))) {
+        printk("can not create lmac task!, return %d\n", ret);
         goto error_register_irqs;
     }
 
@@ -1387,7 +1415,6 @@ int32_t siwifi_platform_set_clkfreq(struct siwifi_hw *siwifi_hw, int32_t clk_typ
 
     return 0;
 }
-
 
 static int siwifi_check_fw_compatibility(struct siwifi_hw *siwifi_hw)
 {
@@ -1559,28 +1586,22 @@ int siwifi_platform_on(struct siwifi_hw *siwifi_hw)
         goto error_sysm_enable;
     }
 
-    /*Step4: create the lmac task & enable it*/
-    if ((ret = siwifi_tasks_create(siwifi_hw, priv))) {
-        printk("can not create lmac task!, return %d\n", ret);
-		goto error_ipc_init;
-	}
-
-    /*Step5: register & enable irq*/
+    /*Step4: register & enable irq*/
     if ((ret = siwifi_irqs_init(siwifi_hw, priv))) {
         printk("siwifi_irq_init failed, ret = %d!\n", ret);
         goto error_ipc_init;
     }
 
-    lmac_glue_start(siwifi_hw, priv);
+//    lmac_glue_start(siwifi_hw, priv);
 
 #ifdef CONFIG_SF16A18_WIFI_RF
-    /*Step6: register rf client*/
+    /*Step5: register rf client*/
     if ((ret = sf_wifi_rf_bb_register(priv->band, &sf_wifi_rf_callback, (void *)siwifi_hw))) {
         printk("can not register rf client, ret : %d\n", ret);
         goto error_register_irqs;
     }
 #endif
-    /*Step7: load agc firmware*/
+    /*Step6: load agc firmware*/
     if ((ret = siwifi_agc_load(siwifi_hw, priv))) {
         printk("siwifi_agc_load failed, ret = %d!\n", ret);
 #ifdef CONFIG_SF16A18_WIFI_RF
@@ -1591,6 +1612,16 @@ int siwifi_platform_on(struct siwifi_hw *siwifi_hw)
     }
     if((ret = siwifi_ldpc_load(siwifi_hw, priv))){
         printk("siwifi_lapc_load failed, ret = %d!\n", ret);
+    }
+
+    /*Step7: create the lmac task & enable it*/
+    if ((ret = siwifi_tasks_create(siwifi_hw, priv))) {
+        printk("can not create lmac task!, return %d\n", ret);
+#ifdef CONFIG_SF16A18_WIFI_RF
+        goto error_register_rfclient;
+#else
+        goto error_register_irqs;
+#endif
     }
 
     if ((ret = siwifi_check_fw_compatibility(siwifi_hw))) {
@@ -1629,6 +1660,7 @@ error_sysm_enable:
     siwifi_sysm_enable(siwifi_hw, priv, 0);
 
     printk("unsuccessfully turn on platform %d!\n", siwifi_hw->mod_params->is_hb);
+
     return ret;
 }
 
@@ -1649,13 +1681,12 @@ void siwifi_platform_off(struct siwifi_hw *siwifi_hw)
         printk("platform has already been turned off!\n");
         return;
     }
-
-    /*Step1: unregister IRQ & disable irq*/
-    siwifi_irqs_deinit(siwifi_hw, priv);
-
-    /*Step2: disable & destroy the LMAC task*/
+    /*Step1: disable & destroy the LMAC task*/
     //TODO, to check if it is any possibility to have a deadlock
     siwifi_tasks_destory(siwifi_hw, priv);
+
+    /*Step2: unregister IRQ & disable irq*/
+    siwifi_irqs_deinit(siwifi_hw, priv);
 
 #ifdef CONFIG_SF16A18_WIFI_RF
     /*Step3: unregister RF client*/
@@ -1739,16 +1770,15 @@ static int siwifi_platform_init(struct siwifi_plat **siwifi_pl, struct platform_
         priv->band = HB_MODULE;
 
     if (!mod_params->is_hb){
-        //priv->pl_clk = devm_clk_get(&pdev->dev, "wifi_lb0");
-        priv->pl_clk = devm_clk_get(&pdev->dev, "wlan_clk");
+        priv->pl_clk = devm_clk_get(&pdev->dev, "wifi_lb0");
         printk("sucessful platform get priv->lb_band: %d\n",priv->band);
     }
     else{
-        //priv->pl_clk = devm_clk_get(&pdev->dev, "wifi_lb3");
-        priv->pl_clk = devm_clk_get(&pdev->dev, "wlan_clk");
+        priv->pl_clk = devm_clk_get(&pdev->dev, "wifi_lb3");
         printk("sucessful platform get priv->hb_band: %d\n",priv->band);
     }
 
+    priv->pl_clk = devm_clk_get(&pdev->dev, "wlan_clk");
 
     if (IS_ERR(priv->pl_clk)) {
         dev_err(&pdev->dev, "Failed to get wlan platform clk\n");
@@ -1781,6 +1811,8 @@ static int siwifi_platform_init(struct siwifi_plat **siwifi_pl, struct platform_
         priv->bus_clk = devm_clk_get(&pdev->dev, "bus3_clk");
     }
 #endif //CFG_A28_V_LA_CLK_BUG
+#else
+    priv->bus_clk = devm_clk_get(&pdev->dev, "bus2_clk");
 #endif //CONFIG_SFA28_FULLMASK
 
     if (IS_ERR(priv->bus_clk)) {
@@ -1811,10 +1843,12 @@ static int siwifi_platform_init(struct siwifi_plat **siwifi_pl, struct platform_
         priv->m_SFDSP_clk = devm_clk_get(&pdev->dev, "m_SFDSPclk");
         printk("hb_m_SFDSPclk\n");
     }
+
     if (IS_ERR(priv->m_SFDSP_clk)) {
         if (priv->m_SFDSP_clk)
             printk("adafafanull\n");
         printk("sucessful platform get priv->m_SFDSP_clk %lu\n",(unsigned long)priv->m_SFDSP_clk);
+
         dev_err(&pdev->dev, "Failed to get _SFDSP clk\n");
         ret = -EINVAL;
         goto error_io;
@@ -1844,8 +1878,8 @@ error_resources:
     release_mem_region(res->start, resource_size(res));
 error_plat:
     siwifi_kfree(siwifi_plat);
-    *siwifi_pl = NULL;
     mod_params = NULL;
+    *siwifi_pl = NULL;
     return ret;
 }
 
@@ -2103,11 +2137,13 @@ int siwifi_register_hp_drv(void)
     siwifi_hp_drv.probe = siwifi_hp_probe;
     siwifi_hp_drv.remove = siwifi_hp_remove;
     siwifi_hp_drv.driver.owner =  THIS_MODULE;
+
     siwifi_hp_drv.driver.name = sf_wifi_module_name;
     siwifi_hp_drv.driver.of_match_table = of_match_ptr(sf_wifi_of_match);
 
     ret = platform_driver_register(&siwifi_hp_drv);
     SIWIFI_DBG("siwifi_register_hp_drv--ret=%d name=%s\n",ret, siwifi_hp_drv.driver.name);
+
     return ret;
 }
 

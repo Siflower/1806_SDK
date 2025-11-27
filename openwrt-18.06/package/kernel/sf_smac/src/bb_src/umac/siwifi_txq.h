@@ -228,7 +228,6 @@ enum siwifi_txq_flags {
     SIWIFI_TXQ_IN_STUCK_CHECK_LIST = BIT(10),
 };
 
-
 #define SIWIFI_TXQ_STOP_POS_VIF_STOP 1
 #define SIWIFI_TXQ_STOP_POS_STATION_STOP 2
 #define SIWIFI_TXQ_STOP_POS_DATA_CFM 3
@@ -399,6 +398,7 @@ struct siwifi_sta;
 struct siwifi_vif;
 struct siwifi_hw;
 struct siwifi_sw_txhdr;
+
 #ifdef TOKEN_ENABLE
 extern int tx_descs_num;
 #endif
@@ -431,6 +431,9 @@ static inline bool siwifi_txq_has_data(struct siwifi_txq *txq)
     return (skb_queue_len(&txq->sk_list)
 #ifdef CONFIG_BRIDGE_ACCELERATE
             || skb_queue_len(&txq->accel_sk_list)
+#endif
+#ifdef KEEP_EARLY_SKB
+            || skb_queue_len(&txq->early_sk_list)
 #endif
             );
 
@@ -471,18 +474,10 @@ static inline bool siwifi_txq_is_ready_for_push(struct siwifi_txq *txq)
  * @tid: int updated with the TXQ tid at each iteration
  * @siwifi_hw: main driver data
  */
-#ifdef CONFIG_MAC80211_TXQ
-#define foreach_sta_txq(sta, txq, tid, siwifi_hw)                         \
-    for (tid = 0, txq = siwifi_txq_sta_get(sta, 0);                       \
-         tid < NX_NB_TXQ_PER_STA;                                       \
-         tid++, txq = siwifi_txq_sta_get(sta, tid))
-#else /* CONFIG_MAC80211_TXQ */
 #define foreach_sta_txq(sta, txq, tid, siwifi_hw)                          \
     for (tid = 0, txq = siwifi_txq_sta_get(sta, 0, siwifi_hw);               \
          tid < (is_multicast_sta(sta->sta_idx) ? 1 : NX_NB_TXQ_PER_STA); \
          tid++, txq++)
-
-#endif
 
 /**
  * foreach_sta_txq_prio - Macro to iterate over all TXQ of a STA in
@@ -556,7 +551,6 @@ void siwifi_txq_tdls_sta_stop(struct siwifi_vif *siwifi_vif, u16 reason,
                             struct siwifi_hw *siwifi_hw);
 void siwifi_txq_ps_drop_skb(struct siwifi_hw *siwifi_hw, struct siwifi_txq *txq);
 
-
 void siwifi_txq_add_to_hw_list(struct siwifi_txq *txq);
 void siwifi_txq_del_from_hw_list(struct siwifi_txq *txq);
 void siwifi_txq_add_to_stuck_check_list(struct siwifi_txq *txq);
@@ -578,6 +572,10 @@ void siwifi_txq_sta_switch_vif(struct siwifi_sta *sta, struct siwifi_vif *old_vi
 //give a chance for other module to flush the queue
 void siwifi_txq_flush(struct siwifi_hw *siwifi_hw, struct siwifi_txq *txq);
 
+#ifdef KEEP_EARLY_SKB
+int siwifi_txq_queue_early_skb(struct sk_buff *skb, struct siwifi_txq *txq,
+                       struct siwifi_hw *siwifi_hw, u16 anchor_fsn);
+#endif
 int siwifi_txq_queue_skb(struct sk_buff *skb, struct siwifi_txq *txq,
                        struct siwifi_hw *siwifi_hw,  bool retry);
 void siwifi_txq_confirm_any(struct siwifi_hw *siwifi_hw, struct siwifi_txq *txq,
@@ -589,7 +587,9 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq);
 void siwifi_hwq_process_all(struct siwifi_hw *siwifi_hw);
 
 int siwifi_adjust_hwq_credits(struct siwifi_hw *siwifi_hw,s16 credit_dec);
+
 #ifdef TOKEN_ENABLE
 int siwifi_get_num_tx_descs_per_ac(struct siwifi_hw *siwifi_hw);
 #endif
+
 #endif /* _SIWIFI_TXQ_H_ */

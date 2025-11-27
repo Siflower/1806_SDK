@@ -400,13 +400,6 @@ struct siwifi_rx_rate_stats {
     uint64_t cpt;
 };
 
-#ifdef CONFIG_SIWIFI_SPLIT_TX_BUF
-struct siwifi_amsdu_stats {
-    int done;
-    int failed;
-};
-#endif
-
 /**
  * struct siwifi_sta_stats - Structure Used to store statistics specific to a STA
  *
@@ -417,10 +410,6 @@ struct siwifi_sta_stats {
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
     struct hw_vect last_rx;
     struct siwifi_rx_rate_stats rx_rate;
-#endif
-#ifdef CONFIG_SIWIFI_SPLIT_TX_BUF
-    struct siwifi_amsdu_stats amsdus[NX_TX_PAYLOAD_MAX];
-    unsigned long last_set_amsdu_tp;
 #endif
     u32 connected_time;     /*  seconds elapsed since associated */
     u32 idle;   /*  time since data pkt rx'd from sta */
@@ -574,7 +563,12 @@ struct siwifi_sta {
     // RM#10611 count of times to update idle time
     u16 update_time_count;
     int user_tid;
+
+#ifdef CONFIG_SIWIFI_EASYMESH
+    bool remove_sta;
+#endif /* CONFIG_SIWIFI_EASYMESH */
 };
+
 #define SIWIFI_STATIC_INFO_MAX 36
 #define SIWIFI_STATIC_TIME_MAX 60
 #define SIWIFI_STATIC_INTERVAL (1 * HZ) // 1s
@@ -616,6 +610,13 @@ void siwifi_static_timer_print(struct siwifi_hw *siwifi_hw, int sta_idx);
 static inline const u8 *siwifi_sta_addr(struct siwifi_sta *siwifi_sta) {
     return siwifi_sta->mac_addr;
 }
+
+#ifdef CONFIG_SIWIFI_SPLIT_TX_BUF
+struct siwifi_amsdu_stats {
+    int done;
+    int failed;
+};
+#endif
 
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
 struct siwifi_stats {
@@ -959,53 +960,26 @@ struct siwifi_iqe {
 
 #ifdef CONFIG_SIWIFI_EASYMESH
 #define WLAN_WNM_BTM_QUERY 6       // BSS Transition Management Query
+#define WLAN_WNM_BTM_RESPONSE 8    // BSS Transition Management Response
 #define WLAN_PA_GAS_INITIAL_REQ 10 // Generic Advertisement Service (GAS) Initial Request
 #define WLAN_WNM_NOTIFY_REQ 26     // WNM (Wireless Network Management) Notification Request
+#define RADIO_MEASUREMENT_REPORT 1 // Radio Mesurement Report
+
+#define DEL_STA_CB_POSITION 40     // Callback position for STA deletion
+#define DEL_STA_CB_CODE 0x0c       // Callback code for STA deletion
 
 /**
- * sf_notify_event_type - Enumeration type representing different types of notify events.
+ * sf_tunneled_frame_type - Enumeration type representing different types of tunneled management frames.
  */
 typedef enum {
-    SF_NOTIFY_STA_CHANGE_EVENT = 0, // Station (STA) state change event
-    SF_NOTIFY_STA_INFO_EVENT,       // Station (STA) info event
-    SF_NOTIFY_MGMT_RX_EVENT,        // Management frame reception event
-} sf_notify_event_type;
-
-/**
- * sf_thnneled_frame_type - Enumeration type representing different types of tunneled management frames.
- */
-typedef enum {
-    SF_TUNNELED_MSG_ASSOC_REQ = 0x00,         // Association Request frame
-    SF_TUNNELED_MSG_REASSOC_REQ = 0x01,       // Reassociation Request frame
-    SF_TUNNELED_MSG_BTM_QUERY = 0x02,         // BSS Transition Management (BTM) Query frame
-    SF_TUNNELED_MSG_WNM_REQ = 0x03,           // Wireless Network Management (WNM) Notification Request frame
-    SF_TUNNELED_MSG_ANQP_NEIGHBOR_REQ = 0x04, // Access Network Query Protocol (ANQP) Request frame
-} sf_thnneled_frame_type;
-
-/**
- * sf_notify_event_data - Structure to hold WiFi notify event data.
- */
-typedef struct {
-    sf_notify_event_type type; // Event type
-    union {
-        struct {
-            const u8 *sta_mac;  // Client MAC address
-            const u8 *prev_mac; // Previous MAC address
-            bool updown;        // Connection state: true for connect, false for disconnect
-        } sta_change_event;     // Data structure for station (STA) connect/disconnect event
-        struct {
-            const u8 *sta_mac;  // Client MAC address
-            const u8 *prev_mac; // Previous MAC address
-            int8_t rssi;        // Received Signal Strength Indication
-            /* TODO: Add more info. */
-        } sta_info_event;
-        struct {
-            u8 *frame_data;                    // Pointer to management frame data
-            uint16_t frame_length;             // Length of management frame data
-            sf_thnneled_frame_type frame_type; // Type of management frame
-        } mgmt_rx_event;                       // Data structure for management frame event
-    } data;                                    // Specific event data
-} sf_notify_event_data;
+    SF_TUNNELED_MSG_ASSOC_REQ = 0x00,                   // Association Request frame
+    SF_TUNNELED_MSG_REASSOC_REQ = 0x01,                 // Reassociation Request frame
+    SF_TUNNELED_MSG_BTM_QUERY = 0x02,                   // BSS Transition Management (BTM) Query frame
+    SF_TUNNELED_MSG_WNM_REQ = 0x03,                     // Wireless Network Management (WNM) Notification Request frame
+    SF_TUNNELED_MSG_ANQP_NEIGHBOR_REQ = 0x04,           // Access Network Query Protocol (ANQP) Request frame
+    SF_TUNNELED_MSG_RADIO_MEASUREMENT_REPORT = 0x05,    // Radio Measurement Report
+    SF_TUNNELED_MSG_BTM_RESPONSE = 0x06,                // BSS Transition Management (BTM) Response frame
+} sf_tunneled_frame_type;
 
 /**
  * struct sf_sta_timer_info - A structure to store timer data.
@@ -1024,28 +998,192 @@ typedef struct {
 } sf_sta_timer_info;
 
 /**
- * siwifi_event_callback - Unified callback function type for notify event handling.
- * @event_data: Pointer to sf_notify_event_data structure containing the event type and data to process.
+ * struct sf_block_sta_info - A structure to store blocked station data.
  *
- * Unified callback function for handling notify events. Processes the event based on its type and data.
+ * @mac: The MAC address of the blocked station.
+ * @bssid: The BSSID of the AP that blocked the station.
+ * @list: Linked list to manage multiple blocked stations.
+ * @timer: Timer data to handle the block duration.
  *
- * Parameters:
- *   event_data: Pointer to sf_notify_event_data structure containing the event type and data to process.
+ * This structure is used to manage information about blocked stations, including
+ * their MAC address, BSSID, and the duration for which they are blocked. It also
+ * includes a linked list structure for managing multiple blocked stations.
  */
-typedef void (*siwifi_event_callback)(const sf_notify_event_data *event_data);
+typedef struct {
+    uint8_t mac[ETH_ALEN];   // MAC address of the blocked station
+    uint8_t bssid[ETH_ALEN]; // BSSID of the AP that blocked the station
+    struct list_head list;   // Linked list structure for multiple blocked stations
+    sf_sta_timer_info timer; // Timer structure to handle the block duration
+} sf_block_sta_info;
 
 /**
- * report_sf_notify_event - Report a WiFi notify event to the registered callback function.
- * @event_data: Pointer to the sf_notify_event_data structure representing the event to report.
+ * struct sf_easymesh_scan_result - A structure to store scan result information.
  *
- * Reports a WiFi notify event by invoking the registered callback function with the event data.
+ * @channel: The channel number on which the scanned network is operating.
+ * @oper_class: The operational class of the channel used by the scanned network.
+ *
+ * @bssid: The BSSID (Basic Service Set Identifier) of the scanned network.
+ *         It is a unique identifier for the access point.
+ * @ssid_len: The length of the SSID (Service Set Identifier) of the scanned network.
+ * @ssid: The SSID of the scanned network. It identifies the network name.
+ * @rssi: The Received Signal Strength Indicator (RSSI) of the scanned network.
+ *        It measures the signal strength of the network.
+ * @chan_bw_len: The length of the channel bandwidth string.
+ * @chan_bw: The channel bandwidth of the scanned network, represented as a string.
+ * @has_bss_load: A flag indicating whether BSS load information is present (1 if present, 0 otherwise).
+ * @chan_util: Percentage of time the channel is busy, scaled from 0 (0%) to 255 (100%).
+ * @sta_count: The number of stations currently associated with the BSS (Basic Service Set).
+ *
+ * @list: A list entry used to link this scan result to a list of scan results.
+ *
+ * This structure is used to store all relevant information obtained from a network scan, including the BSSID, SSID,
+ * signal strength, channel information, bandwidth, BSS load, channel utilization, and the number of stations associated
+ * with the scanned BSS.
  */
-void report_sf_notify_event(const sf_notify_event_data *event_data);
+typedef struct {
+    uint8_t channel;         // Channel number of the scanned network
+    uint8_t oper_class;      // Operational class of the channel
+
+    uint8_t bssid[ETH_ALEN]; // BSSID of the scanned network
+    uint8_t ssid_len;        // Length of the SSID
+    char ssid[32];           // SSID of the scanned network
+    int8_t rssi;             // Received Signal Strength Indicator (RSSI)
+    uint8_t chan_bw_len;     // Length of the channel bandwidth string
+    char chan_bw[6];         // Channel bandwidth of the scanned network
+    bool has_bss_load;       // Flag indicating if BSS load information is present
+    uint8_t chan_util;       // Percentage of time the channel is busy, scaled from 0 (0%) to 255 (100%)
+    uint16_t sta_count;      // Number of stations associated with the BSS
+
+    struct list_head list;   // List entry for linking scan results
+} sf_easymesh_scan_result;
+
+/**
+ * sf_notify_wifi_event_type - Enumeration representing different types of WiFi events.
+ *
+ * This enumeration defines the possible WiFi events that the system can notify.
+ */
+typedef enum {
+    SF_NOTIFY_WIFI_STA_CHANGE_EVENT = 0,   // Event indicating a change in the Station's (STA) connection state.
+    SF_NOTIFY_WIFI_STA_INFO_EVENT,         // Event providing information about the Station (STA).
+    SF_NOTIFY_WIFI_MGMT_RX_EVENT,          // Event triggered by the reception of a management frame.
+    SF_NOTIFY_WIFI_SCAN_DONE_EVENT,        // Event indicating the completion of a channel scan.
+    SF_NOTIFY_WIFI_BLOCK_CONNECT_EVENT,    // Event indicating that connections are being blocked.
+    SF_NOTIFY_WIFI_BBSS_BLOCK_CHECK_EVENT, // Event to check if a STA is allowed to connect to the current BBSS.
+} sf_notify_wifi_event_type;
+
+/**
+ * sf_wifi_event_data - Structure to hold WiFi notification event data.
+ *
+ * This structure encapsulates the data related to various WiFi events that are processed by the system.
+ * The specific event data is stored in a union, with different members representing different types of events.
+ */
+typedef struct {
+    sf_notify_wifi_event_type type; // Event type indicating which WiFi event has occurred.
+
+    union {
+        struct {
+            uint8_t sta_mac[ETH_ALEN];  // Client's current MAC address.
+            uint8_t prev_mac[ETH_ALEN]; // Client's previous MAC address.
+            bool updown;                // Connection state: true if connected, false if disconnected.
+        } sta_change_event;             // Data structure for station (STA) connection state change event.
+
+        struct {
+            uint8_t sta_mac[ETH_ALEN];  // Client's current MAC address.
+            uint8_t prev_mac[ETH_ALEN]; // Client's previous MAC address.
+            int8_t rssi;                // Received Signal Strength Indication for the client.
+            /* TODO: Add more info as needed. */
+        } sta_info_event; // Data structure for station (STA) information event.
+
+        struct {
+            uint8_t *frame_data;               // Pointer to the raw management frame data.
+            uint16_t frame_length;             // Length of the management frame data.
+            sf_tunneled_frame_type frame_type; // Type of the management frame (e.g., deauth, probe request).
+        } mgmt_rx_event;                       // Data structure for received management frame event.
+
+        struct {
+            bool band;              // Band of the device: 0 for 2.4 GHz, 1 for 5 GHz.
+            struct list_head *list; // Pointer to the linked list head storing scan results.
+            spinlock_t *lock;       // Pointer to the spinlock protecting the linked list operations.
+        } scan_done_event;          // Data structure for scan completion event.
+
+        struct {
+            // Placeholder structure, currently no variables defined.
+        } block_connect_event; // Data structure for the event where connections are being blocked.
+
+        struct {
+            uint8_t sta_mac[ETH_ALEN];    // Client's current MAC address.
+            uint8_t bssid[ETH_ALEN];      // BSSID of the BSS.
+            bool band;                          // Band of the device: 0 for 2.4 GHz, 1 for 5 GHz.
+            bool *block;                        // Pointer to a boolean indicating whether the STA should be blocked.
+                                                // True if the STA is not allowed to connect to the current BBSS,
+                                                // False otherwise.
+        } bbss_block_check_event;   // Data structure for checking if a STA is allowed to connect to the current BBSS.
+    } data;                         // Union holding specific event data based on the event type.
+} sf_wifi_event_data;
+
+/**
+ * sf_notify_easymesh_event_type - Enumeration representing different types of EasyMesh events.
+ *
+ * This enumeration defines the possible EasyMesh events that the system can notify.
+ */
+typedef enum {
+    SF_NOTIFY_EASYMESH_STA_DEL_EVENT = 0,     // Event indicating the deletion of a Station (STA).
+    SF_NOTIFY_EASYMESH_STA_BLOCK_EVENT,       // Event indicating that a Station (STA) has been blocked.
+    SF_NOTIFY_EASYMESH_TRIGGER_SCAN_EVENT,    // Event indicating that a scan operation has been triggered.
+    SF_NOTIFY_EASYMESH_UNBLOCK_CONNECT_EVENT, // Event indicating the removal of a restriction, allowing all stations
+                                              // (STA) to connect to the network.
+    SF_NOTIFY_EASYMESH_AP_VLAN_DEL_EVENT      // Event indicating the deletion of AP VLAN interfaces.
+} sf_notify_easymesh_event_type;
+
+/**
+ * sf_easymesh_event_data - Structure to hold EasyMesh notification event data.
+ *
+ * This structure encapsulates the data related to various EasyMesh events that need to be processed.
+ * The specific event data is stored in a union, with different members for different types of events.
+ */
+typedef struct {
+    sf_notify_easymesh_event_type type; // Event type indicating which event has occurred.
+
+    union {
+        struct {
+            struct net_device *dev; // Pointer to the network device where the event occurred.
+            uint8_t *mac;           // MAC address of the station (STA) that is to be deleted.
+        } sta_del_event;            // Data structure for station (STA) deletion event.
+
+        struct {
+            struct net_device *dev; // Pointer to the network device where the event occurred.
+            uint8_t **sta_mac;      // Array of pointers to MAC addresses of stations to be blocked.
+            uint16_t count;         // Number of stations to be blocked.
+            uint16_t timeout;       // Duration for which the stations will be blocked (in seconds).
+        } sta_block_event;          // Data structure for station (STA) block event.
+
+        struct {
+            struct net_device *dev;  // Pointer to the network device where the event occurred.
+            uint8_t *scan_chan_list; // Pointer to the list of channels to be scanned.
+            uint8_t scan_chan_count; // Number of channels in the scan list.
+        } trigger_scan_event;        // Data structure for the scan trigger event.
+
+        struct {
+            struct net_device *dev; // Pointer to the network device where the event occurred.
+        } unblock_connect_event; // Data structure for the event that removes restrictions and allows all stations (STA)
+                                 // to connect.
+
+        struct {
+            struct net_device *dev;    // Pointer to the network device where the event occurred.
+            struct net_device *br_dev; // Pointer to the bridge device associated with the event.
+        } ap_vlan_del_event;           // Data structure for AP VLAN inetefaces deletion event.
+    } data;                            // Union holding specific event data based on the event type.
+} sf_easymesh_event_data;
+
+typedef void (*siwifi_event_callback)(sf_wifi_event_data *event_data);
+void siwifi_report_event_to_easymesh(sf_wifi_event_data *event_data);
+
 #endif /* CONFIG_SIWIFI_EASYMESH */
 
 #ifdef CONFIG_SIWIFI_SORT_SCAN
 #define MAX_SCAN_BSS_CNT 64
 #endif
+
 struct siwifi_hw {
     struct siwifi_mod_params *mod_params;
     bool use_phy_bw_tweaks;
@@ -1066,10 +1204,10 @@ struct siwifi_hw {
     struct siwifi_survey_info survey[SCAN_CHANNEL_MAX];
     struct cfg80211_scan_request *scan_request;
     int scan_timeout;
-    int enable_dbg_sta_conn;
     struct siwifi_chanctx chanctx_table[NX_CHAN_CTXT_CNT];
     u8 cur_chanctx;
     struct siwifi_trace_ctx trace_ctx;
+
 #ifdef CONFIG_SIWIFI_ACS_INTERNAL
     bool acs_internal;
     struct work_struct csa_work;
@@ -1080,11 +1218,13 @@ struct siwifi_hw {
     bool acs_scan;
     struct cfg80211_scan_request *acs_request;
 #endif
+
 #ifdef CONFIG_SIWIFI_ACS
 	struct vendor_channel_data chan_data[SCAN_CHANNEL_MAX];
 	struct hostapd_acs_chan_param acs_params[NX_VIRT_DEV_MAX];
 	struct hostapd_acs_chan_result acs_result;
 #endif
+
     /* Virtual Monitor Interface */
     u8 monitor_vif;
 
@@ -1115,11 +1255,13 @@ struct siwifi_hw {
     struct tasklet_struct task;
     struct mm_version_cfm version_cfm;          /* Lower layers versions - obtained via MM_VERSION_REQ */
 #ifdef CONFIG_HEART_BEAT
-    struct delayed_work heart_work;
+    struct timer_list heart_timer;
+    struct work_struct heart_work;
     unsigned int recovery_hb_num;
 #endif
 
-    struct delayed_work txq_stat_work;
+    struct timer_list txq_stat_timer;
+    struct work_struct txq_stat_work;
 
     u32 tcp_pacing_shift;
     u32 task_max_process_time;
@@ -1162,10 +1304,6 @@ struct siwifi_hw {
     uint32_t wmm_debug_enable;
     uint32_t amsdu_threshold;
     uint32_t debug_frame_statinfo;
-    uint32_t amsdu_nb_disable;
-    uint32_t amsdu_nb_percent;
-    uint32_t amsdu_nb_cleanup;
-    uint32_t amsdu_nb_threshold;
 #endif
 #ifdef CONFIG_SIWIFI_PROCFS
 	struct proc_dir_entry *procfsdir;
@@ -1238,6 +1376,7 @@ struct siwifi_temp_ctl temp_ctl;
     struct rx_thread_dbginfo rx_thread_dbg;
 
 #endif
+
 #ifdef CONFIG_SIWIFI_SORT_SCAN
     struct ipc_e2a_msg scan_results[MAX_SCAN_BSS_CNT];
     struct ipc_e2a_msg result_temp;
@@ -1245,19 +1384,13 @@ struct siwifi_temp_ctl temp_ctl;
     uint8_t scan_num;
 #endif
     struct siwifi_atf atf;
-    // Only for NL80211_IFTYPE_STATION
-    char *assoc_req_insert_info;
-    struct me_assoc_req_insert_info_req assoc_insert;
+
 #ifdef CONFIG_SF_SKB_POOL
 	struct skb_pool_param_t *skb_pool_dev_param;
 #endif
     //fixed gain set to lmac
     u32 fixed_gain;
-
     uint32_t fast_csa_time;
-#ifdef CONFIG_SIWIFI_IQENGINE
-    struct siwifi_iqe iqe;
-#endif
     uint32_t disable_cca_channel_switch;
     uint32_t reord_release_cnt;
     uint32_t reord_alloc_cnt;
@@ -1265,8 +1398,33 @@ struct siwifi_temp_ctl temp_ctl;
     int ch_offset;
 #endif
 
+#ifdef CONFIG_SIWIFI_IQENGINE
+    struct siwifi_iqe iqe;
+#endif
+    char *beacon_insert_info;
+    int beacon_insert_info_len;
+    char *probe_insert_info;
+    int probe_insert_info_len;
+    char *assoc_insert_info;
+    struct me_assoc_insert_info_req assoc_insert;
+    char *auth_insert_info;
+    struct me_auth_insert_info_req auth_insert;
+
 #ifdef CONFIG_SIWIFI_EASYMESH
     sf_sta_timer_info sta_timer_info;
+
+    struct list_head blocked_sta_list;
+    spinlock_t blocked_sta_list_lock;
+
+    bool easymesh_scan_enbale;
+    struct list_head easymesh_scan_list;
+    spinlock_t easymesh_scan_list_lock;
+
+    wait_queue_head_t del_sta_wq;
+    bool remove_sta_receive_cfm;
+    bool remove_sta_success;
+
+    bool block_connection;
 #endif /* CONFIG_SIWIFI_EASYMESH */
     // statistics for debugging
     int siwifi_static_enable_tcp_check;
@@ -1282,6 +1440,9 @@ struct siwifi_temp_ctl temp_ctl;
     uint16_t ave_speed_credits_low;
     uint16_t ave_speed_credits_up;
 };
+
+
+
 
 #ifdef CONFIG_SF_SKB_POOL
 #define MAX_WIFI_POOL_SKB_RAW_SIZE     ( 2816)
@@ -1326,8 +1487,20 @@ int siwifi_check_skb_is_dhcp(struct sk_buff *skb);
 void siwifi_update_src_filter(struct siwifi_vif *siwifi_vif, unsigned char *src_mac);
 struct siwifi_src_filter *siwifi_src_filter_hash_search(struct siwifi_vif *siwifi_vif, unsigned char *src_mac);
 void siwifi_src_filter_hash_free(struct siwifi_vif *siwifi_vif);
+int siwifi_set_assoc_req_insert_info(struct siwifi_hw *siwifi_hw, char *insert_info, int insert_length);
 void src_filter_aging(unsigned long ptr);
 void set_repeater_status(struct siwifi_vif *siwifi_vif, u8 status);
-int siwifi_set_assoc_req_insert_info(struct siwifi_hw *siwifi_hw, char *insert_info, int insert_length);
 int siwifi_channel_recovery_check(struct siwifi_hw *siwifi_hw);
+bool siwifi_params_5g_channel_check(const uint8_t *data, uint8_t len);
+int siwifi_set_assoc_insert_info(struct siwifi_hw *siwifi_hw, char *insert_info, int insert_length);
+int siwifi_set_auth_insert_info(struct siwifi_hw *siwifi_hw, char *insert_info, int insert_length);
+int siwifi_set_probe_insert_info(struct siwifi_hw *siwifi_hw, char *insert_info, int insert_length);
+
+#ifdef CONFIG_SIWIFI_EASYMESH
+void siwifi_easymesh_update_scan_result(struct siwifi_hw *siwifi_hw, struct scanu_result_ind *ind);
+void siwifi_easymesh_scan_done_hook(struct siwifi_hw *siwifi_hw);
+bool siwifi_easymesh_is_sta_blocked(struct siwifi_hw *siwifi_hw, const uint8_t *mac, const uint8_t *bssid);
+bool siwifi_check_connection_block(struct siwifi_hw *siwifi_hw, struct ieee80211_mgmt *mgmt);
+#endif /* CONFIG_SIWIFI_EASYMESH */
+
 #endif /* _SIWIFI_DEFS_H_ */

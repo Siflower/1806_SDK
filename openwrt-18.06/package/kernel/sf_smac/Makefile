@@ -254,7 +254,7 @@ ifdef CONFIG_TARGET_siflower_sf19a28_fullmask_SF19A28-A28-HWA
 else
 	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_pmem.bin $(1)/lib/firmware
 	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_default_reg.bin $(1)/lib/firmware
-ifdef CONFIG_TARGET_siflower_sf19a28_fullmask_SF19A28-AC10
+ifdef CONFIG_TARGET_siflower_sf19a28_fullmask_SF19A28-YTS
 	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf_rf_expa_config_ac10.ini $(1)/lib/firmware/sf_rf_expa_config.ini
 else
 	cp $(PKG_BUILD_DIR)/config/$(SF_ARCH)/sf_rf_expa_config.ini $(1)/lib/firmware/sf_rf_expa_config.ini

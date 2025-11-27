@@ -20,7 +20,7 @@
 #include "siwifi_compat.h"
 #include "lmac_msg.h"
 
-#ifdef CONFIG_SF16A18_WIFI_ATE_TOOLS
+#if defined CONFIG_SF16A18_WIFI_ATE_TOOLS
 #include "siwifi_defs.h"
 #endif
 #include "siwifi_mem.h"
@@ -488,7 +488,7 @@ int siwifi_send_remove_if(struct siwifi_hw *siwifi_hw, u8 vif_index)
  * @set channel offset ,such as netbridge need ch add 5 or 10
  *
  * */
-#ifdef CONFIG_SIWIFI_CH_OFFSET
+#if defined CONFIG_SIWIFI_CH_OFFSET
 int siwifi_send_set_channel_offset(struct siwifi_hw *siwifi_hw, int phy_idx,
 			struct mm_set_channel_cfm *cfm, int ch_offset)
 {
@@ -882,20 +882,16 @@ int siwifi_send_set_power_lvl(struct siwifi_hw *siwifi_hw, u8 power_lvl)
 int siwifi_send_set_fixed_gain(struct siwifi_hw *siwifi_hw, int fixed_gain, int temp_ctrl_enable)
 {
     struct mm_set_gain_control_req *req;
-
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
-
     /* Build the MM_SET_POWER_REQ message */
     req = siwifi_msg_zalloc(MM_GAIN_CONTROL_REQ, TASK_MM, DRV_TASK_ID,
                           sizeof(struct mm_set_gain_control_req));
     if (!req)
         return -ENOMEM;
-
     /* Set parameters for the MM_SET_POWER_REQ message */
     req->action = MM_GAIN_CONTROL_ACTION_FIX_GAIN;
     req->param1 = fixed_gain;
     req->param2 = temp_ctrl_enable;
-
     return siwifi_send_msg(siwifi_hw, req, 0, 0, NULL);
 }
 
@@ -1106,7 +1102,7 @@ int siwifi_send_rf_get_temperature(struct siwifi_hw *siwifi_hw, struct mm_rf_get
 }
 
 #ifdef CONFIG_SIWIFI_COOLING_TEMP
-#if (defined(CONFIG_SFA28_V1) || defined(CONFIG_SFA28_FULLMASK))
+#ifdef CONFIG_SFA28_FULLMASK
 int	siwifi_send_change_power_req(struct siwifi_hw *siwifi_hw,int change_power,int change_power_trend){
 	struct mm_change_power_req *req;
 
@@ -1115,7 +1111,7 @@ int	siwifi_send_change_power_req(struct siwifi_hw *siwifi_hw,int change_power,in
 	if(!req)
 		return -ENOMEM;
 	req->change_power = change_power;
-    req->change_power_trend = change_power_trend;
+        req->change_power_trend = change_power_trend;
 	return siwifi_send_msg(siwifi_hw, req, 0, 0, NULL);
 }
 #else
@@ -1396,10 +1392,74 @@ int siwifi_send_me_sta_add(struct siwifi_hw *siwifi_hw, struct station_parameter
         req->ht_cap.tx_beamforming_capa = cpu_to_le32(ht_capa->tx_BF_cap_info);
         req->ht_cap.asel_capa = ht_capa->antenna_selection_info;
     }
+    if (params->vht_capa || (params->supported_channels &&
+                             siwifi_params_5g_channel_check(params->supported_channels,
+                                                            params->supported_channels_len))) {
+        struct ieee80211_vht_cap vht_capa_temp;
+        const struct ieee80211_vht_cap *vht_capa = NULL;
+        int temp = 0;
 
-    if (params->vht_capa) {
-        const struct ieee80211_vht_cap *vht_capa = params->vht_capa;
+        if (params->vht_capa) {
+            vht_capa = params->vht_capa;
+        } else {
+            /* Build default VHT capability */
+            int mcs_map, bw_max;
+            const int mcs_map_to_rate[4][3] = {
+                [PHY_CHNL_BW_20][IEEE80211_VHT_MCS_SUPPORT_0_7] = 72,
+                [PHY_CHNL_BW_20][IEEE80211_VHT_MCS_SUPPORT_0_8] = 86,
+                [PHY_CHNL_BW_20][IEEE80211_VHT_MCS_SUPPORT_0_9] = 86,
+                [PHY_CHNL_BW_40][IEEE80211_VHT_MCS_SUPPORT_0_7] = 150,
+                [PHY_CHNL_BW_40][IEEE80211_VHT_MCS_SUPPORT_0_8] = 180,
+                [PHY_CHNL_BW_40][IEEE80211_VHT_MCS_SUPPORT_0_9] = 200,
+                [PHY_CHNL_BW_80][IEEE80211_VHT_MCS_SUPPORT_0_7] = 325,
+                [PHY_CHNL_BW_80][IEEE80211_VHT_MCS_SUPPORT_0_8] = 390,
+                [PHY_CHNL_BW_80][IEEE80211_VHT_MCS_SUPPORT_0_9] = 433,
+                [PHY_CHNL_BW_160][IEEE80211_VHT_MCS_SUPPORT_0_7] = 650,
+                [PHY_CHNL_BW_160][IEEE80211_VHT_MCS_SUPPORT_0_8] = 780,
+                [PHY_CHNL_BW_160][IEEE80211_VHT_MCS_SUPPORT_0_9] = 866,
+            };
+#define MAX_VHT_RATE(map, nss, bw) (mcs_map_to_rate[bw][map] * (nss))
 
+            vht_capa_temp.vht_cap_info = 0;
+            memset(&vht_capa_temp.supp_mcs.tx_mcs_map, 0xff, sizeof(uint16_t));
+            memset(&vht_capa_temp.supp_mcs.rx_mcs_map, 0xff, sizeof(uint16_t));
+            vht_capa_temp.supp_mcs.tx_highest = 0;
+            vht_capa_temp.supp_mcs.rx_highest = 0;
+            mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_7;
+            bw_max = PHY_CHNL_BW_20;
+
+            switch (siwifi_hw->vif_table[0]->wdev.chandef.width) {
+                case NL80211_CHAN_WIDTH_20_NOHT:
+                case NL80211_CHAN_WIDTH_20:
+                    mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_8;
+                    bw_max = PHY_CHNL_BW_20;
+                    break;
+                case NL80211_CHAN_WIDTH_40:
+                    mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9;
+                    bw_max = PHY_CHNL_BW_40;
+                    break;
+                default:
+                    break;
+            }
+            vht_capa_temp.supp_mcs.tx_highest = MAX_VHT_RATE(mcs_map, siwifi_hw->mod_params->nss, bw_max);
+            vht_capa_temp.supp_mcs.rx_highest = MAX_VHT_RATE(mcs_map, siwifi_hw->mod_params->nss, bw_max);
+            for (temp = 0; temp < siwifi_hw->mod_params->nss; temp++) {
+                vht_capa_temp.supp_mcs.tx_mcs_map = vht_capa_temp.supp_mcs.tx_mcs_map << 2;
+                vht_capa_temp.supp_mcs.rx_mcs_map = vht_capa_temp.supp_mcs.rx_mcs_map << 2;
+                vht_capa_temp.supp_mcs.tx_mcs_map |= mcs_map;
+                vht_capa_temp.supp_mcs.rx_mcs_map |= mcs_map;
+            }
+            vht_capa_temp.vht_cap_info = 7 << IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
+            vht_capa_temp.vht_cap_info |= IEEE80211_VHT_CAP_TXSTBC;
+            vht_capa_temp.vht_cap_info |= IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454;
+            vht_capa_temp.vht_cap_info |= IEEE80211_VHT_CAP_RXLDPC;
+            vht_capa_temp.vht_cap_info |= IEEE80211_VHT_CAP_RXSTBC_1;
+            vht_capa_temp.vht_cap_info |= IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
+            vht_capa_temp.vht_cap_info |= IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN;
+            vht_capa_temp.vht_cap_info |= IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN;
+
+            vht_capa = &vht_capa_temp;
+        }
         req->flags |= STA_VHT_CAPA;
         req->vht_cap.vht_capa_info = cpu_to_le32(vht_capa->vht_cap_info);
         req->vht_cap.rx_highest = cpu_to_le16(vht_capa->supp_mcs.rx_highest);
@@ -1586,17 +1646,41 @@ int siwifi_send_me_rc_set_no_ss(struct siwifi_hw *siwifi_hw, u8 no_ss)
     return siwifi_send_msg(siwifi_hw, req, 0, 0, NULL);
 }
 
-int siwifi_send_assoc_req_insert_info(struct siwifi_hw *siwifi_hw)
+int siwifi_send_assoc_insert_info(struct siwifi_hw *siwifi_hw)
 {
-    struct me_assoc_req_insert_info_req *req = NULL;
+    struct me_assoc_insert_info_req *req = NULL;
+
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
-    req = siwifi_msg_zalloc(ME_ASSOC_REQ_INSERT_INFO_REQ, TASK_ME, DRV_TASK_ID,
-                        sizeof(struct me_assoc_req_insert_info_req));
+
+    req = siwifi_msg_zalloc(ME_ASSOC_INSERT_INFO_REQ, TASK_ME, DRV_TASK_ID,
+                        sizeof(struct me_assoc_insert_info_req));
+
     if (!req) {
         return -ENOMEM;
     }
+
     req->info_dmalength = siwifi_hw->assoc_insert.info_dmalength;
     req->info_dmaaddr = siwifi_hw->assoc_insert.info_dmaaddr;
+
+    return siwifi_send_msg(siwifi_hw, req, 0, 0, NULL);
+}
+
+int siwifi_send_auth_insert_info(struct siwifi_hw *siwifi_hw)
+{
+    struct me_auth_insert_info_req *req = NULL;
+
+    SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
+
+    req = siwifi_msg_zalloc(ME_AUTH_INSERT_INFO_REQ, TASK_ME, DRV_TASK_ID,
+                        sizeof(struct me_auth_insert_info_req));
+
+    if (!req) {
+        return -ENOMEM;
+    }
+
+    req->info_dmalength = siwifi_hw->auth_insert.info_dmalength;
+    req->info_dmaaddr = siwifi_hw->auth_insert.info_dmaaddr;
+
     return siwifi_send_msg(siwifi_hw, req, 0, 0, NULL);
 }
 
@@ -1650,6 +1734,7 @@ int siwifi_send_sm_connect_req(struct siwifi_hw *siwifi_hw,
     } else {
         req->chan.freq = (u16_l)-1;
     }
+
     for (i = 0; i < sme->ssid_len; i++)
         req->ssid.array[i] = sme->ssid[i];
     req->ssid.length = sme->ssid_len;
@@ -1870,6 +1955,7 @@ int siwifi_send_scanu_req(struct siwifi_hw *siwifi_hw, struct siwifi_vif *siwifi
     uint8_t chan_flags = 0;
     uint16_t mac_array = 0;
 
+
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
 
     /* Build the SCANU_START_REQ message */
@@ -1882,6 +1968,7 @@ int siwifi_send_scanu_req(struct siwifi_hw *siwifi_hw, struct siwifi_vif *siwifi
     req->vif_idx = siwifi_vif->vif_index;
     req->chan_cnt = (u8)min_t(int, SCAN_CHANNEL_MAX, param->n_channels);
     req->ssid_cnt = (u8)min_t(int, SCAN_SSID_MAX, param->n_ssids);
+
     if (param->bssid) {
         mac_array = (concatenate_u8_to_u16(param->bssid[1],param->bssid[0]));
         memcpy(&(req->bssid.array[0]), &mac_array, ETH_ALEN/3);
@@ -1893,6 +1980,7 @@ int siwifi_send_scanu_req(struct siwifi_hw *siwifi_hw, struct siwifi_vif *siwifi
     else {
         req->bssid = mac_addr_bcst;
     }
+
     req->no_cck = param->no_cck;
 
     if (req->ssid_cnt == 0)
@@ -2539,12 +2627,15 @@ int siwifi_send_dbg_trigger_req(struct siwifi_hw *siwifi_hw, char *msg, uint8_t 
 int siwifi_send_dbg_set_cca_parameter_req(struct siwifi_hw *siwifi_hw, uint32_t *param)
 {
     struct dbg_set_cca_parameter_req *req;
+
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
+
     /* Build the DBG_SET_CCA_PARAMETER_REQ message */
     req = siwifi_msg_zalloc(DBG_SET_CCA_PARAMETER_REQ, TASK_DBG, DRV_TASK_ID,
                           sizeof(struct dbg_set_cca_parameter_req));
     if (!req)
         return -ENOMEM;
+
     req->set_cca_parameter_enable = param[0];
     req->bk_timeout = param[1];
     req->be_timeout = param[2];
@@ -2557,6 +2648,7 @@ int siwifi_send_dbg_set_cca_parameter_req(struct siwifi_hw *siwifi_hw, uint32_t 
     req->trigger_interval_high = param[9];
     req->step_max = param[10];
     req->step_distance = param[11];
+
     /* Send DBG_SET_CCA_PARAMETER_REQ message to LMAC FW */
     return siwifi_send_msg(siwifi_hw, req, 0, -1, NULL);
 }
@@ -2761,7 +2853,7 @@ int siwifi_send_cfg_rssi_req(struct siwifi_hw *siwifi_hw, u8 vif_index, int rssi
     return siwifi_send_msg(siwifi_hw, req, 0, 0, NULL);
 }
 
-#ifdef CONFIG_VDR_HW
+#if defined CONFIG_VDR_HW
 int siwifi_send_dbg_get_vendor_info_req(struct siwifi_hw *siwifi_hw,
         struct dbg_get_vendor_info_cfm *cfm, uint32_t clear, uint8_t vif_idx, uint8_t sta_idx)
 {
@@ -2780,6 +2872,7 @@ int siwifi_send_dbg_get_vendor_info_req(struct siwifi_hw *siwifi_hw,
     return siwifi_send_msg(siwifi_hw, req, 1, DBG_GET_VDR_INFO_CFM, cfm);
 }
 #endif
+
 int siwifi_send_dbg_get_vendor_mp_info_req(struct siwifi_hw *siwifi_hw,
         struct dbg_get_vendor_mp_info_cfm *cfm)
 {
@@ -2866,8 +2959,10 @@ int siwifi_send_dbg_get_mgmt_info_req(struct siwifi_hw *siwifi_hw,
     u32_l req_cfm_dma_addr;
 
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
+
     /* Allocate the message */
     req = siwifi_msg_zalloc(DBG_GET_MGMT_INFO_REQ, TASK_DBG, DRV_TASK_ID, sizeof(struct dbg_get_mgmt_info_req));
+
     if (!req)
         return -ENOMEM;
     req->clear = clear;
@@ -2877,9 +2972,9 @@ int siwifi_send_dbg_get_mgmt_info_req(struct siwifi_hw *siwifi_hw,
     } else {
         req->cfm_dma_addr = 0;
     }
-
     // RM#13270 req will be freed after siwifi_send_msg
     req_cfm_dma_addr = req->cfm_dma_addr;
+
     ret = siwifi_send_msg(siwifi_hw, req, 1, DBG_GET_MGMT_INFO_CFM, cfm);
     WARN_ON(req_cfm_dma_addr != cfm->dma_addr);
     dma_sync_single_for_cpu(siwifi_hw->dev, req_cfm_dma_addr,
@@ -2895,8 +2990,10 @@ int siwifi_send_dbg_get_ctrl_info_req(struct siwifi_hw *siwifi_hw,
     u32_l req_cfm_dma_addr;
 
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
+
     /* Allocate the message */
     req = siwifi_msg_zalloc(DBG_GET_CTRL_INFO_REQ, TASK_DBG, DRV_TASK_ID, sizeof(struct dbg_get_ctrl_info_req));
+
     if (!req)
         return -ENOMEM;
     req->clear = clear;
@@ -2949,25 +3046,3 @@ int siwifi_send_debug_frame(struct siwifi_hw *siwifi_hw, struct mm_send_debug_fr
     }
     return siwifi_send_msg(siwifi_hw, req, 0, 0, NULL);
 }
-
-#ifdef CONFIG_ENABLE_RFGAINTABLE
-int siwifi_send_dbg_set_rf_gain_tb_idx(struct siwifi_hw *siwifi_hw, uint8_t *tb_idx) {
-    struct dbg_set_rf_gain_tb_idx_req *req;
-
-    SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
-
-    /* Build the DBG_SET_RF_GAIN_TB_IDX_REQ message */
-    req = siwifi_msg_zalloc(DBG_SET_RF_GAIN_TB_IDX_REQ, TASK_DBG, DRV_TASK_ID,
-                          sizeof(struct dbg_set_rf_gain_tb_idx_req));
-    if (!req)
-        return -ENOMEM;
-
-    req->tb_idx[0] = tb_idx[0];
-    req->tb_idx[1] = tb_idx[1];
-    req->tb_idx[2] = tb_idx[2];
-    req->tb_idx[3] = tb_idx[3];
-
-    /* Send DBG_SET_CCA_PARAMETER_REQ message to LMAC FW */
-    return siwifi_send_msg(siwifi_hw, req, 0, -1, NULL);
-}
-#endif

@@ -20,9 +20,6 @@ CFG_DONT_USE_TXDESC_MASK=y
 # Fragment attack patch
 CONFIG_FA_PATCH=y
 
-# Enable RF GAIN TABLE SET
-CONFIG_RF_GAIN_TABLE ?= n
-
 # Enable BFMER support (need FW support)
 #CONFIG_SIWIFI_BFMER=y
 # Enable BFMER support (need FW support)
@@ -52,6 +49,10 @@ ccflags-y += -DCFG_SET_POWER_LVL
 ccflags-y += -DCFG_RF_GET_TEMP
 ccflags-y += -DCFG_COOLING_TEMP
 ccflags-y += -DCFG_MU_CNT=1
+
+ifeq ($(CONFIG_SF16A18_USE_FMAC), y)
+#ccflags-y += -DCFG_SAVE_TXDESC_COPY
+endif
 
 CONFIG_DUAL_ANTENNA_CALIBRATE=y
 ifeq ($(CFG_DONT_USE_TXDESC_MASK), y)
@@ -132,10 +133,6 @@ ccflags-y += -DCONFIG_ENABLE_DIGGAINTABLE
 ccflags-y += -DCONFIG_ENABLE_TXPOWERTABLE
 endif
 
-ifeq ($(CONFIG_RF_GAIN_TABLE),y)
-ccflags-y += -DCONFIG_ENABLE_RFGAINTABLE
-endif
-
 #Enable unstandard wireless channel
 CONFIG_SIWIFI_UNSTANDARD_CH_ENABLE = n
 
@@ -166,6 +163,7 @@ CONFIG_SIWIFI_TXDESC1_MAX_CNT=1
 CONFIG_SIWIFI_TXDESC2_MAX_CNT=1
 CONFIG_SIWIFI_TXDESC3_MAX_CNT=1
 CONFIG_SIWIFI_TXDESC4_MAX_CNT=1
+
 ifeq ($(CONFIG_WIFI_LITE_MEMORY), y)
 CONFIG_SIWIFI_TXDESC4_CNT=4
 endif
@@ -375,7 +373,7 @@ ccflags-y += -DCFG_P2P=2
 ccflags-y += -DCFG_P2P_DBG
 ccflags-y += -DCFG_P2P_NOA_GO
 ccflags-y += -DCFG_P2P_OPPPS_GO
-#ccflags-y += -DCFG_WAPI
+ccflags-y += -DCFG_WAPI
 ifeq ($(CONFIG_A28), y)
 ccflags-$(CONFIG_SIWIFI_BFMER) += -DCFG_BFMER
 ccflags-$(CONFIG_SIWIFI_BFMEE) += -DCFG_BFMEE

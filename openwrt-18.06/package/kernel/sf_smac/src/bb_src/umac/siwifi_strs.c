@@ -47,11 +47,6 @@ static const char *const siwifi_mmid2str[MSG_I(MM_MAX)] = {
     [MSG_I(MM_SET_VIF_STATE_CFM)]         = "MM_SET_VIF_STATE_CFM",
     [MSG_I(MM_SET_SLOTTIME_REQ)]          = "MM_SET_SLOTTIME_REQ",
     [MSG_I(MM_SET_SLOTTIME_CFM)]          = "MM_SET_SLOTTIME_CFM",
-#ifdef CONFIG_SIWIFI_ENABLE_BRG
-    [MSG_I(MM_SET_NAV_COUNTER_REQ)]       = "MM_SET_NAV_COUNTER_REQ",
-    [MSG_I(MM_SET_AGCGAIN_REQ)]           = "MM_SET_AGCGAIN_REQ",
-    [MSG_I(MM_SET_AGCGAIN_CFM)]           = "MM_SET_AGCGAIN_CFM",
-#endif
     [MSG_I(MM_SET_IDLE_REQ)]              = "MM_SET_IDLE_REQ",
     [MSG_I(MM_SET_IDLE_CFM)]              = "MM_SET_IDLE_CFM",
     [MSG_I(MM_KEY_ADD_REQ)]               = "MM_KEY_ADD_REQ",
@@ -145,15 +140,8 @@ static const char *const siwifi_mmid2str[MSG_I(MM_MAX)] = {
     [MSG_I(MM_DYING_GASP_IND)]            = "MM_DYING_GASP_IND",
     [MSG_I(MM_UPDATE_IDLE_TIME_IND)]      = "MM_UPDATE_IDLE_TIME_IND",
     [MSG_I(MM_SEND_NULL_FRAME_REQ)]       = "MM_SEND_NULL_FRAME_REQ",
-#ifdef CONFIG_SIWIFI_ENABLE_BRG
-    [MSG_I(MM_SET_TX_POWER_BCN_REQ)]      = "MM_SET_TX_POWER_BCN_REQ",
-#endif
     [MSG_I(MM_GAIN_CONTROL_REQ)]          = "MM_GAIN_CONTROL_REQ",
     [MSG_I(MM_CCA_DROP_STEP_IND)]         = "MM_CCA_DROP_STEP_IND",
-#ifdef CONFIG_SIWIFI_ENABLE_BRG
-    [MSG_I(MM_SET_RSSI_THRES_REQ)]        = "MM_SET_RSSI_THRES_REQ",
-    [MSG_I(MM_SET_DEFAULT_AGCGAIN_REQ)]   = "MM_SET_DEFAULT_AGCGAIN_REQ",
-#endif
     [MSG_I(MM_GET_CHANNEL_INFO_REQ)]      = "MM_GET_CHANNEL_INFO_REQ",
     [MSG_I(MM_GET_CHANNEL_INFO_CFM)]      = "MM_GET_CHANNEL_INFO_CFM",
     [MSG_I(MM_SEND_DEBUG_FRAME_REQ)]      = "MM_SEND_DEBUG_FRAME_REQ",
@@ -212,8 +200,6 @@ static const char *const siwifi_tdlsid2str[MSG_I(TDLS_MAX)] = {
     [MSG_I(TDLS_PEER_TRAFFIC_IND_REQ)]   = "TDLS_PEER_TRAFFIC_IND_REQ",
     [MSG_I(TDLS_PEER_TRAFFIC_IND_CFM)]   = "TDLS_PEER_TRAFFIC_IND_CFM",
 };
-
-#ifdef CONFIG_SIWIFI_FULLMAC
 
 static const char *const siwifi_scanuid2str[MSG_I(SCANU_MAX)] = {
     [MSG_I(SCANU_START_REQ)]  = "SCANU_START_REQ",
@@ -299,18 +285,14 @@ static const char *const siwifi_meshid2str[MSG_I(MESH_MAX)] = {
     [MSG_I(MESH_PROXY_UPDATE_IND)] = "MESH_PROXY_UPDATE_IND",
 };
 
-#endif /* CONFIG_SIWIFI_FULLMAC */
-
 const char *const *siwifi_id2str[TASK_LAST_EMB + 1] = {
     [TASK_MM]    = siwifi_mmid2str,
     [TASK_DBG]   = siwifi_dbgid2str,
     [TASK_SCAN]  = siwifi_scanid2str,
     [TASK_TDLS]  = siwifi_tdlsid2str,
-#ifdef CONFIG_SIWIFI_FULLMAC
     [TASK_SCANU] = siwifi_scanuid2str,
     [TASK_ME]    = siwifi_meid2str,
     [TASK_SM]    = siwifi_smid2str,
     [TASK_APM]   = siwifi_apmid2str,
     [TASK_MESH]  = siwifi_meshid2str,
-#endif
 };

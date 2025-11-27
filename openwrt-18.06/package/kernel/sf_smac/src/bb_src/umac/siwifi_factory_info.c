@@ -16,10 +16,6 @@
 #include "siwifi_cfgfile.h"
 #ifdef CONFIG_SFAX8_FACTORY_READ
 #include <sfax8_factory_read.h>
-#else
-#define XO_CONFIG_SIZE 2
-#define WIFI_INFO_SIZE 2046
-#define WIFI_INFO_SIZE_V4 3380
 #endif
 #include "siwifi_mem.h"
 
@@ -203,7 +199,7 @@ static int sf_wifi_init_high_txpower_list(
 {
     int i = 0;
 	/* Now if the starting value of the high table is wrong, the higgh table will
-	 * be filled with 0 instead of thinking that the entire calibration table is
+	 * be filled with 0 instead of thinking that the entire calibration table is 
 	 * unavailable
 	 */
 	int wrong_start_value = 0;
@@ -220,7 +216,7 @@ static int sf_wifi_init_high_txpower_list(
                         factory_info->list_len, GFP_KERNEL);
         if (!factory_info->high_txpower_list)
             goto err;
-
+		
 		if (wrong_start_value) {
 				memset(factory_info->high_txpower_list, 0, factory_info->list_len);
 		} else {
@@ -287,9 +283,7 @@ int sf_wifi_check_calibration_table_available(char *buf){
 int sf_wifi_init_wifi_factory_info(struct siwifi_hw *siwifi_hw)
 {
     int ret = 0;
-#ifdef CONFIG_SFAX8_FACTORY_READ
     char buf[WIFI_VERSION_SIZE];
-#endif
     struct v1_plat_data *priv =
                     (struct v1_plat_data *)&siwifi_hw->plat->priv;
     int lb = priv->band & LB_MODULE;
@@ -355,14 +349,12 @@ int sf_wifi_init_wifi_factory_info(struct siwifi_hw *siwifi_hw)
 	}
 
 	//check factory
-#ifdef CONFIG_SFAX8_FACTORY_READ
     ret = sf_get_value_from_factory(
                     READ_WIFI_VERSION, buf, WIFI_VERSION_SIZE);
     if (ret) {
         factory_info->version = 0;
-    } else {
-        factory_info->version = sf_wifi_check_calibration_table_available(buf);
     }
+	factory_info->version = sf_wifi_check_calibration_table_available(buf);
 
 	if (sf_get_value_from_factory(
                         READ_WIFI_INFO, wifi_info_buf, wifi_info_size)) {
@@ -372,9 +364,6 @@ int sf_wifi_init_wifi_factory_info(struct siwifi_hw *siwifi_hw)
 		printk("txpower calibration table use factory info\n");
 		goto read_xo_value;
 	}
-#else
-    factory_info->version = 0;
-#endif
 
 	//check default_txpower_calibrate_table.bin when factory is empty
 	if(factory_info->version == 0){
@@ -405,11 +394,9 @@ int sf_wifi_init_wifi_factory_info(struct siwifi_hw *siwifi_hw)
 	}
 
 read_xo_value:
-#ifdef CONFIG_SFAX8_FACTORY_READ
 	if (sf_get_value_from_factory(
                         READ_RF_XO_CONFIG, &xo_value, XO_CONFIG_SIZE)) {
         //printk("get XO config from sf_factory_read failed\n");
-#endif
 		//try to get XO value from deautlt_txpower_calibrate.bin
 		fp_read = filp_open(second_txpower_table_file, O_RDONLY , 0);
 		if(!IS_ERR(fp_read)){
@@ -428,9 +415,7 @@ read_xo_value:
 		else{
 			goto err;
 		}
-#ifdef CONFIG_SFAX8_FACTORY_READ
     }
-#endif
 	factory_info->xo_value = xo_value;
 	//printk("xo_value is %x\n",factory_info->xo_value);
 

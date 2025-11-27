@@ -198,8 +198,8 @@ static int siwifi_check_fw_hw_feature(struct siwifi_hw *siwifi_hw,
     // Check supported BW
     bw = (phy_feat & MDM_CHBW_MASK) >> MDM_CHBW_LSB;
     // Check if VHT is supported
-    //if (bw < 2)
-    //    siwifi_hw->mod_params->vht_on = false;
+    // if (bw < 2)
+    //     siwifi_hw->mod_params->vht_on = false;
     // Check if HT40 is supported
     if (bw < 1)
         siwifi_hw->mod_params->use_2040 = false;
@@ -409,7 +409,7 @@ void siwifi_set_vht_capa(struct siwifi_hw *siwifi_hw, struct wiphy *wiphy)
             vht_cap->cap |= IEEE80211_VHT_CAP_SHORT_GI_80;
         if (siwifi_hw->mod_params->stbc_on)
 #ifdef CONFIG_NSS_2
-            vht_cap->cap |= IEEE80211_VHT_CAP_RXSTBC_2;
+        vht_cap->cap |= IEEE80211_VHT_CAP_RXSTBC_2;
 #else
         vht_cap->cap |= IEEE80211_VHT_CAP_RXSTBC_1;
 #endif
@@ -460,13 +460,13 @@ void siwifi_set_vht_capa(struct siwifi_hw *siwifi_hw, struct wiphy *wiphy)
         }
         for (; i < 8; i++) {
             vht_cap->vht_mcs.tx_mcs_map |= cpu_to_le16(
-                    IEEE80211_VHT_MCS_NOT_SUPPORTED << (i*2));
+                IEEE80211_VHT_MCS_NOT_SUPPORTED << (i*2));
         }
 
         if (!siwifi_hw->mod_params->use_80) {
-#ifdef CONFIG_VENDOR_SIWIFI
+    #ifdef CONFIG_VENDOR_SIWIFI
             vht_cap->cap |= IEEE80211_VHT_CAP_NOT_SUP_WIDTH_80;
-#endif
+    #endif
             vht_cap->cap &= ~(IEEE80211_VHT_CAP_SHORT_GI_80 | IEEE80211_VHT_CAP_RXSTBC_MASK);
         }
     }

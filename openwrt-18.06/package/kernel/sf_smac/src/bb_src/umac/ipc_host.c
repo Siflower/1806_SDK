@@ -555,6 +555,7 @@ int ipc_host_rxbuf_push(struct ipc_host_env_tag *env,
     REG_SW_CLEAR_HOSTBUF_IDX_PROFILING(env->pthis);
     REG_SW_SET_HOSTBUF_IDX_PROFILING(env->pthis, env->ipc_host_rxbuf_idx);
 
+
     // Copy the hostbuf (DMA address) in the ipc shared memory
     shared_env_ptr->host_rxbuf[env->ipc_host_rxbuf_idx].hostid   = hostid;
     shared_env_ptr->host_rxbuf[env->ipc_host_rxbuf_idx].dma_addr = hostbuf;
@@ -839,6 +840,7 @@ void ipc_host_status_clear(struct ipc_host_env_tag *env, uint32_t status)
     // effective when we start the interrupt handling
     ipc_emb2app_status_get(IPC_WIFI_BASE(env->mod_params->is_hb));
 }
+
 /**
  ******************************************************************************
  */
@@ -927,7 +929,7 @@ void ipc_host_irq(struct ipc_host_env_tag *env, uint32_t status)
  */
 int ipc_host_msg_push(struct ipc_host_env_tag *env, void *msg_buf, uint16_t len)
 {
-    int i;
+    //int i;
     uint32_t *src, *dst;
 
     REG_SW_SET_PROFILING(env->pthis, SW_PROF_IPC_MSGPUSH);
@@ -944,10 +946,11 @@ int ipc_host_msg_push(struct ipc_host_env_tag *env, void *msg_buf, uint16_t len)
     dst = (uint32_t*)&(env->shared->msg_a2e_buf.msg);
 
     // Copy the message in the IPC queue
-    for (i=0; i<len; i+=4)
-    {
-        *dst++ = *src++;
-    }
+    //for (i=0; i<len; i+=4)
+    //{
+    //    *dst++ = *src++;
+    //}
+    memcpy(dst, src, len);
 
     env->msga2e_hostid = msg_buf;
 

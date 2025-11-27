@@ -585,11 +585,6 @@ struct phy_cfg_tag
 	uint8_t lb_power_gain_tb[31];
 	uint8_t hb_power_gain_tb[31];
 #endif
-#ifdef CONFIG_ENABLE_RFGAINTABLE
-	/// RF gain table index
-	uint8_t lb_rf_gain_tb_idx[4];
-	uint8_t hb_rf_gain_tb_idx[4];
-#endif
 };
 
 /// Structure containing the parameters of the Trident PHY configuration
@@ -756,16 +751,6 @@ struct mm_set_power_lvl_req
     u8_l power_lvl;
 };
 
-#define MM_GAIN_CONTROL_ACTION_FIX_GAIN 0x1
-
-/// Structure containing the parameters of the @ref MM_SET_POWER_LVL_REQ message
-struct mm_set_gain_control_req
-{
-    u8_l action;
-    int param1;
-    int param2;
-};
-
 /// Structure containing the parameters of the @ref MM_SET_ANTENNA_NUMBER_REQ message
 struct mm_set_antenna_number_req
 {
@@ -780,6 +765,15 @@ struct mm_set_power_cfm
     u8_l radio_idx;
     /// TX power configured (in dBm)
     s8_l power;
+};
+
+#define MM_GAIN_CONTROL_ACTION_FIX_GAIN 0x1
+/// Structure containing the parameters of the @ref MM_SET_POWER_LVL_REQ message
+struct mm_set_gain_control_req
+{
+    u8_l action;
+    int param1;
+    int param2;
 };
 
 /// Structure containing the parameters of the @ref MM_SET_BEACON_INT_REQ message
@@ -1909,7 +1903,7 @@ enum
     /// Confirmation of the STA deletion
     ME_STA_DEL_CFM,
     /// Insert information in assoc req
-    ME_ASSOC_REQ_INSERT_INFO_REQ,
+    ME_ASSOC_INSERT_INFO_REQ,
     ///Insert information in auth
     ME_AUTH_INSERT_INFO_REQ,
     /// Indication of a TX RA/TID queue credit update
@@ -2157,8 +2151,17 @@ struct me_rc_set_no_ss_req
     u8_l no_ss;
 };
 
-/// Structure containing the parameters of the @ref ME_ASSOC_REQ_INSERT_INFO_REQ message.
-struct me_assoc_req_insert_info_req
+/// Structure containing the parameters of the @ref ME_ASSOC_INSERT_INFO_REQ message.
+struct me_assoc_insert_info_req
+{
+    /// Length of inserted information
+    u8_l info_dmalength;
+    /// Dma address of insert information
+    u32_l info_dmaaddr;
+};
+
+/// Structure containing the parameters of the @ref ME_AUTH_INSERT_INFO_REQ message.
+struct me_auth_insert_info_req
 {
     /// Length of inserted information
     u8_l info_dmalength;
@@ -2880,10 +2883,6 @@ enum dbg_msg_tag
     DBG_GET_CTRL_INFO_CFM,
     /// Request to set cca parameter
     DBG_SET_CCA_PARAMETER_REQ,
-#ifdef CONFIG_ENABLE_RFGAINTABLE
-    /// Request to set rf gain table index
-    DBG_SET_RF_GAIN_TB_IDX_REQ,
-#endif
     /// Max number of Debug messages
     DBG_MAX,
 };
@@ -3132,15 +3131,6 @@ struct dbg_set_cca_parameter_req
     //default CCA threshold fall when phy init. for Struct alignment
     uint8_t default_cca_threshold_fall;
 };
-
-#ifdef CONFIG_ENABLE_RFGAINTABLE
-/// Structure containing the parameters of the @ref DBG_SET_RF_GAIN_TB_IDX_REQ message.
-struct dbg_set_rf_gain_tb_idx_req
-{
-    /// rf gain table idx
-    uint8_t tb_idx[4];
-};
-#endif
 
 #ifdef NEW_SCHEDULE
 struct dbg_print_burst_info_req

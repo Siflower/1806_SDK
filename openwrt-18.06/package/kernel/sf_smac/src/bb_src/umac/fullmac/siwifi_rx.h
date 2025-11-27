@@ -49,7 +49,7 @@ enum rx_status_bits
 #define RX_MACHDR_BACKUP_LEN    64
 #endif
 
-#define SIWIFI_RX_LOW_MEM_SIZE  5000 // System memory free is lower than 5Mb
+#define SIWIFI_RX_LOW_MEM_SIZE  6000 // System memory free is lower than 6Mb
 
 struct rx_vector_1_old {
     /** Receive Vector 1a */
@@ -297,7 +297,6 @@ struct rx_skb_element {
     struct hw_rxhdr *rxhdr;
     bool forward;
     bool resend;
-    u8 skip_len; 
 };
 
 void siwifi_rx_thread_flush(struct siwifi_hw *siwifi_hw, struct siwifi_vif *vif);

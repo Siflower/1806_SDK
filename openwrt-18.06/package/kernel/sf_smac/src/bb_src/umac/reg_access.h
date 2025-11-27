@@ -45,6 +45,9 @@
 #define REG_SYSM_WIFI1_LA_CLK_SEL   (volatile void *)(0xB9E00000 + 0x8048)
 #define WIFI_1_LA_THRES                         (0xB9E00000 + 0x8044)
 #define WIFI_2_LA_THRES                         (0xB9E00000 + 0xC444)
+#else
+#define REG_SYSM_SHARE_RAM_SEL      (volatile void *)(0xB9E00000 + 0x242C)
+#define REG_SYSM_WIFI1_LA_CLK_SEL   (volatile void *)(0xB9E00000 + 0x8040)
 #endif
 
 #define REG_SYSM_WIFI2_RESET        (volatile void *)(0xB9E00000 + 0x2C68)
@@ -53,6 +56,8 @@
 //#define REG_SYSM_WIFI2_SOFT_BOE     (volatile void *)(0xB9E00000 + 0x840C)
 #ifdef CONFIG_SFA28_FULLMASK
 #define REG_SYSM_WIFI2_LA_CLK_SEL   (volatile void *)(0xB9E00000 + 0xC448)
+#else
+#define REG_SYSM_WIFI2_LA_CLK_SEL   (volatile void *)(0xB9E00000 + 0x8440)
 #endif
 //#define REG_SYSM_PAD_BASE           (volatile void *)(0xB9E00000 + 0x30000)
 
@@ -60,6 +65,8 @@
 
 #ifdef CONFIG_SFA28_FULLMASK
 #define MEM_HB_SHARE_MEM_BASE       (volatile void *)(0xB7800000)
+#else
+#define MEM_HB_SHARE_MEM_BASE       (volatile void *)(0xB1400000)
 #endif
 
 /* IPC registers */

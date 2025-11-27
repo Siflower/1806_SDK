@@ -531,7 +531,8 @@ int siwifi_um_helper(struct siwifi_debugfs *siwifi_debugfs, const char *cmd)
     int argc, ret;
 	char *cmd_buf;
     int cmd_len;
-    struct siwifi_hw *siwifi_hw = container_of(siwifi_debugfs, struct siwifi_hw, debugfs);
+    struct siwifi_hw *siwifi_hw = container_of(siwifi_debugfs, struct siwifi_hw,
+                                           debugfs);
 
 	cmd_len = strlen((cmd = cmd ? cmd : siwifi_debugfs->helper_cmd));
     if (!siwifi_debugfs->dir ||

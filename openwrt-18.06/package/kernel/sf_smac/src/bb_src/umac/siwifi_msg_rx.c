@@ -159,7 +159,7 @@ static inline int siwifi_rx_chan_switch_ind(struct siwifi_hw *siwifi_hw,
     siwifi_hw->cur_chanctx = chan_idx;
     siwifi_radar_detection_enable_on_cur_channel(siwifi_hw);
 
-#ifdef CONFIG_SF16A18_WIFI_ATE_TOOLS
+#if defined CONFIG_SF16A18_WIFI_ATE_TOOLS
     siwifi_hw->ate_env.vif_ctx_flag = true;
 #endif
     spin_unlock_bh(&siwifi_hw->cb_lock);
@@ -391,7 +391,6 @@ static inline int siwifi_rx_pktloss_notify_ind(struct siwifi_hw *siwifi_hw,
                                     ind->num_packets, GFP_ATOMIC);
     }
     spin_unlock_bh(&siwifi_hw->cb_lock);
-
     return 0;
 }
 
@@ -452,24 +451,19 @@ static inline int siwifi_rx_csa_finish_ind(struct siwifi_hw *siwifi_hw,
                 netdev_err(vif->ndev, "CSA finish indication but no active CSA");
         } else {
             if (ind->status == 0) {
-                struct cfg80211_chan_def chandef;
+                                struct cfg80211_chan_def chandef;
                 struct ieee80211_channel *chan = NULL;
-
                 memset(&chandef, 0, sizeof(struct cfg80211_chan_def));
                 chan = ieee80211_get_channel(siwifi_hw->wiphy, ind->center_freq);
-
                 if (chan != NULL)
                     chandef.chan = chan;
                 else {
                     netdev_err(vif->ndev, "STA CSA finish indication but can not get correct channel");
                     spin_unlock_bh(&siwifi_hw->cb_lock);
-
                     return -1;
                 }
-
                 chandef.center_freq1 = ind->center_freq1;
                 chandef.center_freq2 = ind->center_freq2;
-
                 switch (ind->bw) {
                 case 0:
                     chandef.width = NL80211_CHAN_WIDTH_20;
@@ -656,13 +650,25 @@ static inline int siwifi_rx_scanu_start_cfm(struct siwifi_hw *siwifi_hw,
 
     siwifi_ipc_elem_var_deallocs(siwifi_hw, &siwifi_hw->scan_ie);
     spin_lock_bh(&siwifi_hw->cb_lock);
+
+#ifdef CONFIG_SIWIFI_EASYMESH
+    /* Check if the scan was triggered by easymesh. */
+    if (siwifi_hw->easymesh_scan_enbale) {
+        spin_unlock_bh(&siwifi_hw->cb_lock);
+        /* EasyMesh scanning is complete, process the scan results. */
+        siwifi_easymesh_scan_done_hook(siwifi_hw);
+        /* Return directly without further processing. */
+        return 0;
+    }
+#endif /* CONFIG_SIWIFI_EASYMESH */
+
     if (siwifi_hw->scan_request
 #if defined(CONFIG_SIWIFI_ACS) || defined(CONFIG_SIWIFI_ACS_INTERNAL)
             || siwifi_hw->acs_request
 #endif
             ) {
 #ifdef CONFIG_SIWIFI_SORT_SCAN
-        //sort the bss by rssia
+        //sort the bss by rssi
         for (i = 0; i < siwifi_hw->scan_num; i++) {
             for (j = i + 1; j < siwifi_hw->scan_num; j++) {
                 if (((struct scanu_result_ind *)siwifi_hw->scan_results[i].param)->rssi < ((struct scanu_result_ind *)siwifi_hw->scan_results[j].param)->rssi) {
@@ -688,6 +694,7 @@ static inline int siwifi_rx_scanu_start_cfm(struct siwifi_hw *siwifi_hw,
             siwifi_hw->bss_results[i] = cfg80211_get_bss(siwifi_hw->wiphy, NULL, (const u8 *)(((struct ieee80211_mgmt *)ind->payload)->bssid), NULL, 0, IEEE80211_BSS_TYPE_ANY, IEEE80211_PRIVACY_ANY);
         }
 #endif
+
         if (siwifi_hw->scan_request) {
 #if MY_LINUX_VERSION_CODE >= KERNEL_VERSION(4, 8, 0)
 #ifdef CONFIG_SIWIFI_SORT_SCAN
@@ -740,6 +747,17 @@ static inline int siwifi_rx_scanu_result_ind(struct siwifi_hw *siwifi_hw,
 #endif
 
     SIWIFI_DBG(SIWIFI_FN_ENTRY_STR);
+
+#ifdef CONFIG_SIWIFI_EASYMESH
+    /* Check if the scan was triggered by easymesh. */
+    if (siwifi_hw->easymesh_scan_enbale) {
+        /* Processing easymesh scan results. */
+        siwifi_easymesh_update_scan_result(siwifi_hw, ind);
+        /* Return directly without further processing. */
+        return 0;
+    }
+#endif /* CONFIG_SIWIFI_EASYMESH */
+
 #ifdef CONFIG_VDR_HW
     vendor_hook_scan_result_ind(ind->center_freq,
             (struct ieee80211_mgmt *)ind->payload, ind->rssi);
@@ -754,8 +772,8 @@ static inline int siwifi_rx_scanu_result_ind(struct siwifi_hw *siwifi_hw,
             rssi2 = ~(ind_temp->rssi -1);
             if(((rssi1 - rssi2) > 10) || ((rssi2 - rssi1) > 10))
             {
-                //printk(">>>>>>>>>>>>>>rssi diff too much >>>sta is %pM >>> rssi1 : %d rssi2 : %d>>>\n",((struct ieee80211_mgmt *)ind->payload)->bssid, rssi1, rssi2);
-                return 0;
+                    //printk(">>>>>>>>>>>>>>rssi diff too much >>>sta is %pM >>> rssi1 : %d rssi2 : %d>>>\n",((struct ieee80211_mgmt *)ind->payload)->bssid, rssi1, rssi2);
+                    return 0;
             }
             siwifi_hw->scan_results[i] = *msg;
             //printk("ind_temp rssi : %d ssid is %pM >>>>>>>> ind rssi : %d  ssid is %pM \n",ind_temp->rssi,((struct ieee80211_mgmt *)ind_temp->payload)->bssid,ind->rssi,((struct ieee80211_mgmt *)ind->payload)->bssid);
@@ -782,6 +800,7 @@ static inline int siwifi_rx_scanu_result_ind(struct siwifi_hw *siwifi_hw,
     if (bss != NULL)
         cfg80211_put_bss(siwifi_hw->wiphy, bss);
 #endif
+
     return 0;
 }
 
@@ -855,6 +874,7 @@ static inline int siwifi_rx_sm_repeater_status_ind(struct siwifi_hw *siwifi_hw,
 
     return 0;
 }
+
 
 /*
 * get supported rate, ht capability and vht capability information from ies data to
@@ -968,6 +988,9 @@ static inline int siwifi_rx_sm_connect_ind(struct siwifi_hw *siwifi_hw,
         sta->vht = params.vht_capa ? 1 : 0;
         siwifi_kfree(params.supported_rates);
 
+        siwifi_vif->sta.ap = sta;
+        chan = ieee80211_get_channel(siwifi_hw->wiphy, ind->center_freq);
+        cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_NO_HT);
         switch (ind->width) {
         case 0:
             sta->width = NL80211_CHAN_WIDTH_20;
@@ -982,9 +1005,6 @@ static inline int siwifi_rx_sm_connect_ind(struct siwifi_hw *siwifi_hw,
             sta->width = NL80211_CHAN_WIDTH_80;
             break;
         }
-        siwifi_vif->sta.ap = sta;
-        chan = ieee80211_get_channel(siwifi_hw->wiphy, ind->center_freq);
-        cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_NO_HT);
 #if DEBUG_ARRAY_CHECK
         BUG_ON(ind->width > PHY_CHNL_BW_80P80);
 #endif
@@ -1267,7 +1287,6 @@ static inline int siwifi_rx_mesh_peer_update_ind(struct siwifi_hw *siwifi_hw,
                 spin_lock_bh(&siwifi_hw->tx_lock);
                 siwifi_txq_sta_deinit(siwifi_hw, p_siwifi_sta);
                 spin_unlock_bh(&siwifi_hw->tx_lock);
-                siwifi_sta_hash_del(siwifi_vif, p_siwifi_sta);
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
                 siwifi_dbgfs_unregister_rc_stat(siwifi_hw, p_siwifi_sta);
 #endif
@@ -1470,10 +1489,12 @@ static inline int siwifi_rx_cca_drop_step_ind(struct siwifi_hw *siwifi_hw,
                             struct ipc_e2a_msg *msg)
 {
     struct mm_cca_drop_step_ind *mm_cca_drop_step_ind = (struct mm_cca_drop_step_ind *)msg->param;
+
     if(siwifi_hw->disable_cca_channel_switch){
-        printk("cca channel switch disabled, step: %d\n", mm_cca_drop_step_ind->cca_step);
+        //printk("cca channel switch disabled, step: %d\n", mm_cca_drop_step_ind->cca_step);
         return 0;
     }
+
     printk("siwifi_rx_cca_drop_step_ind step %d\n", mm_cca_drop_step_ind->cca_step);
     if (mm_cca_drop_step_ind->cca_step == 6)
         siwifi_fast_channel_switch(siwifi_hw);
