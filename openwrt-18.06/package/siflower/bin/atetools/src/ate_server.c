@@ -870,8 +870,8 @@ int32_t set_phy_power(char *tmpdata,char *channel,char *bw,char *mode,char *rate
 	tmp.length      = 20;
 	tmp.sequence    = 1;
 	if (!strcmp(tmpdata,"factory")){
-		power = get_factory_power(channel,bw,mode,rate,"0","0");
-		//	printf("power is %d\r\n",power);
+		power = get_factory_power(channel,bw,mode,rate,"3","band");
+		printf("power is %d band is %s\r\n",power,band);
 		snprintf(tmp.data,4,"%d",power);
 	}
 	else{
@@ -2056,6 +2056,7 @@ int32_t ate_main(char *buffer)
 		char addr_val[] = "0x1301_0x0000";
 		//char* addr_value = NULL;
 		char data[4] = "xo";
+		char band[] = "\0";
 		//int tmp_power= 0;
 		if(!strncasecmp(buffer,"ate_cmd fastconfig z ",20)){
 			sscanf(buffer,"ate_cmd fastconfig %s %s",op,addr_val);
@@ -2074,8 +2075,8 @@ int32_t ate_main(char *buffer)
 				sscanf(buffer,"ate_cmd fastconfig %s f:%s c:%s w:%s",op,pri_freq,cen_freq,rf_bw);
 		}
 		else if(!strncasecmp(buffer,"ate_cmd fastconfig y ",20)){
-			sscanf(buffer,"ate_cmd fastconfig %s l:%s f:%s c:%s w:%s u:%s m:%s i:%s g:%s p:%s",
-				op,length,pri_freq,cen_freq,rf_bw,frame_bw,mode,mcs,sgi,power);
+			sscanf(buffer,"ate_cmd fastconfig %s l:%s f:%s c:%s w:%s u:%s m:%s i:%s g:%s B:%s p:%s",
+				op,length,pri_freq,cen_freq,rf_bw,frame_bw,mode,mcs,sgi,band,power);
 			printf("0: %s\n 1: %s\n 2: %s\n 3: %s\n",op ,length, pri_freq, cen_freq);
 		}
 		else if(!strncasecmp(buffer,"ate_cmd fastconfig e ",20)){
@@ -2176,7 +2177,7 @@ int32_t ate_main(char *buffer)
 			return -2;
 		if(set_phy_use_sgi(sgi))
 			return -2;
-		if(set_phy_power(power,pri_freq,rf_bw,mode,mcs,"0"))
+		if(set_phy_power(power,pri_freq,rf_bw,mode,mcs,band))
 			return -2;
 NEXT:
 		if (g_tx_frame_flag) {

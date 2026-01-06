@@ -1,0 +1,45 @@
+#!/bin/sh
+
+echo "Content-Type: application/json"
+echo ""
+
+is_telnetd_running() {
+    ps | grep -q "[t]elnetd"
+    return $?
+}
+
+if is_telnetd_running; then
+    cat <<EOF
+{
+    "status": "success",
+    "message": "Telnet is already running",
+    "code": 200
+}
+EOF
+elif command -v telnetd >/dev/null 2>&1; then
+    if telnetd -l /bin/login >/dev/null 2>&1; then
+        cat <<EOF
+{
+    "status": "success",
+    "message": "Telnet enabled successfully",
+    "code": 201
+}
+EOF
+    else
+        cat <<EOF
+{
+    "status": "error",
+    "message": "Failed to start telnetd service",
+    "code": 500
+}
+EOF
+    fi
+else
+    cat <<EOF
+{
+    "status": "error",
+    "message": "Telnetd package not installed",
+    "code": 404
+}
+EOF
+fi
