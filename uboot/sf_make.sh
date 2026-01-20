@@ -358,7 +358,7 @@ case $prj in
 		add_sfbl_flag sf19a28_fullmask=1
 		add_sfbl_flag crystal_40m=1
 		add_sfbl_flag odt=1
-		[ -z $ddr3 ] && ddr3=ddr3_1gcommon
+		[ -z $ddr2 ] && ddr2=ddr2_1gcommon
 		;;
 	sfa28_ac28nand)
 		DEFCONFIG="sfa28_"$ver"_ac28nand"
@@ -397,7 +397,13 @@ case $prj in
 		add_sfbl_flag odt=1
 		[ -z $ddr2 ] && ddr2=ddr2_512mcommon
 		;;
-
+	sfa28_router_1211)
+		DEFCONFIG="sfa28_"$ver"_rep_phy"
+		add_sfbl_flag sf19a28_fullmask=1
+		add_sfbl_flag crystal_40m=1
+		add_sfbl_flag odt=1
+		[ -z $ddr2 ] && ddr2=ddr2_512mcommon
+		;;
 	hwa | sfa28_hwa)
 		DEFCONFIG="sfa28_fullmask_hwa"
 		add_sfbl_flag sf19a28_fullmask=1
