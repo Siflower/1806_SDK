@@ -14,9 +14,9 @@ uint32_t hal_init(void)
     yt_ret_t ret = CMM_ERR_OK;
 
     hal_mem32_init();
-    hal_table_reg_init();
-
+    CMM_ERR_CHK(hal_table_reg_init(), ret);
     CMM_ERR_CHK(hal_ctrl_init(), ret);
 
     return CMM_ERR_OK;
 }
+

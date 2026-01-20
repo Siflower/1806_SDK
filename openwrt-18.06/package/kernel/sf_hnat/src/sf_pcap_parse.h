@@ -27,7 +27,7 @@
 // };
 //
 //
-struct pppoe_ses_hdr {
+struct pppoe_ses_hdr{
 	struct pppoe_hdr hdr;
 	__be16 proto;
 };

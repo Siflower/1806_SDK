@@ -92,7 +92,9 @@ int32_t bytes_to_word(uint8_t *pData, uint32_t len, uint32_t *regValue, bool big
 uint32_t ctrlif_reg_write(uint8_t unit, uint32_t regAddr, uint32_t regValue)
 {
     uint32_t ret = CMM_ERR_OK;
-    yt_swAccMethod_t method = SWITCH_ACCESS_METHOD_ON_UNIT(unit);
+    yt_swAccMethod_t method;
+    CMM_PARAM_CHK((UNITINFO(unit) == NULL), CMM_ERR_NOT_INIT);
+    method = SWITCH_ACCESS_METHOD_ON_UNIT(unit);
 
     ACCESS_LOCK();
     switch(method)
@@ -121,7 +123,9 @@ uint32_t ctrlif_reg_write(uint8_t unit, uint32_t regAddr, uint32_t regValue)
 uint32_t ctrlif_reg_read(uint8_t unit, uint32_t regAddr, uint32_t *pRegVale)
 {
     uint32_t ret = CMM_ERR_OK;
-    yt_swAccMethod_t method = SWITCH_ACCESS_METHOD_ON_UNIT(unit);
+    yt_swAccMethod_t method;
+    CMM_PARAM_CHK((UNITINFO(unit) == NULL), CMM_ERR_NOT_INIT);
+    method = SWITCH_ACCESS_METHOD_ON_UNIT(unit);
 
     ACCESS_LOCK();
     switch(method)

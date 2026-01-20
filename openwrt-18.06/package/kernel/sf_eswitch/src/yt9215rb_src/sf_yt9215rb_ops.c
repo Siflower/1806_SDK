@@ -1,6 +1,7 @@
 /*
 * Description
 *
+* Copyright (C) 2016-2020 Qin.Xia <qin.xia@siflower.com.cn>
 *
 * Siflower software
 */
@@ -9,9 +10,6 @@
 #include <linux/of_mdio.h>
 #include <linux/gpio/consumer.h>
 #include <linux/switch.h>
-#include <linux/if_ether.h>
-#include <linux/netdevice.h>
-#include <net/net_namespace.h>
 
 #include "cal_bprofile.h"
 #include "cal_cmm.h"
@@ -25,7 +23,8 @@
 #include "yt_nic.h"
 #include "yt_mirror.h"
 #include "yt_port.h"
-#include "sw_yt9215.h"
+#include "sw_yt921x.h"
+#include "cmd_types.h"
 #include "hal_mem.h"
 #include "../sf_eswitch.h"
 
@@ -33,13 +32,20 @@
 
 extern struct mii_bus *gp_mii_bus;
 extern struct vlan_entry vlan_entries;
+#if defined(BOARD_YT9215RB_DEFAULT_DEMO)
 extern yt_swDescp_t yt9215rb_swDescp;
+yt_swDescp_t *yt_swDescp = &yt9215rb_swDescp;
+#elif defined(BOARD_YT9215SC_RGMII_DEFAULT_DEMO)
+extern yt_swDescp_t yt9215sc_rgmii_swDescp;
+yt_swDescp_t *yt_swDescp = &yt9215sc_rgmii_swDescp;
+#endif
 extern int check_port_in_portlist(struct sf_eswitch_priv *pesw_priv, int port);
-extern int notify_link_event(struct sf_eswitch_priv *pesw_priv, int port,
-	int updown, char *ifname, uint8_t *mac, uint16_t vlan_id, bool flag);
 
 uint32_t yt9215_port_nums;
 uint32_t yt9215_cpu_port;
+
+yt_ret_t yt_board_profile_yt9215rb_register(void);
+
 static uint32_t yt_smi0_cl22_write(uint8_t phyAddr, uint8_t regAddr, uint16_t regValue) {
 	return mdiobus_write(gp_mii_bus, phyAddr, regAddr, regValue);
 }
@@ -107,13 +113,13 @@ int yt9215rb_setAsicReg(u32 reg_addr, u32 reg_value)
 
 int yt9215rb_setAsicPHYReg(unsigned int phyNo, unsigned int phyAddr, unsigned int pRegData)
 {
-	return yt_port_phy_reg_set(0, phyNo, phyAddr, (u16)pRegData, PHY_INTERNAL);
+	return yt_port_phy_reg_set(0, phyNo, phyAddr, (u16)pRegData, PHY_INTERNAL, MII);
 }
 
 int yt9215rb_getAsicPHYReg(unsigned int phyNo, unsigned int phyAddr, unsigned int *pRegData)
 {
 	uint16_t pData;
-	yt_port_phy_reg_get(0, phyNo, phyAddr, &pData, PHY_INTERNAL);
+	yt_port_phy_reg_get(0, phyNo, phyAddr, &pData, PHY_INTERNAL, MII);
 	*pRegData = pData;
 	return 0;
 
@@ -209,7 +215,7 @@ static int yt9215rb_get_port_pvid(struct switch_dev *dev, int port, int *val)
 	yt_vlan_t pvid;
 
 	SF_MDIO_LOCK();
-	yt_vlan_port_igrPvid_get(0, VLAN_TYPE_CVLAN, port, &pvid);
+	yt_vlan_port_igrPvid_get(0, YT_VLAN_TYPE_CVLAN, port, &pvid);
 	SF_MDIO_UNLOCK();
 	*val = pvid;
 	return 0;
@@ -223,7 +229,7 @@ static int yt9215rb_set_port_pvid(struct switch_dev *dev, int port, int pvid)
 	//specify the priority to 0 if you don’t turn on the QoS
 	printk("set port:%d pvid:%d\n", port, pvid);
 	SF_MDIO_LOCK();
-	yt_vlan_port_igrPvid_set(0, VLAN_TYPE_CVLAN, port, pvid);
+	yt_vlan_port_igrPvid_set(0, YT_VLAN_TYPE_CVLAN, port, pvid);
 	SF_MDIO_UNLOCK();
 
 	return 0;
@@ -339,79 +345,6 @@ static int yt9215rb_set_vlan_enable(struct switch_dev *dev,
 	return 0;
 }
 
-static int yt9215_get_port_fdb_uc_entry(struct switch_dev *dev, const struct switch_attr *attr, struct switch_val *val)
-{
-	struct sf_eswitch_priv *priv = container_of(dev, struct sf_eswitch_priv, swdev);
-	l2_ucastMacAddr_info_t pUcastMac;
-	uint16_t fdb_index = 0, next_fdb_index;
-	static char buf[64];
-	int len = 0;
-	yt_port_t port;
-	yt_vlan_t vid;
-
-	if (val->port_vlan >= YT9215S_NUM_PORTS)
-		return -EINVAL;
-
-	memset(&pUcastMac, 0, sizeof(pUcastMac));
-
-	while ( fdb_index <= 4096 ) {
-		next_fdb_index = 0;
-		yt_l2_fdb_uc_withindex_getnext(0, fdb_index, &next_fdb_index, &pUcastMac);
-		if (next_fdb_index) {
-			fdb_index = next_fdb_index;
-			port = pUcastMac.port;
-			vid = pUcastMac.vid;
-			if (val->port_vlan == port) {
-				printk("The mac:%pM vlan_id:%d is at the yt9215s's port:%d\n",
-					pUcastMac.macaddr.addr, vid, port);
-					notify_link_event(priv, port, priv->phy_status[port], "eth0", pUcastMac.macaddr.addr, vid, false);
-			}
-		fdb_index++;
-		} else {
-			break;
-		}
-	}
-	len += snprintf(buf + len, sizeof(buf) - len, "These are the port %d of yt9215s's fdb entry.\n", val->port_vlan);
-
-	val->value.s = buf;
-	val->len = len;
-
- 	return 0;
-}
-
-static int yt9215_get_info_fdb_uc_entry(struct switch_dev *dev, const struct switch_attr *attr, struct switch_val *val)
-{
-	l2_ucastMacAddr_info_t pUcastMac;
-	static char buf[64];
-	int len = 0;
-	uint16_t fdb_index = 0, next_fdb_index;
-	yt_port_t port;
-	yt_vlan_t vid;
-
-	memset(&pUcastMac, 0, sizeof(pUcastMac));
-
-	while ( fdb_index <= 4096 ) {
-		next_fdb_index = 0;
-		yt_l2_fdb_uc_withindex_getnext(0, fdb_index, &next_fdb_index, &pUcastMac);
-		if (next_fdb_index) {
-			fdb_index = next_fdb_index;
-			port = pUcastMac.port;
-			vid = pUcastMac.vid;
-			printk("The mac:%pM vlan_id:%d is at the yt9215s's port:%d, the index is %d\n",
-					pUcastMac.macaddr.addr, vid, port, next_fdb_index );
-		fdb_index++;
-		} else {
-			break;
-		}
-	}
-	len += snprintf(buf + len, sizeof(buf) - len, "These are the yt9215s's fdb entry.\n");
-
-	val->value.s = buf;
-	val->len = len;
-
- 	return 0;
-}
-
 static int yt9215rb_get_vlan_fid(struct switch_dev *dev,
 		const struct switch_attr *attr,
 		struct switch_val *val)
@@ -452,21 +385,10 @@ static struct switch_attr yt9215rb_globals[] = {
 		.set = yt9215rb_set_vlan_enable,
 		.max = 1,
 		.ofs = 1
-	}, {
-		.type = SWITCH_TYPE_STRING,
-		.name = "fdb_entry",
-		.description = "Get the switch's fdb unicast entry",
-		.get = yt9215_get_info_fdb_uc_entry,
 	}
 };
 
 static struct switch_attr yt9215rb_port[] = {
-	{
-		.type = SWITCH_TYPE_STRING,
-		.name = "fdb_entry",
-		.description = "Get the switch's each port's fdb unicast entry",
-		.get = yt9215_get_port_fdb_uc_entry,
-	}
 };
 
 static struct switch_attr yt9215rb_vlan[] = {
@@ -509,22 +431,16 @@ int yt9215rb_check_phy_link(int port)
 	yt_port_linkStatus_all_t LinkStatus;
 
 	SF_MDIO_LOCK();
-	yt_port_phy_linkstatus_get(0, port, &LinkStatus);
+	yt_port_phy_linkstatus_get(0, port, YT_PHY_CHIP_MODE_COPPER, &LinkStatus);
 	SF_MDIO_UNLOCK();
 	return LinkStatus.link_status;
 }
 
 int yt9215rb_extPort_rgmii_init(int port) {
-	yt_port_force_ctrl_t port_ctrl = {
-		.speed_dup = PORT_SPEED_DUP_1000FULL,
-		.rx_fc_en = true,
-		.tx_fc_en = true,
-	};
-
 	// set rgmii 8/9 init
 	yt_port_extif_mode_set(0, port, YT_EXTIF_MODE_RGMII);
 	// force 1G full
-	yt_port_mac_force_set(0, port, port_ctrl);
+	yt_port_mac_force_set(0, port, PORT_SPEED_DUP_1000FULL);
 
 	yt_stat_mib_enable_set(0, YT_ENABLE);
 
@@ -544,7 +460,7 @@ void yt9215rb_enable_all_phy(struct sf_eswitch_priv *pesw_priv) {
 		if (!check_port_in_portlist(pesw_priv, i))
 			continue;
 
-		yt_port_enable_set(0, i, YT_ENABLE);
+		yt_port_mac_enable_set(0, i, YT_ENABLE);
 	}
 	SF_MDIO_UNLOCK();
 }
@@ -553,7 +469,7 @@ void yt9215rb_disable_all_phy(void) {
 	int i;
 	SF_MDIO_LOCK();
 	for (i = 0; i < YT9215RB_PHY_PORT_NUM; i++) {
-		yt_port_enable_set(0, i, YT_DISABLE);
+		yt_port_mac_enable_set(0, i, YT_DISABLE);
 	}
 	SF_MDIO_UNLOCK();
 }
@@ -666,43 +582,15 @@ void yt9215rb_port_vlan_init(uint32_t cpu_port)
 	tpids.tpid[2] = 0x88a8;
 	tpids.tpid[3] = 0x88a8;
 	yt_vlan_egrTpid_set(0, tpids);
-	yt_vlan_port_igrTpidSel_set(0, VLAN_TYPE_CVLAN, 1, 1);
-	yt_vlan_port_igrTpidSel_set(0, VLAN_TYPE_CVLAN, 2, 1);
-	yt_vlan_port_egrTagMode_set(0, VLAN_TYPE_CVLAN, cpu_port, VLAN_TAG_MODE_ENTRY_BASED);
+	yt_vlan_port_igrTpidSel_set(0, YT_VLAN_TYPE_CVLAN, 1, 1);
+	yt_vlan_port_igrTpidSel_set(0, YT_VLAN_TYPE_CVLAN, 2, 1);
+	yt_vlan_port_egrTagMode_set(0, YT_VLAN_TYPE_CVLAN, cpu_port, YT_VLAN_TAG_MODE_ENTRY_BASED);
 
 	for(i = 0; i < YT9215RB_PHY_PORT_NUM; i++)
 	{
-		yt_vlan_port_egrTagMode_set(0, VLAN_TYPE_CVLAN, i, VLAN_TAG_MODE_ENTRY_BASED);
+		yt_vlan_port_egrTagMode_set(0, YT_VLAN_TYPE_CVLAN, i, YT_VLAN_TAG_MODE_ENTRY_BASED);
 		yt_vlan_port_igrFilter_enable_set(0, i, YT_ENABLE);
 		yt_vlan_port_egrFilter_enable_set(0, i, YT_ENABLE);
-	}
-}
-
-unsigned int get_mtu_by_devname(const char *dev_name)
-{
-	struct net_device *dev;
-	unsigned int mtu = 1500;
-
-	dev = dev_get_by_name(&init_net, dev_name);
-	if (dev) {
-		mtu = dev->mtu;
-		dev_put(dev);
-	}
-
-	return mtu;
-}
-
-void yt9215rb_port_jumbo_size_init(void)
-{
-	int i;
-	unsigned int mtu, jumbo_size;
-
-	mtu = get_mtu_by_devname("eth0");
-	jumbo_size = mtu + ETH_HLEN + ETH_FCS_LEN;
-	for(i = 0; i < YT9215RB_PHY_PORT_NUM; i++)
-	{
-		yt_port_jumbo_enable_set(0, i, YT_ENABLE);
-		yt_port_jumbo_size_set(0, i, jumbo_size);
 	}
 }
 
@@ -710,11 +598,13 @@ void yt9215rb_init(struct sf_eswitch_priv *pesw_priv)
 {
 	int err;
 
-	yt9215rb_swDescp.sw_access.swreg_acc_method = SWCHIP_ACC_SMI;
-	yt9215rb_swDescp.sw_access.controller.smi_controller.smi_read = yt_smi0_cl22_read;
-	yt9215rb_swDescp.sw_access.controller.smi_controller.smi_write = yt_smi0_cl22_write;
-	yt9215rb_swDescp.sw_access.controller.smi_controller.phyAddr = YT9215_PHY_ADDR;
-	yt9215rb_swDescp.sw_access.controller.smi_controller.switchId = 0x0;
+	yt_board_profile_yt9215rb_register();
+
+	yt_swDescp->sw_access.swreg_acc_method = SWCHIP_ACC_SMI;
+	yt_swDescp->sw_access.controller.smi_controller.smi_read = yt_smi0_cl22_read;
+	yt_swDescp->sw_access.controller.smi_controller.smi_write = yt_smi0_cl22_write;
+	yt_swDescp->sw_access.controller.smi_controller.phyAddr = YT9215_PHY_ADDR;
+	yt_swDescp->sw_access.controller.smi_controller.switchId = 0x0;
 
 	//init port/mac/led
 	err = yt_init();
@@ -725,8 +615,34 @@ void yt9215rb_init(struct sf_eswitch_priv *pesw_priv)
 
 	yt9215rb_extPort_rgmii_init(yt9215_cpu_port);
 	yt9215rb_port_vlan_init(yt9215_cpu_port);
-	yt9215rb_port_jumbo_size_init();
 
+	if (pesw_priv->model == YT9215S) {
+		int i, f;
+		//Switch 0
+		yt9215rb_setAsicReg(0X2801D0, 0xC8);
+
+		for (i = 0; i < 10; i++){
+			if (i == 4){
+				yt9215rb_setAsicReg(0X281000 + i*0x8, 0x80402850);
+				yt9215rb_setAsicReg(0X281000 + 0x4 + i*0x8, 0x26765);
+			}else{
+				yt9215rb_setAsicReg(0X281000 + i*0x8, 0x80402850);
+				yt9215rb_setAsicReg(0X281000 + 0x4 + i*0x8, 0x26f1b);
+			}
+
+			for (f = 0; f < 8; f++){
+				yt9215rb_setAsicReg(0X301000 + i*0x40 + f*0x8, 0x40020);
+				yt9215rb_setAsicReg(0X301000 + 0x4 + i*0x40 + f*0x8, 0x0);
+			}
+
+			if (i < 4){
+				yt9215rb_setAsicReg(0X303000 + i*0x4, 0x78);
+			}else if (i == 5)
+			{
+				yt9215rb_setAsicReg(0X303000 + 0x20, 0x78);
+			}
+		}
+	}
 	//yt_port_enable_set(0, 5, YT_ENABLE);
 	//yt_stat_mib_enable_set(0, YT_ENABLE);
 	//yt9215rb_setAsicReg(MAC8_SPEED_SET, 0x1fa);
@@ -776,5 +692,5 @@ struct sf_eswitch_api_t yt9215rb_api = {
 	.setAsicReg = yt9215rb_setAsicReg,
 	.getAsicPHYReg = yt9215rb_getAsicPHYReg,
 	.setAsicPHYReg = yt9215rb_setAsicPHYReg,
-	.dump_mac = yt9215rb_dumpmac,
+	.dumpmac = yt9215rb_dumpmac,
 };

@@ -13,8 +13,8 @@
 *
 ********************************************************************************
 */
-#ifndef __FAL_TIGER_WOL_H
-#define __FAL_TIGER_WOL_H
+#ifndef FAL_TIGER_WOL_H
+#define FAL_TIGER_WOL_H
 
 
 #include "fal_cmm.h"
@@ -76,7 +76,10 @@ extern yt_ret_t  fal_tiger_wol_ethertype_set(yt_unit_t unit, yt_tpid_t eth_type)
  */
 extern yt_ret_t  fal_tiger_wol_ethertype_get(yt_unit_t unit, yt_tpid_t *pEth_type);
 
-
+extern yt_ret_t  fal_tiger_wol_port_enable_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable);
+extern yt_ret_t  fal_tiger_wol_port_enable_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable);
+extern yt_ret_t  fal_tiger_wol_port_macAddr_set(yt_unit_t unit, yt_port_t port, yt_mac_addr_t macAddr);
+extern yt_ret_t  fal_tiger_wol_port_macAddr_get(yt_unit_t unit, yt_port_t port, yt_mac_addr_t *pMacAddr);
 
 
 #ifdef __cplusplus

@@ -12,14 +12,17 @@
 /*
  * Include Files
  */
-#include "yt_error.h"
+#include "yt_error.h" 
 #include "osal_sem.h"
 #ifdef SWITCH_SERIES_TIGER
 #include "fal_tiger_mem.h"
 #endif
+#ifdef SWITCH_SERIES_SHARK
+#include "fal_shark_mem.h"
+#endif
 
-#ifdef INTERNAL_MSG_DEBUG
-#include "hal_mem_msg_debug.h"
+#ifdef SWITCH_SERIES_WHALE
+#include "fal_whale_mem.h"
 #endif
 
 /*
@@ -28,6 +31,7 @@
 extern osal_mux g_cfgmux;
 extern uint8_t ghal_mem32_init;
 extern uint8_t ghal_reg_table_init;
+
 /*
  * Macro Definition
  */
@@ -57,6 +61,7 @@ do {\
 
 #define FIELD_NORMAL 0x1
 
+extern uint32 DEBUG_MODE_K;
 
 struct field_id_s {
     uint8_t field_id;
@@ -73,30 +78,11 @@ struct tbl_reg_info_s {
     uint32_t entry_number;
     uint32_t fields_num;
     const field_id_t *fields;
-
-#ifdef INTERNAL_MSG_DEBUG
-    char name[64];
-    uint32_t flag;
-    uint32_t module_property;
-    uint32_t offset;
-    const field_info_t *field;
-    func_set_one_entry set_one_entry;
-    func_get_one_entry get_one_entry;
-    func_get_one_field get_one_field;
-#endif
 };
 
 typedef struct tbl_reg_info_s tbl_reg_info_t;
 
 extern const tbl_reg_info_t tbl_reg_list[NUM_MEMS];
-
-typedef enum hal_reg_tbl_mode_e
-{
-    HAL_REG_TBL_MODE_CMODEL,
-    HAL_REG_TBL_MODE_NORMAL,/*Include ASIC_FPGA*/
-    HAL_REG_TBL_MODE_BOTH /*Include CMODEL, ASIC_FPGA*/
-}hal_reg_tbl_mode_t;
-
 
 /*
  * Function Declaration
@@ -108,10 +94,6 @@ uint32_t hal_mem32_read(yt_unit_t unit, uint32_t addr, uint32_t *pVal);
 extern uint32_t hal_mem32_init(void);
 extern uint32_t hal_table_reg_init(void);
 extern uint32_t hal_table_reg_exit(void);
-
-extern uint32 hal_table_reg_mode_set(uint8_t unit, hal_reg_tbl_mode_t mode);
-extern uint32 hal_table_reg_mode_get(uint8_t unit, hal_reg_tbl_mode_t * pmode);
-extern uint32 hal_table_reg_reset(uint8_t unit, hal_reg_tbl_mode_t mode);
 
 extern uint32 hal_table_reg_write(uint8_t unit, uint32 mem_id, uint32_t idx, uint16_t len, void *pvalue);
 extern uint32 hal_table_reg_read(uint8_t unit, uint32 mem_id, uint32_t idx,uint16_t len, void *pvalue);

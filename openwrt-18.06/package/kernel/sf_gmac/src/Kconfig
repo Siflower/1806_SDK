@@ -32,4 +32,14 @@ config SFAX8_GMAC_TCLKCHOOSE
 	bool "choose tclk to use for gmac."
 	default "n"
 
+config SFAX8_GMAC_RX_BUFFER_POOL
+	bool "enable  gmac rx pool"
+	default n
+	depends on (SFAX8_GMAC)
+
+config SFAX8_GMAC_RX_BUFFER_POOL_LIMIT
+	bool "enable  gmac rx pool limit, allock skb fail when pool full"
+	default n
+	depends on (SFAX8_GMAC_RX_BUFFER_POOL)
+
 endif

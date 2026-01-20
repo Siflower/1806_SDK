@@ -5298,14 +5298,14 @@ static int hook_dev_xmit_path(struct sk_buff *skb)
 	struct ethhdr *tmp_ethhdr = eth_hdr(skb);
 	//IFNAMSIZ = 16
 	unsigned char dev_name[32] = {'\0'};
+	int name_len = strlen(skb->dev->name);
+	memcpy(dev_name, skb->dev->name, name_len);
 
 	if(skb->dev->ieee80211_ptr)
 		return ret;
 	if (eth_type_vlan(tmp_ethhdr->h_proto)) {
-		int name_len = strlen(skb->dev->name);
 		u16 vlanid = 0;
 		struct vlan_ethhdr *veth = (struct vlan_ethhdr *)tmp_ethhdr;
-		memcpy(dev_name, skb->dev->name, name_len);
 		vlanid = ntohs(veth->h_vlan_TCI);
 		//todo vlanid > 10
 		if (likely(vlanid < 10)) {

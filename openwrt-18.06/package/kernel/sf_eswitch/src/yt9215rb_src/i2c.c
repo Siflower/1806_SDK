@@ -47,3 +47,4 @@ uint32_t i2c_switch_read(uint8_t unit, uint32_t regAddr, uint32_t *pRegValue)
 
     return CMM_ERR_OK;
 }
+

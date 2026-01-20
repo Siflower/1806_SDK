@@ -30,7 +30,6 @@ yt_ret_t yt_storm_ctrl_init(yt_unit_t unit)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->storm_ctrl_init(unit);
 }
@@ -42,20 +41,19 @@ yt_ret_t yt_storm_ctrl_init(yt_unit_t unit)
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[in]     storm_type          -storm type,refer to yt_storm_type_t
+ * @param[in]     stormType          -storm type,refer to yt_storm_type_t
  * @param[in]     enable              -enable or disable
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-yt_ret_t yt_storm_ctrl_enable_set(yt_unit_t unit, yt_port_t port, yt_storm_type_t storm_type, yt_enable_t enable)
+yt_ret_t yt_storm_ctrl_enable_set(yt_unit_t unit, yt_port_t port, yt_storm_type_t stormType, yt_enable_t enable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit,port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
-    return YT_DISPATCH(unit)->storm_ctrl_enable_set(unit, port, storm_type, enable);
+    return YT_DISPATCH(unit)->storm_ctrl_enable_set(unit, port, stormType, enable);
 }
 
 /**
@@ -65,20 +63,19 @@ yt_ret_t yt_storm_ctrl_enable_set(yt_unit_t unit, yt_port_t port, yt_storm_type_
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[in]     storm_type          -storm type,refer to yt_storm_type_t
+ * @param[in]     stormType          -storm type,refer to yt_storm_type_t
  * @param[out]    pEnable             -enable or disable
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-yt_ret_t yt_storm_ctrl_enable_get(yt_unit_t unit, yt_port_t port, yt_storm_type_t storm_type, yt_enable_t *pEnable)
+yt_ret_t yt_storm_ctrl_enable_get(yt_unit_t unit, yt_port_t port, yt_storm_type_t stormType, yt_enable_t *pEnable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit,port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
-    return YT_DISPATCH(unit)->storm_ctrl_enable_get(unit, port, storm_type, pEnable);
+    return YT_DISPATCH(unit)->storm_ctrl_enable_get(unit, port, stormType, pEnable);
 }
 
 /**
@@ -88,20 +85,20 @@ yt_ret_t yt_storm_ctrl_enable_get(yt_unit_t unit, yt_port_t port, yt_storm_type_
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[in]     storm_type          -storm type,refer to yt_storm_type_t
- * @param[in]     rate_mode           -storm rate mode,byte or packet
+ * @param[in]     stormType          -storm type,refer to yt_storm_type_t
+ * @param[in]     rateMode           -storm rate mode,bps or pps,include or exclude
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-yt_ret_t yt_storm_ctrl_rate_mode_set(yt_unit_t unit, yt_port_t port, yt_storm_type_t storm_type, yt_storm_rate_mode_t rate_mode)
+yt_ret_t yt_storm_ctrl_rate_mode_set(yt_unit_t unit, yt_port_t port, yt_storm_type_t stormType, yt_port_rate_mode_t rateMode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit,port))), CMM_ERR_PORT);
-    CMM_PARAM_CHK((STORM_RATE_MODE_PACKET< rate_mode || STORM_RATE_MODE_BYTE > rate_mode), CMM_ERR_INPUT);
+    CMM_PARAM_CHK((YT_RATE_MODE_PPS< rateMode.rateMode || YT_RATE_MODE_BPS > rateMode.rateMode), CMM_ERR_INPUT);
+    CMM_PARAM_CHK((YT_RATE_BPS_GAP_INCLUDE < rateMode.gapMode  || YT_RATE_BPS_GAP_EXCLUDE > rateMode.gapMode), CMM_ERR_INPUT);
 
-    return YT_DISPATCH(unit)->storm_ctrl_rate_mode_set(unit, port, storm_type, rate_mode);
+    return YT_DISPATCH(unit)->storm_ctrl_rate_mode_set(unit, port, stormType, rateMode);
 }
 
 /**
@@ -111,66 +108,19 @@ yt_ret_t yt_storm_ctrl_rate_mode_set(yt_unit_t unit, yt_port_t port, yt_storm_ty
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[in]     storm_type          -storm type,refer to yt_storm_type_t
- * @param[out]    pRate_mode         -storm rate mode,byte or packet
+ * @param[in]     stormType          -storm type,refer to yt_storm_type_t
+ * @param[out]    pRateMode         -storm rate mode,bps or pps
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-yt_ret_t yt_storm_ctrl_rate_mode_get(yt_unit_t unit, yt_port_t port, yt_storm_type_t storm_type, yt_storm_rate_mode_t *pRate_mode)
+yt_ret_t yt_storm_ctrl_rate_mode_get(yt_unit_t unit, yt_port_t port, yt_storm_type_t stormType, yt_port_rate_mode_t *pRateMode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit,port))), CMM_ERR_PORT);
-    CMM_PARAM_CHK((NULL == pRate_mode), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK((NULL == pRateMode), CMM_ERR_NULL_POINT);
 
-    return YT_DISPATCH(unit)->storm_ctrl_rate_mode_get(unit, port, storm_type, pRate_mode);
-}
-
-/**
- * @internal      yt_storm_ctrl_rate_include_gap_set
- * @endinternal
- *
- * @brief         Description
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     storm_type          -storm type,refer to yt_storm_type_t
- * @param[in]     inc_gap             -storm rate include or exclude packet gap
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_storm_ctrl_rate_include_gap_set(yt_unit_t unit, yt_port_t port, yt_storm_type_t storm_type, yt_storm_rate_gap_t inc_gap)
-{
-    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
-    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(CMM_PORT_VALID(unit,port))), CMM_ERR_PORT);
-    CMM_PARAM_CHK((STORM_RATE_GAP_INCLUDE < inc_gap || STORM_RATE_GAP_EXCLUDE > inc_gap), CMM_ERR_INPUT);
-
-    return YT_DISPATCH(unit)->storm_ctrl_rate_include_gap_set(unit, port, storm_type, inc_gap);
-}
-
-/**
- * @internal      yt_storm_ctrl_rate_include_gap_get
- * @endinternal
- *
- * @brief         Description
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     storm_type          -storm type,refer to yt_storm_type_t
- * @param[out]    pInc_gap           -storm rate include or exclude packet gap
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_storm_ctrl_rate_include_gap_get(yt_unit_t unit, yt_port_t port, yt_storm_type_t storm_type, yt_storm_rate_gap_t *pInc_gap)
-{
-    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
-    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(CMM_PORT_VALID(unit,port))), CMM_ERR_PORT);
-    CMM_PARAM_CHK((NULL == pInc_gap), CMM_ERR_NULL_POINT);
-
-    return YT_DISPATCH(unit)->storm_ctrl_rate_include_gap_get(unit, port, storm_type, pInc_gap);
+    return YT_DISPATCH(unit)->storm_ctrl_rate_mode_get(unit, port, stormType, pRateMode);
 }
 
 /**
@@ -185,14 +135,13 @@ yt_ret_t yt_storm_ctrl_rate_include_gap_get(yt_unit_t unit, yt_port_t port, yt_s
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-yt_ret_t yt_storm_ctrl_rate_set(yt_unit_t unit, yt_port_t port, yt_storm_type_t storm_type, uint32_t rate)
+yt_ret_t yt_storm_ctrl_rate_set(yt_unit_t unit, yt_port_t port, yt_storm_type_t stormType, uint32_t rate)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit,port))), CMM_ERR_PORT);
 
-    return YT_DISPATCH(unit)->storm_ctrl_rate_set(unit, port, storm_type, rate);
+    return YT_DISPATCH(unit)->storm_ctrl_rate_set(unit, port, stormType, rate);
 }
 
 /**
@@ -207,13 +156,13 @@ yt_ret_t yt_storm_ctrl_rate_set(yt_unit_t unit, yt_port_t port, yt_storm_type_t 
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-yt_ret_t yt_storm_ctrl_rate_get(yt_unit_t unit, yt_port_t port, yt_storm_type_t storm_type, uint32_t *pRate)
+yt_ret_t yt_storm_ctrl_rate_get(yt_unit_t unit, yt_port_t port, yt_storm_type_t stormType, uint32_t *pRate)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit,port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pRate), CMM_ERR_NULL_POINT);
 
-    return YT_DISPATCH(unit)->storm_ctrl_rate_get(unit, port, storm_type, pRate);
+    return YT_DISPATCH(unit)->storm_ctrl_rate_get(unit, port, stormType, pRate);
 }
+

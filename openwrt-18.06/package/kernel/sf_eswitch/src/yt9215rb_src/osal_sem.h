@@ -7,10 +7,15 @@
 #include <pthread.h>
 #elif defined (__KERNEL__)
 #include <linux/mutex.h>
-#else
+#elif defined (OS_FREERTOS)
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "yt_error.h"
+#elif defined (OS_LITEOS)
+#include "los_mux.h"
+#include "los_compiler.h"
+#include "los_task.h"
+#else
 #endif
 
 /*
@@ -32,7 +37,7 @@
 #define osal_mux_destroy        
 #define osal_mux_lock		    mutex_lock
 #define osal_mux_unlock		    mutex_unlock
-#else
+#elif defined (OS_FREERTOS)
 #define osal_mux            SemaphoreHandle_t
 #define osal_mux_init(pMuxHandle, attr) \
     do \
@@ -77,6 +82,69 @@
         } \
         xSemaphoreGive(*(osal_mux *)(pMuxHandle)); \
     }while(0)
+#elif defined (OS_LITEOS)
+#define osal_mux            UINT32
+#define osal_mux_init(pMuxHandle, attr) \
+    do \
+    { \
+        if(NULL == (UINT32 *)(pMuxHandle)) \
+        { \
+            return CMM_ERR_NULL_POINT; \
+        } \
+        UINT32 ret = LOS_MuxCreate((UINT32 *)pMuxHandle); \
+        if (LOS_OK != ret) \
+        { \
+            return CMM_ERR_FAIL; \
+        } \
+    }while(0)
+    
+#define osal_mux_destroy(pMuxHandle) \
+    do \
+    { \
+        if(NULL == (UINT32 *)(pMuxHandle))\
+        { \
+            return CMM_ERR_NULL_POINT; \
+        } \
+        UINT32 ret = LOS_MuxDelete(*(UINT32 *)(pMuxHandle)); \
+        if (LOS_OK != ret) \
+        { \
+            return CMM_ERR_FAIL; \
+        } \
+    }while(0)
+    
+#define osal_mux_lock(pMuxHandle) \
+    do \
+    { \
+        if(NULL == (UINT32 *)(pMuxHandle)) \
+        { \
+            return CMM_ERR_NULL_POINT; \
+        } \
+        UINT32 ret = LOS_MuxPend(*(UINT32 *)(pMuxHandle), LOS_WAIT_FOREVER); \
+        if (LOS_OK != ret) \
+        { \
+            return CMM_ERR_FAIL; \
+        } \
+    }while(0)
+    
+#define osal_mux_unlock(pMuxHandle) \
+    do \
+    { \
+        if(NULL == (UINT32 *)(pMuxHandle)) \
+        { \
+            return CMM_ERR_NULL_POINT; \
+        } \
+        UINT32 ret = LOS_MuxPost(*(UINT32 *)(pMuxHandle)); \
+        if (LOS_OK != ret) \
+        { \
+            return CMM_ERR_FAIL; \
+        } \
+    }while(0)
+#else
+#define osal_mux                int
+#define osal_mux_init(a, b)     (0)
+#define osal_mux_destroy
+#define osal_mux_lock
+#define osal_mux_unlock
 #endif
 
 
@@ -89,3 +157,4 @@
  */
 
 #endif
+

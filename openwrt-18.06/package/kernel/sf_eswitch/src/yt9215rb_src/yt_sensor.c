@@ -32,7 +32,6 @@ yt_ret_t yt_sensor_temp_enable_set(yt_unit_t unit, yt_enable_t enable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
     return YT_DISPATCH(unit)->sensor_temp_enable_set(unit, enable);
@@ -53,7 +52,6 @@ yt_ret_t yt_sensor_temp_enable_get(yt_unit_t unit, yt_enable_t *pEnable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->sensor_temp_enable_get(unit, pEnable);
@@ -75,9 +73,9 @@ yt_ret_t yt_sensor_temp_value_get(yt_unit_t unit, yt_bool_t *pIsNegative, uint16
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pIsNegative), CMM_ERR_NULL_POINT);
     CMM_PARAM_CHK((NULL == pAbsoluteValue), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->sensor_temp_value_get(unit, pIsNegative, pAbsoluteValue);
 }
+

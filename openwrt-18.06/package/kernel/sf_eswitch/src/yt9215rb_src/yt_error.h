@@ -8,6 +8,9 @@
  * Include Files
  */
 #include "yt_types.h"
+#ifndef OS_FREERTOS
+#include "yt_lock.h"
+#endif
 
 /*
  * Symbol Definition
@@ -21,31 +24,6 @@
 #else
 #define yt_printf printf
 #endif
-
-typedef enum cmm_err_e
-{
-    CMM_ERR_OK                   = 0,
-    CMM_ERR_FAIL                 = 1,
-    CMM_ERR_NULL_POINT  = 2,
-    CMM_ERR_NOT_SUPPORT,
-    CMM_ERR_NOT_INIT,
-    CMM_ERR_INPUT = 5,
-    CMM_ERR_REG_TABLE_NUM,
-    CMM_ERR_REG_TABLE_OP,
-    CMM_ERR_TABLE_FULL,
-    CMM_ERR_ENTRY_NOT_FOUND,
-    CMM_ERR_REG_TABLE_IDX = 10,
-    CMM_ERR_SAMEENTRY_EXIST,
-    CMM_ERR_ENTRY_FULL,
-    CMM_ERR_FDB_OP_BUSY,
-    CMM_ERR_PORT,
-    CMM_ERR_PORTLIST = 15,
-    CMM_ERR_BUSYING_TIME,
-    CMM_ERR_EXCEED_RANGE,
-    CMM_ERR_TOO_LESS_INFO,
-    CMM_ERR_FORBIDDEN,
-    CMM_ERR_MAX,
-} cmm_err_t;
 
 #define _YT_ERRMSG        \
 {                         \
@@ -62,17 +40,31 @@ typedef enum cmm_err_e
         "Table index error",          /* CMM_ERR_REG_TABLE_IDX */ \
         "Entry has been exist",       /* CMM_ERR_SAMEENTRY_EXIST */ \
         "Entry full",                 /* CMM_ERR_ENTRY_FULL */ \
-        "FDB operation busy",                   /* CMM_ERR_FDB_OP_BUSY */ \
+        "FDB operation busy",         /* CMM_ERR_FDB_OP_BUSY */ \
         "Invalid port",               /* CMM_ERR_PORT */ \
         "Invalid portlist",           /* CMM_ERR_PORTLIST */ \
-        "Access  phy register busy", /*CMM_ERR_BUSYING_TIME*/ \
-        "Exceed allowed range", /*CMM_ERR_EXCEED_RANGE*/ \
+        "Access  phy register busy",  /*CMM_ERR_BUSYING_TIME*/ \
+        "Exceed allowed range",       /*CMM_ERR_EXCEED_RANGE*/ \
+        "Port has been in lag port",  /*CMM_ERR_PORT_BEEN_IN_LAG*/ \
+        "Too less info",              /*CMM_ERR_TOO_LESS_INFO*/ \
+        "ACL module not init",        /*CMM_ERR_ACL_NOT_INIT*/ \
+        "ACL instance not found",     /*CMM_ERR_ACL_INSTANCE_NOT_FOUND*/ \
+        "ACL instance is full",       /*CMM_ERR_ACL_INSTANCE_FULL*/ \
+        "ACL keymask not support",    /*CMM_ERR_ACL_KEY_SELECT_FAIL*/ \
+        "ACL entry not found",        /*CMM_ERR_ACL_ENTRY_NOT_FOUND*/ \
+        "ACL bin not enough",         /*CMM_ERR_ACL_BIN_NOT_ENOUGH*/ \
+        "ACL invalid key on current instance",   /*CMM_ERR_ACL_INVALID_KEY_ON_INSTANCE*/ \
+        "ACL operation is busy",      /*CMM_ERR_ACL_OP_BUSY*/ \
+        "Forbidden operation",        /*CMM_ERR_FORBIDDEN*/ \
+        "Entry over lapping",         /*CMM_ERR_ENTRY_OVERLAPPING*/ \
+        "Entry invalid",              /*CMM_ERR_ENTRY_INVALID*/ \
         "Unknown error"               /* CMM_ERR_MAX */ \
 }
 
 typedef enum _yt_debug_level_e
 {
-    YT_DEBUG_NONE = 0,
+    YT_DEBUG_DEBUG = 0,
+    YT_DEBUG_INFO,
     YT_DEBUG_WARN,
     YT_DEBUG_ERROR,
     YT_DEBUG_MAX
@@ -80,7 +72,8 @@ typedef enum _yt_debug_level_e
 
 #define _YT_PROMPT_MSG       \
 {                         \
-        "",                  /* YT_DEBUG_NONE  */ \
+        "Debug: ",                  /* YT_DEBUG_DEBUG  */ \
+        "Info: ",                /* YT_DEBUG_INFO */ \
         "Warning : ",        /* YT_DEBUG_WARN */ \
         "Error : ",           /* YT_DEBUG_ERROR */ \
         "Unknown level"      /* YT_DEBUG_MAX */ \
@@ -88,14 +81,14 @@ typedef enum _yt_debug_level_e
 
 
 /* errorcode to str */
-extern char *_yt_errmsg[];
+extern char * const _yt_errmsg[];
 
 #define yt_errmsg(rv)          \
     _yt_errmsg[rv]
 
 /* for debug */
 extern uint8_t yt_debug_level;
-extern char *_yt_prompt_msg[];
+extern char * const _yt_prompt_msg[];
 
 #define YT_PRINT(trace_level, err_code)\
 do {\
@@ -106,7 +99,7 @@ do {\
 
 #define YT_DEBUG(trace_level, err_code)\
 do {\
-    if (trace_level <= yt_debug_level) {\
+    if (trace_level >= yt_debug_level) {\
         YT_PRINT(trace_level, err_code); \
     }\
 } while (0)
@@ -115,6 +108,7 @@ do {\
 do {\
     if ((uint32_t)(expr)) {\
         YT_DEBUG(YT_DEBUG_ERROR, err_code); \
+	printk("%s %d \n", __func__, __LINE__); \
         return err_code; \
     }\
 } while (0)
@@ -125,10 +119,78 @@ do {\
     goto err_handle;\
 } while(0)
 
+#define CMM_ERR_UNLOCK(op, lockid, ret)\
+do {\
+    if ((ret = (op)) != CMM_ERR_OK) {\
+        if (lockid < YT_LOCK_ID_MAX) {\
+            osal_mux_unlock(&YT_LOCK_ID(lockid));\
+        }\
+        return ret;\
+    }\
+} while(0)
+
 #define CMM_ERR_CHK(op, ret)\
 do {\
     if ((ret = (op)) != CMM_ERR_OK)\
     return ret;\
 } while(0)
 
+#define CMM_ACL_ERR_CHK_WITH_FREE_INSTANCE(op, lockid, ret, instance)\
+do {\
+    if ((ret = (op)) != CMM_ERR_OK){\
+        if (instance != NULL){\
+            osal_free(instance, YT_MEM_MALLOC_MODULE_ACL);\
+            instance = NULL;\
+        }\
+        if (lockid < YT_LOCK_ID_MAX) {\
+            osal_mux_unlock(&YT_LOCK_ID(lockid));\
+        }\
+        return ret;\
+    }\
+} while(0)
+
+#define CMM_ACL_ERR_CHK_WITH_FREE_BIN(op, ret, bin)\
+do {\
+    if ((ret = (op)) != CMM_ERR_OK){\
+        if (bin != NULL){\
+            osal_free(bin, YT_MEM_MALLOC_MODULE_ACL);\
+            bin = NULL;\
+        }\
+        return ret;\
+    }\
+} while(0)
+
+#define CMM_ACL_ERR_CHK_WITH_FREE_INSTANCE_BIN(op, lockid, ret, instance, bin)\
+do {\
+    if ((ret = (op)) != CMM_ERR_OK){\
+        if (instance != NULL){\
+            osal_free(instance, YT_MEM_MALLOC_MODULE_ACL);\
+            instance = NULL;\
+        }\
+        if (bin != NULL){\
+            osal_free(bin, YT_MEM_MALLOC_MODULE_ACL);\
+            bin = NULL;\
+        }\
+        if (lockid < YT_LOCK_ID_MAX) {\
+            osal_mux_unlock(&YT_LOCK_ID(lockid));\
+        }\
+        return ret;\
+    }\
+} while(0)
+
+#define CMM_ACL_ERR_CHK_WITH_FREE_ENTRY(op, lockid, ret, entry)\
+do {\
+    if ((ret = (op)) != CMM_ERR_OK){\
+        if (entry != NULL){\
+            osal_free(entry, YT_MEM_MALLOC_MODULE_ACL);\
+            entry = NULL;\
+        }\
+        if (lockid < YT_LOCK_ID_MAX) {\
+            osal_mux_unlock(&YT_LOCK_ID(lockid));\
+        }\
+        return ret;\
+    }\
+} while(0)
+
 #endif
+

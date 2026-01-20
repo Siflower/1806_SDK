@@ -26,6 +26,12 @@ extern "C" {
 #include "yt_types.h"
 #include "yt_stat.h"
 
+#define MIB_CTRL_ADDR   (0xc0000)
+#define MIB_OP_ADDR (0xc0004)
+#define MIB_TBL_BASE_ADDR0  (0xc0100)
+#define MIB_MAX_COUNTER (0x2e)
+#define MIB_COUNTER_MAX    (0x2e -5)
+
 /**
  * @internal      fal_tiger_mib_init
  * @endinternal
@@ -104,6 +110,7 @@ extern yt_ret_t fal_tiger_stat_mib_port_get (yt_unit_t unit, yt_port_t port, yt_
 
 extern yt_ret_t fal_tiger_stat_mib_port_index_get (yt_unit_t unit, yt_port_t port, uint32_t index, uint64 *pcnt);
 
+extern yt_ret_t fal_tiger_stat_mib_port_singleType_cnt_get(yt_unit_t unit, yt_port_t port, yt_stat_mib_t mibType, uint64 *pCnt);
 
 /**
  * @internal      fal_tiger_stat_flow_enable_set
@@ -117,6 +124,7 @@ extern yt_ret_t fal_tiger_stat_mib_port_index_get (yt_unit_t unit, yt_port_t por
  * @retval        CMM_ERR_FAIL        -on fail
  */
 extern yt_ret_t fal_tiger_stat_flow_enable_set (yt_unit_t unit, uint32_t flow_id, yt_enable_t enable);
+
 
 /**
  * @internal      fal_tiger_stat_flow_enable_get

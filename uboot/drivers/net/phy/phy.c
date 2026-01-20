@@ -257,10 +257,10 @@ int genphy_update_link(struct phy_device *phydev)
 				return -EINTR;
 			}
 
-			if ((i++ % 500) == 0)
+			if ((i++ & 0xfff) == 0)
 				printf(".");
 
-			udelay(1000);	/* 1 ms */
+			udelay(100);
 			mii_reg = phy_read(phydev, MDIO_DEVAD_NONE, MII_BMSR);
 		}
 		printf(" done\n");

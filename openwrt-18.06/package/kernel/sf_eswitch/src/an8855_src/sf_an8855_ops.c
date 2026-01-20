@@ -1,6 +1,7 @@
 /*
 * Description
 *
+* Copyright (C) 2016-2020 Qin.Xia <qin.xia@siflower.com.cn>
 *
 * Siflower software
 */
@@ -8,8 +9,14 @@
 #include "../sf_eswitch.h"
 #include "an8855_mdio.h"
 
+#ifdef CONFIG_SFAX8_ESWITCH_REDIRECT
+#define DHCP_DPORT67_ACL_RULE_IDX    (32)
+#define DNS_DPORT53_ACL_RULE_IDX   (33)
+#endif
+
 extern struct vlan_entry vlan_entries;
 extern int check_port_in_portlist(struct sf_eswitch_priv *pesw_priv, int port);
+extern int notify_link_event(struct sf_eswitch_priv *pesw_priv, int port, int updown, char *ifname, uint8_t *mac, uint16_t vlan_id, bool flag);
 
 AIR_ERROR_NO_T air_printf(C8_T* fmt, ...)
 {
@@ -219,7 +226,6 @@ static int air_an8855_apply_vlan_config(struct switch_dev *dev)
 		air_vlan_setEgsTagConsistent(0, entry->vid, 0);
 
 		for (i = 0; i < AN8855_NUM_PORTS; i++) {
-
 			if (!(entry->member & BIT(i)))
 				continue;
 
@@ -299,6 +305,116 @@ static int air_an8855_get_vlan_fid(struct switch_dev *dev,
 	return 0;
 }
 
+static int air_an8855_set_fld_mode(struct switch_dev *dev,
+		const struct switch_attr *attr,
+		struct switch_val *val)
+{
+	int ptr_fld_en;
+	int type;
+
+	if (val->port_vlan < 0)
+		return -EINVAL;
+
+	if (!strncmp(val->value.s, "true", 4))
+		ptr_fld_en = 1;
+	else if (!strncmp(val->value.s, "false", 5))
+		ptr_fld_en = 0;
+	else
+		return -EINVAL;
+
+	if (!strncmp(val->value.s, "true_b", 6))
+		type = AIR_FLOOD_TYPE_BCST;
+	else if (!strncmp(val->value.s, "false_b", 7))
+		type = AIR_FLOOD_TYPE_BCST;
+	else if (!strncmp(val->value.s, "true_m", 6))
+		type = AIR_FLOOD_TYPE_MCST;
+	else if (!strncmp(val->value.s, "false_m", 7))
+		type = AIR_FLOOD_TYPE_MCST;
+	else if (!strncmp(val->value.s, "true_u", 6))
+		type = AIR_FLOOD_TYPE_UCST;
+	else if (!strncmp(val->value.s, "false_u", 7))
+		type = AIR_FLOOD_TYPE_UCST;
+	else if (!strncmp(val->value.s, "true_u", 6))
+		type = AIR_FLOOD_TYPE_QURY;
+	else if (!strncmp(val->value.s, "false_u", 7))
+		type = AIR_FLOOD_TYPE_QURY;
+	else
+		return -EINVAL;
+
+	SF_MDIO_LOCK();
+	air_sec_setFldMode(0, val->port_vlan, type, ptr_fld_en);
+	SF_MDIO_UNLOCK();
+
+	return 0;
+}
+
+static int air_an8855_get_fld_mode(struct switch_dev *dev,
+		const struct switch_attr *attr,
+		struct switch_val *val)
+{
+	int ptr_fld_en;
+	int type;
+	char stype[4][5] = {"Bcst", "Mcst", "Ucst", "Qury"};
+	static char buf[64];
+	int len = 0;
+
+	if (val->port_vlan < 0)
+		return -EINVAL;
+
+	SF_MDIO_LOCK();
+	for (type = 0; type < AIR_FLOOD_TYPE_LAST; type++) {
+		air_sec_getFldMode(0, val->port_vlan, type, &ptr_fld_en);
+		printk("now the type %s's flood mode is %d.\n", stype[type], ptr_fld_en);
+	}
+	SF_MDIO_UNLOCK();
+
+	len += snprintf(buf + len, sizeof(buf) - len, "These are the port %d of an8855's flood mode.\n", val->port_vlan);
+
+	val->value.s = buf;
+	val->len = len;
+ 	return 0;
+}
+
+static int air_an8855_get_port_fdb_entry(struct switch_dev *dev, const struct switch_attr *attr, struct switch_val *val)
+{
+	struct sf_eswitch_priv *priv = container_of(dev, struct sf_eswitch_priv, swdev);
+	u8 count = 0;
+	u32 bucket_size = 0;
+	AIR_MAC_ENTRY_T *entry = NULL;
+	AIR_ERROR_NO_T ret = AIR_E_OK;
+	static char buf[64];
+	int len = 0;
+
+	SF_MDIO_LOCK();
+	air_l2_getMacBucketSize(0, &bucket_size);
+	SF_MDIO_UNLOCK();
+
+	entry = (AIR_MAC_ENTRY_T *)air_malloc(sizeof(AIR_MAC_ENTRY_T) * bucket_size);
+	if (entry) {
+		memset(entry, 0, sizeof(AIR_MAC_ENTRY_T) * bucket_size);
+
+		SF_MDIO_LOCK();
+		for (ret = air_l2_getMacAddr(0, &count, entry); \
+		     ret == AIR_E_OK; \
+		     ret = air_l2_getNextMacAddr(0, &count, entry)) {
+			if (entry->port_bitmap[0] == BIT(val->port_vlan)) {
+				printk("dump mac:%pM, vlan_id is %d\n", entry->mac, entry->cvid);
+				notify_link_event(priv, val->port_vlan, priv->phy_status[val->port_vlan], "eth0", entry->mac, entry->cvid, false);
+			}
+			memset(entry, 0, sizeof(AIR_MAC_ENTRY_T) * bucket_size);
+		}
+		SF_MDIO_UNLOCK();
+
+		air_free(entry);
+	}
+
+	len += snprintf(buf + len, sizeof(buf) - len, "These are the port %d of an8855's fdb entry.\n", val->port_vlan);
+
+	val->value.s = buf;
+	val->len = len;
+	return 0;
+}
+
 static int air_an8855_set_vlan_fid(struct switch_dev *dev,
 		const struct switch_attr *attr,
 		struct switch_val *val)
@@ -326,6 +442,19 @@ static struct switch_attr air_an8855_globals[] = {
 };
 
 static struct switch_attr air_an8855_port[] = {
+	{
+		.type = SWITCH_TYPE_STRING,
+		.name = "fdb_entry",
+		.description = "Get the switch's each port's fdb unicast entry",
+		.get = air_an8855_get_port_fdb_entry,
+	},
+	{
+		.type = SWITCH_TYPE_STRING,
+		.name = "fld_mode",
+		.description = "Set/Get the switch's each port's flood mode",
+		.set = air_an8855_set_fld_mode,
+		.get = air_an8855_get_fld_mode,
+	},
 };
 
 static struct switch_attr air_an8855_vlan[] = {
@@ -538,11 +667,134 @@ void air_port_air_port_setRgmiiDelay(void)
 	an8855_reg_write(0x1028C84c, regValue);
 }
 
+#ifdef CONFIG_SFAX8_ESWITCH_REDIRECT
+void air_an8855_redirect_dhcp(void)
+{
+	int port;
+	AIR_ACL_RULE_T rule;
+	AIR_ACL_ACTION_T action;
+	AIR_ERROR_NO_T ret = AIR_E_OK;
+
+	memset(&rule, 0, sizeof(rule));
+	memset(&action, 0, sizeof(action));
+
+	//ACL enable
+	air_acl_setGlobalState(0, TRUE);
+	for (port = 0; port < 4; port++)
+	{
+		air_acl_setPortEnable(0, port, TRUE);
+	}
+
+	//ACL rule
+	rule.key.protocol = 17; //udp协议
+	rule.key.dport = 67;
+	rule.key.fieldmap = (1 << AIR_ACL_PROTOCOL) | (1 << AIR_ACL_DPORT);
+	rule.key.portmap = 0xf;
+	rule.mask.protocol = 0xff;
+	rule.mask.dport = 0xffff;
+	rule.mask.fieldmap = rule.key.fieldmap;
+	rule.mask.portmap = (~rule.key.portmap) & AIR_ALL_PORT_BITMAP;
+	rule.ctrl.rule_en = TRUE;
+	rule.ctrl.end = TRUE;
+
+	ret = air_acl_setRule(0, DHCP_DPORT67_ACL_RULE_IDX, rule);
+	if(ret)
+		pr_info("Set ACL Rule(%u): %s\n", 0, air_error_getString(ret));
+
+	//ACL action
+	action.port_en = TRUE;
+	action.dest_port_sel = TRUE;
+	action.portmap = (1 << 5);
+
+	ret = air_acl_setAction(0, DHCP_DPORT67_ACL_RULE_IDX, action);
+	if(ret)
+		pr_info("Set ACL Action(%u): %s\n", 0, air_error_getString(ret));
+	else
+		pr_info("Enable to upload DHCP\n");
+}
+
+void air_an8855_redirect_dhcp_disabled(void)
+{
+	AIR_ERROR_NO_T ret = AIR_E_OK;
+
+	ret = air_acl_delRule(0, DHCP_DPORT67_ACL_RULE_IDX);
+	if(ret)
+		pr_info("Del ACL Rule(%u): %s\n", 0, air_error_getString(ret));
+
+	ret = air_acl_delAction(0, DHCP_DPORT67_ACL_RULE_IDX);
+	if(ret)
+		pr_info("Del ACL Action(%u): %s\n", 0, air_error_getString(ret));
+	else
+		pr_info("Disable to upload DHCP\n");
+}
+
+void air_an8855_redirect_dns(void)
+{
+    int port;
+    AIR_ACL_RULE_T rule;
+    AIR_ACL_ACTION_T action;
+    AIR_ERROR_NO_T ret = AIR_E_OK;
+
+    memset(&rule, 0, sizeof(rule));
+    memset(&action, 0, sizeof(action));
+
+    //ACL enable
+    air_acl_setGlobalState(0, TRUE);
+    for (port = 0; port < 4; port++)
+    {
+        air_acl_setPortEnable(0, port, TRUE);
+    }
+
+    //ACL rule（UDP 53）
+    rule.key.protocol = 17; // UDP
+    rule.key.dport = 53;    // DNS port
+    rule.key.fieldmap = (1 << AIR_ACL_PROTOCOL) | (1 << AIR_ACL_DPORT);
+    rule.key.portmap = 0xf; // Match all ports
+    rule.mask.protocol = 0xff;
+    rule.mask.dport = 0xffff;
+    rule.mask.fieldmap = rule.key.fieldmap;
+    rule.mask.portmap = (~rule.key.portmap) & AIR_ALL_PORT_BITMAP;
+    rule.ctrl.rule_en = TRUE;
+    rule.ctrl.end = TRUE;
+
+    ret = air_acl_setRule(0, DNS_DPORT53_ACL_RULE_IDX, rule);
+    if(ret)
+        pr_info("Set DNS ACL Rule(%u): %s\n", 0, air_error_getString(ret));
+
+    // Redirect to a cpu port (such as port 5)
+    action.port_en = TRUE;
+    action.dest_port_sel = TRUE;
+    action.portmap = (1 << 5);
+
+    ret = air_acl_setAction(0, DNS_DPORT53_ACL_RULE_IDX, action);
+    if(ret)
+        pr_info("Set DNS ACL Action(%u): %s\n", 0, air_error_getString(ret));
+	else
+		pr_info("Enable to upload DNS\n");
+}
+
+void air_an8855_redirect_dns_disabled(void)
+{
+    AIR_ERROR_NO_T ret = AIR_E_OK;
+
+    ret = air_acl_delRule(0, DNS_DPORT53_ACL_RULE_IDX);
+    if(ret)
+        pr_info("Del DNS ACL Rule(%u): %s\n", 0, air_error_getString(ret));
+
+    ret = air_acl_delAction(0, DNS_DPORT53_ACL_RULE_IDX);
+    if(ret)
+        pr_info("Del DNS ACL Action(%u): %s\n", 0, air_error_getString(ret));
+	else
+		pr_info("Disable to upload DNS\n");
+}
+#endif
+
 extern int an8855_init(void);
 void air_an8855_init(struct sf_eswitch_priv *pesw_priv)
 {
 	int i;
 	u32 pvc_mode = 0x8100 << PVC_STAG_VPID_OFFT;
+
 	AIR_INIT_PARAM_T param = {
 		.dev_access = {
 			.read_callback = __switch_read,
@@ -563,6 +815,7 @@ void air_an8855_init(struct sf_eswitch_priv *pesw_priv)
 
 	air_port_setRgmiiMode(0, AIR_PORT_SPEED_1000M);
 	air_port_air_port_setRgmiiDelay();
+
 	for (i = 0; i < AN8855_NUM_PORTS; i++) {
 		an8855_reg_write(PVC(i), pvc_mode);
 		air_port_setVlanMode(0, i, AIR_PORT_VLAN_MODE_SECURITY);
@@ -587,20 +840,27 @@ void air_an8855_dump_mac(char *macaddr, int port)
 
 	SF_MDIO_LOCK();
 	air_l2_getMacBucketSize(0, &bucket_size);
+	SF_MDIO_UNLOCK();
+
 	entry = (AIR_MAC_ENTRY_T *)air_malloc(sizeof(AIR_MAC_ENTRY_T) * bucket_size);
 	if (entry) {
 		memset(entry, 0, sizeof(AIR_MAC_ENTRY_T) * bucket_size);
-		ret = air_l2_getMacAddr(0, &count, entry);
-		do{
+
+		SF_MDIO_LOCK();
+		for (ret = air_l2_getMacAddr(0, &count, entry); \
+		     ret == AIR_E_OK; \
+		     ret = air_l2_getNextMacAddr(0, &count, entry)) {
 			if (entry->port_bitmap[0] & BIT(port)) {
-				sprintf(macaddr,"%pM", entry->mac);
+				sprintf(macaddr, "%pM", entry->mac);
 				break;
 			}
 
 			memset(entry, 0, sizeof(AIR_MAC_ENTRY_T) * bucket_size);
-		}while((air_l2_getNextMacAddr(0, &count, entry))==AIR_E_OK);
+		}
+		SF_MDIO_UNLOCK();
+
+		air_free(entry);
 	}
-	SF_MDIO_UNLOCK();
 }
 
 struct sf_eswitch_api_t an8855_api = {
@@ -620,5 +880,5 @@ struct sf_eswitch_api_t an8855_api = {
 	.getAsicReg = air_an8855_getAsicReg,
 	.setAsicPHYReg = an8855_phy_write,
 	.getAsicPHYReg = an8855_phy_read,
-	.dump_mac = air_an8855_dump_mac,
+	.dumpmac = air_an8855_dump_mac,
 };

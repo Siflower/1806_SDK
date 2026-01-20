@@ -72,6 +72,12 @@ static inline void sgmac_mac_enable(struct sgmac_priv *priv)
 	value = readl(priv->base + GMAC_DMA_OPERATION);
 	value |= DMA_OPERATION_ST | DMA_OPERATION_SR;
 	writel(value, priv->base + GMAC_DMA_OPERATION);
+
+#if defined(CONFIG_CMD_MULUP)
+	value = readl(priv->base + GMAC_FRAME_FILTER);
+	value |= GMAC_FRAME_FILTER_PM;
+	writel(value, priv->base + GMAC_FRAME_FILTER);
+#endif
 }
 
 static inline void sgmac_mac_disable(struct sgmac_priv *priv)
@@ -120,6 +126,7 @@ static int sgmac_hw_init(struct eth_device *dev, struct sgmac_priv *priv)
 	ctrl = readl(priv->base + GMAC_CONTROL) & GMAC_CONTROL_SPD_MASK;
 
 	/* SW reset */
+#ifndef CONFIG_NO_SWITCH_AND_PHY
 	writel(DMA_BUS_MODE_SFT_RESET, priv->base + GMAC_DMA_BUS_MODE);
 	while (readl(priv->base + GMAC_DMA_BUS_MODE) & DMA_BUS_MODE_SFT_RESET) {
 		mdelay(10);
@@ -129,7 +136,7 @@ static int sgmac_hw_init(struct eth_device *dev, struct sgmac_priv *priv)
 			return -ETIMEDOUT;
 		}
 	}
-
+#endif
 	sf_gmac_write_hwaddr(dev);
 	value = (0x10 << DMA_BUS_MODE_PBL_SHIFT) |
 		(0x10 << DMA_BUS_MODE_RPBL_SHIFT) | DMA_BUS_MODE_FB |
@@ -147,7 +154,7 @@ static int sgmac_hw_init(struct eth_device *dev, struct sgmac_priv *priv)
 	// no link
 	priv->link = 0;
 	priv->duplex = DUPLEX_FULL;
-#ifdef CONFIG_SFAX8_RGMII_GMAC
+#ifdef CONFIG_SFA18_RGMII_GMAC
 	priv->speed = SPEED_1000;
 	ctrl = GMAC_CONTROL_CST | GMAC_CONTROL_JE | GMAC_CONTROL_ACS |
 	       GMAC_SPEED_1000M | GMAC_CONTROL_DM;
@@ -615,14 +622,21 @@ int sf_gmac_register(void)
 #ifdef CONFIG_GMAC_USE_GPIO_MDIO
 	uint regValue = 0;
 #else
-	int chip_id = 0, i = 0;
+#ifndef CONFIG_SFA18_GMAC_PHY
 	rtk_portmask_t portmask;
-#endif
-	int ret = 0;
+	int i = 0;
+	int rtk_rgmii_port = 10;
 	u32 chip_mode;
-	int rtk_rgmii_port;
 	u32 read_data = 0;
+#endif
+#endif
+	int chip_id = 0;
+	int ret = 0;
 
+#ifdef CONFIG_NO_SWITCH_AND_PHY
+	mdelay(60000);
+	printf("sf_gmac_register wait switch rx clk for 60 seconds\n");
+#endif
 	dev = (struct eth_device *)malloc(sizeof(struct eth_device));
 	if (dev == NULL) {
 		error("%s: Not enough memory!\n", __func__);
@@ -657,7 +671,7 @@ int sf_gmac_register(void)
 	l2sw_getAsicReg(0x1300, &regValue);
 	l2sw_getAsicReg(0x1300, &regValue);
 	printf("read 0x1300 reg value :0x%x\n", regValue);
-	if (regValue == 0x1619){
+	if (regValue == 0x1619) {
 		priv->gswitch = 1;
 		nf_switch_init();
 	}
@@ -665,17 +679,21 @@ int sf_gmac_register(void)
 	sgmac_mdio_init(dev->name, priv);
 	priv->bus = miiphy_get_dev_by_name(dev->name);
 
-	// trigger switch hw reset first
+	// trigger switch/phy hw reset first
 	sf_trigger_eswitch_hwReset();
 
+
 #ifndef CONFIG_SFA18_GMAC_PHY
-	// chip id to read realtek 8367c
+#ifndef CONFIG_NO_SWITCH_AND_PHY
+	// chip id to read realtek 8367c/8367rb-vc
 	if (chip_id == 0) {
 		rtk_phy_id = 0;
 		rtk_rgmii_port = 16;
-		rtl8367c_setAsicReg(priv, 0x13C2, 0x0249);
-		rtl8367c_getAsicReg(priv, 0x1300, &chip_id);
-		if (chip_id != 0x6367)
+		rtl8367_setAsicReg(priv, 0x13C2, 0x0249);
+		rtl8367_getAsicReg(priv, 0x1300, &chip_id);
+		if (chip_id == 0x6642)
+			rtk_rgmii_port = 17;
+		if (chip_id != 0x6367 && chip_id != 0x6642)
 			chip_id = 0;
 	}
 
@@ -683,8 +701,8 @@ int sf_gmac_register(void)
 	if (chip_id == 0) {
 		rtk_phy_id = 29;
 		rtk_rgmii_port = 17;
-		rtl8367c_setAsicReg(priv, 0x13C2, 0x0249);
-		rtl8367c_getAsicReg(priv, 0x1300, &chip_id);
+		rtl8367_setAsicReg(priv, 0x13C2, 0x0249);
+		rtl8367_getAsicReg(priv, 0x1300, &chip_id);
 		if (chip_id != 0x6367)
 			chip_id = 0;
 	}
@@ -737,14 +755,14 @@ int sf_gmac_register(void)
 			//force gmac8 1G full
 			yt9215_reg_write(priv, MAC8_SPEED_SET, 0x1fa);
 		} else if ((chip_id >> 16 & 0xffff) == YT_SW_ID_9215 &&
-		    (chip_mode & 0x3) == SWCHIP_YT9215S || (chip_mode & 0x3) == SWCHIP_YT9215SC) {
+		    ((chip_mode & 0x3) == SWCHIP_YT9215S || (chip_mode & 0x3) == SWCHIP_YT9215SC)) {
 				priv->gswitch = 1;
-				//set gmac9 rgmii and tx/rx delay 0ns
+				//set gmac9 rgmii and tx delay 2ns+7*0.15ns rx delay 8*0.15ns
 				yt9215_reg_write(priv, CHIP_INTERFACE_SELECT_REG, 0x1);
-				yt9215_reg_write(priv, CHIP_INTERFACE_MAC9, 0x841c0000);
+				yt9215_reg_write(priv, CHIP_INTERFACE_MAC9, 0x841ce140);
 				//force gmac9 1G full
 				yt9215_reg_write(priv, MAC9_SPEED_SET, 0x1fa);
-		}else {
+		} else {
 			chip_id = 0;
 		}
 	}
@@ -755,9 +773,10 @@ int sf_gmac_register(void)
 		if (chip_id != CHIP_ID_JL5106)
 			chip_id = 0;
 	}
-
+#endif
+	priv->chip_id = chip_id;
 	printf("%d chid_id 0x%08x\n", __LINE__, chip_id);
-
+#ifndef CONFIG_NO_SWITCH_AND_PHY
 	if (chip_id == 0xc0ff0410) {
 		priv->gswitch = 1;
 		/* Keep the clock ticking when all ports link down */
@@ -768,25 +787,24 @@ int sf_gmac_register(void)
 		an8855_run_sram_code(priv);
 		an8855_gbe_1g_setting(priv);
 
-		for(i = 0; i <= 4; i++)
-		{
+		for (i = 0; i <= 4; i++) {
 			an8855_phy_write(priv, i, 0, 0x1240);
 		}
 		mdelay(10);
 	}
 
-	if (chip_id == 0x6367) {
+	if (chip_id == 0x6367 || chip_id == 0x6642) {
 		// realtek giga switch
 		priv->gswitch = 1;
-		dal_rtl8367c_port_phyEnableAll_set(priv, 1);
+		dal_rtl8367_port_phyEnableAll_set(priv, 1);
 		rtk_extPort_rgmii_init(priv, rtk_rgmii_port);
 #if defined(CONFIG_SOC_SFA28_MPW0)
 		rtk_port_rgmiiDelayExt_set(priv, 16, 1, 1);
 #endif
 		// sync system tx delay to uboot, or use autodelay value will result in pkt lose
-		rtl8367c_setAsicReg(priv, 0x13f9, 0x90);
+		rtl8367_setAsicReg(priv, 0x13f9, 0x90);
 		// RM#10001 rtk isolation vlan to fix ip error
-		for(; i < 5; i++){
+		for (; i < 5; i++) {
 			RTK_PORTMASK_CLEAR(portmask);
 			RTK_PORTMASK_PORT_SET(portmask, (rtk_rgmii_port - 10));
 			RTK_PORTMASK_PORT_SET(portmask, i);
@@ -820,10 +838,11 @@ int sf_gmac_register(void)
 		// RM#10001 intel enable vlan to fix ip error
 		sf_gmac_vlan_all_enable = 1;
 		intel7084_vlan_set();
-	}else if (chip_id == CHIP_ID_JL5106) {
+	} else if (chip_id == CHIP_ID_JL5106) {
 		priv->gswitch = 1;
 		jl_switch_init();
 	}
+#endif
 #else
 	sgmac_phy_init(priv, dev);
 
@@ -831,14 +850,14 @@ int sf_gmac_register(void)
 #endif /* CONFIG_GMAC_USE_GPIO_MDIO */
 
 	sf_get_gmac_delay_from_factory(buf);
-			printf("get gmac delay:%s\n", buf);
+	printf("get gmac delay:%s\n", buf);
 	if ((buf[0] != 0) && (buf[0] != 0xff)) {
 		if (strtou32((char*)buf, 16, &gmac_delay) == 0) {
 			writew((gmac_delay >> 8) & 0xFF, (void *)EMAC_CLK_TX_I_DLY);
 			writew(gmac_delay & 0xFF, (void *)EMAC_CLK_PHY_RX_I_DLY);
 			printf("get gmac delay:0x%04x\n", gmac_delay);
 		}
-	}else if (chip_id == 0x6367) {
+	} else if (chip_id == 0x6367 || chip_id == 0x6642) {
 		writew(SFA18_RTK8367_GMAC_TX_DELAY, (void *)EMAC_CLK_TX_I_DLY);
 		writew(SFA18_RTK8367_GMAC_RX_DELAY, (void *)EMAC_CLK_PHY_RX_I_DLY);
 	} else if ((chip_id >> 16 & 0xffff) == YT_SW_ID_9215) {
@@ -853,6 +872,7 @@ int sf_gmac_register(void)
 	sgmac_hw_init(dev, priv);
 	sgmac_dma_desc_rings_init(priv);
 	/* Start up the PHY */
+#ifndef CONFIG_NO_SWITCH_AND_PHY
 	if (priv->gswitch) {
 		int reg = readl(priv->base + GMAC_CONTROL);
 		reg &= ~GMAC_CONTROL_SPD_MASK;
@@ -873,6 +893,6 @@ int sf_gmac_register(void)
 		/* Enable Emac Registers */
 		sgmac_adjust_link(priv, priv->phydev);
 	}
-
+#endif
 	return 0;
 }

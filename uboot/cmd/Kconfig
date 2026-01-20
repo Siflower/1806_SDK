@@ -536,6 +536,11 @@ config CMD_PING
 	help
 	  Send ICMP ECHO_REQUEST to network host
 
+config CMD_MULUP
+	bool "mulupgrade"
+	help
+	  Start multicast upgrade image
+
 config CMD_CDP
 	bool "cdp"
 	help
@@ -594,6 +599,11 @@ config CMD_TIME
 	bool "time"
 	help
 	  Run commands and summarize execution time.
+
+config CMD_LED
+	bool "led"
+	help
+	  Light up led.
 
 # TODO: rename to CMD_SLEEP
 config CMD_MISC

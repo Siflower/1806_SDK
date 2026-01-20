@@ -25,7 +25,8 @@ const yt_swchip_cap_t yt9218_capacity =
     .max_protocol_vlan_tbl_num = 4,
     .max_value_of_msti = 15,
     .max_vlan_range_profile_num = 10,
-    .max_vlan_meter_entry_num = 32
+    .max_vlan_meter_entry_num = 32,
+    .max_l2_fdb_num = 4096
 };
 
 /* chip 9002 related to yt9215 */
@@ -42,29 +43,60 @@ const yt_swchip_cap_t yt9215_capacity =
     .max_protocol_vlan_tbl_num = 0,
     .max_value_of_msti = 15,
     .max_vlan_range_profile_num = 10,
-    .max_vlan_meter_entry_num = 32
+    .max_vlan_meter_entry_num = 32,
+    .max_l2_fdb_num = 4096
 };
 
 const yt_swchip_if_info_t yt9218_intf_info =
 {
-	.allif_num = 11,
-	.intif_num = 8,
-	.intif_start_mac_id = 0,
-	.extif_num = 2,
-	.extif_start_mac_id = 8,
-	.extif_start_id = 0,
-	.intcpu_mac_id = 10
+    .allif_num = 10,
+    .intif_start_mac_id = 0,
+    .intif_end_mac_id = 7,
+    .intcpu_mac_id = 10,
+    .extif_num = 2,
+    .extIf[0] = {8, 8, 0},
+    .extIf[1] = {9, 9, 1},
+};
+
+const yt_swchip_if_info_t yt9218n_intf_info =
+{
+    .allif_num = 8,
+    .intif_start_mac_id = 0,
+    .intif_end_mac_id = 7,
+    .intcpu_mac_id = 10,
+    .extif_num = 0,
 };
 
 const yt_swchip_if_info_t yt9215_intf_info =
 {
-	.allif_num = 8,
-	.intif_num = 5,
-	.intif_start_mac_id = 0,
+    .allif_num = 7,
+    .intif_start_mac_id = 0,
+    .intif_end_mac_id = 4,
+    .intcpu_mac_id = 10,
+    .extif_num = 2,
+    .extIf[0] = {8, 8, 0},
+    .extIf[1] = {9, 9, 1},
+};
+
+const yt_swchip_if_info_t yt9213_intf_info =
+{
+	.allif_num = 3,
+	.intif_start_mac_id = 1,
+    .intif_end_mac_id = 3,
+	.intcpu_mac_id = 10,
+	.extif_num = 1,
+    .extIf[0] = {9, 9, 1},
+};
+
+const yt_swchip_if_info_t yt9214_intf_info =
+{
+	.allif_num = 4,
+	.intif_start_mac_id = 1,
+    .intif_end_mac_id = 3,
+	.intcpu_mac_id = 10,
 	.extif_num = 2,
-	.extif_start_mac_id = 8,
-	.extif_start_id = 0,
-	.intcpu_mac_id = 10
+    .extIf[0] = {8, 8, 0},
+    .extIf[1] = {9, 9, 1},
 };
 
 #endif

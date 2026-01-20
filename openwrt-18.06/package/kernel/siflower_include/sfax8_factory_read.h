@@ -101,10 +101,6 @@ enum sfax8_factory_read_action {
 	READ_WAN_MAC_ADDRESS,
 	//for lan basic address
 	READ_LAN_MAC_ADDRESS,
-#ifdef CONFIG_SFAX8_HNAT_MULTI_WAN
-	READ_WWAN_MAC_ADDRESS,
-	READ_LAN2_MAC_ADDRESS,
-#endif
 	READ_SN,
 	READ_SN_FLAG,
 	READ_PCBA_BOOT,

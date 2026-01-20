@@ -25,90 +25,14 @@ extern "C" {
 #include "fal_cmm.h"
 
 
-/**
- * @internal      fal_tiger_rma_action_set
- * @endinternal
- *
- * @brief         Description
- * @param[in]     unit                -unit id
- * @param[in]     macda               -x
- * @param[in]     action              -yt_rma.h
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t  fal_tiger_rma_action_set(yt_unit_t unit, yt_rma_da_t  macda, yt_rma_action_t action);
-
-
-/**
- * @internal      fal_tiger_rma_action_get
- * @endinternal
- *
- * @brief         Description
- * @param[in]     unit                -unit id
- * @param[in]     macda               -x
- * @param[out]    pAction             -yt_rma.h
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t  fal_tiger_rma_action_get(yt_unit_t unit, yt_rma_da_t  macda, yt_rma_action_t *pAction);
-
-
-/**
- * @internal      fal_tiger_rma_bypass_port_isolation_set
- * @endinternal
- *
- * @brief         Description
- * @param[in]     unit                -unit id
- * @param[in]     macda               -x
- * @param[in]     enable              -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t fal_tiger_rma_bypass_port_isolation_set(yt_unit_t unit, yt_rma_da_t  macda, yt_enable_t enable);
-
-
-/**
- * @internal      fal_tiger_rma_bypass_port_isolation_get
- * @endinternal
- *
- * @brief         Description
- * @param[in]     unit                -unit id
- * @param[in]     macda               -x
- * @param[out]    pEnable             -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t fal_tiger_rma_bypass_port_isolation_get(yt_unit_t unit, yt_rma_da_t  macda, yt_enable_t *pEnable);
-
-
-/**
- * @internal      fal_tiger_rma_bypass_vlan_filter_set
- * @endinternal
- *
- * @brief         Description
- * @param[in]     unit                -unit id
- * @param[in]     macda               -x
- * @param[in]     enable              -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t  fal_tiger_rma_bypass_vlan_filter_set(yt_unit_t unit, yt_rma_da_t macda, yt_enable_t enable);
-
-
-/**
- * @internal      fal_tiger_rma_bypass_vlan_filter_get
- * @endinternal
- *
- * @brief         Description
- * @param[in]     unit                -unit id
- * @param[in]     macda               -x
- * @param[out]    pEnable             -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t  fal_tiger_rma_bypass_vlan_filter_get(yt_unit_t unit, yt_rma_da_t macda, yt_enable_t *pEnable);
-
-
+extern yt_ret_t  fal_tiger_rma_action_set(yt_unit_t unit, yt_rma_da_t  macda, yt_act_type_t action);
+extern yt_ret_t  fal_tiger_rma_action_get(yt_unit_t unit, yt_rma_da_t  macda, yt_act_type_t *pAction);
+extern yt_ret_t  fal_tiger_rma_cpu_code_set(yt_unit_t unit, yt_rma_da_t  macda, yt_rma_cpu_code_t cpuCode);
+extern yt_ret_t  fal_tiger_rma_cpu_code_get(yt_unit_t unit, yt_rma_da_t  macda, yt_rma_cpu_code_t *pCpuCode);
+extern yt_ret_t  fal_tiger_rma_bypass_set(yt_unit_t unit, yt_rma_da_t  macda, yt_rma_bypass_t rmaBypass);
+extern yt_ret_t  fal_tiger_rma_bypass_get(yt_unit_t unit, yt_rma_da_t  macda, yt_rma_bypass_t *pRmaBypass);
+extern yt_ret_t  fal_tiger_rma_sa_learn_dis_set(yt_unit_t unit, yt_rma_da_t macda, yt_enable_t enable);
+extern yt_ret_t  fal_tiger_rma_sa_learn_dis_get(yt_unit_t unit, yt_rma_da_t macda, yt_enable_t *pEnable);
 
 
 #ifdef __cplusplus

@@ -452,9 +452,9 @@ static struct spi_nand_flash spi_nand_table[] = {
 	SPI_NAND_INFO("W25N01GV", MFR_ID_WINBOND, 0xaa, 2048, 64, 64, 1024,
 			1, 0,
 			SPI_NAND_ECCINFO(1,&micron_ecc_layout_64, NULL)),
-	SPI_NAND_INFO("W25N02KV", MFR_ID_WINBOND, 0xaa, 2048, 128, 64, 1024,
+	SPI_NAND_INFO("W25N02KV", MFR_ID_WINBOND, 0xaa, 2048, 128, 64, 2048,
 			1, 0,
-			SPI_NAND_ECCINFO(1,&micron_ecc_layout_64, NULL)),
+			SPI_NAND_ECCINFO(8,&micron_ecc_layout_64, NULL)),
 	#endif
 	#ifdef CONFIG_SPI_NAND_MACRONIX
 	SPI_NAND_INFO("MX35LF1GE4AB",   MFR_ID_MACRONIX, 0x12, 2048, 64, 64, 1024,

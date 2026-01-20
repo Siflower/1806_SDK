@@ -77,13 +77,13 @@ static int _spi_xfer(struct sfax8_spi_priv *priv, unsigned int bitlen,
 		/* Finish any previously submitted transfers */
 		goto out;
 
-	if (bitlen % 8) {
+	if (bitlen & 7) {
 		/* Errors always terminate an ongoing transfer */
 		flags |= SPI_XFER_END;
 		goto out;
 	}
 
-	len = bitlen / 8;
+	len = bitlen >> 3;
 
 	if (flags & SPI_XFER_BEGIN) {
 		/* Empty RX FIFO */
@@ -94,19 +94,16 @@ static int _spi_xfer(struct sfax8_spi_priv *priv, unsigned int bitlen,
 	}
 
 	for (len_tx = 0, len_rx = 0; len_rx < len;) {
-		tx_stat = readl(&reg->sspris);
-		status = readl(&reg->sspsr);
-
-		if ((len_tx < len) && (tx_stat & SSPRIS_TX)) {
-			if (txp)
-				value = *txp++;
-			else
-				value = 0xff;
-
-			writel(value, &reg->sspdr);
-			len_tx++;
+		if (len_tx < len) {
+			tx_stat = readl(&reg->sspris);
+			if (tx_stat & SSPRIS_TX) {
+				value = txp ? *txp++ : 0xff;
+				writel(value, &reg->sspdr);
+				len_tx++;
+			}
 		}
 
+		status = readl(&reg->sspsr);
 		if (status & SSPSR_RNE) {
 			value = readl(&reg->sspdr);
 

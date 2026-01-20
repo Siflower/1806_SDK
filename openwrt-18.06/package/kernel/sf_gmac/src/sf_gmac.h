@@ -355,7 +355,7 @@
 #define RXDESC_RX_ERR                   0x00000008              /* bit [3] RE: Receive Error */
 #define RXDESC_RX_WDOG                  0x00000010              /* bit [4] RWT: Receive Watchdog Timeout */
 #define RXDESC_FRAME_TYPE               0x00000020              /* bit [5] FT: Frame Type */
-#define RXDESC_CHECKSUM_ERR             0x00000080              /* bit [7] Timestamp Available, IP Checksum Error, or Giant Frame */
+#define RXDESC_CHECKSUM_ERR             0x00000080              /* bit [7] IPC Checksum Error */
 #define RXDESC_LAST_SEG                 0x00000100              /* bit [8] LS: Last Descriptor */
 #define RXDESC_FIRST_SEG                0x00000200              /* bit [9] FS: First Descriptor */
 #define RXDESC_VLAN_FRAME               0x00000400              /* bit [10] VLAN: VLAN Tag */
@@ -418,6 +418,26 @@
 #define PHY_IDENTIFY_1					0x02
 #define PHY_IDENTIFY_2					0x03
 #define PHY_CTRL_ENABLE_POWER_DOWN					(1 << 11)
+//rtk 8367 regs
+#define    RTL8367C_REG_BYPASS_LINE_RATE			0x03f7
+#define    RTL8367C_REG_SDS_MISC					0x1d11
+#define    RTL8367C_REG_DIGITAL_INTERFACE_SELECT    0x1305
+#define    RTL8367C_REG_REG_TO_ECO4					0x1d41
+#define    RTL8367C_REG_DIGITAL_INTERFACE0_FORCE    0x1310
+#define    RTL8367C_PHY_BASE						0x2000
+#define    RTL8367C_REG_GPHY_OCP_MSB_0				0x1d15
+
+#define    RTL8367C_CFG_MAC8_SEL_SGMII_OFFSET		6
+#define    RTL8367C_CFG_MAC8_SEL_HSGMII_OFFSET		11
+#define    RTL8367C_SELECT_GMII_0_MASK				0xF
+#define    RTL8367C_SELECT_GMII_1_OFFSET			4
+#define    RTL8367C_CFG_SGMII_FDUP_OFFSET			10
+#define    RTL8367C_CFG_SGMII_SPD_MASK				0x180
+#define    RTL8367C_CFG_SGMII_LINK_OFFSET			9
+#define    RTL8367C_CFG_SGMII_TXFC_OFFSET			13
+#define    RTL8367C_CFG_SGMII_RXFC_OFFSET			14
+#define    RTL8367C_PHY_OFFSET						5
+#define    RTL8367C_CFG_CPU_OCPADR_MSB_MASK			0xFC0
 
 //intel gsw150 regs
 #define SMDIO_WRADDR	(0x1F)
@@ -489,6 +509,17 @@
 #define PCDU_6_TXDLY_SHIFT 0
 #define PCDU_6_TXDLY_SIZE	 3
 
+
+/* Responses from smart drop functions. */
+#define SF_DROP 1
+#define SF_ACCEPT 2
+
+enum drop_level {
+	SF_UNRELATE_DROP,
+	SF_HASH_DROP,
+	SF_RANDOM_DROP,
+	SF_ALL_DROP,
+};
 
 struct sgmac_dma_desc {
 	__le32 flags;           // desc0
@@ -569,15 +600,8 @@ struct sgmac_priv {
 #ifdef CONFIG_SFAX8_PTP
 	int hwts_tx_en;
 	int hwts_rx_en;
-	u8  tx_hwtstamp_timeout;
-	unsigned long tx_hwtstamp_skipped;
-	unsigned long tx_hwtstamp_timeouts;
-	unsigned long tx_hwtstamp_start;
 	struct ptp_clock *ptp_clock;
 	struct ptp_clock_info ptp_clock_ops;
-	struct sk_buff *tx_hwtstamp_skb;
-	struct sgmac_dma_desc *tsdesc;
-	struct work_struct tx_hwtstamp_work;
 	spinlock_t ptp_lock;
 #endif
 
@@ -609,4 +633,11 @@ struct sgmac_priv {
 	struct skb_pool_param_t *skb_pool_dev_param;
 #endif
 };
+
+struct switch_ioctl_data {
+    __u32	port;
+    __u32	addr;
+    __u32   	val;
+};
+
 #endif //_SF_GMAC_H_

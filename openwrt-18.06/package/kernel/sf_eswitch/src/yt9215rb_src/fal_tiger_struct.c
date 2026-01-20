@@ -229,6 +229,7 @@ const field_id_t parser_erp_udfnm_field[] = {
 };
 
 const field_id_t dos_tcp_flags0m_field[] = { 
+    {DOS_TCP_FLAGS0_DROP_EN,1,0,17},
     {DOS_TCP_FLAGS0_COPY_TO_CPUf,1,0,16},
     {DOS_TCP_FLAGS0_TCP_FLAGS_MASKf,6,0,10},
     {DOS_TCP_FLAGS0_SEQ_NUM0_MASKf,1,0,9},
@@ -298,6 +299,9 @@ const field_id_t dos_ctrl1m_field[] = {
 };
 
 const field_id_t protocol_based_vlannm_field[] = { 
+    {PROTOCOL_BASED_VLANN_VALIDf,1,0,19},
+    {PROTOCOL_BASED_VLANN_L2_TYPE_BITMAPf,3,0,16},
+    {PROTOCOL_BASED_VLANN_ETH_TYPEf,16,0,0},
 };
 
 const field_id_t port_vlan_ctrlnm_field[] = { 
@@ -334,6 +338,10 @@ const field_id_t vlan_range_profilenm_field[] = {
 };
 
 const field_id_t protocol_based_vlan_data_tblm_field[] = { 
+    {PROTOCOL_BASED_VLAN_DATA_TBL_SVID_CMDf,2,0,26},
+    {PROTOCOL_BASED_VLAN_DATA_TBL_SVIDf,12,0,14},
+    {PROTOCOL_BASED_VLAN_DATA_TBL_CVID_CMDf,2,0,12},
+    {PROTOCOL_BASED_VLAN_DATA_TBL_CVIDf,12,0,0},
 };
 
 const field_id_t vlan_xlate_action_tblm_field[] = { 
@@ -1197,6 +1205,7 @@ const field_id_t l2_lldp_eee_per_port_ctrl2m_field[] = {
 
 const field_id_t l2_fdb_hw_flush_ctrlm_field[] = { 
     {L2_FDB_HW_FLUSH_CTRL_GLOBAL_ENf,1,0,0},
+    {L2_FDB_HW_FLUSH_CTRL_LAG_CTRL_ENf,1,0,4},
 };
 
 const field_id_t l2_uni_que_ctrlm_field[] = { 
@@ -1528,3 +1537,4 @@ const field_id_t psch_shp_cfg_tblm_field[] = {
 const field_id_t psch_meter_cfg_tblm_field[] = { 
     {PSCH_METER_CFG_TBL_METER_LENGTHf,2,0,0},
 };
+

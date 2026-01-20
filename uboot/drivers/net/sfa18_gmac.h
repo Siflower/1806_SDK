@@ -129,6 +129,7 @@ struct sgmac_priv {
 	int link;   // PHY's last seen link state, 0 is no link and 1 is link.
 	int speed;  // PHY's last set duplex mode.
 	int duplex; // PHY's last set speed.
+	int chip_id; // switch chip id
 	struct phy_device *phydev;
 	struct mii_dev *bus;
 

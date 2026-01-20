@@ -135,7 +135,32 @@ extern yt_ret_t fal_tiger_oam_mux_act_set(yt_unit_t unit, yt_port_t port, yt_oam
 extern yt_ret_t fal_tiger_oam_mux_act_get(yt_unit_t unit, yt_port_t port, yt_oam_mux_action_t *paction);
 
 
+/**
+ * @internal      fal_tiger_oam_mac_swap_en_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     enable              -enable or disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_oam_mac_swap_en_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable);
 
+
+/**
+ * @internal      fal_tiger_oam_mac_swap_en_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[out]    pEnable             -enable or disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_oam_mac_swap_en_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable);
 
 #ifdef __cplusplus
 }

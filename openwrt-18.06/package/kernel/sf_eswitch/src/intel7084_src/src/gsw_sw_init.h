@@ -245,4 +245,13 @@ int intel7084_multicast_entry_get(void);
 int intel7084_bridge_redirect_ip(const char *name);
 int intel7084_bridge_redirect_disable(void);
 
+#ifdef CONFIG_SFAX8_ESWITCH_REDIRECT
+int intel7084_bridge_redirect_arp(void);
+int intel7084_bridge_redirect_arp_disabled(void);
+int intel7084_bridge_redirect_dhcp(void);
+int intel7084_bridge_redirect_dhcp_disabled(void);
+int intel7084_bridge_redirect_dns(void);
+int intel7084_bridge_redirect_dns_disabled(void);
+#endif
+
 #endif    /* _ETHSW_INIT_H_ */

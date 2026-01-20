@@ -61,6 +61,25 @@ U_BOOT_CMD(
 	"[loadAddress] [[hostIPaddr:]bootfilename]"
 );
 
+#ifdef CONFIG_CMD_MULUP
+int receive_udp_multicast(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	if (net_loop(MULUP) < 0) {
+		printf("multicast upgrade failed\n");
+		return CMD_RET_FAILURE;
+	}
+	printf("multicast upgrade success!\n");
+
+	return run_command(getenv("bootcmd"), 2);;
+}
+
+U_BOOT_CMD(
+	mulupgrade,	1,	1,	receive_udp_multicast,
+	"Receive UDP multicast packets",
+	""
+);
+#endif
+
 #ifdef CONFIG_CMD_TFTPPUT
 int do_tftpput(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {

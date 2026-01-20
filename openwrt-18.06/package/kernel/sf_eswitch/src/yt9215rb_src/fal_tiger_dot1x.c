@@ -23,7 +23,7 @@ yt_ret_t fal_tiger_dot1x_init(yt_unit_t unit)
 
     /* lock init */
     DOT1X_LOCK_INIT();
-    for (port = 0; port < YT_PORT_NUM; ++port) {
+    for (port = 0; port < CAL_MAX_PORT_NUM_ON_UNIT(unit); ++port) {
         macid = CAL_YTP_TO_MAC(unit,port);
         CLEAR_BIT(DOT1X_PORT_AUTH_MASK(unit), macid);
         CLEAR_BIT(DOT1X_PORT_DIR_MASK(unit), macid);
@@ -56,14 +56,14 @@ yt_ret_t fal_tiger_dot1x_portBasedEnable_set(yt_unit_t unit, yt_port_t port, yt_
     if(enable == YT_ENABLE)
     {
         /* enable rx auth by default */
-        fal_tiger_dot1x_portBasedDirection_set(unit, port, AUTH_DIR_IN);
-        fal_tiger_dot1x_portBasedAuthStatus_set(unit, port, AUTH_STATUS_UNAUTH);
+        fal_tiger_dot1x_portBasedDirection_set(unit, port, YT_DOT1X_AUTH_DIR_IN);
+        fal_tiger_dot1x_portBasedAuthStatus_set(unit, port, YT_DOT1X_AUTH_STATUS_UNAUTH);
     }
     else if(enable == YT_DISABLE)
     {
         /* permit all by default */
-        fal_tiger_dot1x_portBasedAuthStatus_set(unit, port, AUTH_STATUS_AUTH);
-        fal_tiger_dot1x_portBasedDirection_set(unit, port, AUTH_DIR_IN);
+        fal_tiger_dot1x_portBasedAuthStatus_set(unit, port, YT_DOT1X_AUTH_STATUS_AUTH);
+        fal_tiger_dot1x_portBasedDirection_set(unit, port, YT_DOT1X_AUTH_DIR_IN);
     }
 
     return CMM_ERR_OK;
@@ -104,15 +104,15 @@ yt_ret_t fal_tiger_dot1x_portBasedAuthStatus_set(yt_unit_t unit, yt_port_t port,
     CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_DOT1X_CTRL2m, 0, sizeof(l2_dot1x_ctrl2_t), &entry), ret);
     HAL_FIELD_GET(L2_DOT1X_CTRL2m, L2_DOT1X_CTRL2_RX_PERMIT_PORT_MASKf, &entry, &rx_port_mask);
     HAL_FIELD_GET(L2_DOT1X_CTRL2m, L2_DOT1X_CTRL2_TX_PERMIT_PORT_MASKf, &entry, &tx_port_mask);
-    if (AUTH_STATUS_AUTH == port_auth)
+    if (YT_DOT1X_AUTH_STATUS_AUTH == port_auth)
     {
         SET_BIT(rx_port_mask, macid);
         SET_BIT(tx_port_mask, macid);
     }
-    else if(AUTH_STATUS_UNAUTH == port_auth)
+    else if(YT_DOT1X_AUTH_STATUS_UNAUTH == port_auth)
     {
         CLEAR_BIT(rx_port_mask, macid);
-        if(authDir == AUTH_DIR_BOTH)
+        if(authDir == YT_DOT1X_AUTH_DIR_BOTH)
         {
             CLEAR_BIT(tx_port_mask, macid);
         }
@@ -122,7 +122,7 @@ yt_ret_t fal_tiger_dot1x_portBasedAuthStatus_set(yt_unit_t unit, yt_port_t port,
     CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, L2_DOT1X_CTRL2m, 0, sizeof(l2_dot1x_ctrl2_t), &entry), ret);
 
     DOT1X_LOCK();
-    if (AUTH_STATUS_AUTH == port_auth)
+    if (YT_DOT1X_AUTH_STATUS_AUTH == port_auth)
     {
         SET_BIT(DOT1X_PORT_AUTH_MASK(unit), macid);
     }
@@ -142,11 +142,11 @@ yt_ret_t fal_tiger_dot1x_portBasedAuthStatus_get(yt_unit_t unit, yt_port_t port,
     DOT1X_LOCK();
     if (IS_BIT_SET(DOT1X_PORT_AUTH_MASK(unit), macid))
     {
-        *pPort_auth = AUTH_STATUS_AUTH;
+        *pPort_auth = YT_DOT1X_AUTH_STATUS_AUTH;
     }
     else
     {
-        *pPort_auth = AUTH_STATUS_UNAUTH;
+        *pPort_auth = YT_DOT1X_AUTH_STATUS_UNAUTH;
     }
     DOT1X_UNLOCK();
 
@@ -160,22 +160,22 @@ yt_ret_t fal_tiger_dot1x_portBasedDirection_set(yt_unit_t unit, yt_port_t port, 
     cmm_err_t ret = CMM_ERR_OK;
     uint32_t rx_port_mask;
     uint32_t tx_port_mask;
-    yt_dot1x_auth_status_t authStat = AUTH_STATUS_UNAUTH;
+    yt_dot1x_auth_status_t authStat = YT_DOT1X_AUTH_STATUS_UNAUTH;
 
     DOT1X_LOCK();
     if (IS_BIT_SET(DOT1X_PORT_AUTH_MASK(unit), macid))
     {
-        authStat = AUTH_STATUS_AUTH;
+        authStat = YT_DOT1X_AUTH_STATUS_AUTH;
     }
     DOT1X_UNLOCK();
 
     /* if already authed,no need clear auth status */
-    if(authStat == AUTH_STATUS_UNAUTH)
+    if(authStat == YT_DOT1X_AUTH_STATUS_UNAUTH)
     {
         CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_DOT1X_CTRL2m, 0, sizeof(l2_dot1x_ctrl2_t), &entry), ret);
         HAL_FIELD_GET(L2_DOT1X_CTRL2m, L2_DOT1X_CTRL2_RX_PERMIT_PORT_MASKf, &entry, &rx_port_mask);
         HAL_FIELD_GET(L2_DOT1X_CTRL2m, L2_DOT1X_CTRL2_TX_PERMIT_PORT_MASKf, &entry, &tx_port_mask);
-        if (AUTH_DIR_BOTH == port_direction)
+        if (YT_DOT1X_AUTH_DIR_BOTH == port_direction)
         {
             CLEAR_BIT(rx_port_mask, macid);
             CLEAR_BIT(tx_port_mask, macid);
@@ -191,7 +191,7 @@ yt_ret_t fal_tiger_dot1x_portBasedDirection_set(yt_unit_t unit, yt_port_t port, 
     }
 
     DOT1X_LOCK();
-    if (AUTH_DIR_IN == port_direction)
+    if (YT_DOT1X_AUTH_DIR_IN == port_direction)
     {
         SET_BIT(DOT1X_PORT_DIR_MASK(unit), macid);
     }
@@ -211,20 +211,26 @@ yt_ret_t fal_tiger_dot1x_portBasedDirection_get(yt_unit_t unit, yt_port_t port, 
     DOT1X_LOCK();
     if (IS_BIT_SET(DOT1X_PORT_DIR_MASK(unit), macid))
     {
-        *pPort_direction = AUTH_DIR_IN;
+        *pPort_direction = YT_DOT1X_AUTH_DIR_IN;
     }
     else
     {
-        *pPort_direction = AUTH_DIR_BOTH;
+        *pPort_direction = YT_DOT1X_AUTH_DIR_BOTH;
     }
     DOT1X_UNLOCK();
 
     return CMM_ERR_OK;
 }
 
-#if 0
-static uint32_t fal_tiger_dot1x_macBasedEnable_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable)
+yt_ret_t fal_tiger_dot1x_macBasedEnable_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable)
 {
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(enable);
+
+    return CMM_ERR_NOT_SUPPORT;
+
+#if 0
     cmm_err_t ret           = CMM_ERR_OK;
     l2_learn_per_port_ctrln_t l2_learn_per_port_ctrl;
     yt_macid_t macid = CAL_YTP_TO_MAC(unit,port);
@@ -263,10 +269,18 @@ static uint32_t fal_tiger_dot1x_macBasedEnable_set(yt_unit_t unit, yt_port_t por
     DOT1X_UNLOCK();
 
     return CMM_ERR_OK;
+#endif
 }
 
-static uint32_t fal_tiger_dot1x_macBasedEnable_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable)
+yt_ret_t fal_tiger_dot1x_macBasedEnable_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable)
 {
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(pEnable);
+
+    return CMM_ERR_NOT_SUPPORT;
+
+#if 0
     yt_macid_t macid = CAL_YTP_TO_MAC(unit,port);
 
     DOT1X_LOCK();
@@ -281,8 +295,8 @@ static uint32_t fal_tiger_dot1x_macBasedEnable_get(yt_unit_t unit, yt_port_t por
     DOT1X_UNLOCK();
 
     return CMM_ERR_OK;
-}
 #endif
+}
 
 yt_ret_t fal_tiger_dot1x_guest_vlan_set(yt_unit_t unit, yt_vlan_t vid, yt_enable_t enable)
 {
@@ -407,3 +421,22 @@ yt_ret_t fal_tiger_dot1x_rx_bypass_mc_get(yt_unit_t unit, yt_enable_t *pEnable)
 
     return CMM_ERR_OK;
 }
+
+yt_ret_t fal_tiger_dot1x_eapol_act_set(yt_unit_t unit, yt_port_t port, yt_act_type_t actType)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(actType);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t fal_tiger_dot1x_eapol_act_get(yt_unit_t unit, yt_port_t port, yt_act_type_t* pActType)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(pActType);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+

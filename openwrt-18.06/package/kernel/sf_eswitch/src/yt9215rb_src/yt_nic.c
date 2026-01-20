@@ -31,7 +31,6 @@ yt_ret_t  yt_nic_init(yt_unit_t unit)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->nic_init(unit);
 }
@@ -50,7 +49,6 @@ yt_ret_t  yt_nic_cpuport_mode_set(yt_unit_t unit, yt_cpuport_mode_t mode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->nic_cpuport_mode_set(unit, mode);
 }
@@ -69,7 +67,6 @@ yt_ret_t  yt_nic_cpuport_mode_get(yt_unit_t unit, yt_cpuport_mode_t *pMode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pMode), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->nic_cpuport_mode_get(unit, pMode);
@@ -89,7 +86,6 @@ yt_ret_t  yt_nic_ext_cpuport_en_set(yt_unit_t unit,  yt_enable_t enable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
     return YT_DISPATCH(unit)->nic_ext_cpuport_en_set(unit, enable);
@@ -109,7 +105,6 @@ yt_ret_t  yt_nic_ext_cpuport_en_get(yt_unit_t unit,  yt_enable_t *pEnable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->nic_ext_cpuport_en_get(unit, pEnable);
@@ -129,7 +124,6 @@ yt_ret_t  yt_nic_ext_cpuport_port_set(yt_unit_t unit,  yt_port_t port)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit,port))), CMM_ERR_PORT);
 
     return YT_DISPATCH(unit)->nic_ext_cpuport_port_set(unit, port);
@@ -149,7 +143,6 @@ yt_ret_t  yt_nic_ext_cpuport_port_get(yt_unit_t unit,  yt_port_t *pPort)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pPort), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->nic_ext_cpuport_port_get(unit, pPort);
@@ -169,7 +162,6 @@ yt_ret_t  yt_nic_cpuport_tagtpid_set(yt_unit_t unit, uint16_t tpid)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->nic_cpuport_tagtpid_set(unit, tpid);
 }
@@ -188,7 +180,6 @@ yt_ret_t  yt_nic_cpuport_tagtpid_get(yt_unit_t unit, uint16_t *pTpid)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pTpid), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->nic_cpuport_tagtpid_get(unit, pTpid);
@@ -208,7 +199,6 @@ yt_ret_t  yt_nic_ext_cputag_en_set(yt_unit_t unit,  yt_enable_t enable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
     return YT_DISPATCH(unit)->nic_ext_cputag_en_set(unit, enable);
@@ -228,8 +218,125 @@ yt_ret_t  yt_nic_ext_cputag_en_get(yt_unit_t unit,  yt_enable_t *pEnable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->nic_ext_cputag_en_get(unit, pEnable);
+}
+
+/**
+ * @internal      yt_nic_int_cputag_en_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[in]     enable              -enable or disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t  yt_nic_int_cputag_en_set(yt_unit_t unit,  yt_enable_t enable)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
+
+    return YT_DISPATCH(unit)->nic_int_cputag_en_set(unit, enable);
+}
+
+/**
+ * @internal      yt_nic_int_cputag_en_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[out]    pEnable             -enable or disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t  yt_nic_int_cputag_en_get(yt_unit_t unit,  yt_enable_t *pEnable)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
+
+    return YT_DISPATCH(unit)->nic_int_cputag_en_get(unit, pEnable);
+}
+
+/**
+ * @internal      yt_nic_cpu_pkt_keepAll_en_set
+ * @endinternal
+ *
+ * @brief         enable/disable external/internal cpu port tx packets keep all(do not modify pkt content exclude cpu tag)
+ * @param[in]     unit                -unit id
+ * @param[in]     extEn               -external cpu port pkt keep all enable/disable
+ * @param[in]     intEn               -internal cpu port pkt keep all enable/disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t  yt_nic_cpu_pkt_keepAll_en_set(yt_unit_t unit, yt_enable_t extEn, yt_enable_t intEn)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((YT_ENABLE < extEn || YT_DISABLE > extEn), CMM_ERR_INPUT);
+    CMM_PARAM_CHK((YT_ENABLE < intEn || YT_DISABLE > intEn), CMM_ERR_INPUT);
+
+    return YT_DISPATCH(unit)->nic_cpu_pkt_keepAll_en_set(unit, extEn, intEn);
+}
+
+/**
+ * @internal      yt_nic_cpu_pkt_keepAll_en_get
+ * @endinternal
+ *
+ * @brief         get state of external/internal cpu port tx packets keep all(do not modify pkt content exclude cpu tag)
+ * @param[in]     unit                -unit id
+ * @param[out]     pExtEN             -external cpu port pkt keep all enable/disable
+ * @param[out]     pIntEN             -internal cpu port pkt keep all enable/disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t  yt_nic_cpu_pkt_keepAll_en_get(yt_unit_t unit, yt_enable_t *pExtEN, yt_enable_t *pIntEN)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((NULL == pExtEN), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK((NULL == pIntEN), CMM_ERR_NULL_POINT);
+
+    return YT_DISPATCH(unit)->nic_cpu_pkt_keepAll_en_get(unit, pExtEN, pIntEN);
+}
+
+/**
+ * @internal      yt_nic_cputag_mode_set
+ * @endinternal
+ *
+ * @brief         Set cpu tag mode
+ * @param[in]     unit                -unit id
+ * @param[in]     mode                -internal or external cpu port
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t  yt_nic_cputag_mode_set(yt_unit_t unit, yt_cputag_mode_t mode)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((mode > CPUTAG_MODE_4B_VID), CMM_ERR_EXCEED_RANGE);
+
+    return YT_DISPATCH(unit)->nic_cputag_mode_set(unit, mode);
+}
+
+/**
+ * @internal      yt_nic_cputag_mode_get
+ * @endinternal
+ *
+ * @brief         Get cpu tag mode
+ * @param[in]     unit                -unit id
+ * @param[out]    pmode               -internal or external cpu port
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t  yt_nic_cputag_mode_get(yt_unit_t unit, yt_cputag_mode_t *pMode)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((NULL == pMode), CMM_ERR_NULL_POINT);
+
+    return YT_DISPATCH(unit)->nic_cputag_mode_get(unit, pMode);
 }

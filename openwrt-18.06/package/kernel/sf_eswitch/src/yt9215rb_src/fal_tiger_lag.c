@@ -27,6 +27,13 @@
  * Function Declaration
  */
 
+yt_ret_t fal_tiger_lag_init(yt_unit_t unit)
+{
+    CMM_UNUSED_PARAM(unit);
+
+    return CMM_ERR_OK;
+}
+
 yt_ret_t fal_tiger_lag_hash_sel_set(yt_unit_t unit, uint8_t hash_mask)
 {
     link_agg_hash_ctrl_t  entry;
@@ -59,19 +66,19 @@ yt_ret_t fal_tiger_lag_group_port_set(yt_unit_t unit, uint8_t groupId, yt_port_m
     uint8_t macid = 0;
     uint32_t  mask;
     yt_port_mask_t macmask;
+    yt_port_mask_t temp_member_portmask;
     uint8_t idx_offset = 0;
-    yt_link_agg_group_t laginfo;
 
-    CMM_PARAM_CHK((FAL_MAX_LAG_NUM - 1< groupId), CMM_ERR_INPUT);
+    CMM_PARAM_CHK((FAL_MAX_LAG_NUM - 1 < groupId), CMM_ERR_INPUT);
 
     /*check if port mask conflic with another lag*/
-    fal_tiger_lag_group_info_get(unit, (groupId == 1 ? 0:1), &laginfo);
-    if(member_portmask.portbits[0] & laginfo.member_portmask)
+    fal_tiger_lag_group_port_get(unit, (groupId == 1 ? 0 : 1), &temp_member_portmask);
+    if(member_portmask.portbits[0] & temp_member_portmask.portbits[0])
     {
         return CMM_ERR_SAMEENTRY_EXIST;
     }
 
-    osal_memset(member_entry, 0, sizeof(member_entry));
+    osal_memset(member_entry, sizeof(member_entry), 0, sizeof(member_entry));
     CAL_YTPLIST_TO_MLIST(unit, member_portmask, macmask);
     
     mask = macmask.portbits[0];
@@ -106,20 +113,48 @@ yt_ret_t fal_tiger_lag_group_port_set(yt_unit_t unit, uint8_t groupId, yt_port_m
     return CMM_ERR_OK;
 }
 
-yt_ret_t fal_tiger_lag_group_info_get(yt_unit_t unit, uint8_t groupId, yt_link_agg_group_t *p_laginfo)
+yt_ret_t fal_tiger_lag_group_port_get(yt_unit_t unit, uint8_t groupId, yt_port_mask_t *p_member_portmask)
 {
     link_agg_groupn_t group_entry;
     cmm_err_t ret = CMM_ERR_OK;
     yt_port_mask_t macmask;
-    yt_port_mask_t portmask;
 
-    CMM_PARAM_CHK((FAL_MAX_LAG_NUM - 1< groupId), CMM_ERR_INPUT);
+    CMM_PARAM_CHK((FAL_MAX_LAG_NUM - 1 < groupId), CMM_ERR_INPUT);
 
     CMM_ERR_CHK(HAL_TBL_REG_READ(unit, LINK_AGG_GROUPNm, groupId, sizeof(link_agg_groupn_t), &group_entry), ret); 
-    HAL_FIELD_GET(LINK_AGG_GROUPNm, LINK_AGG_GROUPN_MEMBER_NUMf, &group_entry, &(p_laginfo->member_num));
     HAL_FIELD_GET(LINK_AGG_GROUPNm, LINK_AGG_GROUPN_PORT_MASKf, &group_entry, macmask.portbits);
-    CAL_MLIST_TO_YTPLIST(unit, macmask, portmask);
-    p_laginfo->member_portmask = portmask.portbits[0];
+    CAL_MLIST_TO_YTPLIST(unit, macmask, (*p_member_portmask));
    
     return CMM_ERR_OK;
+}
+
+yt_ret_t fal_tiger_lag_phyPort_belong_lagPort_get(yt_unit_t unit, yt_port_t port, uint8_t *pGroupId)
+{
+    uint8_t index = 0;
+    cmm_err_t ret = CMM_ERR_OK;
+    yt_port_mask_t tempMemberPortmask;
+
+    /* check whether the port is in other lag group */
+    for (index = 0; index < FAL_MAX_LAG_NUM; index++)
+    {
+        osal_memset(&tempMemberPortmask, sizeof(yt_port_mask_t), 0, sizeof(yt_port_mask_t));
+        CMM_ERR_CHK(fal_tiger_lag_group_port_get(unit, index, &tempMemberPortmask), ret);
+        if (IS_BIT_SET(tempMemberPortmask.portbits[0], port) != 0)
+        {
+            *pGroupId = index;
+            break;
+        }
+    }
+
+    return CMM_ERR_OK;
+}
+
+yt_ret_t fal_tiger_lag_en_get(yt_unit_t unit, yt_port_t port, yt_enable_t *lagState, uint8_t *lagId)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(lagState);
+    CMM_UNUSED_PARAM(lagId);
+
+    return CMM_ERR_NOT_SUPPORT;
 }

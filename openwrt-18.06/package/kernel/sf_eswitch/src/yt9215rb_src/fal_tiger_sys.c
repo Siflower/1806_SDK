@@ -8,6 +8,7 @@
 #include "fal_tiger_entry.h"
 #include "fal_tiger_mem.h"
 #include "fal_tiger_acl.h"
+#include "hal_ctrl.h"
 
 /*
  * Function Declaration
@@ -80,6 +81,7 @@ yt_ret_t fal_tiger_sys_chipInfo_get(yt_unit_t unit, yt_switch_chip_t *pChip)
     cmm_err_t ret = CMM_ERR_OK;
     uint32_t regChip;
     uint32_t regMode;
+    uint8_t eData;
 
     CMM_ERR_CHK(HAL_MEM_DIRECT_READ(unit, CHIP_CHIP_ID_REG, &regChip), ret);
     CMM_ERR_CHK(HAL_MEM_DIRECT_READ(unit, CHIP_CHIP_MODE_REG, &regMode), ret);
@@ -101,6 +103,42 @@ yt_ret_t fal_tiger_sys_chipInfo_get(yt_unit_t unit, yt_switch_chip_t *pChip)
                 *pChip = 0;
                 break;
         }
+
+        HALSWDRV_FUNC(unit)->switch_edata_read(unit, CHIP_CHIP_EXTMODE_REG, &eData);
+        if (*pChip == SWCHIP_YT9215S &&
+            ((eData&0xF) == 1 || ((eData>>4)&0xF) == 1))
+        {
+            *pChip = SWCHIP_YT9215SL;
+        }
+        else if (*pChip == SWCHIP_YT9215RB)
+        {
+            if ((eData&0xF) == 2 || ((eData>>4)&0xF) == 2)
+            {
+                *pChip = SWCHIP_YT9214NB;
+            }
+            else if ((eData&0xF) == 3 || ((eData>>4)&0xF) == 3)
+            {
+                *pChip = SWCHIP_YT9213NB;
+            }
+        }
+
+        return CMM_ERR_OK;
+    }
+    else if (0x9001 == (regChip>>16&0x0ffff))
+    {
+        switch(regMode&0x3)
+        {
+            case 0:
+                *pChip = SWCHIP_YT9218N;
+                break;
+            case 1:
+                *pChip = SWCHIP_YT9218M;
+                break;
+           default:
+                *pChip = 0;
+                break;
+        }
+
         return CMM_ERR_OK;
     }
 

@@ -32,7 +32,7 @@ extern "C" {
  * @brief         Description
  * @note          APPLICABLE DEVICES  -Tiger
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[in]     enable              -enable or disable
  * @retval        CMM_ERR_OK          -on success
@@ -48,7 +48,7 @@ extern yt_ret_t fal_tiger_vlan_trans_untagPvidIgnore_set(yt_unit_t unit, yt_vlan
  * @brief         Description
  * @note          APPLICABLE DEVICES  -Tiger
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[out]    pEnable             -enable or disable
  * @retval        CMM_ERR_OK          -on success
@@ -69,7 +69,7 @@ extern yt_ret_t fal_tiger_vlan_trans_untagPvidIgnore_get(yt_unit_t unit, yt_vlan
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  fal_tiger_vlan_trans_rangeProfile_add(yt_unit_t unit, yt_vlan_range_group_t vlan_range, yt_profile_id_t *pProfile_id);
+extern yt_ret_t  fal_tiger_vlan_trans_rangeProfile_add(yt_unit_t unit, yt_profile_id_t profile_id, const yt_vlan_range_group_t *pVlan_range);
 
 
 /**
@@ -174,7 +174,7 @@ extern yt_ret_t  fal_tiger_vlan_trans_mode_get(yt_unit_t unit, yt_port_t  port, 
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  fal_tiger_vlan_igr_trans_table_add(yt_unit_t unit, yt_vlan_trans_tbl_t *pRuleTbl,  yt_vlan_trans_action_tbl_t *pAction, yt_trans_tbl_id_t *pEntry_id);
+extern yt_ret_t  fal_tiger_vlan_igr_trans_table_add(yt_unit_t unit, const yt_vlan_trans_tbl_t *pRuleTbl,  const yt_vlan_trans_action_tbl_t *pAction, yt_trans_tbl_id_t *pEntry_id);
 
 
 /**
@@ -220,7 +220,7 @@ extern yt_ret_t  fal_tiger_vlan_igr_trans_table_del(yt_unit_t unit, yt_trans_tbl
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_vlan_egr_trans_table_add(yt_unit_t unit, yt_egr_vlan_trans_tbl_t  *pRuleTbl, yt_egr_vlan_trans_action_tbl_t *pAction, yt_trans_tbl_id_t *pEntry_id);
+extern yt_ret_t fal_tiger_vlan_egr_trans_table_add(yt_unit_t unit, const yt_egr_vlan_trans_tbl_t  *pRuleTbl, const yt_egr_vlan_trans_action_tbl_t *pAction, yt_trans_tbl_id_t *pEntry_id);
 
 
 /**
@@ -252,7 +252,17 @@ extern yt_ret_t fal_tiger_vlan_egr_trans_table_get(yt_unit_t unit, yt_trans_tbl_
  */
 extern yt_ret_t  fal_tiger_vlan_egr_trans_table_del(yt_unit_t unit, yt_trans_tbl_id_t entry_idx);
 
-
+extern yt_ret_t  fal_tiger_vlan_igr_trans_prio_tagPvidIgnore_set(yt_unit_t unit, yt_vlan_type_t type,  yt_port_t  port,  yt_enable_t enable);
+extern yt_ret_t  fal_tiger_vlan_igr_trans_prio_tagPvidIgnore_get(yt_unit_t unit, yt_vlan_type_t  type,  yt_port_t  port,  yt_enable_t *pEnable);
+extern yt_ret_t  fal_tiger_vlan_igr_trans_lookup_miss_ctrl_set(yt_unit_t unit, yt_port_t  port, yt_vlan_type_t  type,  yt_act_type_t missAction);
+extern yt_ret_t  fal_tiger_vlan_igr_trans_lookup_miss_ctrl_get(yt_unit_t unit, yt_port_t  port, yt_vlan_type_t  type,  yt_act_type_t *pMissAction);
+extern yt_ret_t  fal_tiger_vlan_igr_trans_table_add_by_index(yt_unit_t unit, yt_trans_tbl_id_t tableIdx, const yt_vlan_trans_tbl_t *pRuleTbl,  const yt_vlan_trans_action_tbl_t *pAction);
+extern yt_ret_t  fal_tiger_vlan_egr_trans_lookup_miss_ctrl_set(yt_unit_t unit, yt_port_t  port, yt_vlan_type_t  type,  yt_vlan_egrtrans_lookup_miss_act_t missAction);
+extern yt_ret_t  fal_tiger_vlan_egr_trans_lookup_miss_ctrl_get(yt_unit_t unit, yt_port_t  port, yt_vlan_type_t  type,  yt_vlan_egrtrans_lookup_miss_act_t *pMissAction);
+extern yt_ret_t  fal_tiger_vlan_egr_trans_rangeProfile_add(yt_unit_t unit, yt_profile_id_t profileId, const yt_vlan_range_group_t *pVlanRange);
+extern yt_ret_t  fal_tiger_vlan_egr_trans_rangeProfile_get(yt_unit_t unit, yt_profile_id_t profileId, yt_vlan_range_group_t *pVlanRange);
+extern yt_ret_t  fal_tiger_vlan_egr_trans_rangeProfile_del(yt_unit_t unit, yt_profile_id_t profileId);
+extern yt_ret_t  fal_tiger_vlan_egr_trans_table_add_by_index(yt_unit_t unit, yt_trans_tbl_id_t tableIdx, const yt_egr_vlan_trans_tbl_t  *pRuleTbl, const yt_egr_vlan_trans_action_tbl_t *pAction);
 
 
 #ifdef __cplusplus

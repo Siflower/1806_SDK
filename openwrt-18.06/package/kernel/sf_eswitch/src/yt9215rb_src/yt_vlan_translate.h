@@ -25,319 +25,645 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#if defined(SWITCH_SERIES_TIGER)
+#define YT_VLAN_IGRTRANS_PROFILE_MAX_NUM      (9U)
+#endif
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_WHALE)
+#define YT_VLAN_IGRTRANS_PROFILE_MAX_NUM      (16U)
+#endif
+#define YT_VLAN_EGRTRANS_PROFILE_MAX_NUM      (16U)
+
 
 typedef enum yt_vlan_trans_action_e
 {
-    VLAN_TRANS_ACTION_INVALID,/*no action*/
-    VLAN_TRANS_ACTION_ADD,/*add assign vid if untag*/
-    VLAN_TRANS_ACTION_REPLACE,/*replace original vid with assgin vid*/
+    YT_VLAN_TRANS_ACTION_NO_CHANGE,  /*no action*/
+    YT_VLAN_TRANS_ACTION_ADD,        /*add assign vid if untag*/
+    YT_VLAN_TRANS_ACTION_REPLACE,/*replace original vid with assgin vid*/
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_WHALE)
+    YT_VLAN_TRANS_ACTION_COPY,/*copy svlan to cvlan or copy cvlan to svlan*/
+#endif
+    YT_VLAN_TRANS_ACTION_MAX
 }yt_vlan_trans_action_t;
 
 typedef enum yt_prio_trans_action_e
 {
-    PRIO_TRANS_ACTION_INVALID,/*no action*/
-    PRIO_TRANS_ACTION_REPLACE,/*replace original priority with assgin priority*/
+    YT_VLAN_PRIO_ACT_NO_CHANGE,  /*no action*/
+    YT_VLAN_PRIO_ACT_REPLACE, /*replace original priority with assgin priority*/
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_WHALE)
+    YT_VLAN_PRIO_ACT_COPY, /*copy spri to cpri or copy cpri to spri*/
+#endif
+    YT_VLAN_PRIO_ACT_MAX
 }yt_prio_trans_action_t;
 
 typedef enum yt_vlan_range_trans_mode_e
 {
-    VLAN_RANGE_TRANS_MODE_CVLAN,
-    VLAN_RANGE_TRANS_MODE_SVLAN,
+    YT_VLAN_RANGE_TRANS_MODE_CVLAN,
+    YT_VLAN_RANGE_TRANS_MODE_SVLAN,
 }yt_vlan_range_trans_mode_t;
+
+typedef enum yt_vlan_match_type_e
+{
+    YT_VLAN_MATCH_TYPE_VID,
+    YT_VLAN_MATCH_TYPE_RANGE,
+}yt_vlan_match_type_t;
+
+typedef enum yt_vlan_egrtrans_lookup_miss_act_e 
+{
+    YT_VLAN_EGRTRANS_LOOKUP_MISS_FWD,
+    YT_VLAN_EGRTRANS_LOOKUP_MISS_DROP,
+}yt_vlan_egrtrans_lookup_miss_act_t;
 
 typedef enum yt_vlan_format_e
 {
-    VLAN_FMT_UNTAGGED,
-    VLAN_FMT_PRIO_TAGGED,
-    VLAN_FMT_TAGGED,
+    YT_VLAN_FMT_UNTAGGED,
+    YT_VLAN_FMT_PRIO_TAGGED,
+    YT_VLAN_FMT_TAGGED,
 }yt_vlan_format_t;
 
-typedef struct yt_vlan_range_group_s
+typedef struct yt_vlan_range_group_e
 {
-    uint16_t vid_range0_min;
-    uint16_t vid_range0_max;
-    uint16_t vid_range1_min;
-    uint16_t vid_range1_max;
-    uint16_t vid_range2_min;
-    uint16_t vid_range2_max;
-    uint16_t vid_range3_min;
-    uint16_t vid_range3_max;
+#if defined(SWITCH_SERIES_TIGER)
+    uint16_t vidRange0Min;
+    uint16_t vidRange0Max;
+    uint16_t vidRange1Min;
+    uint16_t vidRange1Max;
+    uint16_t vidRange2Min;
+    uint16_t vidRange2Max;
+    uint16_t vidRange3Min;
+    uint16_t vidRange3Max;
+#endif
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_WHALE)
+    uint16_t vidMin;
+    uint16_t vidMax;
+    yt_vlan_type_t vidType;    /* YT_VLAN_TYPE_CVLAN:just match cvlan; YT_VLAN_TYPE_SVLAN:just match svlan */
+#endif
 }yt_vlan_range_group_t;
 
 typedef struct yt_vlan_trans_tbl_s
 {
-    yt_bool_t   svid_valid;
-    uint16_t    svid;
-    yt_bool_t   stag_format_valid;
-    yt_vlan_format_t     stag_format;
-    yt_bool_t   cvid_valid;
-    uint16_t    cvid;
-    yt_bool_t   ctag_format_valid;
-    yt_vlan_format_t    ctag_format;
-    uint16_t    valid_port_mask;
+    yt_bool_t                 svidNeedCare;    /*false:do not need to care svid   true:need to care svid*/
+    yt_bool_t                 cvidNeedCare;    /*false:do not need to care cvid   true:need to care cvid*/
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_WHALE)
+    yt_profile_id_t           sVidRangeId0;
+    yt_profile_id_t           sVidRangeId1;
+    yt_profile_id_t           sVidRangeId2;
+    uint16_t                  svid;
+    yt_vlan_match_type_t svidMatchType;
+    yt_profile_id_t           cVidRangeId0;
+    yt_profile_id_t           cVidRangeId1;
+    yt_profile_id_t           cVidRangeId2;
+    uint16_t                  cvid;
+    yt_vlan_match_type_t cvidMatchType;
+#endif
+#if defined(SWITCH_SERIES_TIGER)
+    yt_bool_t                 stagFormatNeedCare;
+    uint16_t                  svidOrVidRangeId;
+    yt_bool_t                 ctagFormatNeedCare;
+    uint16_t                  cvidOrVidRangeId;
+#endif
+    yt_vlan_tag_fmt_t         stagFormat;
+    yt_vlan_tag_fmt_t         ctagFormat;
+    yt_port_mask_t            srcPortMaskNeedCare;  /* src portmask which need to care */
 }yt_vlan_trans_tbl_t;
 
 typedef struct yt_vlan_trans_action_tbl_s
 {
-    yt_vlan_trans_action_t     svid_action;
-    uint16_t    assign_svid;
-    yt_vlan_trans_action_t     cvid_action;
-    uint16_t    assign_cvid;
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_WHALE)
+    yt_bool_t      igrVlanFilterBypass;
+    yt_act_type_t  fwdAct;
+    uint8_t                 assignSpri;
+    yt_prio_trans_action_t  spriAction;
+    uint8_t                 assignCpri;
+    yt_prio_trans_action_t  cpriAction;
+#endif
+    uint16_t                assignSvid;
+    yt_vlan_trans_action_t  svidAction;
+    uint16_t                assignCvid;
+    yt_vlan_trans_action_t  cvidAction;
 }yt_vlan_trans_action_tbl_t;
 
 typedef struct yt_egr_vlan_trans_tbl_s
 {
-    yt_bool_t   svid_valid;
-    yt_bool_t   cvid_valid;
-    yt_bool_t   mvr_valid;/*if check multicast vlan hit or not*/
-    uint16_t    valid_port_mask;
-    yt_vlan_range_trans_mode_t  vid_range_mode;/*select range check works on CVLAN or SVLAN*/
-    uint16_t    vid_range_min;
-    uint16_t    vid_range_max;
-    uint16_t    vid;/*for one of another svlan and cvlan if range mode works one*/
-    yt_bool_t   original_ctag_format_valid;/*if check original cvlan is tagged*/
-    yt_bool_t   original_stag_format_valid;/*if check original svlan is tagged*/
+    yt_bool_t                  svidNeedCare;    /*false:do not need to care svid   true:need to care svid*/
+    yt_bool_t                  cvidNeedCare;    /*false:do not need to care cvid   true:need to care cvid*/
+    yt_bool_t                  mvrNeedCare;    /*if check multicast vlan hit or not*/
+#if defined(SWITCH_SERIES_TIGER)
+    yt_vlan_range_trans_mode_t vidRangeMode;/*select range check works on CVLAN or SVLAN*/
+    uint16_t    vidRangeMin;
+    uint16_t    vidRangeMax;
+    uint16_t    vid;
+    yt_bool_t   originalCtagFormatNeedCare;/*if check original cvlan is tagged*/
+    yt_bool_t   originalStagFormatNeedCare;/*if check original svlan is tagged*/
+#endif
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_WHALE)
+    yt_profile_id_t           sVidRangeId0;
+    yt_profile_id_t           sVidRangeId1;
+    yt_profile_id_t           sVidRangeId2;
+    uint16_t                  svid;
+    yt_vlan_match_type_t      svidMatchType;
+    yt_vlan_tag_fmt_t         stagFormat;
+    yt_profile_id_t           cVidRangeId0;
+    yt_profile_id_t           cVidRangeId1;
+    yt_profile_id_t           cVidRangeId2;
+    uint16_t                  cvid;
+    yt_vlan_match_type_t      cvidMatchType;
+    yt_vlan_tag_fmt_t         ctagFormat;
+#endif
+    yt_port_mask_t            dstPortMaskNeedCare; /* dst portmask which need to care */
 } yt_egr_vlan_trans_tbl_t;
 
 typedef struct yt_egr_vlan_trans_data_s
 {
-    yt_bool_t     svid_enable;
-    yt_bool_t     cvid_enable;
-    uint16_t    svid;
-    uint16_t    cvid;
+    yt_bool_t     svidEnable;  /*false:do not change svid   true:need to change svid*/
+    yt_bool_t     cvidEnable;/*false:do not change cvid   true:need to change cvid*/
+    uint16_t      assignSvid;
+    uint16_t      assignCvid;
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_WHALE)
+    yt_bool_t     spriEnable;  /*false:do not change svid   true:need to change svid*/
+    yt_bool_t     cpriEnable;/*false:do not change cvid   true:need to change cvid*/
+    uint8_t       assignSpri;
+    uint8_t       assignCpri;
+#endif
 } yt_egr_vlan_trans_action_tbl_t;
 
 
 /**
- * @internal      yt_vlan_trans_untagPvidIgnore_set
+ * @internal      yt_vlan_igr_trans_untagPvidIgnore_set
  * @endinternal
  *
- * @brief         Set if check pvid for untag packet,use pvid by default.if enable,use 0 instead of pvid
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         Set pvid value to cvlan of svlan to match ingress trans table for untag packet
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[in]     enable              -enable or disable
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_PORT        -port err
  */
-extern yt_ret_t yt_vlan_trans_untagPvidIgnore_set(yt_unit_t unit, yt_vlan_type_t type,  yt_port_t  port,  yt_enable_t enable);
-
+extern yt_ret_t yt_vlan_igr_trans_untagPvidIgnore_set(yt_unit_t unit, yt_vlan_type_t type,  yt_port_t  port,  yt_enable_t enable);
 
 /**
- * @internal      yt_vlan_trans_untagPvidIgnore_get
+ * @internal      yt_vlan_igr_trans_untagPvidIgnore_get
  * @endinternal
  *
- * @brief         Get pvid ignore state
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         Get whether pvid value is set to cvlan of svlan to match ingress trans table for untag packet
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[out]    pEnable             -enable or disable
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_PORT        -port err
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
  */
-extern yt_ret_t yt_vlan_trans_untagPvidIgnore_get(yt_unit_t unit, yt_vlan_type_t  type,  yt_port_t  port,  yt_enable_t *pEnable);
-
+extern yt_ret_t yt_vlan_igr_trans_untagPvidIgnore_get(yt_unit_t unit, yt_vlan_type_t  type,  yt_port_t  port,  yt_enable_t *pEnable);
 
 /**
- * @internal      yt_vlan_trans_rangeProfile_add
+ * @internal      yt_vlan_igr_trans_prio_tagPvidIgnore_set
  * @endinternal
  *
- * @brief         Add vlan translate range profile
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         Set pvid value to cvlan of svlan to match ingress trans table for priority tag packet
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     vlan_range          -ingress vlan translate profile group info, one of them should bind to the port
- * @param[out]     pProfile_id         -ingress vlan range profile index
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
+ * @param[in]     port                -port num
+ * @param[in]     enable              -enable or disable
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_PORT        -port err
  */
-extern yt_ret_t  yt_vlan_trans_rangeProfile_add(yt_unit_t unit, yt_vlan_range_group_t vlan_range, yt_profile_id_t *pProfile_id);
-
+extern yt_ret_t yt_vlan_igr_trans_prio_tagPvidIgnore_set(yt_unit_t unit, yt_vlan_type_t type,  yt_port_t  port,  yt_enable_t enable);
 
 /**
- * @internal      yt_vlan_trans_rangeProfile_get
+ * @internal      yt_vlan_igr_trans_prio_tagPvidIgnore_get
  * @endinternal
  *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         Get whether pvid value is set to cvlan of svlan to match ingress trans table for priority tag packet
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     profile_id          -ingress vlan range profile index
- * @param[out]    pVlan_range         -ingress vlan translate profile group info, one of them should bind to the port
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
+ * @param[in]     port                -port num
+ * @param[out]    pEnable             -enable or disable
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_PORT        -port err
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
  */
-extern yt_ret_t  yt_vlan_trans_rangeProfile_get(yt_unit_t unit, yt_profile_id_t profile_id, yt_vlan_range_group_t *pVlan_range);
-
+extern yt_ret_t yt_vlan_igr_trans_prio_tagPvidIgnore_get(yt_unit_t unit, yt_vlan_type_t  type,  yt_port_t  port,  yt_enable_t *pEnable);
 
 /**
- * @internal      yt_vlan_trans_rangeProfile_del
+ * @internal      yt_vlan_igr_trans_lookup_miss_ctrl_set
  * @endinternal
  *
- * @brief         Delete vlan translate range profile by profile id
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         Set loop miss ctrl for ingress trans table match
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     profile_id          -ingress vlan range profile index
+ * @param[in]     port                -port num
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
+ * @param[in]     missAction          -miss drop action
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_PORT        -port err
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
  */
-extern yt_ret_t  yt_vlan_trans_rangeProfile_del(yt_unit_t unit, yt_profile_id_t profile_id);
-
+extern yt_ret_t  yt_vlan_igr_trans_lookup_miss_ctrl_set(yt_unit_t unit, yt_port_t  port, yt_vlan_type_t  type,  yt_act_type_t missAction);
 
 /**
- * @internal      yt_vlan_trans_port_rangeProfileSel_set
+ * @internal      yt_vlan_igr_trans_lookup_miss_ctrl_get
  * @endinternal
  *
- * @brief         Select port vlan translate range profile info
+ * @brief         Get loop miss ctrl for ingress trans table match
+ * @note          APPLICABLE DEVICES  -Shark, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
+ * @param[out]    pMissAction         -miss drop action
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_PORT        -port err
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
+ */
+extern yt_ret_t  yt_vlan_igr_trans_lookup_miss_ctrl_get(yt_unit_t unit, yt_port_t  port, yt_vlan_type_t  type,  yt_act_type_t *pMissAction);
+
+/**
+ * @internal      yt_vlan_igr_trans_rangeProfile_add
+ * @endinternal
+ *
+ * @brief         Set vlan range profile for ingress trans table match,it need to be binded to port for Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     profileId           -ingress vlan profile index,start from 1
+ * @param[in]     pVlanRange          -ingress vlan translate profile group info
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
+ */
+extern yt_ret_t  yt_vlan_igr_trans_rangeProfile_add(yt_unit_t unit, yt_profile_id_t profileId, const yt_vlan_range_group_t *pVlanRange);
+
+/**
+ * @internal      yt_vlan_igr_trans_rangeProfile_get
+ * @endinternal
+ *
+ * @brief         Get vlan range profile for ingress trans table match
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     profileId           -ingress vlan profile index,start from 1
+ * @param[out]    pVlanRange          -ingress vlan translate profile group info
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
+ */
+extern yt_ret_t  yt_vlan_igr_trans_rangeProfile_get(yt_unit_t unit, yt_profile_id_t profileId, yt_vlan_range_group_t *pVlanRange);
+
+/**
+ * @internal      yt_vlan_igr_trans_rangeProfile_del
+ * @endinternal
+ *
+ * @brief         Delete vlan range profile for ingress trans table match
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     profileId           -ingress vlan profile index,start from 1
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
+ */
+extern yt_ret_t  yt_vlan_igr_trans_rangeProfile_del(yt_unit_t unit, yt_profile_id_t profileId);
+
+/**
+ * @internal      yt_vlan_igr_trans_port_rangeProfileSel_set
+ * @endinternal
+ *
+ * @brief         Set port to bind vlan range profile
  * @note          APPLICABLE DEVICES  -Tiger
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[in]     profile_id          -ingress vlan range profile index
+ * @param[in]     profileId           -ingress vlan profile index
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_PORT        -port err
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
  */
-extern yt_ret_t  yt_vlan_trans_port_rangeProfileSel_set(yt_unit_t unit, yt_port_t  port, yt_profile_id_t profile_id);
-
+extern yt_ret_t  yt_vlan_igr_trans_port_rangeProfileSel_set(yt_unit_t unit, yt_port_t  port, yt_profile_id_t profileId);
 
 /**
- * @internal      yt_vlan_trans_port_rangeProfileSel_get
+ * @internal      yt_vlan_igr_trans_port_rangeProfileSel_get
  * @endinternal
  *
- * @brief         Get port vlan translate selected range profile id
+ * @brief         Get the bind vlan range profile of port
  * @note          APPLICABLE DEVICES  -Tiger
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[out]    pProfile_id         -ingress vlan profile index
+ * @param[out]    pProfileId          -ingress vlan profile index
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_PORT        -port err
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
  */
-extern yt_ret_t  yt_vlan_trans_port_rangeProfileSel_get(yt_unit_t unit, yt_port_t  port, yt_profile_id_t *pProfile_id);
-
+extern yt_ret_t  yt_vlan_igr_trans_port_rangeProfileSel_get(yt_unit_t unit, yt_port_t  port, yt_profile_id_t *pProfileId);
 
 /**
- * @internal      yt_vlan_trans_mode_set
+ * @internal      yt_vlan_igr_trans_mode_set
  * @endinternal
  *
- * @brief         Set vlan translate mode (CVLAN or SVLAN)
+ * @brief         Set vlan range profile whether is belong to cvid or svid
  * @note          APPLICABLE DEVICES  -Tiger
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[in]     rangeMode           -select the vlan type on which ingress vlan translate depend
+ * @param[in]     rangeMode           -range mode
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_PORT        -port err
  */
-extern yt_ret_t  yt_vlan_trans_mode_set(yt_unit_t unit, yt_port_t  port, yt_vlan_range_trans_mode_t rangeMode);
-
+extern yt_ret_t  yt_vlan_igr_trans_mode_set(yt_unit_t unit, yt_port_t  port, yt_vlan_range_trans_mode_t rangeMode);
 
 /**
- * @internal      yt_vlan_trans_mode_get
+ * @internal      yt_vlan_igr_trans_mode_get
  * @endinternal
  *
- * @brief         Get vlan translate mode (CVLAN or SVLAN)
+ * @brief         Get vlan range profile whether is belong to cvid or svid
  * @note          APPLICABLE DEVICES  -Tiger
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[out]    pRangeMode          -the vlan type on which ingress vlan translate depend
+ * @param[out]    pRangeMode          -range mode
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_PORT        -port err
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
  */
-extern yt_ret_t  yt_vlan_trans_mode_get(yt_unit_t unit, yt_port_t  port, yt_vlan_range_trans_mode_t *pRangeMode);
-
+extern yt_ret_t  yt_vlan_igr_trans_mode_get(yt_unit_t unit, yt_port_t  port, yt_vlan_range_trans_mode_t *pRangeMode);
 
 /**
  * @internal      yt_vlan_igr_trans_table_add
  * @endinternal
  *
  * @brief         Add ingress vlan translate table and action
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     pRuleTbl            -ingress vlan translate table info
  * @param[in]     pAction             -ingress vlan translate action
- * @param[out]     pEntry_id           -vlan translate table index
+ * @param[out]     pTableIdx          -vlan translate table index
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
- * @retval        CMM_ERR_TABLE_FULL        -no free table entry
+ * @retval        CMM_ERR_TABLE_FULL  -no free table entry
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
+ * @retval        CMM_ERR_PORTLIST    -portlist err
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
  */
-extern yt_ret_t  yt_vlan_igr_trans_table_add(yt_unit_t unit, yt_vlan_trans_tbl_t *pRuleTbl,  yt_vlan_trans_action_tbl_t *pAction, yt_trans_tbl_id_t *pEntry_id);
+extern yt_ret_t  yt_vlan_igr_trans_table_add(yt_unit_t unit, const yt_vlan_trans_tbl_t *pRuleTbl,  const yt_vlan_trans_action_tbl_t *pAction, yt_trans_tbl_id_t *pTableIdx);
 
+/**
+ * @internal      yt_vlan_igr_trans_table_add_by_index
+ * @endinternal
+ *
+ * @brief         Add ingress vlan translate table and action by index
+ * @note          APPLICABLE DEVICES  -Shark, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     tableIdx            -vlan translate table index
+ * @param[in]     pRuleTbl            -ingress vlan translate table info
+ * @param[in]     pAction             -ingress vlan translate action
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_TABLE_FULL  -no free table entry
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
+ * @retval        CMM_ERR_PORTLIST    -portlist err
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
+ */
+extern yt_ret_t  yt_vlan_igr_trans_table_add_by_index(yt_unit_t unit, yt_trans_tbl_id_t tableIdx, const yt_vlan_trans_tbl_t *pRuleTbl,  const yt_vlan_trans_action_tbl_t *pAction);
 
 /**
  * @internal      yt_vlan_igr_trans_table_get
  * @endinternal
  *
  * @brief         Get ingress vlan translate table and action
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     entry_id            -vlan translate table index
- * @param[out]    pRuleTbl            -ingress vlan translate table info
- * @param[out]    pAction             -ingress vlan translate action
+ * @param[in]     tableIdx            -vlan translate table index
+ * @param[out]    pRuleTbl            -x
+ * @param[out]    pAction             -x
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
  */
-extern yt_ret_t  yt_vlan_igr_trans_table_get(yt_unit_t unit,  yt_trans_tbl_id_t entry_id, yt_vlan_trans_tbl_t *pRuleTbl,  yt_vlan_trans_action_tbl_t *pAction);
-
+extern yt_ret_t  yt_vlan_igr_trans_table_get(yt_unit_t unit,  yt_trans_tbl_id_t tableIdx, yt_vlan_trans_tbl_t *pRuleTbl,  yt_vlan_trans_action_tbl_t *pAction);
 
 /**
  * @internal      yt_vlan_igr_trans_table_del
  * @endinternal
  *
- * @brief         Delete ingress vlan translate table
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         Delete ingress vlan translate table and action
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     entry_id            -vlan translate table index
+ * @param[in]     tableIdx            -vlan translate table index
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
  */
-extern yt_ret_t  yt_vlan_igr_trans_table_del(yt_unit_t unit, yt_trans_tbl_id_t entry_id);
+extern yt_ret_t  yt_vlan_igr_trans_table_del(yt_unit_t unit, yt_trans_tbl_id_t tableIdx);
 
+/**
+ * @internal      yt_vlan_egr_trans_lookup_miss_ctrl_enable_set
+ * @endinternal
+ *
+ * @brief         Set loop miss ctrl for egress trans table match
+ * @note          APPLICABLE DEVICES  -Shark, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
+ * @param[in]     missAction          -lookup miss action
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_PORT        -port err
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
+ */
+extern yt_ret_t  yt_vlan_egr_trans_lookup_miss_ctrl_set(yt_unit_t unit, yt_port_t  port, yt_vlan_type_t  type,  yt_vlan_egrtrans_lookup_miss_act_t missAction);
+
+/**
+ * @internal      yt_vlan_egr_trans_lookup_miss_ctrl_get
+ * @endinternal
+ *
+ * @brief         Get loop miss ctrl for egress trans table match
+ * @note          APPLICABLE DEVICES  -Shark, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
+ * @param[out]    pMissAction         -lookup miss action
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_PORT        -port err
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
+ */
+extern yt_ret_t  yt_vlan_egr_trans_lookup_miss_ctrl_get(yt_unit_t unit, yt_port_t  port, yt_vlan_type_t  type,  yt_vlan_egrtrans_lookup_miss_act_t *pMissAction);
+
+/**
+ * @internal      yt_vlan_egr_trans_rangeProfile_add
+ * @endinternal
+ *
+ * @brief         Set vlan range profile for egress trans table match
+ * @note          APPLICABLE DEVICES  -Shark, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     profileId           -egress vlan profile index
+ * @param[in]     pVlanRange          -egress vlan translate profile group info
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
+ */
+extern yt_ret_t  yt_vlan_egr_trans_rangeProfile_add(yt_unit_t unit, yt_profile_id_t profileId, const yt_vlan_range_group_t *pVlanRange);
+
+/**
+ * @internal      yt_vlan_egr_trans_rangeProfile_get
+ * @endinternal
+ *
+ * @brief         Get vlan range profile for egress trans table match
+ * @note          APPLICABLE DEVICES  -Shark, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     profileId           -ingress vlan profile index
+ * @param[out]    pVlanRange          -ingress vlan translate profile group info, one of them should bind to the port
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
+ */
+extern yt_ret_t  yt_vlan_egr_trans_rangeProfile_get(yt_unit_t unit, yt_profile_id_t profileId, yt_vlan_range_group_t *pVlanRange);
+
+/**
+ * @internal      yt_vlan_egr_trans_rangeProfile_del
+ * @endinternal
+ *
+ * @brief         Delete vlan range profile for egress trans table match
+ * @note          APPLICABLE DEVICES  -Shark, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     profileId           -ingress vlan profile index
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
+ */
+extern yt_ret_t  yt_vlan_egr_trans_rangeProfile_del(yt_unit_t unit, yt_profile_id_t profileId);
 
 /**
  * @internal      yt_vlan_egr_trans_table_add
  * @endinternal
  *
- * @brief         Add engress vlan translate table and action
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         Add egress vlan translate table and action
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     pRuleTbl            -egress vlan translate table info
  * @param[in]     pAction             -egress vlan translate action
- * @param[out]     pEntry_id           -vlan translate table index
+ * @param[out]    pTableIdx           -vlan translate table index
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
- * @retval        CMM_ERR_TABLE_FULL        -no free table entry
+ * @retval        CMM_ERR_TABLE_FULL  -no free table entry
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
+ * @retval        CMM_ERR_PORTLIST    -portlist err
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
  */
-extern yt_ret_t yt_vlan_egr_trans_table_add(yt_unit_t unit, yt_egr_vlan_trans_tbl_t  *pRuleTbl, yt_egr_vlan_trans_action_tbl_t *pAction, yt_trans_tbl_id_t *pEntry_id);
+extern yt_ret_t yt_vlan_egr_trans_table_add(yt_unit_t unit, const yt_egr_vlan_trans_tbl_t  *pRuleTbl, const yt_egr_vlan_trans_action_tbl_t *pAction, yt_trans_tbl_id_t *pTableIdx);
 
+/**
+ * @internal      yt_vlan_egr_trans_table_add_by_index
+ * @endinternal
+ *
+ * @brief         Add egress vlan translate table and action by index
+ * @note          APPLICABLE DEVICES  -Shark, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     pRuleTbl            -egress vlan translate table info
+ * @param[in]     pAction             -egress vlan translate action
+ * @param[out]    tableIdx            -vlan translate table index
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_TABLE_FULL  -no free table entry
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
+ * @retval        CMM_ERR_PORTLIST    -portlist err
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
+ */
+extern yt_ret_t yt_vlan_egr_trans_table_add_by_index(yt_unit_t unit, yt_trans_tbl_id_t tableIdx, const yt_egr_vlan_trans_tbl_t  *pRuleTbl, const yt_egr_vlan_trans_action_tbl_t *pAction);
 
 /**
  * @internal      yt_vlan_egr_trans_table_get
  * @endinternal
  *
- * @brief         Get engress vlan translate table and action
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         Get egress vlan translate table and action
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     entry_idx           -vlan translate table index
- * @param[out]    pRuleTbl            -egress vlan translate table info
- * @param[out]    pAction             -egress vlan translate action
+ * @param[in]     tableIdx            -vlan translate table index
+ * @param[out]    pRuleTbl            -rule tbale
+ * @param[out]    pAction             -action
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_NULL_POINT  -point is NULL
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
  */
-extern yt_ret_t yt_vlan_egr_trans_table_get(yt_unit_t unit, yt_trans_tbl_id_t entry_idx, yt_egr_vlan_trans_tbl_t  *pRuleTbl, yt_egr_vlan_trans_action_tbl_t *pAction);
-
+extern yt_ret_t yt_vlan_egr_trans_table_get(yt_unit_t unit, yt_trans_tbl_id_t tableIdx, yt_egr_vlan_trans_tbl_t  *pRuleTbl, yt_egr_vlan_trans_action_tbl_t *pAction);
 
 /**
  * @internal      yt_vlan_egr_trans_table_del
  * @endinternal
  *
- * @brief         Delete engress vlan translate table
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         Delete egress vlan translate table and action
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     entry_idx           -vlan translate table index
+ * @param[in]     tableIdx            -vlan translate table index
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT       -input value err
+ * @retval        CMM_ERR_NOT_INIT    -not init
+ * @retval        CMM_ERR_EXCEED_RANGE  -input value out of range
  */
-extern yt_ret_t  yt_vlan_egr_trans_table_del(yt_unit_t unit, yt_trans_tbl_id_t entry_idx);
-
-
+extern yt_ret_t  yt_vlan_egr_trans_table_del(yt_unit_t unit, yt_trans_tbl_id_t tableIdx);
 
 
 #ifdef __cplusplus

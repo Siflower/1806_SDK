@@ -31,7 +31,6 @@ yt_ret_t yt_dot1x_init(yt_unit_t unit)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->dot1x_init(unit);
 }
@@ -52,7 +51,6 @@ yt_ret_t yt_dot1x_portBasedEnable_set(yt_unit_t unit, yt_port_t port, yt_enable_
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
@@ -64,7 +62,7 @@ yt_ret_t yt_dot1x_portBasedEnable_set(yt_unit_t unit, yt_port_t port, yt_enable_
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[out]    pEnable             -enable or disable
@@ -75,7 +73,6 @@ yt_ret_t yt_dot1x_portBasedEnable_get(yt_unit_t unit, yt_port_t port, yt_enable_
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
@@ -87,7 +84,7 @@ yt_ret_t yt_dot1x_portBasedEnable_get(yt_unit_t unit, yt_port_t port, yt_enable_
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     port_auth           -yt_dot1x.h
@@ -98,9 +95,8 @@ yt_ret_t yt_dot1x_portBasedAuthStatus_set(yt_unit_t unit, yt_port_t port, yt_dot
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
-    CMM_PARAM_CHK((AUTH_STATUS_END <= port_auth), CMM_ERR_INPUT);
+    CMM_PARAM_CHK((YT_DOT1X_AUTH_STATUS_END <= port_auth), CMM_ERR_INPUT);
 
     return YT_DISPATCH(unit)->dot1x_portBasedAuthStatus_set(unit, port, port_auth);
 }
@@ -110,7 +106,7 @@ yt_ret_t yt_dot1x_portBasedAuthStatus_set(yt_unit_t unit, yt_port_t port, yt_dot
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[out]    pPort_auth          -yt_dot1x.h
@@ -121,7 +117,6 @@ yt_ret_t yt_dot1x_portBasedAuthStatus_get(yt_unit_t unit, yt_port_t port, yt_dot
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pPort_auth), CMM_ERR_NULL_POINT);
 
@@ -133,7 +128,7 @@ yt_ret_t yt_dot1x_portBasedAuthStatus_get(yt_unit_t unit, yt_port_t port, yt_dot
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     port_direction      -yt_dot1x.h
@@ -144,9 +139,8 @@ yt_ret_t yt_dot1x_portBasedDirection_set(yt_unit_t unit, yt_port_t port, yt_dot1
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
-    CMM_PARAM_CHK((AUTH_DIR_END <= port_direction), CMM_ERR_INPUT);
+    CMM_PARAM_CHK((YT_DOT1X_AUTH_DIR_END <= port_direction), CMM_ERR_INPUT);
 
     return YT_DISPATCH(unit)->dot1x_portBasedDirection_set(unit, port, port_direction);
 }
@@ -156,7 +150,7 @@ yt_ret_t yt_dot1x_portBasedDirection_set(yt_unit_t unit, yt_port_t port, yt_dot1
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[out]    pPort_direction     -yt_dot1x.h
@@ -167,7 +161,6 @@ yt_ret_t yt_dot1x_portBasedDirection_get(yt_unit_t unit, yt_port_t port, yt_dot1
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pPort_direction), CMM_ERR_NULL_POINT);
 
@@ -175,11 +168,53 @@ yt_ret_t yt_dot1x_portBasedDirection_get(yt_unit_t unit, yt_port_t port, yt_dot1
 }
 
 /**
+ * @internal      yt_dot1x_dot1x_macBasedEnable_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     enable              -enable or disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t yt_dot1x_macBasedEnable_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
+
+    return YT_DISPATCH(unit)->dot1x_macBasedEnable_set(unit, port, enable);
+}
+
+/**
+ * @internal      yt_dot1x_macBasedEnable_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[out]     pEnable              -enable or disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t yt_dot1x_macBasedEnable_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
+
+    return YT_DISPATCH(unit)->dot1x_macBasedEnable_get(unit, port, pEnable);
+}
+
+/**
  * @internal      yt_dot1x_guest_vlan_set
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[in]     vid                 -vlan id
  * @param[in]     enable              -enable or disable
@@ -190,7 +225,6 @@ yt_ret_t yt_dot1x_guest_vlan_set(yt_unit_t unit, yt_vlan_t vid, yt_enable_t enab
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((YT_VLAN_ID_MAX < vid), CMM_ERR_EXCEED_RANGE);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
@@ -202,7 +236,7 @@ yt_ret_t yt_dot1x_guest_vlan_set(yt_unit_t unit, yt_vlan_t vid, yt_enable_t enab
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[in]     vid                 -vlan id
  * @param[out]    pEnable             -enable or disable
@@ -213,7 +247,6 @@ yt_ret_t yt_dot1x_guest_vlan_get(yt_unit_t unit, yt_vlan_t vid, yt_enable_t *pEn
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((YT_VLAN_ID_MAX < vid), CMM_ERR_EXCEED_RANGE);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
@@ -225,7 +258,7 @@ yt_ret_t yt_dot1x_guest_vlan_get(yt_unit_t unit, yt_vlan_t vid, yt_enable_t *pEn
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[in]     enable              -enable or disable
  * @retval        CMM_ERR_OK          -on success
@@ -235,7 +268,6 @@ yt_ret_t yt_dot1x_tx_bypass_bc_set(yt_unit_t unit, yt_enable_t enable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
     return YT_DISPATCH(unit)->dot1x_tx_bypass_bc_set(unit, enable);
@@ -246,7 +278,7 @@ yt_ret_t yt_dot1x_tx_bypass_bc_set(yt_unit_t unit, yt_enable_t enable)
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[out]    pEnable             -enable or disable
  * @retval        CMM_ERR_OK          -on success
@@ -256,7 +288,6 @@ yt_ret_t yt_dot1x_tx_bypass_bc_get(yt_unit_t unit, yt_enable_t *pEnable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->dot1x_tx_bypass_bc_get(unit, pEnable);
@@ -267,7 +298,7 @@ yt_ret_t yt_dot1x_tx_bypass_bc_get(yt_unit_t unit, yt_enable_t *pEnable)
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[in]     enable              -enable or disable
  * @retval        CMM_ERR_OK          -on success
@@ -277,7 +308,6 @@ yt_ret_t yt_dot1x_tx_bypass_mc_set(yt_unit_t unit, yt_enable_t enable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
     return YT_DISPATCH(unit)->dot1x_tx_bypass_mc_set(unit, enable);
@@ -288,7 +318,7 @@ yt_ret_t yt_dot1x_tx_bypass_mc_set(yt_unit_t unit, yt_enable_t enable)
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[out]    pEnable             -enable or disable
  * @retval        CMM_ERR_OK          -on success
@@ -298,7 +328,6 @@ yt_ret_t yt_dot1x_tx_bypass_mc_get(yt_unit_t unit, yt_enable_t *pEnable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->dot1x_tx_bypass_mc_get(unit, pEnable);
@@ -309,7 +338,7 @@ yt_ret_t yt_dot1x_tx_bypass_mc_get(yt_unit_t unit, yt_enable_t *pEnable)
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[in]     enable              -enable or disable
  * @retval        CMM_ERR_OK          -on success
@@ -319,7 +348,6 @@ yt_ret_t yt_dot1x_rx_bypass_bc_set(yt_unit_t unit, yt_enable_t enable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
     return YT_DISPATCH(unit)->dot1x_rx_bypass_bc_set(unit, enable);
@@ -330,7 +358,7 @@ yt_ret_t yt_dot1x_rx_bypass_bc_set(yt_unit_t unit, yt_enable_t enable)
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[out]    pEnable             -enable or disable
  * @retval        CMM_ERR_OK          -on success
@@ -340,7 +368,6 @@ yt_ret_t yt_dot1x_rx_bypass_bc_get(yt_unit_t unit, yt_enable_t *pEnable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->dot1x_rx_bypass_bc_get(unit, pEnable);
@@ -351,7 +378,7 @@ yt_ret_t yt_dot1x_rx_bypass_bc_get(yt_unit_t unit, yt_enable_t *pEnable)
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[out]     enable              -enable or disable
  * @retval        CMM_ERR_OK          -on success
@@ -361,7 +388,6 @@ yt_ret_t yt_dot1x_rx_bypass_mc_set(yt_unit_t unit, yt_enable_t enable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
     return YT_DISPATCH(unit)->dot1x_rx_bypass_mc_set(unit, enable);
@@ -372,7 +398,7 @@ yt_ret_t yt_dot1x_rx_bypass_mc_set(yt_unit_t unit, yt_enable_t enable)
  * @endinternal
  *
  * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger Shark
  * @param[in]     unit                -unit id
  * @param[out]    pEnable             -enable or disable
  * @retval        CMM_ERR_OK          -on success
@@ -382,8 +408,50 @@ yt_ret_t yt_dot1x_rx_bypass_mc_get(yt_unit_t unit, yt_enable_t *pEnable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->dot1x_rx_bypass_mc_get(unit, pEnable);
 }
+
+/**
+ * @internal      yt_dot1x_eapol_act_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     actType            -x
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t yt_dot1x_eapol_act_set(yt_unit_t unit, yt_port_t port, yt_act_type_t actType)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
+
+    return YT_DISPATCH(unit)->dot1x_eapol_act_set(unit, port, actType);
+}
+
+/**
+ * @internal      yt_dot1x_eapol_act_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[out]    pActType            -x
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t yt_dot1x_eapol_act_get(yt_unit_t unit, yt_port_t port, yt_act_type_t* pActType)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
+
+    return YT_DISPATCH(unit)->dot1x_eapol_act_get(unit, port, pActType);
+}
+

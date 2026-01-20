@@ -29,33 +29,46 @@ extern "C" {
 #define FAL_PER_PORT_MAX_QUEUE_PRI(unit)            (CAL_MAX_UCAST_QUEUE_NUM(unit) + CAL_MAX_MCAST_QUEUE_NUM(unit) - 1)
 #define QOS_FORCEAC_UCASTQUE_REG(unit, macid, qid)  (0x301000 + ((macid) * CAL_MAX_UCAST_QUEUE_NUM(unit) * 8) + ((qid) * 8))
 #define QOS_FORCEAC_MCASTQUE_REG(unit, macid, qid)  (0x302000 + ((macid) * CAL_MAX_MCAST_QUEUE_NUM(unit) * 4) + ((qid) * 4))
+#define QOS_GROUPAC_REG(idx)                        (0x303000 + ((idx) * 4))
+#define QOS_GROUPAC_MAX_NUM                         (10)
 
 /**
- * @internal      fal_tiger_qos_intPri_map_weight_set
+ * @internal      fal_tiger_qos_init
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_qos_init(yt_unit_t unit);
+
+/**
+ * @internal      fal_tiger_qos_intPri_sel_precedence_set
  * @endinternal
  *
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[in]     pri_tbl             -internal priority select, The higher the value, the higher the priority
+ * @param[in]     pPriTbl             -internal priority select, The higher the value, the higher the priority
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intPri_map_weight_set(yt_unit_t unit, yt_port_t port, yt_qos_intPri_map_weight_t pri_tbl);
+extern yt_ret_t fal_tiger_qos_intPri_sel_precedence_set(yt_unit_t unit, yt_port_t port, yt_qos_intPri_sel_precedence_t *pPriTbl);
 
 
 /**
- * @internal      fal_tiger_qos_intPri_map_weight_get
+ * @internal      fal_tiger_qos_intPri_sel_precedence_get
  * @endinternal
  *
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[out]    pri_tbl             -internal priority select, The higher the value, the higher the priority
+ * @param[out]    pPriTbl             -internal priority select, The higher the value, the higher the priority
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intPri_map_weight_get(yt_unit_t unit, yt_port_t port, yt_qos_intPri_map_weight_t *pri_tbl);
+extern yt_ret_t fal_tiger_qos_intPri_sel_precedence_get(yt_unit_t unit, yt_port_t port, yt_qos_intPri_sel_precedence_t *pPriTbl);
 
 
 /**
@@ -87,6 +100,57 @@ extern yt_ret_t fal_tiger_qos_intPri_portDefPri_set (yt_unit_t unit, yt_port_t p
  */
 extern yt_ret_t  fal_tiger_qos_intPri_portDefPri_get (yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable, yt_pri_t *pri);
 
+/**
+ * @internal      fal_tiger_qos_intPri_intCpri_map_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[in]     cpri                -internal vlan priority (0 - MAX_PRIORITY)
+ * @param[in]     pri                 -internal priority (0 - MAX_PRIORITY)
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_qos_intPri_intCpri_map_set(yt_unit_t unit, yt_pri_t cpri, yt_pri_t pri);
+
+/**
+ * @internal      fal_tiger_qos_intPri_intCpri_map_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[in]     cpri                -internal vlan priority (0 - MAX_PRIORITY)
+ * @param[out]    pPri                -internal priority (0 - MAX_PRIORITY)
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_qos_intPri_intCpri_map_get(yt_unit_t unit, yt_pri_t cpri, yt_pri_t *pPri);
+
+/**
+ * @internal      fal_tiger_qos_intPri_intSpri_map_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[in]     spri                -internal vlan priority (0 - MAX_PRIORITY)
+ * @param[in]     pri                 -internal priority (0 - MAX_PRIORITY)
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_qos_intPri_intSpri_map_set(yt_unit_t unit, yt_pri_t spri, yt_pri_t pri);
+
+/**
+ * @internal      fal_tiger_qos_intPri_intSpri_map_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[in]     spri                -internal vlan priority (0 - MAX_PRIORITY)
+ * @param[out]    pPri                -internal priority (0 - MAX_PRIORITY)
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_qos_intPri_intSpri_map_get(yt_unit_t unit, yt_pri_t spri, yt_pri_t *pPri);
 
 /**
  * @internal      fal_tiger_qos_intPri_cpri_map_set
@@ -94,13 +158,12 @@ extern yt_ret_t  fal_tiger_qos_intPri_portDefPri_get (yt_unit_t unit, yt_port_t 
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
  * @param[in]     cpri                -tag control information exclude vid
  * @param[in]     pri                 -internal priority or vlan tag priority (0 - MAX_PRIORITY)
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intPri_cpri_map_set(yt_unit_t unit, yt_port_t port, yt_qos_pmap_tci_t cpri, yt_pri_t pri);
+extern yt_ret_t fal_tiger_qos_intPri_cpri_map_set(yt_unit_t unit, yt_qos_pmap_tci_t cpri, yt_pri_t pri);
 
 
 /**
@@ -109,13 +172,12 @@ extern yt_ret_t fal_tiger_qos_intPri_cpri_map_set(yt_unit_t unit, yt_port_t port
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
  * @param[in]     cpri                -tag control information exclude vid
  * @param[out]    pPri                -internal priority or vlan tag priority (0 - MAX_PRIORITY)
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intPri_cpri_map_get(yt_unit_t unit, yt_port_t port, yt_qos_pmap_tci_t cpri, yt_pri_t *pPri);
+extern yt_ret_t fal_tiger_qos_intPri_cpri_map_get(yt_unit_t unit, yt_qos_pmap_tci_t cpri, yt_pri_t *pPri);
 
 
 /**
@@ -124,13 +186,12 @@ extern yt_ret_t fal_tiger_qos_intPri_cpri_map_get(yt_unit_t unit, yt_port_t port
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
  * @param[in]     spri                -tag control information exclude vid
  * @param[in]     pri                 -internal priority or vlan tag priority (0 - MAX_PRIORITY)
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intPri_spri_map_set(yt_unit_t unit, yt_port_t port, yt_qos_pmap_tci_t spri, yt_pri_t pri);
+extern yt_ret_t fal_tiger_qos_intPri_spri_map_set(yt_unit_t unit, yt_qos_pmap_tci_t spri, yt_pri_t pri);
 
 
 /**
@@ -139,13 +200,12 @@ extern yt_ret_t fal_tiger_qos_intPri_spri_map_set(yt_unit_t unit, yt_port_t port
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
  * @param[in]     spri                -tag control information exclude vid
  * @param[out]    pPri                -internal priority or vlan tag priority (0 - MAX_PRIORITY)
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intPri_spri_map_get(yt_unit_t unit, yt_port_t port, yt_qos_pmap_tci_t spri, yt_pri_t *pPri);
+extern yt_ret_t fal_tiger_qos_intPri_spri_map_get(yt_unit_t unit, yt_qos_pmap_tci_t spri, yt_pri_t *pPri);
 
 
 /**
@@ -212,12 +272,13 @@ extern yt_ret_t  fal_tiger_qos_intPri_vlan_map_get(yt_unit_t unit, yt_vlan_t vid
  *
  * @brief         Description
  * @param[in]     unit                -unit id
+ * @param[in]     grpId               -mirror group id
  * @param[in]     enable              -enable or disable
  * @param[in]     pri                 -internal priority or vlan tag priority (0 - MAX_PRIORITY)
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intPri_map_igrMirror_set(yt_unit_t unit, yt_enable_t enable, yt_pri_t pri);
+extern yt_ret_t fal_tiger_qos_intPri_map_igrMirror_set(yt_unit_t unit, yt_mirror_group_t grpId, yt_enable_t enable, yt_pri_t pri);
 
 
 /**
@@ -226,12 +287,13 @@ extern yt_ret_t fal_tiger_qos_intPri_map_igrMirror_set(yt_unit_t unit, yt_enable
  *
  * @brief         Description
  * @param[in]     unit                -unit id
+ * @param[in]     grpId               -mirror group id
  * @param[out]    pEnable             -enable or disable
  * @param[out]    pPri                -internal priority or vlan tag priority (0 - MAX_PRIORITY)
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intPri_map_igrMirror_get(yt_unit_t unit, yt_enable_t *pEnable, yt_pri_t *pPri);
+extern yt_ret_t fal_tiger_qos_intPri_map_igrMirror_get(yt_unit_t unit, yt_mirror_group_t grpId, yt_enable_t *pEnable, yt_pri_t *pPri);
 
 
 /**
@@ -240,12 +302,13 @@ extern yt_ret_t fal_tiger_qos_intPri_map_igrMirror_get(yt_unit_t unit, yt_enable
  *
  * @brief         Description
  * @param[in]     unit                -unit id
+ * @param[in]     grpId               -mirror group id
  * @param[in]     enable              -enable or disable
  * @param[in]     pri                 -internal priority or vlan tag priority (0 - MAX_PRIORITY)
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intPri_map_egrMirror_set(yt_unit_t unit, yt_enable_t enable, yt_pri_t pri);
+extern yt_ret_t fal_tiger_qos_intPri_map_egrMirror_set(yt_unit_t unit, yt_mirror_group_t grpId, yt_enable_t enable, yt_pri_t pri);
 
 
 /**
@@ -254,12 +317,13 @@ extern yt_ret_t fal_tiger_qos_intPri_map_egrMirror_set(yt_unit_t unit, yt_enable
  *
  * @brief         Description
  * @param[in]     unit                -unit id
+ * @param[in]     grpId               -mirror group id
  * @param[out]    pEnable             -enable or disable
  * @param[out]    pPri                -internal priority or vlan tag priority (0 - MAX_PRIORITY)
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intPri_map_egrMirror_get(yt_unit_t unit, yt_enable_t *pEnable, yt_pri_t *pPri);
+extern yt_ret_t fal_tiger_qos_intPri_map_egrMirror_get(yt_unit_t unit, yt_mirror_group_t grpId, yt_enable_t *pEnable, yt_pri_t *pPri);
 
 /**
  * @internal      fal_tiger_qos_intDP_cpri_map_set
@@ -267,13 +331,12 @@ extern yt_ret_t fal_tiger_qos_intPri_map_egrMirror_get(yt_unit_t unit, yt_enable
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
  * @param[in]     cpri                -tag control information exclude vid
  * @param[in]     dp                  -drop priority
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intDP_cpri_map_set(yt_unit_t unit, yt_port_t port, yt_qos_pmap_tci_t cpri, yt_dp_t dp);
+extern yt_ret_t fal_tiger_qos_intDP_cpri_map_set(yt_unit_t unit, yt_qos_pmap_tci_t cpri, yt_dp_t dp);
 
 
 /**
@@ -282,13 +345,12 @@ extern yt_ret_t fal_tiger_qos_intDP_cpri_map_set(yt_unit_t unit, yt_port_t port,
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
  * @param[in]     cpri                -tag control information exclude vid
  * @param[out]    pDp                 -drop priority
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intDP_cpri_map_get(yt_unit_t unit, yt_port_t port, yt_qos_pmap_tci_t cpri, yt_dp_t *pDp);
+extern yt_ret_t fal_tiger_qos_intDP_cpri_map_get(yt_unit_t unit, yt_qos_pmap_tci_t cpri, yt_dp_t *pDp);
 
 
 /**
@@ -297,13 +359,12 @@ extern yt_ret_t fal_tiger_qos_intDP_cpri_map_get(yt_unit_t unit, yt_port_t port,
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
  * @param[in]     spri                -tag control information exclude vid
  * @param[in]     dp                  -drop priority
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intDP_spri_map_set(yt_unit_t unit, yt_port_t port, yt_qos_pmap_tci_t spri, yt_dp_t dp);
+extern yt_ret_t fal_tiger_qos_intDP_spri_map_set(yt_unit_t unit, yt_qos_pmap_tci_t spri, yt_dp_t dp);
 
 
 /**
@@ -312,13 +373,12 @@ extern yt_ret_t fal_tiger_qos_intDP_spri_map_set(yt_unit_t unit, yt_port_t port,
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
  * @param[in]     spri                -tag control information exclude vid
  * @param[out]    pDp                 -drop priority
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_intDP_spri_map_get(yt_unit_t unit, yt_port_t port, yt_qos_pmap_tci_t spri, yt_dp_t *pDp);
+extern yt_ret_t fal_tiger_qos_intDP_spri_map_get(yt_unit_t unit, yt_qos_pmap_tci_t spri, yt_dp_t *pDp);
 
 
 /**
@@ -356,11 +416,11 @@ extern yt_ret_t fal_tiger_qos_intDP_dscp_map_get(yt_unit_t unit, yt_dscp_t dscp,
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[in]     qmap_tbl            -internal priority to queue mapping
+ * @param[in]     pQmap               -internal priority to queue mapping
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_que_map_ucast_set(yt_unit_t unit, yt_port_t port, yt_qos_qmap_t qmap_tbl);
+extern yt_ret_t fal_tiger_qos_que_map_ucast_set(yt_unit_t unit, yt_port_t port, yt_qos_qmap_t *pQmap);
 
 
 /**
@@ -370,11 +430,11 @@ extern yt_ret_t fal_tiger_qos_que_map_ucast_set(yt_unit_t unit, yt_port_t port, 
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[out]    qmap_tbl            -internal priority to queue mapping
+ * @param[out]    pQmap               -internal priority to queue mapping
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_que_map_ucast_get(yt_unit_t unit, yt_port_t port, yt_qos_qmap_t *qmap_tbl);
+extern yt_ret_t fal_tiger_qos_que_map_ucast_get(yt_unit_t unit, yt_port_t port, yt_qos_qmap_t *pQmap);
 
 
 /**
@@ -384,11 +444,11 @@ extern yt_ret_t fal_tiger_qos_que_map_ucast_get(yt_unit_t unit, yt_port_t port, 
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[in]     qmap_tbl            -internal priority to queue mapping
+ * @param[in]     pQmap               -internal priority to queue mapping
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_que_map_mcast_set(yt_unit_t unit, yt_port_t port, yt_qos_qmap_t qmap_tbl);
+extern yt_ret_t fal_tiger_qos_que_map_mcast_set(yt_unit_t unit, yt_port_t port, yt_qos_qmap_t *pQmap);
 
 
 /**
@@ -398,11 +458,11 @@ extern yt_ret_t fal_tiger_qos_que_map_mcast_set(yt_unit_t unit, yt_port_t port, 
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[out]    qmap_tbl            -internal priority to queue mapping
+ * @param[out]    pQmap               -internal priority to queue mapping
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_que_map_mcast_get(yt_unit_t unit, yt_port_t port, yt_qos_qmap_t *qmap_tbl);
+extern yt_ret_t fal_tiger_qos_que_map_mcast_get(yt_unit_t unit, yt_port_t port, yt_qos_qmap_t *pQmap);
 
 /**
  * @internal      fal_tiger_qos_que_forceDropPerQue_enable_set
@@ -465,11 +525,11 @@ extern yt_ret_t fal_tiger_qos_que_forceDrop_enable_get(yt_unit_t unit, yt_port_t
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[in]     rmark_en            -remark states of different type
+ * @param[in]     pRemarkCtrl            -remark states of different type
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_remark_port_set(yt_unit_t unit, yt_port_t port, yt_qos_remark_en_t rmark_en);
+extern yt_ret_t fal_tiger_qos_remark_port_set(yt_unit_t unit, yt_port_t port, const yt_qos_remark_ctrl_t *pRemarkCtrl);
 
 
 /**
@@ -479,11 +539,11 @@ extern yt_ret_t fal_tiger_qos_remark_port_set(yt_unit_t unit, yt_port_t port, yt
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[out]    pRmark_en           -remark states of different type
+ * @param[out]    pRemarkCtrl           -remark states of different type
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_remark_port_get(yt_unit_t unit, yt_port_t port, yt_qos_remark_en_t *pRmark_en);
+extern yt_ret_t fal_tiger_qos_remark_port_get(yt_unit_t unit, yt_port_t port, yt_qos_remark_ctrl_t *pRemarkCtrl);
 
 
 /**
@@ -493,11 +553,11 @@ extern yt_ret_t fal_tiger_qos_remark_port_get(yt_unit_t unit, yt_port_t port, yt
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     srcInfo             -as a key value that remark to priority and dscp
- * @param[in]     new_dscp            -the dscp value (0 - MAX_DSCP_VALUE)
+ * @param[in]     newDscp            -the dscp value (0 - MAX_DSCP_VALUE)
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_remark_dscp_set(yt_unit_t unit, yt_qos_remark_info_t srcInfo, yt_dscp_t new_dscp);
+extern yt_ret_t fal_tiger_qos_remark_dscp_set(yt_unit_t unit, yt_qos_remark_info_t srcInfo, yt_dscp_t newDscp);
 
 
 /**
@@ -507,11 +567,11 @@ extern yt_ret_t fal_tiger_qos_remark_dscp_set(yt_unit_t unit, yt_qos_remark_info
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     srcInfo             -the priority and dscp for remark(src or dest)
- * @param[out]    pNew_dscp           -the dscp value (0 - MAX_DSCP_VALUE)
+ * @param[out]    pNewDscp           -the dscp value (0 - MAX_DSCP_VALUE)
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_remark_dscp_get(yt_unit_t unit, yt_qos_remark_info_t srcInfo, yt_dscp_t *pNew_dscp);
+extern yt_ret_t fal_tiger_qos_remark_dscp_get(yt_unit_t unit, yt_qos_remark_info_t srcInfo, yt_dscp_t *pNewDscp);
 
 
 /**
@@ -520,13 +580,12 @@ extern yt_ret_t fal_tiger_qos_remark_dscp_get(yt_unit_t unit, yt_qos_remark_info
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
  * @param[in]     srcInfo             -as a key value that remark to priority and dscp
  * @param[in]     dstInfo             -tag control information exclude vid
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_remark_cpri_set(yt_unit_t unit, yt_port_t port, yt_qos_remark_info_t srcInfo, yt_qos_pmap_tci_t dstInfo);
+extern yt_ret_t fal_tiger_qos_remark_cpri_set(yt_unit_t unit, yt_qos_remark_info_t srcInfo, yt_qos_pmap_tci_t dstInfo);
 
 
 /**
@@ -535,13 +594,12 @@ extern yt_ret_t fal_tiger_qos_remark_cpri_set(yt_unit_t unit, yt_port_t port, yt
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
  * @param[in]     srcInfo             -as a key value that remark to priority and dscp
  * @param[out]    pDstInfo            -tag control information exclude vid
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_remark_cpri_get(yt_unit_t unit, yt_port_t port, yt_qos_remark_info_t srcInfo, yt_qos_pmap_tci_t *pDstInfo);
+extern yt_ret_t fal_tiger_qos_remark_cpri_get(yt_unit_t unit, yt_qos_remark_info_t srcInfo, yt_qos_pmap_tci_t *pDstInfo);
 
 
 /**
@@ -550,13 +608,12 @@ extern yt_ret_t fal_tiger_qos_remark_cpri_get(yt_unit_t unit, yt_port_t port, yt
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
  * @param[in]     srcInfo             -as a key value that remark to priority and dscp
  * @param[in]     dstInfo             -tag control information exclude vid
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_remark_spri_set(yt_unit_t unit, yt_port_t port, yt_qos_remark_info_t srcInfo, yt_qos_pmap_tci_t dstInfo);
+extern yt_ret_t fal_tiger_qos_remark_spri_set(yt_unit_t unit, yt_qos_remark_info_t srcInfo, yt_qos_pmap_tci_t dstInfo);
 
 
 /**
@@ -565,17 +622,16 @@ extern yt_ret_t fal_tiger_qos_remark_spri_set(yt_unit_t unit, yt_port_t port, yt
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
  * @param[in]     srcInfo             -as a key value that remark to priority and dscp
  * @param[out]    pDstInfo            -tag control information exclude vid
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_remark_spri_get(yt_unit_t unit, yt_port_t port, yt_qos_remark_info_t srcInfo, yt_qos_pmap_tci_t *pDstInfo);
+extern yt_ret_t fal_tiger_qos_remark_spri_get(yt_unit_t unit, yt_qos_remark_info_t srcInfo, yt_qos_pmap_tci_t *pDstInfo);
 
 
 /**
- * @internal      fal_tiger_qos_schedule_sp_set
+ * @internal      fal_tiger_qos_schedule_queue_pri_set
  * @endinternal
  *
  * @brief         Description
@@ -585,11 +641,11 @@ extern yt_ret_t fal_tiger_qos_remark_spri_get(yt_unit_t unit, yt_port_t port, yt
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_schedule_sp_set(yt_unit_t unit, yt_qid_t qinfo, yt_queue_pri_t qpri);
+extern yt_ret_t fal_tiger_qos_schedule_queue_pri_set(yt_unit_t unit, yt_qid_t qinfo, yt_queue_pri_t qpri);
 
 
 /**
- * @internal      fal_tiger_qos_schedule_sp_get
+ * @internal      fal_tiger_qos_schedule_queue_pri_get
  * @endinternal
  *
  * @brief         Description
@@ -599,7 +655,7 @@ extern yt_ret_t fal_tiger_qos_schedule_sp_set(yt_unit_t unit, yt_qid_t qinfo, yt
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_schedule_sp_get(yt_unit_t unit, yt_qid_t qinfo, yt_queue_pri_t *pQpri);
+extern yt_ret_t fal_tiger_qos_schedule_queue_pri_get(yt_unit_t unit, yt_qid_t qinfo, yt_queue_pri_t *pQpri);
 
 
 /**
@@ -609,11 +665,11 @@ extern yt_ret_t fal_tiger_qos_schedule_sp_get(yt_unit_t unit, yt_qid_t qinfo, yt
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     qinfo               -queue id, port, and ucast or mcast type config
- * @param[in]     dwrr_cmode          -bbs and pps
+ * @param[in]     dwrrMode          -bbs and pps
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_schedule_dwrr_mode_set(yt_unit_t unit, yt_qid_t qinfo, yt_rate_mode_t dwrr_cmode);
+extern yt_ret_t fal_tiger_qos_schedule_dwrr_mode_set(yt_unit_t unit, yt_qid_t qinfo, yt_rate_mode_t dwrrMode);
 
 
 /**
@@ -623,15 +679,15 @@ extern yt_ret_t fal_tiger_qos_schedule_dwrr_mode_set(yt_unit_t unit, yt_qid_t qi
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     qinfo               -queue id, port, and ucast or mcast type config
- * @param[out]    pDwrr_cmode         -bbs and pps
+ * @param[out]    pDwrrMode         -bbs and pps
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_schedule_dwrr_mode_get(yt_unit_t unit, yt_qid_t qinfo, yt_rate_mode_t *pDwrr_cmode);
+extern yt_ret_t fal_tiger_qos_schedule_dwrr_mode_get(yt_unit_t unit, yt_qid_t qinfo, yt_rate_mode_t *pDwrrMode);
 
 
 /**
- * @internal      fal_tiger_qos_schedule_dwrr_set
+ * @internal      fal_tiger_qos_schedule_dwrr_weight_set
  * @endinternal
  *
  * @brief         Description
@@ -641,11 +697,11 @@ extern yt_ret_t fal_tiger_qos_schedule_dwrr_mode_get(yt_unit_t unit, yt_qid_t qi
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_schedule_dwrr_set(yt_unit_t unit, yt_qid_t qinfo, yt_queue_weight_t qweight);
+extern yt_ret_t fal_tiger_qos_schedule_dwrr_weight_set(yt_unit_t unit, yt_qid_t qinfo, yt_queue_weight_t qweight);
 
 
 /**
- * @internal      fal_tiger_qos_schedule_dwrr_get
+ * @internal      fal_tiger_qos_schedule_dwrr_weight_get
  * @endinternal
  *
  * @brief         Description
@@ -655,10 +711,10 @@ extern yt_ret_t fal_tiger_qos_schedule_dwrr_set(yt_unit_t unit, yt_qid_t qinfo, 
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_qos_schedule_dwrr_get(yt_unit_t unit, yt_qid_t qinfo, yt_queue_weight_t *pQweight);
+extern yt_ret_t fal_tiger_qos_schedule_dwrr_weight_get(yt_unit_t unit, yt_qid_t qinfo, yt_queue_weight_t *pQweight);
 
 
-extern uint32_t fal_tiger_qos_sch_tableId_get(yt_unit_t unit, yt_qid_t qinfo, uint8_t *pId);
+extern uint32_t fal_tiger_qos_queue_id_get(yt_unit_t unit, yt_qid_t qinfo, uint8_t *pId);
 
 
 #ifdef __cplusplus

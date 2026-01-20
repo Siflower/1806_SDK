@@ -37,10 +37,33 @@ extern "C" {
 #define LED_PARALLEL_OUTPUT_CTRL        0xd01c4
 #define LED_PARALLEL_POS_INVERT_CTRL    0xd01c8
 
+typedef enum led_action_e {
+    LED_ACTION_10M_BLINK = 0x1,
+    LED_ACTION_100M_BLINK = 0x2,
+    LED_ACTION_1000M_BLINK = 0x4,
+    LED_ACTION_COLLISION_BLINK_ENABLE = 0x8,
+    LED_ACTION_10M_ON = 0x10,
+    LED_ACTION_100M_ON = 0x20,
+    LED_ACTION_1000M_ON = 0x40,
+    LED_ACTION_RXACT_ON = 0x80,
+    LED_ACTION_TXACT_ON = 0x100,
+    LED_ACTION_RXACT_BLINK = 0x200,
+    LED_ACTION_TXACT_BLINK = 0x400,
+    LED_ACTION_HALFDUPLEX_ON = 0x800,
+    LED_ACTION_FULLDUPLEX_ON = 0x1000,
+    LED_ACTION_ACTIVE_BLINK_INDICATE = 0x2000,
+    LED_ACTION_LOOPDETECT_INDICATE = 0x4000,
+    LED_ACTION_EEE_INDICATE = 0x8000,
+    LED_ACTION_COLLISION_BLINK = 0x10000,         /* only tiger for LED0 */
+    LED_ACTION_DISABLE_LINK_TRY = 0x20000,        /* only tiger for LED0 */
+    LED_ACTION_NUM
+}led_action_t;
 
-#define LEDDSCP_ON_UNIT(unit)           (UNITINFO(unit)->pLEDDescp)
-#define LED_MODE(unit)                  (LEDDSCP_ON_UNIT(unit)->ledMode)
-#define SLED_PARAM(unit)                (LEDDSCP_ON_UNIT(unit)->pSledParam)
+typedef struct yt_led_slot_s
+{
+    uint8_t serialId;
+    uint8_t ledId;
+}yt_led_slot_t;
 
 /**
  * @internal      fal_tiger_led_enable
@@ -237,6 +260,9 @@ extern yt_ret_t fal_tiger_led_force_rate_set(yt_unit_t unit, yt_port_t port, yt_
  */
 extern yt_ret_t fal_tiger_led_force_rate_get(yt_unit_t unit, yt_port_t port, yt_led_id_t ledId, yt_led_force_rate_t *pRate);
 
+extern yt_ret_t fal_tiger_led_serial_outputMode_set(yt_unit_t unit, yt_sled_dataNum_t mode);
+extern yt_ret_t fal_tiger_led_serial_outputMode_get(yt_unit_t unit, yt_sled_dataNum_t *pMode);
+
 /**
  * @internal      fal_tiger_led_serial_activeMode_set
  * @endinternal
@@ -286,29 +312,6 @@ extern yt_ret_t fal_tiger_led_serial_remapping_set(yt_unit_t unit,  uint8_t inde
  * @retval        CMM_ERR_FAIL        -on fail
  */
 extern yt_ret_t fal_tiger_led_serial_remapping_get(yt_unit_t unit, uint8_t index, yt_led_remapping_t *pDstInfo);
-
-/**
- * @internal      fal_tiger_led_serial_enable_set
- * @endinternal
- *
- * @brief         enabel/disable serial LED
- * @param[in]     unit                -unit id
- * @param[in]     enable              -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t fal_tiger_led_serial_enable_set(yt_unit_t unit, yt_enable_t enable);
-/**
- * @internal      fal_tiger_led_serial_enable_get
- * @endinternal
- *
- * @brief         get enable state of serial LED
- * @param[in]     unit                -unit id
- * @param[out]    pEnable             -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t fal_tiger_led_serial_enable_get(yt_unit_t unit, yt_enable_t *pEnable);
 
 /**
  * @internal      fal_tiger_led_parallel_output_set
@@ -387,6 +390,54 @@ extern yt_ret_t fal_tiger_led_parallel_pos_invert_set(yt_unit_t unit, yt_port_t 
  * @retval        CMM_ERR_FAIL        -on fail
  */
 extern yt_ret_t fal_tiger_led_parallel_pos_invert_get(yt_unit_t unit, yt_port_t port, yt_led_id_t ledId, yt_enable_t *pEnable);
+
+/**
+ * @internal      fal_tiger_led_serial_port_info_set
+ * @endinternal
+ *
+ * @brief         set per_port_en,is_combo_en,ledmode
+ * @param[in]     unit                -unit id
+ * @param[out]    portledInfo         -per_port_en,is_combo_en,ledmode info
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_led_serial_port_info_set(yt_unit_t unit, yt_led_seled_info_t portledInfo);
+
+/**
+ * @internal      fal_tiger_led_serial_port_info_get
+ * @endinternal
+ *
+ * @brief         get per_port_en,is_combo_en,ledmode
+ * @param[in]     unit                -unit id
+ * @param[out]    portledInfo         -pointer to per_port_en,is_combo_en,ledmode info
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_led_serial_port_info_get(yt_unit_t unit, yt_led_seled_info_t *pPortledInfo);
+
+/**
+ * @internal      fal_tiger_led_serial_total_ledNum_set
+ * @endinternal
+ *
+ * @brief        set total led number
+ * @param[in]     unit                -unit id
+ * @param[in]     lednum              -total led number
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_led_serial_total_ledNum_set(yt_unit_t unit, yt_unit_t lednum);
+
+/**
+ * @internal      fal_tiger_led_serial_total_ledNum_get
+ * @endinternal
+ *
+ * @brief        get total led number
+ * @param[in]     unit                -unit id
+ * @param[in]     lednum              -total led num
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_led_serial_total_ledNum_get(yt_unit_t unit, yt_unit_t *pLednum);
 
 #ifdef __cplusplus
 }

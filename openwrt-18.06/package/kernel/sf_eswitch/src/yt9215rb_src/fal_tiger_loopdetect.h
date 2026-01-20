@@ -24,6 +24,10 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/*
+ * Macro Declaration
+ */
+#define L2_LOOP_DETECT_FLAG_DUMMY                    0x180814
 
 /**
  * @internal      fal_tiger_loop_detect_enable_set
@@ -130,8 +134,21 @@ extern yt_ret_t fal_tiger_loop_detect_unitID_set(yt_unit_t unit, yt_local_id_t l
  */
 extern yt_ret_t fal_tiger_loop_detect_unitID_get(yt_unit_t unit, yt_local_id_t *pLocalID, yt_remote_id_t *pRemoteID);
 
-
-
+/**
+ * @internal      fal_tiger_loop_detect_loopedPorts_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[out]    pPortMask          -pointer to port mask
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_loop_detect_loopedPorts_get(yt_unit_t unit, yt_port_mask_t *pPortMask);
+extern yt_ret_t fal_tiger_loop_detect_interval_set(yt_unit_t unit, uint32_t interval);
+extern yt_ret_t fal_tiger_loop_detect_interval_get(yt_unit_t unit, uint32_t *pInterval);
+extern yt_ret_t fal_tiger_loop_detect_prevent_enable_set(yt_unit_t unit, yt_enable_t enable);
+extern yt_ret_t fal_tiger_loop_detect_prevent_enable_get(yt_unit_t unit, yt_enable_t *pEnable);
 
 #ifdef __cplusplus
 }

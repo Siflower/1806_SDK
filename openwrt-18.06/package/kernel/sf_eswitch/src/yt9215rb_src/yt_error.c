@@ -9,8 +9,8 @@
 #define _YT_ERROR_C
 #include "yt_error.h"
 
-char *_yt_errmsg[] = _YT_ERRMSG;
-uint8_t yt_debug_level = YT_DEBUG_NONE;
-char *_yt_prompt_msg[] = _YT_PROMPT_MSG;
+char * const _yt_errmsg[] = _YT_ERRMSG;
+uint8_t yt_debug_level = YT_DEBUG_INFO;
+char * const _yt_prompt_msg[] = _YT_PROMPT_MSG;
 
 #endif //YT_ERROR_C

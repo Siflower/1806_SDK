@@ -47,31 +47,31 @@
  *      Functions implementations                                   *
  **************************************************/
 
-static uint32_t  fal_tiger_dos_tcp_flagsn_set(yt_unit_t unit, yt_dos_type_t type, yt_enable_t enable)
+static uint32_t  fal_tiger_dos_tcp_flagsn_set(yt_unit_t unit, yt_dos_type_t dosType, yt_enable_t enable)
 {
-    dos_tcp_flags0_t dos_tcp_flagsn;
+    dos_tcp_flags0_t dosTcpFlagsn;
     cmm_err_t ret = CMM_ERR_OK;
-    uint16_t memid = 0;
+    uint16_t memId = 0;
 
-    switch(type)
+    switch(dosType)
     {
-        case DOS_TYPE_TCP_SYNRST_SCAN:
-           memid = 4;
+        case YT_DOS_TYPE_TCP_SYNRST_SCAN:
+           memId = 4;
            break;
-        case DOS_TYPE_TCP_SYNFIN_SCAN:
-           memid = 3;
+        case YT_DOS_TYPE_TCP_SYNFIN_SCAN:
+           memId = 3;
            break;
-        case DOS_TYPE_TCP_XMAS_SCAN:
-           memid = 0;
+        case YT_DOS_TYPE_TCP_XMAS_SCAN:
+           memId = 0;
            break;
-        case DOS_TYPE_TCP_NULL_SCAN:
-           memid = 1;
+        case YT_DOS_TYPE_TCP_NULL_SCAN:
+           memId = 1;
            break;
-        case DOS_TYPE_TCP_SYN_PORTLESS1024:
-           memid = 2;
+        case YT_DOS_TYPE_TCP_SYN_PORTLESS1024:
+           memId = 2;
            break;
-        case DOS_TYPE_TCP_ALLFLAGS_SCAN:
-           memid = 5;
+        case YT_DOS_TYPE_TCP_ALLFLAGS_SCAN:
+           memId = 5;
            break;
         default:
            return CMM_ERR_NOT_SUPPORT;
@@ -79,61 +79,61 @@ static uint32_t  fal_tiger_dos_tcp_flagsn_set(yt_unit_t unit, yt_dos_type_t type
 
     if(enable == YT_ENABLE)
     {
-        switch(type)
+        switch(dosType)
         {
-            case DOS_TYPE_TCP_SYNRST_SCAN:
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dos_tcp_flagsn, 0x6);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dos_tcp_flagsn, 0x6);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dos_tcp_flagsn, 0);
+            case YT_DOS_TYPE_TCP_SYNRST_SCAN:
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dosTcpFlagsn, 0x6);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dosTcpFlagsn, 0x6);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dosTcpFlagsn, 0);
                 break;
-            case DOS_TYPE_TCP_SYNFIN_SCAN:
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dos_tcp_flagsn, 0x3);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dos_tcp_flagsn, 0x3);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dos_tcp_flagsn, 0);
+            case YT_DOS_TYPE_TCP_SYNFIN_SCAN:
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dosTcpFlagsn, 0x3);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dosTcpFlagsn, 0x3);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dosTcpFlagsn, 0);
                 break;
-            case DOS_TYPE_TCP_XMAS_SCAN:
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dos_tcp_flagsn, 1);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dos_tcp_flagsn, 0x29);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dos_tcp_flagsn, 1);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dos_tcp_flagsn, 0x29);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dos_tcp_flagsn, 0);
+            case YT_DOS_TYPE_TCP_XMAS_SCAN:
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dosTcpFlagsn, 1);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dosTcpFlagsn, 0x29);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dosTcpFlagsn, 1);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dosTcpFlagsn, 0x29);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dosTcpFlagsn, 0);
                 break;
-            case DOS_TYPE_TCP_NULL_SCAN:
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dos_tcp_flagsn, 1);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dos_tcp_flagsn, 1);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dos_tcp_flagsn, 0x3f);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dos_tcp_flagsn, 0);
+            case YT_DOS_TYPE_TCP_NULL_SCAN:
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dosTcpFlagsn, 1);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dosTcpFlagsn, 1);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dosTcpFlagsn, 0x3f);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dosTcpFlagsn, 0);
                 break;
-            case DOS_TYPE_TCP_SYN_PORTLESS1024:
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dos_tcp_flagsn, 1);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dos_tcp_flagsn, 0x2);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dos_tcp_flagsn, 1);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dos_tcp_flagsn, 0x12);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dos_tcp_flagsn, 0);
+            case YT_DOS_TYPE_TCP_SYN_PORTLESS1024:
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dosTcpFlagsn, 1);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dosTcpFlagsn, 0x2);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dosTcpFlagsn, 1);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dosTcpFlagsn, 0x12);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dosTcpFlagsn, 0);
                 break;
-            case DOS_TYPE_TCP_ALLFLAGS_SCAN:
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dos_tcp_flagsn, 0x3F);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dos_tcp_flagsn, 0);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dos_tcp_flagsn, 0x3F);
-                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dos_tcp_flagsn, 0);
+            case YT_DOS_TYPE_TCP_ALLFLAGS_SCAN:
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dosTcpFlagsn, 0x3F);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dosTcpFlagsn, 0);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dosTcpFlagsn, 0x3F);
+                HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dosTcpFlagsn, 0);
                 break;
             default:
                 break;
@@ -142,79 +142,83 @@ static uint32_t  fal_tiger_dos_tcp_flagsn_set(yt_unit_t unit, yt_dos_type_t type
     else if(enable == YT_DISABLE)
     {
         /* clear setting when disabled */
-        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dos_tcp_flagsn, 0);
-        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dos_tcp_flagsn, 0);
-        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dos_tcp_flagsn, 0);
-        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dos_tcp_flagsn, 1);
-        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dos_tcp_flagsn, 1);
-        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dos_tcp_flagsn, 0x3f);
-        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dos_tcp_flagsn, 0);
+        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dosTcpFlagsn, 0);
+        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dosTcpFlagsn, 0);
+        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dosTcpFlagsn, 0);
+        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dosTcpFlagsn, 1);
+        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dosTcpFlagsn, 1);
+        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dosTcpFlagsn, 0x3f);
+        HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dosTcpFlagsn, 0);
     }
     else
     {
         return CMM_ERR_NOT_SUPPORT;
     }
-    memid = DOS_TCP_FLAGS0m + memid;
+    memId = DOS_TCP_FLAGS0m + memId;
+    HAL_FIELD_SET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_DROP_EN, &dosTcpFlagsn, enable);
 
-    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, memid, 0, sizeof(dos_tcp_flags0_t), &dos_tcp_flagsn), ret);
+    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, memId, 0, sizeof(dos_tcp_flags0_t), &dosTcpFlagsn), ret);
 
     return CMM_ERR_OK;
 }
 
-static uint32_t  fal_tiger_dos_tcp_flagsn_get(yt_unit_t unit, yt_dos_type_t type, yt_enable_t *pEnable)
+static uint32_t  fal_tiger_dos_tcp_flagsn_get(yt_unit_t unit, yt_dos_type_t dosType, yt_enable_t *pEnable)
 {
-    dos_tcp_flags0_t dos_tcp_flagsn;
+    dos_tcp_flags0_t dosTcpFlagsn;
     cmm_err_t ret = CMM_ERR_OK;
-    uint16_t memid = 0;
-    uint32_t public_tcp_sport;
-    uint32_t seq_num;
-    uint32_t tcp_flag;
-    uint32_t public_tcp_sport_mask;
-    uint32_t seq_num_mask;
-    uint32_t tcp_flag_mask;
-    uint32_t copy_to_cpu;
+    uint16_t memId = 0;
+    uint32_t publicTcpSport;
+    uint32_t seqNum;
+    uint32_t tcpFlag;
+    uint32_t publicTcpSportMask;
+    uint32_t seqNumMask;
+    uint32_t tcpFlagMask;
+    uint32_t copyToCpu;
+    uint32_t enable = YT_DISABLE;
 
-    switch(type)
+    switch(dosType)
     {
-        case DOS_TYPE_TCP_SYNRST_SCAN:
-           memid = 4;
+        case YT_DOS_TYPE_TCP_SYNRST_SCAN:
+           memId = 4;
            break;
-        case DOS_TYPE_TCP_SYNFIN_SCAN:
-           memid = 3;
+        case YT_DOS_TYPE_TCP_SYNFIN_SCAN:
+           memId = 3;
            break;
-        case DOS_TYPE_TCP_XMAS_SCAN:
-           memid = 0;
+        case YT_DOS_TYPE_TCP_XMAS_SCAN:
+           memId = 0;
            break;
-        case DOS_TYPE_TCP_NULL_SCAN:
-           memid = 1;
+        case YT_DOS_TYPE_TCP_NULL_SCAN:
+           memId = 1;
            break;
-        case DOS_TYPE_TCP_SYN_PORTLESS1024:
-           memid = 2;
+        case YT_DOS_TYPE_TCP_SYN_PORTLESS1024:
+           memId = 2;
            break;
-        case DOS_TYPE_TCP_ALLFLAGS_SCAN:
-           memid = 5;
+        case YT_DOS_TYPE_TCP_ALLFLAGS_SCAN:
+           memId = 5;
            break;
         default:
            return CMM_ERR_NOT_SUPPORT;
     }
 
-    memid = DOS_TCP_FLAGS0m + memid;
+    memId = DOS_TCP_FLAGS0m + memId;
 
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, memid, 0, sizeof(dos_tcp_flags0_t), &dos_tcp_flagsn), ret);
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, memId, 0, sizeof(dos_tcp_flags0_t), &dosTcpFlagsn), ret);
 
-    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dos_tcp_flagsn, &public_tcp_sport);
-    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dos_tcp_flagsn, &seq_num);
-    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dos_tcp_flagsn, &tcp_flag);
-    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dos_tcp_flagsn, &public_tcp_sport_mask);
-    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dos_tcp_flagsn, &seq_num_mask);
-    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dos_tcp_flagsn, &tcp_flag_mask);
-    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dos_tcp_flagsn, &copy_to_cpu);
-    if(public_tcp_sport == 0 &&
-        seq_num == 0 &&
-        tcp_flag == 0 &&
-        public_tcp_sport_mask == 1 &&
-        seq_num_mask == 1 &&
-        tcp_flag_mask == 0x3F)
+    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORTf, &dosTcpFlagsn, &publicTcpSport);
+    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0f, &dosTcpFlagsn, &seqNum);
+    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGSf, &dosTcpFlagsn, &tcpFlag);
+    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_PUBLIC_TCP_SPORT_MASKf, &dosTcpFlagsn, &publicTcpSportMask);
+    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_SEQ_NUM0_MASKf, &dosTcpFlagsn, &seqNumMask);
+    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_TCP_FLAGS_MASKf, &dosTcpFlagsn, &tcpFlagMask);
+    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_COPY_TO_CPUf, &dosTcpFlagsn, &copyToCpu);
+    HAL_FIELD_GET(DOS_TCP_FLAGS0m, DOS_TCP_FLAGS0_DROP_EN, &dosTcpFlagsn, &enable);
+    if(publicTcpSport == 0 &&
+        seqNum == 0 &&
+        tcpFlag == 0 &&
+        publicTcpSportMask == 1 &&
+        seqNumMask == 1 &&
+        tcpFlagMask == 0x3F &&
+        enable == YT_DISABLE)
     {
         *pEnable = YT_DISABLE;
     }
@@ -228,196 +232,240 @@ static uint32_t  fal_tiger_dos_tcp_flagsn_get(yt_unit_t unit, yt_dos_type_t type
 
 yt_ret_t fal_tiger_dos_init(yt_unit_t unit)
 {
-    dos_ctrl_t dos_ctrl;
+    dos_ctrl_t dosCtrl;
     cmm_err_t ret = CMM_ERR_OK;
 
     /*disable part of dos drop by default*/
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dos_ctrl), ret);
-    HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_TCP_SPORT_EQ_DPORT_DROPf, &dos_ctrl, YT_DISABLE);
-    HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_UDP_SPORT_EQ_DPORT_DROPf, &dos_ctrl, YT_DISABLE);
-    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dos_ctrl), ret);
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dosCtrl), ret);
+    HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_TCP_SPORT_EQ_DPORT_DROPf, &dosCtrl, YT_DISABLE);
+    HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_UDP_SPORT_EQ_DPORT_DROPf, &dosCtrl, YT_DISABLE);
+    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dosCtrl), ret);
 
     return CMM_ERR_OK;
 }
 
 yt_ret_t fal_tiger_dos_port_en_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable)
 {
-    dos_ctrl_t dos_ctrl;
-    yt_macid_t macid;
-    uint32_t port_en_mask;
+    dos_ctrl_t dosCtrl;
+    yt_macid_t macId;
+    uint32_t portEnMask;
     cmm_err_t ret = CMM_ERR_OK;
 
-    macid = CAL_YTP_TO_MAC(unit,port);
+    macId = CAL_YTP_TO_MAC(unit,port);
 
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dos_ctrl), ret);
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dosCtrl), ret);
     
-    HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_PORT_EN_MASKf, &dos_ctrl, &port_en_mask);
+    HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_PORT_EN_MASKf, &dosCtrl, &portEnMask);
     if(enable)
     {
-        port_en_mask |= 1<<macid;
+        portEnMask |= 1<<macId;
     }
     else
     {
-        port_en_mask &= ~(1<<macid);
+        portEnMask &= ~(1<<macId);
     }
-    HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_PORT_EN_MASKf, &dos_ctrl, port_en_mask);
+    HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_PORT_EN_MASKf, &dosCtrl, portEnMask);
     
-    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dos_ctrl), ret);
+    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dosCtrl), ret);
     
     return CMM_ERR_OK;
 }
 
 yt_ret_t fal_tiger_dos_port_en_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable)
 {
-    dos_ctrl_t dos_ctrl;
-    yt_macid_t macid;
-    uint32_t port_en_mask;
+    dos_ctrl_t dosCtrl;
+    yt_macid_t macId;
+    uint32_t portEnMask;
     cmm_err_t ret = CMM_ERR_OK;
 
-    macid = CAL_YTP_TO_MAC(unit,port);
+    macId = CAL_YTP_TO_MAC(unit,port);
 
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dos_ctrl), ret);
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dosCtrl), ret);
     
-    HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_PORT_EN_MASKf, &dos_ctrl, &port_en_mask);
-    *pEnable = (port_en_mask & (1<<macid)) ? YT_ENABLE : YT_DISABLE;
+    HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_PORT_EN_MASKf, &dosCtrl, &portEnMask);
+    *pEnable = (portEnMask & (1<<macId)) ? YT_ENABLE : YT_DISABLE;
     
     return CMM_ERR_OK;
 }
 
 
-yt_ret_t fal_tiger_dos_drop_en_set(yt_unit_t unit, yt_dos_type_t type, yt_enable_t enable)
+yt_ret_t fal_tiger_dos_drop_en_set(yt_unit_t unit, yt_dos_type_t dosType, yt_enable_t enable)
 {
-    dos_ctrl_t dos_ctrl;
-    dos_ctrl1_t dos_ctrl1;
-    uint16_t regid = 0;
+    dos_ctrl_t dosCtrl;
+    dos_ctrl1_t dosCtrl1;
+    uint16_t regId = 0;
     cmm_err_t ret = CMM_ERR_OK;
 
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dos_ctrl), ret);
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRL1m, 0, sizeof(dos_ctrl1_t), &dos_ctrl1), ret);
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dosCtrl), ret);
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRL1m, 0, sizeof(dos_ctrl1_t), &dosCtrl1), ret);
 
-    regid = DOS_CTRLm;
-    switch (type)
+    regId = DOS_CTRLm;
+    switch (dosType)
     {
-        case DOS_TYPE_DAEQSA:
-            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_MACSA_EQ_MACDA_DROPf, &dos_ctrl, enable);
+        case YT_DOS_TYPE_SA_EQ_DA:
+            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_MACSA_EQ_MACDA_DROPf, &dosCtrl, enable);
             break;
-        case DOS_TYPE_LAND:
-            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_SIP_EQ_DIP_DROPf, &dos_ctrl, enable);
+        case YT_DOS_TYPE_LAND:
+            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_SIP_EQ_DIP_DROPf, &dosCtrl, enable);
             break;
-        case DOS_TYPE_ICMP_PRAG:
-            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_ICMP_PRAG_DROPf, &dos_ctrl, enable);
+        case YT_DOS_TYPE_ICMP_FRAG:
+            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_ICMP_PRAG_DROPf, &dosCtrl, enable);
             break;
-        case DOS_TYPE_TCP_FRAG_OFFSET:
-            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_TCP_FRAG_OFFSET1_DROPf, &dos_ctrl, enable);
+        case YT_DOS_TYPE_TCP_FRAG_NOT_FIRST:
+            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_TCP_FRAG_OFFSET1_DROPf, &dosCtrl, enable);
             break;
-        case DOS_TYPE_LARGE_ICMPV4:
-            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_LARGE_IPV4_ICMP_DROPf, &dos_ctrl, enable);
+        case YT_DOS_TYPE_LARGE_IPV4_ICMP:
+            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_LARGE_IPV4_ICMP_DROPf, &dosCtrl, enable);
             break;
-        case DOS_TYPE_LARGE_ICMPV6:
-            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_LARGE_IPV6_ICMP_DROPf, &dos_ctrl, enable);
+        case YT_DOS_TYPE_LARGE_IPV6_ICMP:
+            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_LARGE_IPV6_ICMP_DROPf, &dosCtrl, enable);
             break;
-        case DOS_TYPE_TCP_HEADER_PARTIAL:
-            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_TCP_HEADER_PARTIAL_DROPf, &dos_ctrl, enable);
+        case YT_DOS_TYPE_TCP_HEADER_PARTIAL:
+            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_TCP_HEADER_PARTIAL_DROPf, &dosCtrl, enable);
             break;
-        case DOS_TYPE_CFI_MISMATCH_DROP:
-            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_VLAN_CFI1DROP_ENf, &dos_ctrl, enable);
+        case YT_DOS_TYPE_CFI_MISMATCH:
+            HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_VLAN_CFI1DROP_ENf, &dosCtrl, enable);
             break;           
-        case DOS_TYPE_SA_MC_DROP:
-            HAL_FIELD_SET(DOS_CTRL1m, DOS_CTRL1_SA_MC_DROP_ENf, &dos_ctrl1, enable);
-            regid = DOS_CTRL1m;
+        case YT_DOS_TYPE_UDP_SPORT_EQ_DPORT:
+			if (CAL_SWCHIP_ID(unit) == YT_SW_ID_9218)
+            {
+                HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_UDP_SPORT_EQ_DPORT_DROPf, &dosCtrl, enable);
+                regId = DOS_CTRLm;
+            }
+            else
+            {
+                regId = 0;
+                ret = CMM_ERR_NOT_SUPPORT;
+            }
             break;
-        case DOS_TYPE_SA_BC_DROP:
-            HAL_FIELD_SET(DOS_CTRL1m, DOS_CTRL1_SA_BC_DROP_ENf, &dos_ctrl1, enable);
-            regid = DOS_CTRL1m;
+        case YT_DOS_TYPE_TCP_SPORT_EQ_DPORT:
+			if (CAL_SWCHIP_ID(unit) == YT_SW_ID_9218)
+            {
+                HAL_FIELD_SET(DOS_CTRLm, DOS_CTRL_TCP_SPORT_EQ_DPORT_DROPf, &dosCtrl, enable);
+                regId = DOS_CTRLm;
+            }
+            else
+            {
+                regId = 0;
+                ret = CMM_ERR_NOT_SUPPORT;
+            }
             break;
-        case DOS_TYPE_SA_ZERO_DROP:
-            HAL_FIELD_SET(DOS_CTRL1m, DOS_CTRL1_SA_ZERO_DROP_ENf, &dos_ctrl1, enable);
-            regid = DOS_CTRL1m;
+        case YT_DOS_TYPE_SA_MC:
+            HAL_FIELD_SET(DOS_CTRL1m, DOS_CTRL1_SA_MC_DROP_ENf, &dosCtrl1, enable);
+            regId = DOS_CTRL1m;
             break;
-        case DOS_TYPE_DA_ZERO_DROP:
-            HAL_FIELD_SET(DOS_CTRL1m, DOS_CTRL1_DA_ZERO_DROP_ENf, &dos_ctrl1, enable);
-            regid = DOS_CTRL1m;
+        case YT_DOS_TYPE_SA_BC:
+            HAL_FIELD_SET(DOS_CTRL1m, DOS_CTRL1_SA_BC_DROP_ENf, &dosCtrl1, enable);
+            regId = DOS_CTRL1m;
             break;
-        case DOS_TYPE_TCP_SYNRST_SCAN:
-        case DOS_TYPE_TCP_SYNFIN_SCAN:
-        case DOS_TYPE_TCP_XMAS_SCAN:
-        case DOS_TYPE_TCP_NULL_SCAN:
-        case DOS_TYPE_TCP_SYN_PORTLESS1024:
-        case DOS_TYPE_TCP_ALLFLAGS_SCAN:
-            return fal_tiger_dos_tcp_flagsn_set(unit, type, enable);
+        case YT_DOS_TYPE_SA_ZERO:
+            HAL_FIELD_SET(DOS_CTRL1m, DOS_CTRL1_SA_ZERO_DROP_ENf, &dosCtrl1, enable);
+            regId = DOS_CTRL1m;
+            break;
+        case YT_DOS_TYPE_DA_ZERO:
+            HAL_FIELD_SET(DOS_CTRL1m, DOS_CTRL1_DA_ZERO_DROP_ENf, &dosCtrl1, enable);
+            regId = DOS_CTRL1m;
+            break;
+        case YT_DOS_TYPE_TCP_SYNRST_SCAN:
+        case YT_DOS_TYPE_TCP_SYNFIN_SCAN:
+        case YT_DOS_TYPE_TCP_XMAS_SCAN:
+        case YT_DOS_TYPE_TCP_NULL_SCAN:
+        case YT_DOS_TYPE_TCP_SYN_PORTLESS1024:
+        case YT_DOS_TYPE_TCP_ALLFLAGS_SCAN:
+            return fal_tiger_dos_tcp_flagsn_set(unit, dosType, enable);
         default:
-            regid = 0;
+            regId = 0;
             ret = CMM_ERR_NOT_SUPPORT;
                 break;
     }
 
-    if(regid == DOS_CTRLm)
+    if(regId == DOS_CTRLm)
     {
-        CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dos_ctrl), ret);
+        CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dosCtrl), ret);
     }
-    else if(regid == DOS_CTRL1m)
+    else if(regId == DOS_CTRL1m)
     {
-        CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, DOS_CTRL1m, 0, sizeof(dos_ctrl1_t), &dos_ctrl1), ret);
+        CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, DOS_CTRL1m, 0, sizeof(dos_ctrl1_t), &dosCtrl1), ret);
     }
 
     return ret;
 }
 
-yt_ret_t fal_tiger_dos_drop_en_get(yt_unit_t unit, yt_dos_type_t type, yt_enable_t *pEnable)
+yt_ret_t fal_tiger_dos_drop_en_get(yt_unit_t unit, yt_dos_type_t dosType, yt_enable_t *pEnable)
 {
-    dos_ctrl_t dos_ctrl;
-    dos_ctrl1_t dos_ctrl1;
+    dos_ctrl_t dosCtrl;
+    dos_ctrl1_t dosCtrl1;
     uint32_t enable = YT_DISABLE;
     cmm_err_t ret = CMM_ERR_OK;
 
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dos_ctrl), ret);
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRL1m, 0, sizeof(dos_ctrl1_t), &dos_ctrl1), ret);
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRLm, 0, sizeof(dos_ctrl_t), &dosCtrl), ret);
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_CTRL1m, 0, sizeof(dos_ctrl1_t), &dosCtrl1), ret);
 
-    switch (type)
+    switch (dosType)
     {
-        case DOS_TYPE_DAEQSA:
-            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_MACSA_EQ_MACDA_DROPf, &dos_ctrl, &enable);
+        case YT_DOS_TYPE_SA_EQ_DA:
+            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_MACSA_EQ_MACDA_DROPf, &dosCtrl, &enable);
             break;
-        case DOS_TYPE_LAND:
-            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_SIP_EQ_DIP_DROPf, &dos_ctrl, &enable);
+        case YT_DOS_TYPE_LAND:
+            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_SIP_EQ_DIP_DROPf, &dosCtrl, &enable);
             break;
-        case DOS_TYPE_ICMP_PRAG:
-            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_ICMP_PRAG_DROPf, &dos_ctrl, &enable);
+        case YT_DOS_TYPE_ICMP_FRAG:
+            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_ICMP_PRAG_DROPf, &dosCtrl, &enable);
             break;
-        case DOS_TYPE_TCP_FRAG_OFFSET:
-            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_TCP_FRAG_OFFSET1_DROPf, &dos_ctrl, &enable);
+        case YT_DOS_TYPE_TCP_FRAG_NOT_FIRST:
+            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_TCP_FRAG_OFFSET1_DROPf, &dosCtrl, &enable);
             break;
-        case DOS_TYPE_LARGE_ICMPV4:
-            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_LARGE_IPV4_ICMP_DROPf, &dos_ctrl, &enable);
+        case YT_DOS_TYPE_LARGE_IPV4_ICMP:
+            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_LARGE_IPV4_ICMP_DROPf, &dosCtrl, &enable);
             break;
-        case DOS_TYPE_LARGE_ICMPV6:
-            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_LARGE_IPV6_ICMP_DROPf, &dos_ctrl, &enable);
+        case YT_DOS_TYPE_LARGE_IPV6_ICMP:
+            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_LARGE_IPV6_ICMP_DROPf, &dosCtrl, &enable);
             break;
-        case DOS_TYPE_TCP_HEADER_PARTIAL:
-            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_TCP_HEADER_PARTIAL_DROPf, &dos_ctrl, &enable);
+        case YT_DOS_TYPE_TCP_HEADER_PARTIAL:
+            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_TCP_HEADER_PARTIAL_DROPf, &dosCtrl, &enable);
             break;
-        case DOS_TYPE_CFI_MISMATCH_DROP:
-            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_VLAN_CFI1DROP_ENf, &dos_ctrl, &enable);
+        case YT_DOS_TYPE_CFI_MISMATCH:
+            HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_VLAN_CFI1DROP_ENf, &dosCtrl, &enable);
             break;           
-        case DOS_TYPE_SA_MC_DROP:
-            HAL_FIELD_GET(DOS_CTRL1m, DOS_CTRL1_SA_MC_DROP_ENf, &dos_ctrl1, &enable);
+        case YT_DOS_TYPE_UDP_SPORT_EQ_DPORT:
+			if (CAL_SWCHIP_ID(unit) == YT_SW_ID_9218)
+            {
+                HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_UDP_SPORT_EQ_DPORT_DROPf, &dosCtrl, &enable);
+            }
+            else if (CAL_SWCHIP_MODEL(unit) == YT_SW_MODEL_9215)
+            {
+                ret = CMM_ERR_NOT_SUPPORT;
+            }
             break;
-        case DOS_TYPE_SA_BC_DROP:
-            HAL_FIELD_GET(DOS_CTRL1m, DOS_CTRL1_SA_BC_DROP_ENf, &dos_ctrl1, &enable);
+        case YT_DOS_TYPE_TCP_SPORT_EQ_DPORT:
+			if (CAL_SWCHIP_ID(unit) == YT_SW_ID_9218)
+            {
+                HAL_FIELD_GET(DOS_CTRLm, DOS_CTRL_TCP_SPORT_EQ_DPORT_DROPf, &dosCtrl, &enable);
+            }
+            else
+            {
+                ret = CMM_ERR_NOT_SUPPORT;
+            }
             break;
-        case DOS_TYPE_SA_ZERO_DROP:
-            HAL_FIELD_GET(DOS_CTRL1m, DOS_CTRL1_SA_ZERO_DROP_ENf, &dos_ctrl1, &enable);
+        case YT_DOS_TYPE_SA_MC:
+            HAL_FIELD_GET(DOS_CTRL1m, DOS_CTRL1_SA_MC_DROP_ENf, &dosCtrl1, &enable);
             break;
-        case DOS_TYPE_DA_ZERO_DROP:
-            HAL_FIELD_GET(DOS_CTRL1m, DOS_CTRL1_DA_ZERO_DROP_ENf, &dos_ctrl1, &enable);
+        case YT_DOS_TYPE_SA_BC:
+            HAL_FIELD_GET(DOS_CTRL1m, DOS_CTRL1_SA_BC_DROP_ENf, &dosCtrl1, &enable);
             break;
-        case DOS_TYPE_TCP_SYNRST_SCAN:
-        case DOS_TYPE_TCP_SYNFIN_SCAN:
-        case DOS_TYPE_TCP_XMAS_SCAN:
-        case DOS_TYPE_TCP_NULL_SCAN:
-        case DOS_TYPE_TCP_SYN_PORTLESS1024:
-        case DOS_TYPE_TCP_ALLFLAGS_SCAN:
-            return fal_tiger_dos_tcp_flagsn_get(unit, type, pEnable);
+        case YT_DOS_TYPE_SA_ZERO:
+            HAL_FIELD_GET(DOS_CTRL1m, DOS_CTRL1_SA_ZERO_DROP_ENf, &dosCtrl1, &enable);
+            break;
+        case YT_DOS_TYPE_DA_ZERO:
+            HAL_FIELD_GET(DOS_CTRL1m, DOS_CTRL1_DA_ZERO_DROP_ENf, &dosCtrl1, &enable);
+            break;
+        case YT_DOS_TYPE_TCP_SYNRST_SCAN:
+        case YT_DOS_TYPE_TCP_SYNFIN_SCAN:
+        case YT_DOS_TYPE_TCP_XMAS_SCAN:
+        case YT_DOS_TYPE_TCP_NULL_SCAN:
+        case YT_DOS_TYPE_TCP_SYN_PORTLESS1024:
+        case YT_DOS_TYPE_TCP_ALLFLAGS_SCAN:
+            return fal_tiger_dos_tcp_flagsn_get(unit, dosType, pEnable);
         default:
             ret = CMM_ERR_NOT_SUPPORT;
             break;
@@ -428,55 +476,95 @@ yt_ret_t fal_tiger_dos_drop_en_get(yt_unit_t unit, yt_dos_type_t type, yt_enable
     return ret;
 }
 
-yt_ret_t  fal_tiger_dos_large_icmp_size_set(yt_unit_t unit, yt_dos_icmp_version_t ver, uint16_t size)
+yt_ret_t fal_tiger_dos_large_packet_size_set(yt_unit_t unit, yt_dos_packet_type_t packType, yt_dos_packet_version_t ver, uint16_t size)
 {
-    dos_large_icmp_ctrl_t dos_large_icmp_ctrl;
+    dos_large_icmp_ctrl_t dosLargeIcmpCtrl;
     cmm_err_t ret = CMM_ERR_OK;
 
     if(size > 0x1FFF)
+    {
         return CMM_ERR_INPUT;
-
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_LARGE_ICMP_CTRLm, 0, sizeof(dos_large_icmp_ctrl_t), &dos_large_icmp_ctrl), ret);
-    
-    if(ver == DOS_ICMP_VERSION_4)
-    {
-        HAL_FIELD_SET(DOS_LARGE_ICMP_CTRLm, DOS_LARGE_ICMP_CTRL_IPV4_ICMP_MAX_SIZEf, &dos_large_icmp_ctrl, size & 0x1FFF);
     }
-    else if(ver == DOS_ICMP_VERSION_6)
+    if (YT_LARGE_ICMP == packType)
     {
-        HAL_FIELD_SET(DOS_LARGE_ICMP_CTRLm, DOS_LARGE_ICMP_CTRL_IPV6_ICMP_MAX_SIZEf, &dos_large_icmp_ctrl, size & 0x1FFF);
+        CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_LARGE_ICMP_CTRLm, 0, sizeof(dos_large_icmp_ctrl_t), &dosLargeIcmpCtrl), ret);
+        if (YT_DOS_VERSION_4 == ver)
+        {
+            HAL_FIELD_SET(DOS_LARGE_ICMP_CTRLm, DOS_LARGE_ICMP_CTRL_IPV4_ICMP_MAX_SIZEf, &dosLargeIcmpCtrl, size & 0x1FFF);
+        }
+        else if (YT_DOS_VERSION_6 == ver)
+        {
+            HAL_FIELD_SET(DOS_LARGE_ICMP_CTRLm, DOS_LARGE_ICMP_CTRL_IPV6_ICMP_MAX_SIZEf, &dosLargeIcmpCtrl, size & 0x1FFF);
+        }
+        else
+        {
+            return CMM_ERR_INPUT;
+        }
+        CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, DOS_LARGE_ICMP_CTRLm, 0, sizeof(dos_large_icmp_ctrl_t), &dosLargeIcmpCtrl), ret);  
     }
     else
     {
-        return CMM_ERR_INPUT;
+        return CMM_ERR_NOT_SUPPORT;
     }
-    
-    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, DOS_LARGE_ICMP_CTRLm, 0, sizeof(dos_large_icmp_ctrl_t), &dos_large_icmp_ctrl), ret);  
-   
     return CMM_ERR_OK;
 }
 
-yt_ret_t  fal_tiger_dos_large_icmp_size_get(yt_unit_t unit, yt_dos_icmp_version_t ver, uint16_t *psize)
+yt_ret_t fal_tiger_dos_large_packet_size_get(yt_unit_t unit, yt_dos_packet_type_t packType, yt_dos_packet_version_t ver, uint16_t *pSize)
 {
-    dos_large_icmp_ctrl_t dos_large_icmp_ctrl;
+    dos_large_icmp_ctrl_t dosLargeIcmpCtrl;
     uint32_t size;
     cmm_err_t ret = CMM_ERR_OK;
 
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_LARGE_ICMP_CTRLm, 0, sizeof(dos_large_icmp_ctrl_t), &dos_large_icmp_ctrl), ret);
-    
-    if(ver == DOS_ICMP_VERSION_4)
+    if (YT_LARGE_ICMP == packType)
     {
-        HAL_FIELD_GET(DOS_LARGE_ICMP_CTRLm, DOS_LARGE_ICMP_CTRL_IPV4_ICMP_MAX_SIZEf, &dos_large_icmp_ctrl, &size);
-    }
-    else if(ver == DOS_ICMP_VERSION_6)
-    {
-        HAL_FIELD_GET(DOS_LARGE_ICMP_CTRLm, DOS_LARGE_ICMP_CTRL_IPV6_ICMP_MAX_SIZEf, &dos_large_icmp_ctrl, &size);
+        CMM_ERR_CHK(HAL_TBL_REG_READ(unit, DOS_LARGE_ICMP_CTRLm, 0, sizeof(dos_large_icmp_ctrl_t), &dosLargeIcmpCtrl), ret);
+        if(YT_DOS_VERSION_4 == ver)
+        {
+            HAL_FIELD_GET(DOS_LARGE_ICMP_CTRLm, DOS_LARGE_ICMP_CTRL_IPV4_ICMP_MAX_SIZEf, &dosLargeIcmpCtrl, &size);
+        }
+        else if(YT_DOS_VERSION_6 == ver)
+        {
+            HAL_FIELD_GET(DOS_LARGE_ICMP_CTRLm, DOS_LARGE_ICMP_CTRL_IPV6_ICMP_MAX_SIZEf, &dosLargeIcmpCtrl, &size);
+        }
+        else
+        {
+            return CMM_ERR_INPUT;
+        }
+        *pSize = size; 
     }
     else
     {
-        return CMM_ERR_INPUT;
+        return CMM_ERR_NOT_SUPPORT;
     }
-
-    *psize = size;
     return CMM_ERR_OK;
+}
+
+yt_ret_t fal_tiger_dos_action_set(yt_unit_t unit, yt_dos_type_t dosType, yt_act_type_t action)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(dosType);
+    CMM_UNUSED_PARAM(action);
+    return CMM_ERR_NOT_SUPPORT;
+}
+yt_ret_t fal_tiger_dos_action_get(yt_unit_t unit, yt_dos_type_t dosType, yt_act_type_t *pAction)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(dosType);
+    CMM_UNUSED_PARAM(pAction);
+    return CMM_ERR_NOT_SUPPORT;
+}
+yt_ret_t fal_tiger_dos_salearn_dis_set(yt_unit_t unit, yt_dos_type_t dosType, yt_enable_t enable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(dosType);
+    CMM_UNUSED_PARAM(enable);
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t fal_tiger_dos_salearn_dis_get(yt_unit_t unit, yt_dos_type_t dosType, yt_enable_t *pEnable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(dosType);
+    CMM_UNUSED_PARAM(pEnable);
+    return CMM_ERR_NOT_SUPPORT;
 }

@@ -11,13 +11,16 @@
 #define FACTORY_SIZE 0x20000
 #endif
 
-#define FACTORY_BACKUP_FLAG_OFFSET 184
+#define FACTORY_BACKUP_FLAG_OFFSET 280
 #define BAKUP_FLAG_ON_RAM_ADDRESS 0xbc00fffc
+/* ram flag */
 #define LAST_BOOTUP_FAILED 0xAAAAAAAA
 #define LINUX_REBOOT 0xFFFFFFFF
 #define BOOTUP_IMAGE 0xAAAAAAAA
+/* flash flag */
 #define MASTER_IMAGE 0xFFFFFFFF
 #define BACKUP_IMAGE 0xEEEEEEEE
+/* return flag */
 #define BOOT_MASTER 0
 #define BOOT_BACKUP 1
 

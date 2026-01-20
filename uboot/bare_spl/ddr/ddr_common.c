@@ -508,7 +508,11 @@ void set_pll_ratio(u32 freq)
 		pll_para = 0x4a000000021;
 		break;
 	default:
+#ifdef TARGET_SFA28_BPI
+		pll_para = 0x4a000000027;
+#else
 		pll_para = 0x4a000000028;
+#endif
 		break;
 	};
 #else // for crystal 12M

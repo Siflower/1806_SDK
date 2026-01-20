@@ -34,9 +34,6 @@ struct sf_hashkey {
 	//TODO hash value
 	unsigned char ppphd_index;
 	unsigned char dnat_to_host;
-#ifdef	CONFIG_SFAX8_HNAT_MULTI_WAN
-	unsigned char snat_to_wan;
-#endif
 	unsigned char is_dip_rt_ip_same_subnet;
 	struct flow_offload *pkey_flow;
 	unsigned char lan_subnet_index;

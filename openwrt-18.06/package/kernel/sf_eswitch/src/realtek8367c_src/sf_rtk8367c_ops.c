@@ -677,5 +677,5 @@ struct sf_eswitch_api_t rtk8367c_api = {
 	.getAsicReg = rtl8367c_getAsicReg,
 	.setAsicPHYReg = rtl8367c_setAsicPHYReg,
 	.getAsicPHYReg = rtl8367c_getAsicPHYReg,
-	.dump_mac = rtk8367c_dumpmac,
+	.dumpmac = rtk8367c_dumpmac,
 };

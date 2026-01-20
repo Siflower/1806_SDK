@@ -24,35 +24,46 @@ extern "C" {
 
 #include "fal_cmm.h"
 
+/**
+ * @internal      fal_tiger_mirror_init
+ * @endinternal
+ *
+ * @brief         Description
+ *                Mirror init API.
+ * @param[in]     unit                -unit id
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_mirror_init(yt_unit_t unit);
 
 /**
- * @internal      fal_tiger_mirror_port_set
+ * @internal      fal_tiger_mirror_group_set
  * @endinternal
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     target_port         -port num
- * @param[in]     rx_portmask         -port bit mask
- * @param[in]     tx_portmask         -port bit mask
+ * @param[in]     grpId               -group id
+ * @param[in]     pMirrorEntry        -pointer to mirror entry
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_mirror_port_set(yt_unit_t unit, yt_port_t target_port, yt_port_mask_t rx_portmask, yt_port_mask_t tx_portmask);
+extern yt_ret_t fal_tiger_mirror_group_set(yt_unit_t unit, yt_mirror_group_t grpId,
+                                    yt_mirror_entry_t *pMirrorEntry);
 
 
 /**
- * @internal      fal_tiger_mirror_port_get
+ * @internal      fal_tiger_mirror_group_get
  * @endinternal
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[out]    p_target_port       -port num
- * @param[out]    p_rx_portmask       -port bit mask
- * @param[out]    p_tx_portmask       -port bit mask
+ * @param[in]     grpId               -group id
+ * @param[out]     pMirrorEntry       -pointer to mirror entry
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_mirror_port_get(yt_unit_t unit, yt_port_t *p_target_port, yt_port_mask_t *p_rx_portmask, yt_port_mask_t *p_tx_portmask);
+extern yt_ret_t fal_tiger_mirror_group_get(yt_unit_t unit, yt_mirror_group_t grpId,
+                                    yt_mirror_entry_t *pMirrorEntry);
 
 
 

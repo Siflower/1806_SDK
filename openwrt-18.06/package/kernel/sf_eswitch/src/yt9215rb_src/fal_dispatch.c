@@ -15,16 +15,29 @@
 #ifdef SWITCH_SERIES_TIGER
 #include "fal_tiger_dispatch.h"
 #endif
+#ifdef SWITCH_SERIES_SHARK
+#include "fal_shark_dispatch.h"
+#endif
+#ifdef SWITCH_SERIES_WHALE
+#include "fal_whale_dispatch.h"
+#endif
 
 
-fal_dispatch_info_t gfal_dispatch_info[] =
+const fal_dispatch_info_t gfal_dispatch_info[] =
 {
 #ifdef SWITCH_SERIES_TIGER
     {YT_SW_ID_9215,  YT_SW_REV_A, &fal_tiger_dispatch},
+    {YT_SW_ID_9218,  YT_SW_REV_A, &fal_tiger_dispatch},
+#endif
+#ifdef SWITCH_SERIES_SHARK
+    {YT_SW_ID_923X, YT_SW_REV_A, &fal_shark_dispatch},
+#endif
+#ifdef SWITCH_SERIES_WHALE
+    {YT_SW_ID_922X, YT_SW_REV_A, &fal_whale_dispatch},
 #endif
 };
 
-fal_dispatch_t *gpfal_dispatch[YT_MAX_UNIT];
+fal_dispatch_t *gpfal_dispatch[YT_MAX_UNIT] = {NULL};
 
 /*
  * Function Declaration
@@ -37,12 +50,14 @@ uint32_t fal_dispatch_init(void)
     
     static uint8_t gdispatch_inited = FALSE;
     
-    CMM_PARAM_CHK((TRUE == gdispatch_inited), CMM_ERR_OK);
+    if(TRUE == gdispatch_inited)
+    {
+        return CMM_ERR_OK;
+    }
     
     for(i = 0; YT_UNIT_NUM > i; i++)
     {
         CMM_ERR_CHK(fal_dispatch_get(&(gpfal_dispatch[i]), i), ret);
-        gpfal_dispatch[i]->is_inited = TRUE;             
     }
 
     gdispatch_inited = TRUE;
@@ -63,7 +78,7 @@ uint32_t fal_dispatch_get(fal_dispatch_t **pdispatch, uint8_t unit)
     {
         if(gfal_dispatch_info[i].chip_id == UNITINFO(unit)->chip_id)
         {
-            *pdispatch = gfal_dispatch_info[i].pdispatch;
+            *pdispatch = (fal_dispatch_t *) gfal_dispatch_info[i].pdispatch;
             return CMM_ERR_OK;
         }
     }

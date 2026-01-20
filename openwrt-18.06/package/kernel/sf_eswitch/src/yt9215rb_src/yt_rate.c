@@ -16,204 +16,90 @@
 #include "yt_rate.h"
 #include "fal_dispatch.h"
 
-
-/**
- * @internal      yt_rate_init
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
 yt_ret_t yt_rate_init(yt_unit_t unit)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->rate_init(unit);
 }
 
-/**
- * @internal      yt_rate_igrBandwidthCtrlEnable_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     enable              -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
 yt_ret_t yt_rate_igrBandwidthCtrlEnable_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
     return YT_DISPATCH(unit)->rate_igrBandwidthCtrlEnable_set(unit, port, enable);
 }
 
-/**
- * @internal      yt_rate_igrBandwidthCtrlEnable_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[out]    pEnable             -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
 yt_ret_t yt_rate_igrBandwidthCtrlEnable_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->rate_igrBandwidthCtrlEnable_get(unit, port, pEnable);
 }
 
-/**
- * @internal      yt_rate_igrBandwidthCtrlMode_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     port_rate_mode      -config RATE_MODE(byte or packet) and BYTE_RATE_MODE(excGAP or incGAP)
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_igrBandwidthCtrlMode_set(yt_unit_t unit, yt_port_t port, yt_port_rate_mode_t port_rate_mode)
+yt_ret_t yt_rate_igrBandwidthCtrlMode_set(yt_unit_t unit, yt_port_t port, yt_port_rate_mode_t *pRateMode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
+    CMM_PARAM_CHK((NULL == pRateMode), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK(YT_RATE_BPS_GAP_INCLUDE < pRateMode->gapMode, CMM_ERR_INPUT);
+    CMM_PARAM_CHK(YT_RATE_MODE_PPS < pRateMode->rateMode, CMM_ERR_INPUT);
 
-    return YT_DISPATCH(unit)->rate_igrBandwidthCtrlMode_set(unit, port, port_rate_mode);
+    return YT_DISPATCH(unit)->rate_igrBandwidthCtrlMode_set(unit, port, pRateMode);
 }
 
-/**
- * @internal      yt_rate_igrBandwidthCtrlMode_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[out]    pPort_rate_mode     -config RATE_MODE(byte or packet) and BYTE_RATE_MODE(excGAP or incGAP)
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_igrBandwidthCtrlMode_get(yt_unit_t unit, yt_port_t port, yt_port_rate_mode_t *pPort_rate_mode)
+yt_ret_t yt_rate_igrBandwidthCtrlMode_get(yt_unit_t unit, yt_port_t port, yt_port_rate_mode_t *pRateMode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
-    CMM_PARAM_CHK((NULL == pPort_rate_mode), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK((NULL == pRateMode), CMM_ERR_NULL_POINT);
 
-    return YT_DISPATCH(unit)->rate_igrBandwidthCtrlMode_get(unit, port, pPort_rate_mode);
+    return YT_DISPATCH(unit)->rate_igrBandwidthCtrlMode_get(unit, port, pRateMode);
 }
 
-/**
- * @internal      yt_rate_igrBandwidthCtrlRate_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     rate                -
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_igrBandwidthCtrlRate_set(yt_unit_t unit, yt_port_t port, uint32_t rate)
+yt_ret_t yt_rate_igrBandwidthCtrlRate_set(yt_unit_t unit, yt_port_t port, yt_rate_t rate)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
 
     return YT_DISPATCH(unit)->rate_igrBandwidthCtrlRate_set(unit, port, rate);
 }
 
-/**
- * @internal      yt_rate_igrBandwidthCtrlRate_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[out]    pRate               -
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_igrBandwidthCtrlRate_get(yt_unit_t unit, yt_port_t port, uint32_t *pRate)
+yt_ret_t yt_rate_igrBandwidthCtrlRate_get(yt_unit_t unit, yt_port_t port, yt_rate_t *pRate)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pRate), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->rate_igrBandwidthCtrlRate_get(unit, port, pRate);
 }
 
-/**
- * @internal      yt_rate_meter_vlan_enable_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     vid                 -vlan id
- * @param[in]     meter_id            -meter id, can access meter tbl by it
- * @param[in]     enable              -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_meter_vlan_enable_set(yt_unit_t unit, yt_vlan_t vid, yt_meterid_t meter_id, yt_enable_t enable)
+yt_ret_t yt_rate_meter_vlan_enable_set(yt_unit_t unit, yt_vlan_t vid, yt_meterid_t meterId, yt_enable_t enable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((YT_VLAN_ID_MAX < vid), CMM_ERR_EXCEED_RANGE);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(CAL_MAX_VLAN_METER_ENTRY_NUM(unit) <= meterId, CMM_ERR_NOT_SUPPORT);
 
-    return YT_DISPATCH(unit)->rate_meter_vlan_enable_set(unit, vid, meter_id, enable);
+    return YT_DISPATCH(unit)->rate_meter_vlan_enable_set(unit, vid, meterId, enable);
 }
 
-/**
- * @internal      yt_rate_meter_vlan_enable_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     vid                 -vlan id
- * @param[out]    pMeter_id           -meter id, can access meter tbl by it
- * @param[out]    pEnable             -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
 yt_ret_t yt_rate_meter_vlan_enable_get(yt_unit_t unit, yt_vlan_t vid, yt_meterid_t *pMeter_id, yt_enable_t *pEnable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((YT_VLAN_ID_MAX < vid), CMM_ERR_EXCEED_RANGE);
     CMM_PARAM_CHK((NULL == pMeter_id), CMM_ERR_NULL_POINT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
@@ -221,402 +107,207 @@ yt_ret_t yt_rate_meter_vlan_enable_get(yt_unit_t unit, yt_vlan_t vid, yt_meterid
     return YT_DISPATCH(unit)->rate_meter_vlan_enable_get(unit, vid, pMeter_id, pEnable);
 }
 
-/**
- * @internal      yt_rate_meter_enable_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     meter_id            -meter id, can access meter tbl by it
- * @param[in]     enable              -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_meter_enable_set(yt_unit_t unit, yt_meterid_t meter_id, yt_enable_t enable)
+yt_ret_t yt_rate_meter_enable_set(yt_unit_t unit, yt_meterid_t meterId, yt_enable_t enable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(CAL_MAX_METER_ENTRY_NUM(unit) <= meterId, CMM_ERR_INPUT);
 
-    return YT_DISPATCH(unit)->rate_meter_enable_set(unit, meter_id, enable);
+    return YT_DISPATCH(unit)->rate_meter_enable_set(unit, meterId, enable);
 }
 
-/**
- * @internal      yt_rate_meter_enable_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     meter_id            -meter id, can access meter tbl by it
- * @param[out]    pEnable             -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_meter_enable_get(yt_unit_t unit, yt_meterid_t meter_id, yt_enable_t *pEnable)
+yt_ret_t yt_rate_meter_enable_get(yt_unit_t unit, yt_meterid_t meterId, yt_enable_t *pEnable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK(CAL_MAX_METER_ENTRY_NUM(unit) <= meterId, CMM_ERR_INPUT);
 
-    return YT_DISPATCH(unit)->rate_meter_enable_get(unit, meter_id, pEnable);
+    return YT_DISPATCH(unit)->rate_meter_enable_get(unit, meterId, pEnable);
 }
 
-/**
- * @internal      yt_rate_meter_mode_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     meter_id            -meter id, can access meter tbl by it
- * @param[in]     mode                - meter mode config
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_meter_mode_set(yt_unit_t unit, yt_meterid_t meter_id, yt_rate_meter_mode_t mode)
+yt_ret_t yt_rate_meter_mode_set(yt_unit_t unit, yt_meterid_t meterId, yt_rate_meter_mode_t *pMode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
-
-    return YT_DISPATCH(unit)->rate_meter_mode_set(unit, meter_id, mode);
-}
-
-/**
- * @internal      yt_rate_meter_mode_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     meter_id            -meter id, can access meter tbl by it
- * @param[out]    pMode               - meter mode config
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_meter_mode_get(yt_unit_t unit, yt_meterid_t meter_id, yt_rate_meter_mode_t *pMode)
-{
-    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
-    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK(CAL_MAX_METER_ENTRY_NUM(unit) <= meterId, CMM_ERR_INPUT);
     CMM_PARAM_CHK((NULL == pMode), CMM_ERR_NULL_POINT);
-
-    return YT_DISPATCH(unit)->rate_meter_mode_get(unit, meter_id, pMode);
+    CMM_PARAM_CHK((0 == pMode->flags), CMM_ERR_INPUT);
+    if (pMode->flags & YT_RATE_METER_FLAG_RATEMODE)
+    {
+        CMM_PARAM_CHK(YT_RATE_MODE_PPS < pMode->rateMode, CMM_ERR_INPUT);
+    }
+    if (pMode->flags & YT_RATE_METER_FLAG_METERMODE)
+    {
+        CMM_PARAM_CHK(YT_METER_MODE_RFC2698 < pMode->meterMode, CMM_ERR_INPUT);
+    }
+    if (pMode->flags & YT_RATE_METER_FLAG_GAP)
+    {
+        CMM_PARAM_CHK(YT_RATE_BPS_GAP_INCLUDE < pMode->gapMode, CMM_ERR_INPUT);
+    }
+    if (pMode->flags & YT_RATE_METER_FLAG_DROPCOLOR)
+    {
+        CMM_PARAM_CHK(YT_DROP_COLOR_NONE < pMode->dropColor, CMM_ERR_INPUT);
+    }
+    if (pMode->flags & YT_RATE_METER_FLAG_COLORMODE)
+    {
+        CMM_PARAM_CHK(YT_COLOR_BLIND < pMode->colorMode, CMM_ERR_INPUT);
+    }
+    if (pMode->flags & YT_RATE_METER_FLAG_CFMODE)
+    {
+        CMM_PARAM_CHK(YT_CF_MODE_LEAKY < pMode->cfMode, CMM_ERR_INPUT);
+    }
+    return YT_DISPATCH(unit)->rate_meter_mode_set(unit, meterId, pMode);
 }
 
-/**
- * @internal      yt_rate_meter_rate_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     meter_id            -meter id, can access meter tbl by it
- * @param[in]     rate                -CIR, EIR, CBS, EBS config
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_meter_rate_set(yt_unit_t unit, yt_meterid_t meter_id, yt_qos_two_rate_t rate)
+yt_ret_t yt_rate_meter_mode_get(yt_unit_t unit, yt_meterid_t meterId, yt_rate_meter_mode_t *pMode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((NULL == pMode), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK((0 == pMode->flags), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(CAL_MAX_METER_ENTRY_NUM(unit) <= meterId, CMM_ERR_INPUT);
 
-    return YT_DISPATCH(unit)->rate_meter_rate_set(unit, meter_id, rate);
+    return YT_DISPATCH(unit)->rate_meter_mode_get(unit, meterId, pMode);
 }
 
-/**
- * @internal      yt_rate_meter_rate_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     meter_id            -meter id, can access meter tbl by it
- * @param[out]    pRate               -CIR, EIR, CBS, EBS config
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_meter_rate_get(yt_unit_t unit, yt_meterid_t meter_id, yt_qos_two_rate_t *pRate)
+yt_ret_t yt_rate_meter_rate_set(yt_unit_t unit, yt_meterid_t meterId, yt_qos_two_rate_t *pRate)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pRate), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK(CAL_MAX_METER_ENTRY_NUM(unit) <= meterId, CMM_ERR_INPUT);
 
-    return YT_DISPATCH(unit)->rate_meter_rate_get(unit, meter_id, pRate);
+    return YT_DISPATCH(unit)->rate_meter_rate_set(unit, meterId, pRate);
 }
 
-/**
- * @internal      yt_rate_shaping_port_enable_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     enable              -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
+yt_ret_t yt_rate_meter_rate_get(yt_unit_t unit, yt_meterid_t meterId, yt_qos_two_rate_t *pRate)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((NULL == pRate), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK(CAL_MAX_METER_ENTRY_NUM(unit) <= meterId, CMM_ERR_INPUT);
+
+    return YT_DISPATCH(unit)->rate_meter_rate_get(unit, meterId, pRate);
+}
+
 yt_ret_t yt_rate_shaping_port_enable_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
     return YT_DISPATCH(unit)->rate_shaping_port_enable_set(unit, port, enable);
 }
 
-/**
- * @internal      yt_rate_shaping_port_enable_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[out]    pEnable             -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
 yt_ret_t yt_rate_shaping_port_enable_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->rate_shaping_port_enable_get(unit, port, pEnable);
 }
 
-/**
- * @internal      yt_rate_shaping_port_mode_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     shaping_mode        -shaping mode config
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_shaping_port_mode_set(yt_unit_t unit, yt_port_t port, yt_shaping_mode_t shaping_mode)
+yt_ret_t yt_rate_shaping_port_mode_set(yt_unit_t unit, yt_port_t port, yt_shaping_mode_t *pShpMode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
+    CMM_PARAM_CHK((NULL == pShpMode), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK(YT_RATE_BPS_GAP_INCLUDE < pShpMode->schMode, CMM_ERR_INPUT);
+    CMM_PARAM_CHK(YT_RATE_MODE_PPS < pShpMode->shpMode, CMM_ERR_INPUT);
 
-    return YT_DISPATCH(unit)->rate_shaping_port_mode_set(unit, port, shaping_mode);
+    return YT_DISPATCH(unit)->rate_shaping_port_mode_set(unit, port, pShpMode);
 }
 
-/**
- * @internal      yt_rate_shaping_port_mode_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[out]    pShaping_mode       -shaping mode config
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_shaping_port_mode_get(yt_unit_t unit, yt_port_t port, yt_shaping_mode_t *pShaping_mode)
+yt_ret_t yt_rate_shaping_port_mode_get(yt_unit_t unit, yt_port_t port, yt_shaping_mode_t *pShpMode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
-    CMM_PARAM_CHK((NULL == pShaping_mode), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK((NULL == pShpMode), CMM_ERR_NULL_POINT);
 
-    return YT_DISPATCH(unit)->rate_shaping_port_mode_get(unit, port, pShaping_mode);
+    return YT_DISPATCH(unit)->rate_shaping_port_mode_get(unit, port, pShpMode);
 }
 
-/**
- * @internal      yt_rate_shaping_port_rate_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     rate                -
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_shaping_port_rate_set(yt_unit_t unit, yt_port_t port, uint32_t rate)
+yt_ret_t yt_rate_shaping_port_rate_set(yt_unit_t unit, yt_port_t port, yt_rate_t rate)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
 
     return YT_DISPATCH(unit)->rate_shaping_port_rate_set(unit, port, rate);
 }
 
-/**
- * @internal      yt_rate_shaping_port_rate_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[out]    pRate               -
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_shaping_port_rate_get(yt_unit_t unit, yt_port_t port, uint32_t *pRate)
+yt_ret_t yt_rate_shaping_port_rate_get(yt_unit_t unit, yt_port_t port, yt_rate_t *pRate)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pRate), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->rate_shaping_port_rate_get(unit, port, pRate);
 }
 
-/**
- * @internal      yt_rate_shaping_queue_enable_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     qinfo               -queue id, port, and ucast or mcast type config
- * @param[in]     cshap_en            -enable or disable
- * @param[in]     eshap_en            -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_shaping_queue_enable_set(yt_unit_t unit, yt_qid_t qinfo, yt_enable_t cshap_en, yt_enable_t eshap_en)
+yt_ret_t yt_rate_shaping_queue_enable_set(yt_unit_t unit, yt_qid_t qinfo, yt_enable_t cShpEn, yt_enable_t eShpEn)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((YT_ENABLE < cshap_en), CMM_ERR_INPUT);
-    CMM_PARAM_CHK((YT_ENABLE < eshap_en), CMM_ERR_INPUT);
+    CMM_PARAM_CHK((YT_ENABLE < cShpEn), CMM_ERR_INPUT);
+    CMM_PARAM_CHK((YT_ENABLE < eShpEn), CMM_ERR_INPUT);
 
-    return YT_DISPATCH(unit)->rate_shaping_queue_enable_set(unit, qinfo, cshap_en, eshap_en);
+    return YT_DISPATCH(unit)->rate_shaping_queue_enable_set(unit, qinfo, cShpEn, eShpEn);
 }
 
-/**
- * @internal      yt_rate_shaping_queue_enable_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     qinfo               -queue id, port, and ucast or mcast type config
- * @param[out]    pCshap_en           -enable or disable
- * @param[out]    pEshap_en           -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_shaping_queue_enable_get(yt_unit_t unit, yt_qid_t qinfo, yt_enable_t *pCshap_en, yt_enable_t *pEshap_en)
+yt_ret_t yt_rate_shaping_queue_enable_get(yt_unit_t unit, yt_qid_t qinfo, yt_enable_t *pCshpEn, yt_enable_t *pEshpEn)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((NULL == pCshap_en), CMM_ERR_NULL_POINT);
-    CMM_PARAM_CHK((NULL == pEshap_en), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK((NULL == pCshpEn), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK((NULL == pEshpEn), CMM_ERR_NULL_POINT);
 
-    return YT_DISPATCH(unit)->rate_shaping_queue_enable_get(unit, qinfo, pCshap_en, pEshap_en);
+    return YT_DISPATCH(unit)->rate_shaping_queue_enable_get(unit, qinfo, pCshpEn, pEshpEn);
 }
 
-/**
- * @internal      yt_rate_shaping_queue_mode_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     qinfo               -queue id, port, and ucast or mcast type config
- * @param[in]     shaping_mode        -shaping mode config
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_shaping_queue_mode_set(yt_unit_t unit, yt_qid_t qinfo, yt_shaping_mode_t shaping_mode)
+yt_ret_t yt_rate_shaping_queue_mode_set(yt_unit_t unit, yt_qid_t qinfo, yt_shaping_mode_t *pShpMode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((NULL == pShpMode), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK(YT_RATE_BPS_GAP_INCLUDE < pShpMode->schMode, CMM_ERR_INPUT);
+    CMM_PARAM_CHK(YT_RATE_MODE_PPS < pShpMode->shpMode, CMM_ERR_INPUT);
 
-    return YT_DISPATCH(unit)->rate_shaping_queue_mode_set(unit, qinfo, shaping_mode);
+    return YT_DISPATCH(unit)->rate_shaping_queue_mode_set(unit, qinfo, pShpMode);
 }
 
-/**
- * @internal      yt_rate_shaping_queue_mode_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     qinfo               -queue id, port, and ucast or mcast type config
- * @param[out]    pShaping_mode       -shaping mode config
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_shaping_queue_mode_get(yt_unit_t unit, yt_qid_t qinfo, yt_shaping_mode_t *pShaping_mode)
+yt_ret_t yt_rate_shaping_queue_mode_get(yt_unit_t unit, yt_qid_t qinfo, yt_shaping_mode_t *pShpMode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((NULL == pShaping_mode), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK((NULL == pShpMode), CMM_ERR_NULL_POINT);
 
-    return YT_DISPATCH(unit)->rate_shaping_queue_mode_get(unit, qinfo, pShaping_mode);
+    return YT_DISPATCH(unit)->rate_shaping_queue_mode_get(unit, qinfo, pShpMode);
 }
 
-/**
- * @internal      yt_rate_shaping_queue_rate_set
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     qinfo               -queue id, port, and ucast or mcast type config
- * @param[in]     rate                -CIR, EIR, CBS, EBS config
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_rate_shaping_queue_rate_set(yt_unit_t unit, yt_qid_t qinfo, yt_qos_two_rate_t rate)
+yt_ret_t yt_rate_shaping_queue_rate_set(yt_unit_t unit, yt_qid_t qinfo, yt_qos_two_rate_t *pRate)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((NULL == pRate), CMM_ERR_NULL_POINT);
 
-    return YT_DISPATCH(unit)->rate_shaping_queue_rate_set(unit, qinfo, rate);
+    return YT_DISPATCH(unit)->rate_shaping_queue_rate_set(unit, qinfo, pRate);
 }
 
-/**
- * @internal      yt_rate_shaping_queue_rate_get
- * @endinternal
- *
- * @brief         Description
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     qinfo               -queue id, port, and ucast or mcast type config
- * @param[out]    pRate               -CIR, EIR, CBS, EBS config
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
 yt_ret_t yt_rate_shaping_queue_rate_get(yt_unit_t unit, yt_qid_t qinfo, yt_qos_two_rate_t *pRate)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pRate), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->rate_shaping_queue_rate_get(unit, qinfo, pRate);
 }
+

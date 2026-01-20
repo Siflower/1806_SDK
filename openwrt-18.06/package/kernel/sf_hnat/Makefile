@@ -20,9 +20,6 @@ define KernelPackage/sf_hnat/config
 		config SFAX8_HNAT_TEST_TOOL
 			bool "set test tool"
 			default "n"
-		config SFAX8_HNAT_MULTI_WAN
-			bool "support hnat multi wan"
-			default "n"
 	endif
 endef
 
@@ -32,11 +29,6 @@ EXTRA_KCONFIG:= \
 ifdef CONFIG_SFAX8_HNAT_TEST_TOOL
 EXTRA_KCONFIG += CONFIG_SFAX8_HNAT_TEST_TOOL=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_HNAT_TEST_TOOL
-endif
-
-ifdef CONFIG_SFAX8_HNAT_MULTI_WAN
-EXTRA_KCONFIG += CONFIG_SFAX8_HNAT_MULTI_WAN=y
-NOSTDINC_FLAGS += -DCONFIG_SFAX8_HNAT_MULTI_WAN
 endif
 
 ifdef CONFIG_TARGET_siflower_sf19a28_v2

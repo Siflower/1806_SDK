@@ -95,10 +95,15 @@ void printChecksumMd5(int address,unsigned int size)
 
 #ifdef CONFIG_SPI_NAND_BOOT
 #define ERASE_SECTOR_SIZE 0x20000 //128k
+#ifdef CONFIG_DOUBLE_IMAGE_BACKUP_NAND
+#define ERASE_NAND_SIZE 0x1400000 //20MB
+#else
+#define ERASE_NAND_SIZE 0x7f40000 //127MB
+#endif
 static void assemble_command(char * buf, const char *img_type, const ulong size, unsigned long from, unsigned long to)
 {
 	printf("\n\n****************************\n*     %s UPGRADING     *\n* DO NOT POWER OFF DEVICE! *\n****************************\n\n", img_type);
-	sprintf(buf, "spi_nand probe 0 33000000;spi_nand update 0x%lx 0x%lx 0x%lx;", from, to, size);
+	sprintf(buf, "spi_nand probe 0 33000000;spi_nand erase 0x%lx 0x%x;spi_nand write 0x%lx 0x%lx 0x%lx;", to, ERASE_NAND_SIZE, from, to, size);
 }
 #else  // CONFIG_SPI_NAND_BOOT
 

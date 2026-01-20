@@ -12,4 +12,4 @@
 #include "osal_mem.h"
 
 extern yt_ret_t fal_tiger_init(yt_unit_t unit);
-yt_ret_t CMM_CALSdsMode_to_YTExtMode(yt_serdes_mode_t sdsMode, yt_extif_mode_t *pExtifMode);
+extern yt_ret_t fal_tiger_9218_init(yt_unit_t unit);

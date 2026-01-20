@@ -34,7 +34,6 @@ yt_ret_t yt_sys_mac_get(yt_unit_t unit, yt_mac_addr_t *pSys_mac)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pSys_mac), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->sys_mac_get(unit, pSys_mac);
@@ -54,7 +53,6 @@ yt_ret_t yt_sys_chip_reset(yt_unit_t unit)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->sys_chip_reset(unit);
 }
@@ -73,7 +71,6 @@ yt_ret_t yt_sys_database_reset(yt_unit_t unit)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->sys_database_reset(unit);
 }
@@ -95,7 +92,7 @@ yt_ret_t yt_sys_version_get(yt_unit_t unit, char *pVerStr)
 
     CMM_PARAM_CHK((NULL == pVerStr), CMM_ERR_NULL_POINT);
 
-    osal_strcpy(pVerStr, YT_SDK_VERSION);
+    osal_strcpy(pVerStr, osal_strlen(pVerStr)+1, YT_SDK_VERSION);
 
     return CMM_ERR_OK;
 }
@@ -154,8 +151,11 @@ yt_ret_t yt_sys_chipInfo_get(yt_unit_t unit, yt_switch_chip_t *pChip)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pChip), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->sys_chipInfo_get(unit, pChip);
 }
+
+#if defined(LINUX_KERNEL_MODE)
+EXPORT_SYMBOL(yt_sys_chip_reset);
+#endif
