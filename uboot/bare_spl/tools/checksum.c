@@ -78,7 +78,7 @@ int main(int arg ,char *arv[])
 
 	header.flags.support_patch = enable;
 	if (enable) {
-		fscanf(patchfile, "%x", &dev_addr);
+		dev_addr = size + 1000;
 		header.dev_offset = dev_addr;
 		printf("irom patch enabled with addr 0x%x\n", header.dev_offset);
 	} else {

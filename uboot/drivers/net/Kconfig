@@ -221,6 +221,13 @@ config GMAC_USE_GPIO_MDIO
 	help
 	  gmac choose gpio mdio.
 
+config NO_SWITCH_AND_PHY
+	depends on SFA18_GMAC
+	bool "dont config or control switch and phy"
+	default n
+	help
+	  dont config or control switch and phy.
+
 config GMAC_TCLKCHOOSE
 	bool "SFA18  ethernet gmac use tclk."
 	help

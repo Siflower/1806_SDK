@@ -1,3 +1,10 @@
+#
+# Copyright (C) 2008-2010 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
+
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=sf_gmac
@@ -44,10 +51,13 @@ define KernelPackage/sf_gmac/config
 			bool "choose tclk to use for gmac."
 			default "n"
 
-		config SFAX8_PTP
-			bool "ptp function enable"
+		config SFAX8_GMAC_RX_BUFFER_POOL
+			bool "enable  gmac rx pool"
 			default "n"
 
+		config SFAX8_GMAC_RX_BUFFER_POOL_LIMIT
+			bool "enable  gmac rx pool limit, allock skb fail when pool full"
+			default "n"
 	endif
 
 endef
@@ -108,20 +118,25 @@ EXTRA_KCONFIG += CONFIG_SFAX8_GMAC_DELAY_AUTOCALI=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_GMAC_DELAY_AUTOCALI
 endif
 
-ifdef CONFIG_SFAX8_PTP
-NOSTDINC_FLAGS += -DCONFIG_SFAX8_PTP
-endif
-
 #ifdef CONFIG_SFAX8_GMAC_TCLKCHOOSE
 EXTRA_KCONFIG += CONFIG_SFAX8_GMAC_TCLKCHOOSE=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_GMAC_TCLKCHOOSE
 #endif
 
+ifdef CONFIG_SFAX8_GMAC_RX_BUFFER_POOL
+EXTRA_KCONFIG += CONFIG_SFAX8_GMAC_RX_BUFFER_POOL=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_GMAC_RX_BUFFER_POOL
+endif
+
+ifdef CONFIG_SFAX8_GMAC_RX_BUFFER_POOL_LIMIT
+EXTRA_KCONFIG += CONFIG_SFAX8_GMAC_RX_BUFFER_POOL_LIMIT=y
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_GMAC_RX_BUFFER_POOL_LIMIT
+endif
 
 define KernelPackage/sf_gmac
   SUBMENU:=Network Devices
   TITLE:=Siflower SFA18 gmac support
-  DEPENDS:=+kmod-sfax8-factory-read +SFAX8_PTP:kmod-ptp
+  DEPENDS:=+kmod-sfax8-factory-read
   FILES:=$(PKG_BUILD_DIR)/sgmac.ko
   AUTOLOAD:=$(call AutoLoad,60,sgmac,1)
   KCONFIG:=

@@ -29,7 +29,6 @@ yt_ret_t yt_led_enable(yt_unit_t unit)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->led_enable(unit);
 }
@@ -51,7 +50,6 @@ yt_ret_t yt_led_mode_set(yt_unit_t unit, yt_led_mode_t mode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->led_mode_set(unit, mode);
 }
@@ -70,7 +68,6 @@ yt_ret_t yt_led_mode_get(yt_unit_t unit, yt_led_mode_t *pMode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pMode), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->led_mode_get(unit, pMode);
@@ -92,7 +89,6 @@ yt_ret_t yt_led_action_set(yt_unit_t unit, yt_port_t port, yt_led_id_t ledId, yt
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
 
     return YT_DISPATCH(unit)->led_action_set(unit, port, ledId, ledActCfg);
@@ -114,7 +110,6 @@ yt_ret_t yt_led_action_get(yt_unit_t unit, yt_port_t port, yt_led_id_t ledId, yt
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pLedActCfg), CMM_ERR_NULL_POINT);
 
@@ -137,7 +132,6 @@ yt_ret_t yt_led_blink_freq_set(yt_unit_t unit, yt_port_t port, yt_led_blink_even
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->led_blink_freq_set(unit, port, event, freq);
 }
@@ -157,7 +151,6 @@ yt_ret_t yt_led_blink_freq_get(yt_unit_t unit, yt_port_t port, yt_led_blink_even
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pFreq), CMM_ERR_NULL_POINT);
 
@@ -179,7 +172,6 @@ yt_ret_t yt_led_blink_duty_set(yt_unit_t unit, yt_port_t port, yt_led_blink_duty
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
 
     return YT_DISPATCH(unit)->led_blink_duty_set(unit, port, duty);
@@ -200,7 +192,6 @@ yt_ret_t yt_led_blink_duty_get(yt_unit_t unit, yt_port_t port, yt_led_blink_duty
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pDuty), CMM_ERR_NULL_POINT);
 
@@ -221,7 +212,6 @@ yt_ret_t yt_led_loopdetect_blink_rate_set(yt_unit_t unit, yt_led_loopdetect_blin
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->led_loopdetect_blink_rate_set(unit, rate);
 }
@@ -240,7 +230,6 @@ yt_ret_t yt_led_loopdetect_blink_rate_get(yt_unit_t unit, yt_led_loopdetect_blin
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->led_loopdetect_blink_rate_get(unit, pRate);
 }
@@ -262,7 +251,6 @@ yt_ret_t yt_led_force_mode_set(yt_unit_t unit, yt_port_t port, yt_led_id_t ledId
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
 
     return YT_DISPATCH(unit)->led_force_mode_set(unit, port, ledId, mode);
@@ -284,7 +272,6 @@ yt_ret_t yt_led_force_mode_get(yt_unit_t unit, yt_port_t port, yt_led_id_t ledId
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pMode), CMM_ERR_NULL_POINT);
 
@@ -307,7 +294,6 @@ yt_ret_t yt_led_force_rate_set(yt_unit_t unit, yt_port_t port, yt_led_id_t ledId
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
 
     return YT_DISPATCH(unit)->led_force_rate_set(unit, port, ledId, rate);
@@ -329,11 +315,48 @@ yt_ret_t yt_led_force_rate_get(yt_unit_t unit, yt_port_t port, yt_led_id_t ledId
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pRate), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->led_force_rate_get(unit, port, ledId, pRate);
+}
+
+/**
+ * @internal      yt_led_serial_outputMode_set
+ * @endinternal
+ *
+ * @brief         select the output mode of serial LED
+ * @param[in]     unit                -unit id
+ * @param[in]     mode                -ouput mode
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t yt_led_serial_outputMode_set(yt_unit_t unit, yt_sled_dataNum_t mode)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((SLED_DATANUM_MAX <= mode), CMM_ERR_EXCEED_RANGE);
+
+    return YT_DISPATCH(unit)->led_serial_outputMode_set(unit, mode);
+}
+
+/**
+ * @internal      yt_led_serial_outputMode_get
+ * @endinternal
+ *
+ * @brief         get the output mode of serial LED
+ * @param[in]     unit                -unit id
+ * @param[out]    pMode               -ouput mode
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t yt_led_serial_outputMode_get(yt_unit_t unit, yt_sled_dataNum_t *pMode)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((NULL == pMode), CMM_ERR_NULL_POINT);
+
+    return YT_DISPATCH(unit)->led_serial_outputMode_get(unit, pMode);
 }
 
 /**
@@ -350,7 +373,6 @@ yt_ret_t yt_led_serial_activeMode_set(yt_unit_t unit, yt_sled_activeMode_t mode)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
 
     return YT_DISPATCH(unit)->led_serial_activeMode_set(unit, mode);
 }
@@ -370,7 +392,6 @@ yt_ret_t yt_led_serial_activeMode_get(yt_unit_t unit, yt_sled_activeMode_t *pMod
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pMode), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->led_serial_activeMode_get(unit, pMode);
@@ -391,7 +412,6 @@ yt_ret_t yt_led_serial_remapping_set(yt_unit_t unit, uint8_t index, yt_led_remap
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, dstInfo.port))), CMM_ERR_PORT);
     
     return YT_DISPATCH(unit)->led_serial_remapping_set(unit, index, dstInfo);
@@ -412,50 +432,9 @@ yt_ret_t yt_led_serial_remapping_get(yt_unit_t unit, uint8_t index, yt_led_remap
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pDstInfo), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->led_serial_remapping_get(unit, index, pDstInfo);
-}
-
-/**
- * @internal      yt_led_serial_enable_set
- * @endinternal
- *
- * @brief         enabel/disable serial LED
- * @param[in]     unit                -unit id
- * @param[in]     enable              -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_led_serial_enable_set(yt_unit_t unit, yt_enable_t enable)
-{
-    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
-    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
-
-    return YT_DISPATCH(unit)->led_serial_enable_set(unit, enable);
-}
-
-/**
- * @internal      yt_led_serial_enable_get
- * @endinternal
- *
- * @brief         get enable state of serial LED
- * @param[in]     unit                -unit id
- * @param[out]    pEnable             -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_led_serial_enable_get(yt_unit_t unit, yt_enable_t *pEnable)
-{
-    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
-    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
-
-    return YT_DISPATCH(unit)->led_serial_enable_get(unit, pEnable);
 }
 
 /**
@@ -472,7 +451,6 @@ yt_ret_t yt_led_parallel_output_set(yt_unit_t unit, yt_port_mask_t port_mask)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PLIST_VALID(unit, port_mask))), CMM_ERR_PORTLIST);
 
     return YT_DISPATCH(unit)->led_parallel_output_set(unit, port_mask);
@@ -492,7 +470,6 @@ yt_ret_t  yt_led_parallel_output_get(yt_unit_t unit, yt_port_mask_t *pport_mask)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((NULL == pport_mask), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->led_parallel_output_get(unit, pport_mask);
@@ -513,7 +490,6 @@ yt_ret_t yt_led_parallel_remapping_set(yt_unit_t unit, yt_led_remapping_t srcInf
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, srcInfo.port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, dstInfo.port))), CMM_ERR_PORT);
     
@@ -535,7 +511,6 @@ yt_ret_t yt_led_parallel_remapping_get(yt_unit_t unit, yt_led_remapping_t srcInf
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, srcInfo.port))), CMM_ERR_PORT);
     CMM_PARAM_CHK((NULL == pDstInfo), CMM_ERR_NULL_POINT);
 
@@ -558,7 +533,6 @@ yt_ret_t yt_led_parallel_pos_invert_set(yt_unit_t unit, yt_port_t port, yt_led_i
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
 	CMM_PARAM_CHK((YT_ENABLE < enable || YT_DISABLE > enable), CMM_ERR_INPUT);
 
@@ -581,9 +555,84 @@ yt_ret_t yt_led_parallel_pos_invert_get(yt_unit_t unit, yt_port_t port, yt_led_i
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
 	CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
 
     return YT_DISPATCH(unit)->led_parallel_pos_invert_get(unit, port, ledId, pEnable);
+}
+
+/**
+ * @internal      yt_led_serial_port_info_set
+ * @endinternal
+ *
+ * @brief         set per_port_en,iscombo_en,ledmode
+ * @param[in]     unit                -unit id
+ * @param[in]     portledInfo         -per_port_en,iscombo_en,ledmode info
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t yt_led_serial_port_info_set(yt_unit_t unit, yt_led_seled_info_t portledInfo)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    //CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
+    //CMM_PARAM_CHK((NULL == pEnable), CMM_ERR_NULL_POINT);
+
+    return YT_DISPATCH(unit)->led_serial_port_info_set(unit, portledInfo);
+}
+
+/**
+ * @internal      yt_led_serial_port_info_get
+ * @endinternal
+ *
+ * @brief         get per_port_en,iscombo_en,ledmode
+ * @param[in]     unit                -unit id
+ * @param[in]     pPortledInfo        -pointer to per_port_en,iscombo_en,ledmode info
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t yt_led_serial_port_info_get(yt_unit_t unit, yt_led_seled_info_t *pPortledInfo)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    //CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
+    //CMM_PARAM_CHK((NULL == pPortledInfo), CMM_ERR_NULL_POINT);
+
+    return YT_DISPATCH(unit)->led_serial_port_info_get(unit, pPortledInfo);
+}
+
+/**
+ * @internal      yt_led_serial_total_ledNum_set
+ * @endinternal
+ *
+ * @brief         set total led number
+ * @param[in]     unit                -unit id
+ * @param[in]     lednum              -total led number
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t yt_led_serial_total_ledNum_set(yt_unit_t unit, yt_unit_t lednum)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+
+    return YT_DISPATCH(unit)->led_serial_total_ledNum_set(unit, lednum);
+}
+
+/**
+ * @internal      yt_led_serial_total_ledNum_get
+ * @endinternal
+ *
+ * @brief         get total led number
+ * @param[in]     unit                -unit id
+ * @param[in]     pLednum             -pointer to total led number
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t yt_led_serial_total_ledNum_get(yt_unit_t unit, yt_unit_t *pLednum)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+
+    return YT_DISPATCH(unit)->led_serial_total_ledNum_get(unit, pLednum);
 }

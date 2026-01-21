@@ -37,418 +37,447 @@
 /**************************************************
  *      Functions implementations                  *
  **************************************************/
-
-yt_ret_t  fal_tiger_ctrlpkt_unknown_ucast_act_set(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_action_t act_ctrl)
+/**
+ * @internal      fal_tiger_ctrlpkt_act_mask_get
+ * @endinternal
+ *
+ * @brief         get act mask based on drop & copy mask
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     macid               -mac index
+ * @param[in]     actType             -packet action: FWD/TRAP/DROP/COPY
+ * @param[out]    pCopyMask           -copy mask
+ * @param[out]    pDropMask           -drop mask
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_NULL_POINT  -null pointer
+ * @retval        CMM_ERR_NOT_SUPPORT -current action type not support
+ */
+yt_ret_t fal_tiger_ctrlpkt_act_mask_get(yt_macid_t macid, yt_act_type_t actType,
+    uint32_t *pCopyMask, uint32_t *pDropMask)
 {
-    cmm_err_t ret                   = CMM_ERR_OK;
-    l2_uc_unknown_act_ctrl_t act;
-    uint32_t l2_act;
-
-    yt_macid_t macid = CAL_YTP_TO_MAC(unit,port);
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_UC_UNKNOWN_ACT_CTRLm, 0, sizeof(l2_uc_unknown_act_ctrl_t), &act), ret);    
-    HAL_FIELD_GET(L2_UC_UNKNOWN_ACT_CTRLm, L2_UC_UNKNOWN_ACT_CTRL_L2_UC_UNKNOWN_ACTf, &act, &l2_act);
-    l2_act &= (~(3 << (macid * 2)));
-    l2_act |= act_ctrl << (macid * 2);
-    HAL_FIELD_SET(L2_UC_UNKNOWN_ACT_CTRLm, L2_UC_UNKNOWN_ACT_CTRL_L2_UC_UNKNOWN_ACTf, &act, l2_act);
-    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, L2_UC_UNKNOWN_ACT_CTRLm, 0, sizeof(l2_uc_unknown_act_ctrl_t), &act), ret);
-
-    return CMM_ERR_OK;
-}
-
-yt_ret_t  fal_tiger_ctrlpkt_unknown_ucast_act_get(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_action_t *pAct_ctrl)
-{
-    cmm_err_t ret                   = CMM_ERR_OK;
-    l2_uc_unknown_act_ctrl_t act;
-    uint32_t l2_act;
-
-    yt_macid_t macid = CAL_YTP_TO_MAC(unit,port);
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_UC_UNKNOWN_ACT_CTRLm, 0, sizeof(l2_uc_unknown_act_ctrl_t), &act), ret);
-    HAL_FIELD_GET(L2_UC_UNKNOWN_ACT_CTRLm, L2_UC_UNKNOWN_ACT_CTRL_L2_UC_UNKNOWN_ACTf, &act, &l2_act);
-    *pAct_ctrl = (l2_act >> (macid * 2)) & 0x3;
-
-    return CMM_ERR_OK;
-}
-
-yt_ret_t  fal_tiger_ctrlpkt_unknown_mcast_act_set(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_action_t act_ctrl)
-{
-    cmm_err_t ret                   = CMM_ERR_OK;
-    l2_mc_unknown_act_ctrl_t act;
-    uint32_t l2_act;
-
-    yt_macid_t macid = CAL_YTP_TO_MAC(unit,port);
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_MC_UNKNOWN_ACT_CTRLm, 0, sizeof(l2_mc_unknown_act_ctrl_t), &act), ret);
-    HAL_FIELD_GET(L2_MC_UNKNOWN_ACT_CTRLm, L2_MC_UNKNOWN_ACT_CTRL_L2_MC_UNKNOWN_ACTf, &act, &l2_act);
-    l2_act &= (~(3 << (macid * 2)));
-    l2_act |= act_ctrl << (macid * 2);
-    HAL_FIELD_SET(L2_MC_UNKNOWN_ACT_CTRLm, L2_MC_UNKNOWN_ACT_CTRL_L2_MC_UNKNOWN_ACTf, &act, l2_act);
-    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, L2_MC_UNKNOWN_ACT_CTRLm, 0, sizeof(l2_mc_unknown_act_ctrl_t), &act), ret);
-
-    return CMM_ERR_OK;
-}
-
-yt_ret_t  fal_tiger_ctrlpkt_unknown_mcast_act_get(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_action_t *pAct_ctrl)
-{
-    cmm_err_t ret                   = CMM_ERR_OK;
-    l2_mc_unknown_act_ctrl_t act;
-    uint32_t l2_act;
-
-    yt_macid_t macid = CAL_YTP_TO_MAC(unit,port);
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_MC_UNKNOWN_ACT_CTRLm, 0, sizeof(l2_mc_unknown_act_ctrl_t), &act), ret);
-    HAL_FIELD_GET(L2_MC_UNKNOWN_ACT_CTRLm, L2_MC_UNKNOWN_ACT_CTRL_L2_MC_UNKNOWN_ACTf, &act, &l2_act);
-    *pAct_ctrl = (l2_act >> (macid * 2)) & 0x3;
-
-    return CMM_ERR_OK;
-}
-
-yt_ret_t fal_tiger_ctrlpkt_arp_act_set(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_action_t act_ctrl)
-{
-    l2_arp_bcast_per_port_ctrl_t entry;
-    yt_macid_t macid;
-    uint32_t copyMask;
-    uint32_t dropMask;
-    cmm_err_t ret = CMM_ERR_OK;
-
-    macid = CAL_YTP_TO_MAC(unit,port);
-
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_ARP_BCAST_PER_PORT_CTRLm, 0, sizeof(l2_arp_bcast_per_port_ctrl_t), &entry), ret);
-
-    HAL_FIELD_GET(L2_ARP_BCAST_PER_PORT_CTRLm, L2_ARP_BCAST_PER_PORT_CTRL_COPY_TO_CPUf, &entry, &copyMask);
-    HAL_FIELD_GET(L2_ARP_BCAST_PER_PORT_CTRLm, L2_ARP_BCAST_PER_PORT_CTRL_DROPf, &entry, &dropMask);
-
-    switch(act_ctrl)
+    CMM_PARAM_CHK(pDropMask == NULL || pCopyMask == NULL, CMM_ERR_NULL_POINT);
+    switch(actType)
     {
-        case L2_ACTION_FWD:
-            copyMask = (uint32_t)CLR_FIELD(copyMask, macid, 1);
-            dropMask = (uint32_t)CLR_FIELD(dropMask, macid, 1);
+        case ACT_TYPE_FWD:
+            *pCopyMask = (uint32_t)CLR_FIELD((*pCopyMask), macid, 1);
+            *pDropMask = (uint32_t)CLR_FIELD((*pDropMask), macid, 1);
             break;
 
-        case L2_ACTION_TRAP:
-            copyMask |= (uint32_t)(1UL<<macid);
-            dropMask |= (uint32_t)(1UL<<macid);
+        case ACT_TYPE_TRAP:
+            *pCopyMask |= (uint32_t)(1UL<<macid);
+            *pDropMask |= (uint32_t)(1UL<<macid);
             break;
 
-        case L2_ACTION_DROP:
-            copyMask = (uint32_t)CLR_FIELD(copyMask, macid, 1);
-            dropMask |= (uint32_t)(1UL<<macid);
+        case ACT_TYPE_DROP:
+            *pCopyMask = (uint32_t)CLR_FIELD((*pCopyMask), macid, 1);
+            *pDropMask |= (uint32_t)(1UL<<macid);
             break;
 
-        case L2_ACTION_COPY:
-            copyMask |= (uint32_t)(1UL<<macid);
-            dropMask = (uint32_t)CLR_FIELD(dropMask, macid, 1);;
+        case ACT_TYPE_COPY:
+            *pCopyMask |= (uint32_t)(1UL<<macid);
+            *pDropMask = (uint32_t)CLR_FIELD((*pDropMask), macid, 1);;
             break;
 
         default:
             return CMM_ERR_NOT_SUPPORT;
     }
-    
-    HAL_FIELD_SET(L2_ARP_BCAST_PER_PORT_CTRLm, L2_ARP_BCAST_PER_PORT_CTRL_COPY_TO_CPUf, &entry, copyMask);
-    HAL_FIELD_SET(L2_ARP_BCAST_PER_PORT_CTRLm, L2_ARP_BCAST_PER_PORT_CTRL_DROPf, &entry, dropMask);
-    
-    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, L2_ARP_BCAST_PER_PORT_CTRLm, 0, sizeof(l2_arp_bcast_per_port_ctrl_t), &entry), ret);  
-   
+
     return CMM_ERR_OK;
 }
 
-yt_ret_t fal_tiger_ctrlpkt_arp_act_get(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_action_t *pAct_ctrl)
+/**
+ * @internal      fal_tiger_ctrlpkt_act_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     pktType             -packet type: ARP/ND/LLDP/LLDP_EEE
+ * @param[in]     actType             -packet action: FWD/TRAP/DROP/COPY
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_act_set(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_type_t pktType,
+    yt_act_type_t actType)
 {
-    l2_arp_bcast_per_port_ctrl_t entry;
+    l2_arp_bcast_per_port_ctrl_t arpEntry;
+    l2_nd_per_port_ctrl_t ndEntry;
+    l2_lldp_eee_per_port_ctrl_t lldpEeeEntry;
+    l2_lldp_per_port_ctrl_t lldpEntry;
     yt_macid_t macid;
-    uint32_t copyMask;
-    uint32_t dropMask;
+    uint32_t copyMask = 0;
+    uint32_t dropMask = 0;
     cmm_err_t ret = CMM_ERR_OK;
 
     macid = CAL_YTP_TO_MAC(unit,port);
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_ARP_BCAST_PER_PORT_CTRLm, 0, sizeof(l2_arp_bcast_per_port_ctrl_t), &entry), ret);
-        
-    HAL_FIELD_GET(L2_ARP_BCAST_PER_PORT_CTRLm, L2_ARP_BCAST_PER_PORT_CTRL_COPY_TO_CPUf, &entry, &copyMask);
-    HAL_FIELD_GET(L2_ARP_BCAST_PER_PORT_CTRLm, L2_ARP_BCAST_PER_PORT_CTRL_DROPf, &entry, &dropMask);
+    switch (pktType)
+    {
+        case YT_CTRL_PKT_ARP_TYPE:
+            osal_memset(&arpEntry, sizeof(l2_arp_bcast_per_port_ctrl_t), 0, sizeof(l2_arp_bcast_per_port_ctrl_t));
+            CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_ARP_BCAST_PER_PORT_CTRLm, 0, sizeof(l2_arp_bcast_per_port_ctrl_t), &arpEntry), ret);
+            HAL_FIELD_GET(L2_ARP_BCAST_PER_PORT_CTRLm, L2_ARP_BCAST_PER_PORT_CTRL_COPY_TO_CPUf, &arpEntry, &copyMask);
+            HAL_FIELD_GET(L2_ARP_BCAST_PER_PORT_CTRLm, L2_ARP_BCAST_PER_PORT_CTRL_DROPf, &arpEntry, &dropMask);
+            CMM_ERR_CHK(fal_tiger_ctrlpkt_act_mask_get(macid, actType, &copyMask, &dropMask), ret);
+            HAL_FIELD_SET(L2_ARP_BCAST_PER_PORT_CTRLm, L2_ARP_BCAST_PER_PORT_CTRL_COPY_TO_CPUf, &arpEntry, copyMask);
+            HAL_FIELD_SET(L2_ARP_BCAST_PER_PORT_CTRLm, L2_ARP_BCAST_PER_PORT_CTRL_DROPf, &arpEntry, dropMask);
+            CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, L2_ARP_BCAST_PER_PORT_CTRLm, 0, sizeof(l2_arp_bcast_per_port_ctrl_t), &arpEntry), ret);  
+            break;
+
+        case YT_CTRL_PKT_ND_TYPE:
+            osal_memset(&ndEntry, sizeof(l2_nd_per_port_ctrl_t), 0, sizeof(l2_nd_per_port_ctrl_t));
+            CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_ND_PER_PORT_CTRLm, 0, sizeof(l2_nd_per_port_ctrl_t), &ndEntry), ret);
+            HAL_FIELD_GET(L2_ND_PER_PORT_CTRLm, L2_ND_PER_PORT_CTRL_COPY_TO_CPUf, &ndEntry, &copyMask);
+            HAL_FIELD_GET(L2_ND_PER_PORT_CTRLm, L2_ND_PER_PORT_CTRL_DROPf, &ndEntry, &dropMask);
+            CMM_ERR_CHK(fal_tiger_ctrlpkt_act_mask_get(macid, actType, &copyMask, &dropMask), ret);
+            HAL_FIELD_SET(L2_ND_PER_PORT_CTRLm, L2_ND_PER_PORT_CTRL_COPY_TO_CPUf, &ndEntry, copyMask);
+            HAL_FIELD_SET(L2_ND_PER_PORT_CTRLm, L2_ND_PER_PORT_CTRL_DROPf, &ndEntry, dropMask);
+            CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, L2_ND_PER_PORT_CTRLm, 0, sizeof(l2_nd_per_port_ctrl_t), &ndEntry), ret);
+            break;
+
+        case YT_CTRL_PKT_LLDP_TYPE:
+            osal_memset(&lldpEntry, sizeof(l2_lldp_per_port_ctrl_t), 0, sizeof(l2_lldp_per_port_ctrl_t));
+            CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_LLDP_PER_PORT_CTRLm, 0, sizeof(l2_lldp_per_port_ctrl_t), &lldpEntry), ret);
+            HAL_FIELD_GET(L2_LLDP_PER_PORT_CTRLm, L2_LLDP_PER_PORT_CTRL_COPY_TO_CPUf, &lldpEntry, &copyMask);
+            HAL_FIELD_GET(L2_LLDP_PER_PORT_CTRLm, L2_LLDP_PER_PORT_CTRL_DROPf, &lldpEntry, &dropMask);
+            CMM_ERR_CHK(fal_tiger_ctrlpkt_act_mask_get(macid, actType, &copyMask, &dropMask), ret);
+            HAL_FIELD_SET(L2_LLDP_PER_PORT_CTRLm, L2_LLDP_PER_PORT_CTRL_COPY_TO_CPUf, &lldpEntry, copyMask);
+            HAL_FIELD_SET(L2_LLDP_PER_PORT_CTRLm, L2_LLDP_PER_PORT_CTRL_DROPf, &lldpEntry, dropMask);
+            CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, L2_LLDP_PER_PORT_CTRLm, 0, sizeof(l2_lldp_per_port_ctrl_t), &lldpEntry), ret);
+            break;
+
+        case YT_CTRL_PKT_LLDP_EEE_TYPE:
+            osal_memset(&lldpEeeEntry, sizeof(l2_lldp_eee_per_port_ctrl_t), 0, sizeof(l2_lldp_eee_per_port_ctrl_t));
+            CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_LLDP_EEE_PER_PORT_CTRLm, 0, sizeof(l2_lldp_eee_per_port_ctrl_t), &lldpEeeEntry), ret);
+            HAL_FIELD_GET(L2_LLDP_EEE_PER_PORT_CTRLm, L2_LLDP_EEE_PER_PORT_CTRL_COPY_TO_CPUf, &lldpEeeEntry, &copyMask);
+            HAL_FIELD_GET(L2_LLDP_EEE_PER_PORT_CTRLm, L2_LLDP_EEE_PER_PORT_CTRL_DROPf, &lldpEeeEntry, &dropMask);
+            CMM_ERR_CHK(fal_tiger_ctrlpkt_act_mask_get(macid, actType, &copyMask, &dropMask), ret);
+            HAL_FIELD_SET(L2_LLDP_EEE_PER_PORT_CTRLm, L2_LLDP_EEE_PER_PORT_CTRL_COPY_TO_CPUf, &lldpEeeEntry, copyMask);
+            HAL_FIELD_SET(L2_LLDP_EEE_PER_PORT_CTRLm, L2_LLDP_EEE_PER_PORT_CTRL_DROPf, &lldpEeeEntry, dropMask);
+            CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, L2_LLDP_EEE_PER_PORT_CTRLm, 0, sizeof(l2_lldp_eee_per_port_ctrl_t), &lldpEeeEntry), ret);
+            break;
+
+        default:
+            return CMM_ERR_NOT_SUPPORT;
+    }
+
+    return CMM_ERR_OK;
+}
+
+/**
+ * @internal      fal_tiger_ctrlpkt_act_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     pktType             -packet type: ARP/ND/LLDP/ERPS/RRPP/IGMP/MLD/PIM
+ * @param[out]    pActType            -packet action: FWD/TRAP/DROP/COPY
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_act_get(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_type_t pktType,
+    yt_act_type_t *pActType)
+{
+    l2_arp_bcast_per_port_ctrl_t arpEntry;
+    l2_nd_per_port_ctrl_t ndEntry;
+    l2_lldp_eee_per_port_ctrl_t lldpEeeEntry;
+    l2_lldp_per_port_ctrl_t lldpEntry;
+    yt_macid_t macid;
+    uint32_t copyMask = 0;
+    uint32_t dropMask = 0;
+    cmm_err_t ret = CMM_ERR_OK;
+
+    macid = CAL_YTP_TO_MAC(unit,port);
+    switch (pktType)
+    {
+        case YT_CTRL_PKT_ARP_TYPE:
+            osal_memset(&arpEntry, sizeof(l2_arp_bcast_per_port_ctrl_t), 0, sizeof(l2_arp_bcast_per_port_ctrl_t));
+            CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_ARP_BCAST_PER_PORT_CTRLm, 0, sizeof(l2_arp_bcast_per_port_ctrl_t), &arpEntry), ret);
+            HAL_FIELD_GET(L2_ARP_BCAST_PER_PORT_CTRLm, L2_ARP_BCAST_PER_PORT_CTRL_COPY_TO_CPUf, &arpEntry, &copyMask);
+            HAL_FIELD_GET(L2_ARP_BCAST_PER_PORT_CTRLm, L2_ARP_BCAST_PER_PORT_CTRL_DROPf, &arpEntry, &dropMask);
+            break;
+
+        case YT_CTRL_PKT_ND_TYPE:
+            osal_memset(&ndEntry, sizeof(l2_nd_per_port_ctrl_t), 0, sizeof(l2_nd_per_port_ctrl_t));
+            CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_ND_PER_PORT_CTRLm, 0, sizeof(l2_nd_per_port_ctrl_t), &ndEntry), ret);
+            HAL_FIELD_GET(L2_ND_PER_PORT_CTRLm, L2_ND_PER_PORT_CTRL_COPY_TO_CPUf, &ndEntry, &copyMask);
+            HAL_FIELD_GET(L2_ND_PER_PORT_CTRLm, L2_ND_PER_PORT_CTRL_DROPf, &ndEntry, &dropMask);
+            break;
+
+        case YT_CTRL_PKT_LLDP_TYPE:
+            osal_memset(&lldpEntry, sizeof(l2_lldp_per_port_ctrl_t), 0, sizeof(l2_lldp_per_port_ctrl_t));
+            CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_LLDP_PER_PORT_CTRLm, 0, sizeof(l2_lldp_per_port_ctrl_t), &lldpEntry), ret);
+            HAL_FIELD_GET(L2_LLDP_PER_PORT_CTRLm, L2_LLDP_PER_PORT_CTRL_COPY_TO_CPUf, &lldpEntry, &copyMask);
+            HAL_FIELD_GET(L2_LLDP_PER_PORT_CTRLm, L2_LLDP_PER_PORT_CTRL_DROPf, &lldpEntry, &dropMask);
+            break;
+
+        case YT_CTRL_PKT_LLDP_EEE_TYPE:
+            osal_memset(&lldpEeeEntry, sizeof(l2_lldp_eee_per_port_ctrl_t), 0, sizeof(l2_lldp_eee_per_port_ctrl_t));
+            CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_LLDP_EEE_PER_PORT_CTRLm, 0, sizeof(l2_lldp_eee_per_port_ctrl_t), &lldpEeeEntry), ret);
+            HAL_FIELD_GET(L2_LLDP_EEE_PER_PORT_CTRLm, L2_LLDP_EEE_PER_PORT_CTRL_COPY_TO_CPUf, &lldpEeeEntry, &copyMask);
+            HAL_FIELD_GET(L2_LLDP_EEE_PER_PORT_CTRLm, L2_LLDP_EEE_PER_PORT_CTRL_DROPf, &lldpEeeEntry, &dropMask);
+            break;
+
+        default:
+            return CMM_ERR_NOT_SUPPORT;
+    }
 
     if (copyMask & (1UL<<macid))
     {
         if (dropMask & (1UL<<macid))
         {
-            *pAct_ctrl = L2_ACTION_TRAP;
+            *pActType = ACT_TYPE_TRAP;
         }
         else
         {
-            *pAct_ctrl = L2_ACTION_COPY;
+            *pActType = ACT_TYPE_COPY;
         }
     }
     else
     {
         if (dropMask & (1UL<<macid))
         {
-            *pAct_ctrl = L2_ACTION_DROP;
+            *pActType = ACT_TYPE_DROP;
         }
         else
         {
-            *pAct_ctrl = L2_ACTION_FWD;
+            *pActType = ACT_TYPE_FWD;
         }
     }
-   
+
     return CMM_ERR_OK;
 }
 
-yt_ret_t fal_tiger_ctrlpkt_nd_act_set(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_action_t act_ctrl)
+/**
+ * @internal      fal_tiger_ctrlpkt_myMac_act_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     pActConf            -action config data struct
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_NULL_POINT  -null pointer
+ */
+yt_ret_t fal_tiger_ctrlpkt_myMac_act_set(yt_unit_t unit, yt_ctrlpkt_myMac_act_t *pActConf)
 {
-    l2_nd_per_port_ctrl_t entry;
-    yt_macid_t macid;
-    uint32_t copyMask;
-    uint32_t dropMask;
-    cmm_err_t ret = CMM_ERR_OK;
-
-    macid = CAL_YTP_TO_MAC(unit,port);
-
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_ND_PER_PORT_CTRLm, 0, sizeof(l2_nd_per_port_ctrl_t), &entry), ret);
-    HAL_FIELD_GET(L2_ND_PER_PORT_CTRLm, L2_ND_PER_PORT_CTRL_COPY_TO_CPUf, &entry, &copyMask);
-    HAL_FIELD_GET(L2_ND_PER_PORT_CTRLm, L2_ND_PER_PORT_CTRL_DROPf, &entry, &dropMask);
-
-    switch(act_ctrl)
-    {
-        case L2_ACTION_FWD:
-            copyMask = (uint32_t)CLR_FIELD(copyMask, macid, 1);
-            dropMask = (uint32_t)CLR_FIELD(dropMask, macid, 1);
-            break;
-
-        case L2_ACTION_TRAP:
-            copyMask |= (uint32_t)(1UL<<macid);
-            dropMask |= (uint32_t)(1UL<<macid);
-            break;
-
-        case L2_ACTION_DROP:
-            copyMask = (uint32_t)CLR_FIELD(copyMask, macid, 1);
-            dropMask |= (uint32_t)(1UL<<macid);
-            break;
-
-        case L2_ACTION_COPY:
-            copyMask |= (uint32_t)(1UL<<macid);
-            dropMask = (uint32_t)CLR_FIELD(dropMask, macid, 1);;
-            break;
-
-        default:
-            return CMM_ERR_NOT_SUPPORT;
-    }
-    
-    HAL_FIELD_SET(L2_ND_PER_PORT_CTRLm, L2_ND_PER_PORT_CTRL_COPY_TO_CPUf, &entry, copyMask);
-    HAL_FIELD_SET(L2_ND_PER_PORT_CTRLm, L2_ND_PER_PORT_CTRL_DROPf, &entry, dropMask);
-    
-    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, L2_ND_PER_PORT_CTRLm, 0, sizeof(l2_nd_per_port_ctrl_t), &entry), ret);
-    
-    return CMM_ERR_OK;
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pActConf);
+    return CMM_ERR_NOT_SUPPORT;
 }
 
-yt_ret_t fal_tiger_ctrlpkt_nd_act_get(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_action_t *pAct_ctrl)
+/**
+ * @internal      fal_tiger_ctrlpkt_myMac_act_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[out]    pActConf            -action config data struct
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_myMac_act_get(yt_unit_t unit, yt_ctrlpkt_myMac_act_t *pActConf)
 {
-    l2_nd_per_port_ctrl_t entry;
-    yt_macid_t macid;
-    uint32_t copyMask;
-    uint32_t dropMask;
-    cmm_err_t ret = CMM_ERR_OK;
-
-    macid = CAL_YTP_TO_MAC(unit,port);
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_ND_PER_PORT_CTRLm, 0, sizeof(l2_nd_per_port_ctrl_t), &entry), ret);
-        
-    HAL_FIELD_GET(L2_ND_PER_PORT_CTRLm, L2_ND_PER_PORT_CTRL_COPY_TO_CPUf, &entry, &copyMask);
-    HAL_FIELD_GET(L2_ND_PER_PORT_CTRLm, L2_ND_PER_PORT_CTRL_DROPf, &entry, &dropMask);
-
-    if (copyMask & (1UL<<macid))
-    {
-        if (dropMask & (1UL<<macid))
-        {
-            *pAct_ctrl = L2_ACTION_TRAP;
-        }
-        else
-        {
-            *pAct_ctrl = L2_ACTION_COPY;
-        }
-    }
-    else
-    {
-        if (dropMask & (1UL<<macid))
-        {
-            *pAct_ctrl = L2_ACTION_DROP;
-        }
-        else
-        {
-            *pAct_ctrl = L2_ACTION_FWD;
-        }
-    }
-   
-    return CMM_ERR_OK;    
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pActConf);
+    return CMM_ERR_NOT_SUPPORT;
 }
 
-yt_ret_t fal_tiger_ctrlpkt_lldp_eee_act_set(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_action_t act_ctrl)
+/**
+ * @internal      fal_tiger_ctrlpkt_bypass_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     pktType             -packet type: ARP/ND/LLDP/ERPS/RRPP/IGMP/MLD/PIM
+ * @param[in]     pBypassConf         -config data
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_bypass_set(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_type_t pktType,
+    yt_ctrlpkt_bypass_t *pBypassConf)
 {
-    l2_lldp_eee_per_port_ctrl_t entry;
-    yt_macid_t macid;
-    uint32_t copyMask;
-    uint32_t dropMask;
-    cmm_err_t ret = CMM_ERR_OK;
-
-    macid = CAL_YTP_TO_MAC(unit,port);
-
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_LLDP_EEE_PER_PORT_CTRLm, 0, sizeof(l2_lldp_eee_per_port_ctrl_t), &entry), ret);
-    HAL_FIELD_GET(L2_LLDP_EEE_PER_PORT_CTRLm, L2_LLDP_EEE_PER_PORT_CTRL_COPY_TO_CPUf, &entry, &copyMask);
-    HAL_FIELD_GET(L2_LLDP_EEE_PER_PORT_CTRLm, L2_LLDP_EEE_PER_PORT_CTRL_DROPf, &entry, &dropMask);
-
-    switch(act_ctrl)
-    {
-        case L2_ACTION_FWD:
-            copyMask = (uint32_t)CLR_FIELD(copyMask, macid, 1);
-            dropMask = (uint32_t)CLR_FIELD(dropMask, macid, 1);
-            break;
-
-        case L2_ACTION_TRAP:
-            copyMask |= (uint32_t)(1UL<<macid);
-            dropMask |= (uint32_t)(1UL<<macid);
-            break;
-
-        case L2_ACTION_DROP:
-            copyMask = (uint32_t)CLR_FIELD(copyMask, macid, 1);
-            dropMask |= (uint32_t)(1UL<<macid);
-            break;
-
-        case L2_ACTION_COPY:
-            copyMask |= (uint32_t)(1UL<<macid);
-            dropMask = (uint32_t)CLR_FIELD(dropMask, macid, 1);;
-            break;
-
-        default:
-            return CMM_ERR_NOT_SUPPORT;
-    }
-    
-    HAL_FIELD_SET(L2_LLDP_EEE_PER_PORT_CTRLm, L2_LLDP_EEE_PER_PORT_CTRL_COPY_TO_CPUf, &entry, copyMask);
-    HAL_FIELD_SET(L2_LLDP_EEE_PER_PORT_CTRLm, L2_LLDP_EEE_PER_PORT_CTRL_DROPf, &entry, dropMask);
-    
-    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, L2_LLDP_EEE_PER_PORT_CTRLm, 0, sizeof(l2_lldp_eee_per_port_ctrl_t), &entry), ret);
-    
-    return CMM_ERR_OK;
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(pktType);
+    CMM_UNUSED_PARAM(pBypassConf);
+    return CMM_ERR_NOT_SUPPORT;
 }
 
-yt_ret_t fal_tiger_ctrlpkt_lldp_eee_act_get(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_action_t *pAct_ctrl)
+/**
+ * @internal      fal_tiger_ctrlpkt_bypass_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     pktType             -packet type: ARP/ND/LLDP/ERPS/RRPP/IGMP/MLD/PIM
+ * @param[out]    pBypassConf         -config data
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_bypass_get(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_type_t pktType,
+    yt_ctrlpkt_bypass_t *pBypassConf)
 {
-    l2_lldp_eee_per_port_ctrl_t entry;
-    yt_macid_t macid;
-    uint32_t copyMask;
-    uint32_t dropMask;
-    cmm_err_t ret = CMM_ERR_OK;
-
-    macid = CAL_YTP_TO_MAC(unit,port);
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_LLDP_EEE_PER_PORT_CTRLm, 0, sizeof(l2_lldp_eee_per_port_ctrl_t), &entry), ret);
-        
-    HAL_FIELD_GET(L2_LLDP_EEE_PER_PORT_CTRLm, L2_LLDP_EEE_PER_PORT_CTRL_COPY_TO_CPUf, &entry, &copyMask);
-    HAL_FIELD_GET(L2_LLDP_EEE_PER_PORT_CTRLm, L2_LLDP_EEE_PER_PORT_CTRL_DROPf, &entry, &dropMask);
-
-    if (copyMask & (1UL<<macid))
-    {
-        if (dropMask & (1UL<<macid))
-        {
-            *pAct_ctrl = L2_ACTION_TRAP;
-        }
-        else
-        {
-            *pAct_ctrl = L2_ACTION_COPY;
-        }
-    }
-    else
-    {
-        if (dropMask & (1UL<<macid))
-        {
-            *pAct_ctrl = L2_ACTION_DROP;
-        }
-        else
-        {
-            *pAct_ctrl = L2_ACTION_FWD;
-        }
-    }
-   
-    return CMM_ERR_OK;
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(pktType);
+    CMM_UNUSED_PARAM(pBypassConf);
+    return CMM_ERR_NOT_SUPPORT;
 }
 
-yt_ret_t fal_tiger_ctrlpkt_lldp_act_set(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_action_t act_ctrl)
+/**
+ * @internal      fal_tiger_ctrlpkt_bypass_stp_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     pktType             -packet type: ARP/ND/LLDP/ERPS/RRPP/IGMP/MLD
+ * @param[in]     enable              -YT_ENABLE/YT_DISABLE
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_bypass_stp_set(yt_unit_t unit, yt_ctrlpkt_type_t pktType, yt_enable_t enable)
 {
-    l2_lldp_per_port_ctrl_t entry;
-    yt_macid_t macid;
-    uint32_t copyMask;
-    uint32_t dropMask;
-    cmm_err_t ret = CMM_ERR_OK;
-
-    macid = CAL_YTP_TO_MAC(unit,port);
-
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_LLDP_PER_PORT_CTRLm, 0, sizeof(l2_lldp_per_port_ctrl_t), &entry), ret);
-    HAL_FIELD_GET(L2_LLDP_PER_PORT_CTRLm, L2_LLDP_PER_PORT_CTRL_COPY_TO_CPUf, &entry, &copyMask);
-    HAL_FIELD_GET(L2_LLDP_PER_PORT_CTRLm, L2_LLDP_PER_PORT_CTRL_DROPf, &entry, &dropMask);
-
-    switch(act_ctrl)
-    {
-        case L2_ACTION_FWD:
-            copyMask = (uint32_t)CLR_FIELD(copyMask, macid, 1);
-            dropMask = (uint32_t)CLR_FIELD(dropMask, macid, 1);
-            break;
-
-        case L2_ACTION_TRAP:
-            copyMask |= (uint32_t)(1UL<<macid);
-            dropMask |= (uint32_t)(1UL<<macid);
-            break;
-
-        case L2_ACTION_DROP:
-            copyMask = (uint32_t)CLR_FIELD(copyMask, macid, 1);
-            dropMask |= (uint32_t)(1UL<<macid);
-            break;
-
-        case L2_ACTION_COPY:
-            copyMask |= (uint32_t)(1UL<<macid);
-            dropMask = (uint32_t)CLR_FIELD(dropMask, macid, 1);;
-            break;
-
-        default:
-            return CMM_ERR_NOT_SUPPORT;
-    }
-    
-    HAL_FIELD_SET(L2_LLDP_PER_PORT_CTRLm, L2_LLDP_PER_PORT_CTRL_COPY_TO_CPUf, &entry, copyMask);
-    HAL_FIELD_SET(L2_LLDP_PER_PORT_CTRLm, L2_LLDP_PER_PORT_CTRL_DROPf, &entry, dropMask);
-    
-    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, L2_LLDP_PER_PORT_CTRLm, 0, sizeof(l2_lldp_per_port_ctrl_t), &entry), ret);
-    
-    return CMM_ERR_OK;
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pktType);
+    CMM_UNUSED_PARAM(enable);
+    return CMM_ERR_NOT_SUPPORT;
 }
 
-yt_ret_t fal_tiger_ctrlpkt_lldp_act_get(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_l2_action_t *pAct_ctrl)
+/**
+ * @internal      fal_tiger_ctrlpkt_bypass_stp_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     pktType             -packet type: ARP/ND/LLDP/ERPS/RRPP/IGMP/MLD
+ * @param[out]    pEnable             -YT_ENABLE/YT_DISABLE
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_bypass_stp_get(yt_unit_t unit, yt_ctrlpkt_type_t pktType, yt_enable_t *pEnable)
 {
-    l2_lldp_per_port_ctrl_t entry;
-    yt_macid_t macid;
-    uint32_t copyMask;
-    uint32_t dropMask;
-    cmm_err_t ret = CMM_ERR_OK;
-
-    macid = CAL_YTP_TO_MAC(unit,port);
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, L2_LLDP_PER_PORT_CTRLm, 0, sizeof(l2_lldp_per_port_ctrl_t), &entry), ret);
-        
-    HAL_FIELD_GET(L2_LLDP_PER_PORT_CTRLm, L2_LLDP_PER_PORT_CTRL_COPY_TO_CPUf, &entry, &copyMask);
-    HAL_FIELD_GET(L2_LLDP_PER_PORT_CTRLm, L2_LLDP_PER_PORT_CTRL_DROPf, &entry, &dropMask);
-
-    if (copyMask & (1UL<<macid))
-    {
-        if (dropMask & (1UL<<macid))
-        {
-            *pAct_ctrl = L2_ACTION_TRAP;
-        }
-        else
-        {
-            *pAct_ctrl = L2_ACTION_COPY;
-        }
-    }
-    else
-    {
-        if (dropMask & (1UL<<macid))
-        {
-            *pAct_ctrl = L2_ACTION_DROP;
-        }
-        else
-        {
-            *pAct_ctrl = L2_ACTION_FWD;
-        }
-    }
-   
-    return CMM_ERR_OK;
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pktType);
+    CMM_UNUSED_PARAM(pEnable);
+    return CMM_ERR_NOT_SUPPORT;
 }
+
+/**
+ * @internal      fal_tiger_ctrlpkt_sa_learn_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     pktType             -packet type: ARP/ND/LLDP/ERPS/RRPP/IGMP/MLD
+ * @param[in]     enable              -YT_ENABLE/YT_DISABLE
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_sa_learn_set(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_type_t pktType,
+    yt_enable_t enable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(pktType);
+    CMM_UNUSED_PARAM(enable);
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+/**
+ * @internal      fal_tiger_ctrlpkt_sa_learn_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     pktType             -packet type: ARP/ND/LLDP/ERPS/RRPP/IGMP/MLD
+ * @param[out]    pEnable             -YT_ENABLE/YT_DISABLE
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_sa_learn_get(yt_unit_t unit, yt_port_t port, yt_ctrlpkt_type_t pktType,
+    yt_enable_t *pEnable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(pktType);
+    CMM_UNUSED_PARAM(pEnable);
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+/**
+ * @internal      fal_tiger_ctrlpkt_parse_en_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     parseType           -ARP|PPPOE
+ * @param[in]     enable              -enable or disable
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_parse_en_set(yt_unit_t unit, yt_ctrlpkt_parse_type_t parseType, yt_enable_t enable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(parseType);
+    CMM_UNUSED_PARAM(enable);
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+/**
+ * @internal      fal_tiger_ctrlpkt_parse_en_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     parseType           -ARP|PPPOE
+ * @param[out]    pEnable             -enable or disable
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_parse_en_get(yt_unit_t unit, yt_ctrlpkt_parse_type_t parseType, yt_enable_t *pEnable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(parseType);
+    CMM_UNUSED_PARAM(pEnable);
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+/**
+ * @internal      fal_tiger_ctrlpkt_rrpp_parse_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     pParseConf           -x
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_rrpp_parse_set(yt_unit_t unit, yt_ctrlpkt_rrpp_parse_t *pParseConf)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pParseConf);
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+/**
+ * @internal      fal_tiger_ctrlpkt_rrpp_parse_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[out]    pParseConf          -x
+ * @retval        CMM_ERR_NOT_SUPPORT -not support pkt type
+ */
+yt_ret_t fal_tiger_ctrlpkt_rrpp_parse_get(yt_unit_t unit, yt_ctrlpkt_rrpp_parse_t *pParseConf)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pParseConf);
+    return CMM_ERR_NOT_SUPPORT;
+}
+

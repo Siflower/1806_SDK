@@ -118,6 +118,9 @@
 #include "httpd.h"
 DECLARE_GLOBAL_DATA_PTR;
 
+#if defined(CONFIG_CMD_MULUP)
+#include "mul_upgrade.h"
+#endif
 /** BOOTP EXTENTIONS **/
 
 /* Our subnet mask (0=unknown) */
@@ -507,6 +510,11 @@ restart:
 			HttpdStart();
 			break;
 
+#if defined(CONFIG_CMD_MULUP)
+		case MULUP:
+			Mulupgrade();
+			break;
+#endif
 #if defined(CONFIG_CMD_NFS)
 		case NFS:
 			nfs_start();
@@ -611,6 +619,31 @@ restart:
 			  net_state = NETLOOP_SUCCESS;
 		}
 
+#if defined(CONFIG_CMD_MULUP)
+		if (protocol == MULUP) {
+			if (wait_time == 0)
+				wait_time = get_timer(0);
+
+			if (!test_bit(0, tftp_mcast_bitmap) &&
+			    get_timer(0) - wait_time > 1000) {
+				net_arp_wait_packet_ip.s_addr = 0;
+				net_cleanup_loop();
+				eth_halt();
+				eth_set_last_protocol(BOOTP);
+
+				puts("\n");
+				ret = -EINTR;
+				goto done;
+			}
+
+			if (test_bit(0, tftp_mcast_bitmap) &&
+			    r_count == t_count) {
+				net_boot_file_size = image_size;
+				net_state = NETLOOP_SUCCESS;
+				free(tftp_mcast_bitmap);
+			}
+		}
+#endif
 
 #if 1
 		//workaround for some case we can't receive uip_acked
@@ -1240,12 +1273,15 @@ void net_process_received_packet(uchar *in_packet, int len)
 		}
 		/* If it is not for us, ignore it */
 		dst_ip = net_read_ip(&ip->ip_dst);
-		if (net_ip.s_addr && dst_ip.s_addr != net_ip.s_addr &&
-		    dst_ip.s_addr != 0xFFFFFFFF) {
+		if (!((et->et_dest[0] == 0x01) && (et->et_dest[1] == 0x0)
+					&& (et->et_dest[2] == 0x5e))) {
+			if (net_ip.s_addr && dst_ip.s_addr != net_ip.s_addr &&
+				dst_ip.s_addr != 0xFFFFFFFF) {
 #ifdef CONFIG_MCAST_TFTP
-			if (net_mcast_addr != dst_ip)
+				if (net_mcast_addr != dst_ip)
 #endif
-				return;
+					return;
+			}
 		}
 		/* Read source IP address for later use */
 		src_ip = net_read_ip(&ip->ip_src);

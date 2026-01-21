@@ -1,15 +1,9 @@
-#include <linux/kallsyms.h>
-#include <linux/gpio.h>
-#include <linux/of_gpio.h>
-#include <linux/crc32.h>
-
 #include "sf_gmac.h"
 #include "yt8521.h"
-
 #ifdef CONFIG_SFAX8_FACTORY_READ
 #include <sfax8_factory_read.h>
 #endif
-
+#include <linux/crc32.h>
 #if IS_ENABLED(CONFIG_NF_FLOW_TABLE)
 #include <linux/netfilter.h>
 #include <net/netfilter/nf_flow_table.h>
@@ -23,7 +17,16 @@
 #include <asm/atomic.h>
 #endif
 
+#include <linux/kallsyms.h>
+#include <linux/gpio.h>
+#include <linux/of_gpio.h>
+#include <linux/if_pppox.h>
+#include <linux/ppp_defs.h>
+#include <linux/tcp.h>
 
+#ifdef CONFIG_SFAX8_GMAC_RX_BUFFER_POOL
+#include "sf_gmac_mem.h"
+#endif
 
 #ifdef CONFIG_SFAX8_GMAC_DELAY_AUTOCALI
 #include <linux/kthread.h>
@@ -36,26 +39,29 @@ atomic_t g_is_tx_pause;
 int gmac_delay_auto_calibration(struct sgmac_priv *priv);
 void sfax8_gmac_test_tx_complete(void* driver_priv, unsigned short rest_space, atomic_t *pis_tx_pause);
 #endif
+unsigned int g_tx_stop_queue_cnt = 0;
+unsigned int g_tx_drop_cnt = 0;
+unsigned int g_tx_hnat_drop_cnt = 0;
 
+unsigned int g_rx_smart_drop_en = 0xf;
+unsigned int g_rx_alloc_pool_fail = 0;
+unsigned int g_rx_alloc_out_pool = 0;
+unsigned int g_rx_skb_cached_cnt = 0;
+unsigned int g_rx_force_drop_cnt = 0;
 #if IS_ENABLED(CONFIG_SFAX8_ESWITCH_DRIVER)
 extern struct ethtool_ops eswitch_ethtool_ops;
 static void sf_trigger_eswitch_hwReset(struct sgmac_priv *priv);
 #endif
 
-unsigned int g_tx_stop_queue_cnt = 0;
-unsigned int g_tx_drop_cnt = 0;
-unsigned int g_tx_hnat_drop_cnt = 0;
-
-unsigned int g_rx_alloc_skb_fail = 0;
-
 unsigned int debug_log = 0;
+unsigned int g_drop_div = 3;
 unsigned int g_ethtool_phyad = 0;
 spinlock_t sf_gmac_tx_lock;
-
 unsigned int sf_dev_ct_limit = 50;
 EXPORT_SYMBOL(sf_dev_ct_limit);
 unsigned long sf_oom_drop_level = 0;
 EXPORT_SYMBOL(sf_oom_drop_level);
+static void sgmac_set_rx_mode(struct net_device *ndev);
 
 /* EMAC_Soft_Clkgate[3] */
 #define EMAC_ETH_BYPREF_CLK		(1 << 2) /* supply for gmii transmit clk */
@@ -75,6 +81,8 @@ EXPORT_SYMBOL(sf_oom_drop_level);
 
 /* GMAC Configuration Settings */
 #define SF_MAX_MTU 9000
+// qin: reserve eth headroom for hnat add vlan/pppoe header
+#define SF_ETH_RESV 20
 // austin: PAUSE_TIME is 0xffff by default
 #define PAUSE_TIME 0x400
 
@@ -97,10 +105,11 @@ EXPORT_SYMBOL(sf_oom_drop_level);
 #define tx_dma_ring_space(p)                                                   \
 	dma_ring_space((p)->tx_head, (p)->tx_tail, DMA_TX_RING_SZ)
 
+#define SIOCGSWITCH (SIOCDEVPRIVATE+5)	/* Read switch register */
+#define SIOCSSWITCH (SIOCDEVPRIVATE+6)	/* Write switch register */
+
 static int sgmac_stop(struct net_device *ndev);
 static int sgmac_hw_init(struct net_device *ndev);
-static void sgmac_set_rx_mode(struct net_device *ndev);
-
 /* GMAC Descriptor Access Helpers */
 static inline void desc_set_buf_len(struct sgmac_dma_desc *p, u32 buf_sz)
 {
@@ -108,7 +117,7 @@ static inline void desc_set_buf_len(struct sgmac_dma_desc *p, u32 buf_sz)
 		p->buf_size = cpu_to_le32(
 				MAX_DESC_BUF_SZ |
 				(buf_sz - MAX_DESC_BUF_SZ)
-                                        << DESC_BUFFER2_SZ_OFFSET);
+						<< DESC_BUFFER2_SZ_OFFSET);
 	else
 		p->buf_size = cpu_to_le32(buf_sz);
 }
@@ -216,15 +225,15 @@ static inline u32 desc_get_tx_timestamp_status(struct sgmac_dma_desc *p)
 
 static inline u32 desc_get_rx_timestamp_status(struct sgmac_dma_desc *p)
 {
-	return le32_to_cpu(p->flags) & RXDESC_CHECKSUM_ERR;
-}
-
-static inline u64 desc_get_timestamp(struct sgmac_dma_desc *p)
-{
 	u64 ns;
 	ns = p->timestamp_low;
 	ns += p->timestamp_high * 1000000000ULL;
 	return ns;
+}
+
+static inline u32 desc_get_timestamp(struct sgmac_dma_desc *p)
+{
+	return le32_to_cpu(p->flags) & TXDESC_TX_TS_STATUS;
 }
 
 static void sgmac_dma_flush_tx_fifo(struct sgmac_priv *priv)
@@ -297,18 +306,11 @@ static int desc_get_rx_status(struct sgmac_priv *priv, struct sgmac_dma_desc *p)
 	if (!(status & RXDESC_ERROR_SUMMARY))
 		return ret;
 
-#ifdef CONFIG_SFAX8_PTP
-	/* Handle any errors */
-	if (status & (RXDESC_DESCRIPTOR_ERR | RXDESC_OVERFLOW_ERR |
-				     RXDESC_LENGTH_ERR | RXDESC_CRC_ERR))
-		return -1;
-#else
 	/* Handle any errors */
 	if (status & (RXDESC_DESCRIPTOR_ERR | RXDESC_OVERFLOW_ERR |
 				     RXDESC_CHECKSUM_ERR | RXDESC_LENGTH_ERR |
 				     RXDESC_CRC_ERR))
 		return -1;
-#endif
 
 	if (status & RXDESC_EXT_STATUS) {
 		if (ext_status & RXDESC_IP_HEADER_ERR)
@@ -339,7 +341,6 @@ static inline void sgmac_mac_disable(struct sgmac_priv *priv)
 	u32 value = readl(priv->base + GMAC_DMA_OPERATION);
 	value &= ~(DMA_OPERATION_ST | DMA_OPERATION_SR);
 	writel(value, priv->base + GMAC_DMA_OPERATION);
-
 	value = readl(priv->base + GMAC_CONTROL);
 	value &= ~(GMAC_CONTROL_TE | GMAC_CONTROL_RE);
 	writel(value, priv->base + GMAC_CONTROL);
@@ -349,13 +350,11 @@ static void
 sgmac_set_mac_addr(struct sgmac_priv *priv, unsigned char *addr, int num)
 {
 	u32 data;
-
 	if (addr) {
 		data = (addr[5] << 8) | addr[4] | (num ? GMAC_ADDR_AE : 0);
 		writel(data, priv->base + GMAC_ADDR_HIGH(num));
-
 		data = (addr[3] << 24) | (addr[2] << 16) | (addr[1] << 8) |
-                        addr[0];
+		       addr[0];
 		writel(data, priv->base + GMAC_ADDR_LOW(num));
 	} else {
 		writel(0, priv->base + GMAC_ADDR_HIGH(num));
@@ -368,12 +367,11 @@ static void sgmac_set_mdc_clk_div(struct sgmac_priv *priv)
 	int value = readl(priv->base + GMAC_GMII_ADDR);
 	value &= ~GMAC_GMII_ADDR_CR_MASK;
 #ifdef CONFIG_SF16A18_V2
-	value |= GMAC_GMII_ADDR_CR_124;
+		value |= GMAC_GMII_ADDR_CR_124;
 #else
 	/* In sf19a28, the CSR clk is 150MHz */
 	value |= GMAC_GMII_ADDR_CR_62;
 #endif
-
 	writel(value, priv->base + GMAC_GMII_ADDR);
 }
 
@@ -395,12 +393,10 @@ static int sgmac_phy_wait_rw_not_busy(struct sgmac_priv *priv)
 {
 	int value = readl(priv->base + GMAC_GMII_ADDR);
 	int i = 0;
-
 	while ((value & GMAC_GMII_ADDR_GB) && (i < 100000)) {
 		value = readl(priv->base + GMAC_GMII_ADDR);
 		i++;
 	}
-
 	return value;
 }
 
@@ -471,22 +467,12 @@ static void sgmac_adjust_link(struct net_device *ndev) {
 		priv->speed = phydev->speed;
 		state_changed = 1;
 		reg &= ~GMAC_CONTROL_SPD_MASK;
-		if (priv->speed == SPEED_10) {
+		if (priv->speed == SPEED_10)
 			reg |= GMAC_SPEED_10M;
-#ifdef CONFIG_SFAX8_PTP
-			priv->tx_hwtstamp_timeout = 16;
-#endif
-		}else if (priv->speed == SPEED_100) {
+		else if (priv->speed == SPEED_100)
 			reg |= GMAC_SPEED_100M;
-#ifdef CONFIG_SFAX8_PTP
-			priv->tx_hwtstamp_timeout = 10;
-#endif
-		}else if (priv->speed == SPEED_1000) {
+		else if (priv->speed == SPEED_1000)
 			reg |= GMAC_SPEED_1000M;
-#ifdef CONFIG_SFAX8_PTP
-			priv->tx_hwtstamp_timeout = 1;
-#endif
-		}
 	}
 	if (priv->duplex != phydev->duplex) {
 
@@ -533,7 +519,7 @@ static int sgmac_mdio_probe(struct sgmac_priv *priv) {
 	error = of_mdiobus_register(bus, priv->dev->of_node);
 	if (error) {
 		netdev_err(priv->ndev, "cannot register MDIO bus %s\n",
-                                bus->name);
+				bus->name);
 		mdiobus_free(bus);
 		return -error;
 	}
@@ -548,26 +534,21 @@ static int sgmac_ptp_init_systime(struct sgmac_priv *priv, u32 sec, u32 nsec) {
 
 	writel(sec, priv->base + GMAC_TS_HIGH_UPDATE);
 	writel(nsec, priv->base + GMAC_TS_LOW_UPDATE);
-	/* issue command to initialize the system time value
-	 * should use coarse correction method
-	 * */
+	/* issue command to initialize the system time value */
 	value = readl(priv->base + GMAC_TS_CONTROL);
-	value &= ~GMAC_TS_CONTROL_TSCFUPDT;
 	value |= GMAC_TS_CONTROL_TSINIT;
 	writel(value, priv->base + GMAC_TS_CONTROL);
 
 	/* wait for present system time initialize to complete */
-	limit = 10000;
+	limit = 10;
 	while (limit--) {
 		if (!(readl(priv->base + GMAC_TS_CONTROL) &
-                                GMAC_TS_CONTROL_TSINIT))
+				    GMAC_TS_CONTROL_TSINIT))
 			break;
+		mdelay(10);
 	}
-
-	if (limit < 0) {
-		printk("[%s:%d] timeout\n", __func__, __LINE__);
+	if (limit < 0)
 		return -EBUSY;
-	}
 
 	return 0;
 }
@@ -577,26 +558,21 @@ static int sgmac_ptp_config_addend(struct sgmac_priv *priv, u32 addend) {
 	int limit;
 
 	writel(addend, priv->base + GMAC_TS_ADDEND);
-	/* issue command to update the addend value
-	 * should use fine update method
-	 * */
+	/* issue command to update the addend value */
 	value = readl(priv->base + GMAC_TS_CONTROL);
-	value |= GMAC_TS_CONTROL_TSCFUPDT;
 	value |= GMAC_TS_CONTROL_TSADDREG;
 	writel(value, priv->base + GMAC_TS_CONTROL);
 
 	/* wait for present addend update to complete */
-	limit = 10000;
+	limit = 10;
 	while (limit--) {
 		if (!(readl(priv->base + GMAC_TS_CONTROL) &
-                                GMAC_TS_CONTROL_TSADDREG))
+				    GMAC_TS_CONTROL_TSADDREG))
 			break;
+		mdelay(10);
 	}
-
-	if (limit < 0) {
-		printk("[%s:%d] timeout\n", __func__, __LINE__);
+	if (limit < 0)
 		return -EBUSY;
-	}
 
 	return 0;
 }
@@ -608,30 +584,24 @@ static int sgmac_ptp_adjust_systime(struct sgmac_priv *priv,
 
 	writel(sec, priv->base + GMAC_TS_HIGH_UPDATE);
 	writel(((add_sub << 31) | nsec), priv->base + GMAC_TS_LOW_UPDATE);
-	/* issue command to initialize the system time value
-	 * should use coarse correction method
-	 * */
+	/* issue command to initialize the system time value */
 	value = readl(priv->base + GMAC_TS_CONTROL);
-	value &= ~GMAC_TS_CONTROL_TSCFUPDT;
-	value |= GMAC_TS_CONTROL_TSUPDT;
+	value |= GMAC_TS_STATUS_TSTRGTERR;
 	writel(value, priv->base + GMAC_TS_CONTROL);
 
 	/* wait for present system time adjust/update to complete */
-	limit = 10000;
+	limit = 10;
 	while (limit--) {
 		if (!(readl(priv->base + GMAC_TS_CONTROL) &
-				    GMAC_TS_CONTROL_TSUPDT))
+				    GMAC_TS_STATUS_TSTRGTERR))
 			break;
+		mdelay(10);
 	}
-
-	if (limit < 0) {
-		printk("[%s:%d] timeout\n", __func__, __LINE__);
+	if (limit < 0)
 		return -EBUSY;
-	}
 
 	return 0;
 }
-
 static u64 sgmac_ptp_get_systime(struct sgmac_priv *priv) {
 	u64 ns;
 
@@ -723,7 +693,7 @@ static int sgmac_ptp_adjust_time(struct ptp_clock_info *ptp, s64 delta)
  * Description: this function will read the current time from the
  * hardware clock and store it in @ts.
  */
-static int sgmac_ptp_get_time(struct ptp_clock_info *ptp, struct timespec64 *ts)
+static int sgmac_ptp_get_time(struct ptp_clock_info *ptp, struct timespec *ts)
 {
 	struct sgmac_priv *priv =
 			container_of(ptp, struct sgmac_priv, ptp_clock_ops);
@@ -753,7 +723,7 @@ static int sgmac_ptp_get_time(struct ptp_clock_info *ptp, struct timespec64 *ts)
  * hardware clock.
  */
 static int sgmac_ptp_set_time(struct ptp_clock_info *ptp,
-		const struct timespec64 *ts)
+		const struct timespec *ts)
 {
 	struct sgmac_priv *priv =
 			container_of(ptp, struct sgmac_priv, ptp_clock_ops);
@@ -768,6 +738,13 @@ static int sgmac_ptp_set_time(struct ptp_clock_info *ptp,
 	return 0;
 }
 
+static int sgmac_ptp_enable(struct ptp_clock_info *ptp,
+		struct ptp_clock_request *rq,
+		int on)
+{
+	return -EOPNOTSUPP;
+}
+
 /* structure describing a PTP hardware clock */
 static struct ptp_clock_info sgmac_ptp_clock_ops = {
 	.owner = THIS_MODULE,
@@ -780,9 +757,9 @@ static struct ptp_clock_info sgmac_ptp_clock_ops = {
 	.pps = 0,
 	.adjfreq = sgmac_ptp_adjust_freq,
 	.adjtime = sgmac_ptp_adjust_time,
-	.gettime64 = sgmac_ptp_get_time,
-	.settime64 = sgmac_ptp_set_time,
-	.enable = NULL,
+	.gettime = sgmac_ptp_get_time,
+	.settime = sgmac_ptp_set_time,
+	.enable = sgmac_ptp_enable,
 };
 
 /**
@@ -837,7 +814,8 @@ void sgmac_ptp_unregister(struct sgmac_priv *priv)
  * and also perform some sanity checks.
  */
 static void sgmac_ptp_get_tx_hwtstamp(struct sgmac_priv *priv,
-		struct sgmac_dma_desc *desc, struct sk_buff *skb)
+		struct sgmac_dma_desc *desc,
+		struct sk_buff *skb)
 {
 	struct skb_shared_hwtstamps shhwtstamp;
 	u64 ns;
@@ -852,6 +830,8 @@ static void sgmac_ptp_get_tx_hwtstamp(struct sgmac_priv *priv,
 	shhwtstamp.hwtstamp = ns_to_ktime(ns);
 	/* pass tstamp to stack */
 	skb_tstamp_tx(skb, &shhwtstamp);
+
+	return;
 }
 
 /* sgmac_ptp_get_rx_hwtstamp: get HW RX timestamps
@@ -863,7 +843,8 @@ static void sgmac_ptp_get_tx_hwtstamp(struct sgmac_priv *priv,
  * and pass it to stack. It also perform some sanity checks.
  */
 static void sgmac_ptp_get_rx_hwtstamp(struct sgmac_priv *priv,
-		struct sgmac_dma_desc *desc, struct sk_buff *skb)
+		struct sgmac_dma_desc *desc,
+		struct sk_buff *skb)
 {
 	struct skb_shared_hwtstamps *shhwtstamp = NULL;
 	u64 ns;
@@ -895,6 +876,7 @@ static int sgmac_ptp_hwtstamp_ioctl(struct net_device *dev, struct ifreq *ifr)
 	struct sgmac_priv *priv = netdev_priv(dev);
 	struct hwtstamp_config config;
 	struct timespec now;
+	u64 temp = 0;
 	u32 ptp_v2 = 0;
 	u32 tstamp_all = 0;
 	u32 ptp_over_ipv4_udp = 0;
@@ -905,13 +887,12 @@ static int sgmac_ptp_hwtstamp_ioctl(struct net_device *dev, struct ifreq *ifr)
 	u32 ts_event_en = 0;
 	u32 value = 0;
 	int ret;
-
 	if (copy_from_user(&config, ifr->ifr_data,
 			    sizeof(struct hwtstamp_config)))
 		return -EFAULT;
 
-	netdev_info(priv->ndev,
-			"%s config flags:0x%x, tx_type:%d, rx_filter:%d\n",
+	netdev_err(priv->ndev,
+			"%s config flags:0x%x, tx_type:0x%x, rx_filter:0x%x\n",
 			__func__, config.flags, config.tx_type,
 			config.rx_filter);
 
@@ -920,7 +901,7 @@ static int sgmac_ptp_hwtstamp_ioctl(struct net_device *dev, struct ifreq *ifr)
 		return -EINVAL;
 
 	if (config.tx_type != HWTSTAMP_TX_OFF &&
-                        config.tx_type != HWTSTAMP_TX_ON)
+			config.tx_type != HWTSTAMP_TX_ON)
 		return -ERANGE;
 
 	switch (config.rx_filter) {
@@ -994,37 +975,6 @@ static int sgmac_ptp_hwtstamp_ioctl(struct net_device *dev, struct ifreq *ifr)
 		ptp_over_ipv6_udp = GMAC_TS_CONTROL_TSIPV6ENA;
 		break;
 
-	case HWTSTAMP_FILTER_PTP_V2_L2_EVENT:
-		/* 802.AS1, Ethnert, any kind of event packet */
-		config.rx_filter = HWTSTAMP_FILTER_PTP_V2_L2_EVENT;
-		ptp_v2 = GMAC_TS_CONTROL_TSVER2ENA;
-		/* take time stamp for all event messages */
-		snap_type_sel = GMAC_TS_CONTROL_BIT16;
-
-		ptp_over_ethernet = GMAC_TS_CONTROL_TSIPENA;
-		break;
-
-	case HWTSTAMP_FILTER_PTP_V2_L2_SYNC:
-		/* 802.AS1, Ethernet, Sync packet */
-		config.rx_filter = HWTSTAMP_FILTER_PTP_V2_L2_SYNC;
-		ptp_v2 = GMAC_TS_CONTROL_TSVER2ENA;
-		/* take time stamp for SYNC messages only */
-		ts_event_en = GMAC_TS_CONTROL_TSEVNTENA;
-
-		ptp_over_ethernet = GMAC_TS_CONTROL_TSIPENA;
-		break;
-
-	case HWTSTAMP_FILTER_PTP_V2_L2_DELAY_REQ:
-		/* 802.AS1, Ethernet, Delay_req packet */
-		config.rx_filter = HWTSTAMP_FILTER_PTP_V2_L2_DELAY_REQ;
-		ptp_v2 = GMAC_TS_CONTROL_TSVER2ENA;
-		/* take time stamp for Delay_Req messages only */
-		ts_master_en = GMAC_TS_CONTROL_TSMSTRENA;
-		ts_event_en = GMAC_TS_CONTROL_TSEVNTENA;
-
-		ptp_over_ethernet = GMAC_TS_CONTROL_TSIPENA;
-		break;
-
 	case HWTSTAMP_FILTER_PTP_V2_EVENT:
 		/* PTP v2/802.AS1 any layer, any kind of event packet */
 		config.rx_filter = HWTSTAMP_FILTER_PTP_V2_EVENT;
@@ -1071,7 +1021,6 @@ static int sgmac_ptp_hwtstamp_ioctl(struct net_device *dev, struct ifreq *ifr)
 	default:
 		return -ERANGE;
 	}
-
 	priv->hwts_rx_en = ((config.rx_filter == HWTSTAMP_FILTER_NONE) ? 0 : 1);
 	priv->hwts_tx_en = config.tx_type == HWTSTAMP_TX_ON;
 
@@ -1085,22 +1034,24 @@ static int sgmac_ptp_hwtstamp_ioctl(struct net_device *dev, struct ifreq *ifr)
 				snap_type_sel);
 		writel(value, priv->base + GMAC_TS_CONTROL);
 
-		/* mask ptp irq */
-		writel(GMAC_INT_MASK_TSIM, priv->base + GMAC_INT_MASK);
-
 		/* program Sub Second Increment reg */
-		// period 1s / 50MHz = 20ns
+		// 1s / 50MHz = 20ns
 		value = (1000000000ULL / 50000000);
 		writel(value, priv->base + GMAC_TS_SUBSEC_INCR);
 
 		/* calculate default added value:
 		 * formula is :
-		 * addend = (0xffffffff)/freq_div_ratio;
-		 * where, freq_div_ratio = clk_ptp_ref_i/50MHz = eth_tsu_clk/50MHz
+		 * addend = (2^32)/freq_div_ratio;
+		 * where, freq_div_ratio = clk_ptp_ref_i/50MHz
+		 * hence, addend = ((2^32) * 50MHz)/clk_ptp_ref_i;
 		 * NOTE: clk_ptp_ref_i should be >= 50MHz to
 		 *       achive 20ns accuracy.
+		 *
+		 * 2^x * y == (y << x), hence
+		 * 2^32 * 50000000 ==> (50000000 << 32)
 		 */
-		value = 0xffffffff/(50/50);
+		temp = (u64)(50000000ULL << 32);
+		value = 0;
 		sgmac_ptp_config_addend(priv, value);
 
 		/* initialize system time */
@@ -1155,6 +1106,105 @@ static int sgmac_set_flow_ctrl(struct sgmac_priv *priv, int rx, int tx)
 	return 0;
 }
 
+static int sf_smart_oom_drop(struct sgmac_priv *priv, struct sk_buff **rxskb)
+{
+	struct vlan_ethhdr *veth;
+	struct iphdr *iph;
+	struct tcphdr *tcp_hdr;
+	struct sk_buff *skb = *rxskb, *tmp_skb = NULL;
+	unsigned long long free_mem;
+	int bufsz = priv->ndev->mtu + ETH_HLEN + ETH_FCS_LEN + VLAN_HLEN;
+	u32 offset = 0;
+	__be16 proto;
+
+	if (skb == NULL)
+		goto oom_accept;
+
+	veth = (struct vlan_ethhdr *)skb->data;
+	// MemAvailable/KB in /proc/meminfo
+	free_mem = si_mem_available() << (PAGE_SHIFT -10);
+	if (free_mem < priv->rx_oom_threshold) {
+		if (g_rx_smart_drop_en & 0x8)
+			goto oom_drop;
+	}else if (free_mem < (priv->rx_oom_threshold + 1000)) {
+		if (g_rx_smart_drop_en & 0x4)
+			set_bit(SF_RANDOM_DROP, &sf_oom_drop_level);
+	}else if (free_mem < (priv->rx_oom_threshold + 3000)) {
+		if (g_rx_smart_drop_en & 0x2) {
+			clear_bit(SF_RANDOM_DROP, &sf_oom_drop_level);
+			set_bit(SF_HASH_DROP, &sf_oom_drop_level);
+		}
+		goto oom_accept;
+	}else if (free_mem < (priv->rx_oom_threshold + 4000)) {
+		if (g_rx_smart_drop_en & 0x1) {
+			clear_bit(SF_RANDOM_DROP, &sf_oom_drop_level);
+			clear_bit(SF_HASH_DROP, &sf_oom_drop_level);
+			set_bit(SF_UNRELATE_DROP, &sf_oom_drop_level);
+		}
+	}else {
+		clear_bit(SF_RANDOM_DROP, &sf_oom_drop_level);
+		clear_bit(SF_HASH_DROP, &sf_oom_drop_level);
+		clear_bit(SF_UNRELATE_DROP, &sf_oom_drop_level);
+		goto oom_accept;
+	}
+
+	if (likely(eth_type_vlan(veth->h_vlan_proto))) {
+		proto = veth->h_vlan_encapsulated_proto;
+		offset = sizeof(*veth);
+	}else {
+		proto = veth->h_vlan_proto;
+		offset = sizeof(struct ethhdr);
+	}
+
+	switch (proto) {
+	case htons(ETH_P_PPP_SES):
+		offset += sizeof(struct pppoe_hdr);
+		proto = *((__be16 *)(skb->data + offset));
+		// pppoe lcp keep alive skb should never drop
+		if (proto == htons(PPP_LCP))
+			goto oom_accept;
+		if (proto != htons(PPP_IP) && test_bit(SF_UNRELATE_DROP, &sf_oom_drop_level))
+			goto oom_drop;
+	case htons(ETH_P_IP):
+		iph = (struct iphdr *)(skb->data + offset);
+		switch (iph->protocol) {
+		case IPPROTO_TCP:
+			tcp_hdr = (struct tcphdr *)((u8 *)iph + sizeof(struct iphdr));
+			if (tcp_hdr->fin || tcp_hdr->rst)
+				goto oom_accept;
+		case IPPROTO_UDP:
+			if (test_bit(SF_RANDOM_DROP, &sf_oom_drop_level)
+					&& priv->rx_head % g_drop_div)
+				goto oom_drop;
+		default:
+			if (test_bit(SF_UNRELATE_DROP, &sf_oom_drop_level))
+				goto oom_drop;
+		}
+		break;
+	default:
+		if (test_bit(SF_UNRELATE_DROP, &sf_oom_drop_level))
+			goto oom_drop;
+	}
+
+oom_accept:
+	tmp_skb = netdev_alloc_skb_ip_align(priv->ndev, bufsz + EXTER_HEADROOM);
+	if (tmp_skb != NULL) {
+		*rxskb = tmp_skb;
+		g_rx_alloc_out_pool++;
+		return SF_ACCEPT;
+	}
+
+oom_drop:
+	// means all memory run out, just self loop in dma ring
+	if ((dma_ring_cnt(priv->rx_head, priv->rx_tail, DMA_RX_RING_SZ) < 4)) {
+		g_rx_force_drop_cnt++;
+		return SF_DROP;
+	}
+
+	g_rx_skb_cached_cnt++;
+	return 0;
+}
+
 /**
  * sgmac_rx_refill:
  * @priv: private driver structure
@@ -1165,9 +1215,17 @@ static int sgmac_rx_refill(struct sgmac_priv *priv, struct sk_buff *last_skb)
 {
 	struct sgmac_dma_desc *p;
 	dma_addr_t paddr;
-	int ret = 0;
+	int ret = SF_ACCEPT;
 	int bufsz = priv->ndev->mtu + ETH_HLEN + ETH_FCS_LEN + VLAN_HLEN;
 	unsigned int desc_irq_div = (DMA_RX_RING_SZ > 64) ? 64 : DMA_RX_RING_SZ/2;
+
+#ifdef CONFIG_SFAX8_GMAC_RX_BUFFER_POOL
+#ifdef CONFIG_MEMORY_OPTIMIZE
+    unsigned int min_ring_ext_cnt = 4;
+#else
+    unsigned int min_ring_ext_cnt = 8;
+#endif
+#endif
 
 	while (dma_ring_space(priv->rx_head, priv->rx_tail, DMA_RX_RING_SZ) > 1) {
 		int entry = priv->rx_head;
@@ -1176,36 +1234,41 @@ static int sgmac_rx_refill(struct sgmac_priv *priv, struct sk_buff *last_skb)
 		p = priv->dma_rx + entry;
 
 		if (likely(priv->rx_skbuff[entry] == NULL)) {
+#ifdef CONFIG_SFAX8_GMAC_RX_BUFFER_POOL
+			skb = sgmac_dev_alloc_rxskb(bufsz + EXTER_HEADROOM);
+			if(skb == NULL){
+				g_rx_alloc_pool_fail++;
+				if(dma_ring_cnt(priv->rx_head, priv->rx_tail, DMA_RX_RING_SZ) < min_ring_ext_cnt){
+				  skb = netdev_alloc_skb_ip_align(priv->ndev, bufsz + EXTER_HEADROOM);
+				  g_rx_alloc_out_pool++;
+				}
+			}
+#else
 #ifdef CONFIG_SF_SKB_POOL
-			skb = __netdev_alloc_skb_from_pool(priv->ndev,
-						bufsz + EXTER_HEADROOM,GFP_ATOMIC,
-                                                priv->skb_pool_dev_param);
+			skb = __netdev_alloc_skb_from_pool(priv->ndev, bufsz + EXTER_HEADROOM,GFP_ATOMIC, priv->skb_pool_dev_param);
+			if (skb == NULL) {
+				g_rx_alloc_pool_fail++;
+			}
 #else
 			skb = netdev_alloc_skb_ip_align(priv->ndev, bufsz + EXTER_HEADROOM);
 #endif
+#endif
 			if (unlikely(skb == NULL)){
-				g_rx_alloc_skb_fail++;
-				if((dma_ring_cnt(priv->rx_head, priv->rx_tail, DMA_RX_RING_SZ) < 4 ) &&
-                                                last_skb != NULL) {
-					skb = last_skb;
-					ret =  -1;
-				}
-				else
+				if ((ret = sf_smart_oom_drop(priv, &last_skb)) == 0)
 					break;
+
+				skb = last_skb;
 			}
 
-			if(ret != -1)
+			if(ret != SF_DROP)
 				skb_reserve(skb, EXTER_HEADROOM);
-
 			paddr = dma_map_single(priv->dev, skb->data,
-							priv->dma_buf_sz - NET_IP_ALIGN,
-							DMA_FROM_DEVICE);
-
+					priv->dma_buf_sz - NET_IP_ALIGN,
+					DMA_FROM_DEVICE);
 			if (dma_mapping_error(priv->dev, paddr)) {
 				dev_kfree_skb_any(skb);
-				return -2;
+				return SF_DROP;
 			}
-
 			priv->rx_skbuff[entry] = skb;
 			desc_set_buf_addr(p, paddr, priv->dma_buf_sz);
 		}
@@ -1222,11 +1285,9 @@ static int sgmac_rx_refill(struct sgmac_priv *priv, struct sk_buff *last_skb)
 
 		priv->rx_head = dma_ring_incr(priv->rx_head, DMA_RX_RING_SZ);
 		desc_set_rx_owner(p);
-
-		if (ret == -1)
+		if (ret == SF_DROP)
 			break;
 	}
-
 	return ret;
 }
 
@@ -1253,7 +1314,6 @@ static int sgmac_dma_desc_rings_init(struct net_device *ndev)
 			sizeof(struct sk_buff *) * DMA_RX_RING_SZ, GFP_KERNEL);
 	if (!priv->rx_skbuff)
 		return -ENOMEM;
-
 	priv->dma_rx = dma_alloc_coherent(priv->dev,
 			DMA_RX_RING_SZ * sizeof(struct sgmac_dma_desc),
 			&priv->dma_rx_phy, GFP_KERNEL);
@@ -1264,7 +1324,6 @@ static int sgmac_dma_desc_rings_init(struct net_device *ndev)
 			sizeof(struct sk_buff *) * DMA_TX_RING_SZ, GFP_KERNEL);
 	if (!priv->tx_skbuff)
 		goto err_tx_skb;
-
 	priv->dma_tx = dma_alloc_coherent(priv->dev,
 			DMA_TX_RING_SZ * sizeof(struct sgmac_dma_desc),
 			&priv->dma_tx_phy, GFP_KERNEL);
@@ -1319,7 +1378,8 @@ static void sgmac_free_rx_skbufs(struct sgmac_priv *priv)
 
 		p = priv->dma_rx + i;
 		dma_unmap_single(priv->dev, desc_get_buf_addr(p),
-				priv->dma_buf_sz - NET_IP_ALIGN, DMA_FROM_DEVICE);
+				priv->dma_buf_sz - NET_IP_ALIGN,
+				DMA_FROM_DEVICE);
 		dev_kfree_skb_any(skb);
 		priv->rx_skbuff[i] = NULL;
 	}
@@ -1347,7 +1407,6 @@ static void sgmac_free_tx_skbufs(struct sgmac_priv *priv)
 
 		if (desc_get_tx_ls(p))
 			dev_kfree_skb_any(priv->tx_skbuff[i]);
-
 		priv->tx_skbuff[i] = NULL;
 	}
 }
@@ -1365,14 +1424,12 @@ static void sgmac_free_dma_desc_rings(struct sgmac_priv *priv)
 				priv->dma_tx, priv->dma_tx_phy);
 		priv->dma_tx = NULL;
 	}
-
 	if (priv->dma_rx) {
 		dma_free_coherent(priv->dev,
 				DMA_RX_RING_SZ * sizeof(struct sgmac_dma_desc),
 				priv->dma_rx, priv->dma_rx_phy);
 		priv->dma_rx = NULL;
 	}
-
 	kfree(priv->rx_skbuff);
 	priv->rx_skbuff = NULL;
 	kfree(priv->tx_skbuff);
@@ -1412,7 +1469,10 @@ static void sgmac_tx_complete(struct sgmac_priv *priv)
 			priv->netstats.tx_bytes += skb->len;
 			dev_consume_skb_any(skb);
 		}
-
+#ifdef CONFIG_SFAX8_PTP
+		if(priv->hwts_tx_en)
+			sgmac_ptp_get_tx_hwtstamp(priv, p, skb);
+#endif
 		priv->tx_skbuff[entry] = NULL;
 		priv->tx_tail = dma_ring_incr(entry, DMA_TX_RING_SZ);
 	}
@@ -1429,19 +1489,18 @@ static int sgmac_recovery(struct net_device *ndev)
 	struct sgmac_priv *priv = netdev_priv(ndev);
 	struct mii_bus *pmdio_bus = priv->bus;
 	unsigned int ret, phy_value;
-
-	//back up:save the value of the VLAN entries
 #if IS_ENABLED(CONFIG_SFAX8_ESWITCH_DRIVER)
 	struct vlan_entry current_vlan;
 #endif
-
 
 	if (priv->phy_node)
 		phy_disconnect(priv->phydev);
 #if IS_ENABLED(CONFIG_SFAX8_ESWITCH_DRIVER)
 	else{
+		//back up:save the value of the VLAN entries
 		memset(&current_vlan, 0, sizeof(current_vlan));
 		priv->pesw_priv->get_vlan(priv->pesw_priv,&current_vlan);
+
 		priv->pesw_priv->deinit(priv->eswitch_pdev);
 		priv->pesw_priv->pesw_api->vender_deinit(priv->pesw_priv);
 		sf_trigger_eswitch_hwReset(priv);
@@ -1555,7 +1614,6 @@ static void sgmac_tx_timeout_work(struct work_struct *work)
 
 	reg = readl(priv->base + GMAC_DMA_OPERATION);
 	writel(reg & ~DMA_OPERATION_ST, priv->base + GMAC_DMA_OPERATION);
-
 	do {
 		udelay(10);
 		value = readl(priv->base + GMAC_DMA_STATUS) & 0x700000;
@@ -1588,42 +1646,6 @@ static void sgmac_tx_timeout_work(struct work_struct *work)
 	writel(DMA_INTR_DEFAULT_MASK, priv->base + GMAC_DMA_STATUS);
 	writel(DMA_INTR_DEFAULT_MASK, priv->base + GMAC_DMA_INTR_ENA);
 }
-
-#ifdef CONFIG_SFAX8_PTP
-static void sgmac_tx_hwtstamp_work(struct work_struct *work)
-{
-	struct sgmac_priv *priv =
-			container_of(work, struct sgmac_priv, tx_hwtstamp_work);
-	struct sk_buff *skb = priv->tx_hwtstamp_skb;
-	struct sgmac_dma_desc *desc = priv->tsdesc;
-	struct skb_shared_hwtstamps shhwtstamp;
-	u64 ns;
-
-	/* exit if rx tstamp is not valid */
-	if (desc_get_tx_timestamp_status(desc)) {
-		/* get the valid tstamp */
-		ns = desc_get_timestamp(desc);
-
-		memset(&shhwtstamp, 0, sizeof(struct skb_shared_hwtstamps));
-		shhwtstamp.hwtstamp = ns_to_ktime(ns);
-
-		priv->tx_hwtstamp_skb = NULL;
-		wmb(); /* force write prior to skb_tstamp_tx */
-
-		/* pass tstamp to stack */
-		skb_tstamp_tx(skb, &shhwtstamp);
-		dev_kfree_skb_any(skb);
-	}else if (time_after(jiffies, priv->tx_hwtstamp_start
-				+ priv->tx_hwtstamp_timeout * HZ)) {
-		dev_kfree_skb_any(priv->tx_hwtstamp_skb);
-		priv->tx_hwtstamp_skb = NULL;
-		priv->tx_hwtstamp_timeouts++;
-	}else {
-		/* reschedule to check later */
-		schedule_work(&priv->tx_hwtstamp_work);
-	}
-}
-#endif
 
 static int sgmac_hw_init(struct net_device *ndev)
 {
@@ -1703,7 +1725,6 @@ static int sgmac_self_cali_thread(void *data)
 	atomic_set(&g_is_tx_pause, 0);
 	ret = gmac_delay_auto_calibration(priv);
 	sfax8_gmac_test_tx_complete(priv, 1, &g_is_tx_pause);
-
 	if (ret < 0)
 	{
 		// gmac delay self-calibration fail will use dts delay
@@ -1714,7 +1735,6 @@ static int sgmac_self_cali_thread(void *data)
 			writel(0x1, (void *)0xb9e0444c);
 		}
 	}
-
 	g_start_delay_test = 0;
 
 	do_exit(0);
@@ -1789,11 +1809,15 @@ static int sgmac_open(struct net_device *ndev)
 			yt8521_config_init(pmdio_bus, priv->phydev);
 		}
 	}
+
 #if IS_ENABLED(CONFIG_SFAX8_ESWITCH_DRIVER)
 	else{
 		priv->pesw_priv->pesw_api->enable_all_phy(priv->pesw_priv);
 	}
+
 #endif
+	//for fpga test
+//	sgmac_phy_write(priv->bus, priv->phydev->mdio.addr, 0, 0x0100);
 
 	/* Initialize the GMAC and descriptors */
 	sgmac_hw_init(ndev);
@@ -1884,6 +1908,7 @@ static int sgmac_stop(struct net_device *ndev)
 #endif
 #endif
 
+
 	return 0;
 }
 
@@ -1907,8 +1932,7 @@ static netdev_tx_t sgmac_xmit(struct sk_buff *skb, struct net_device *ndev)
 	dma_addr_t paddr;
 
 #ifdef CONFIG_SFAX8_HNAT_TEST_TOOL
-	if (priv->phnat_priv->ptest_priv->g_start_test_tx ||
-			priv->phnat_priv->ptest_priv->g_start_test) {
+	if (priv->phnat_priv->ptest_priv->g_start_test_tx || priv->phnat_priv->ptest_priv->g_start_test) {
 		dev_kfree_skb_any(skb);
 		return NETDEV_TX_OK;
 	}
@@ -1937,21 +1961,21 @@ static netdev_tx_t sgmac_xmit(struct sk_buff *skb, struct net_device *ndev)
 		}
 	}
 	priv->tx_irq_cnt = (priv->tx_irq_cnt + 1) & (DMA_TX_RING_SZ/32  - 1);
-   	irq_flag = priv->tx_irq_cnt ? 0 : TXDESC_INTERRUPT;
+   irq_flag = priv->tx_irq_cnt ? 0 : TXDESC_INTERRUPT;
 
-   	desc_flags = (skb->ip_summed == CHECKSUM_PARTIAL) ? TXDESC_CSUM_ALL : 0;
-	entry = priv->tx_head;
-   	desc = priv->dma_tx + entry;
-   	first = desc;
+   desc_flags = (skb->ip_summed == CHECKSUM_PARTIAL) ? TXDESC_CSUM_ALL : 0;
+   entry = priv->tx_head;
+   desc = priv->dma_tx + entry;
+   first = desc;
 
-   	len = skb_headlen(skb);
-   	paddr = dma_map_single(priv->dev, skb->data, len, DMA_TO_DEVICE);
-   	if (dma_mapping_error(priv->dev, paddr)) {
+   len = skb_headlen(skb);
+   paddr = dma_map_single(priv->dev, skb->data, len, DMA_TO_DEVICE);
+   if (dma_mapping_error(priv->dev, paddr)) {
 		if(go_direct_xmit ){
 			spin_unlock_bh(&sf_gmac_tx_lock);
 		}
-	   	dev_kfree_skb_any(skb);
-	  	return NETDEV_TX_OK;
+	   dev_kfree_skb_any(skb);
+	   return NETDEV_TX_OK;
 	}
 	priv->tx_skbuff[entry] = skb;
 	desc_set_buf_addr_and_size(desc, paddr, len);
@@ -1982,23 +2006,6 @@ static netdev_tx_t sgmac_xmit(struct sk_buff *skb, struct net_device *ndev)
 	else
 		desc_flags |= TXDESC_LAST_SEG | irq_flag;
 
-#ifdef CONFIG_SFAX8_PTP
-	if (unlikely(skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP) && priv->hwts_tx_en) {
-		if (!priv->tx_hwtstamp_skb) {
-			skb_shinfo(skb)->tx_flags |= SKBTX_IN_PROGRESS;
-			desc_flags |= TXDESC_TX_TS_EN;
-			priv->tx_hwtstamp_skb = skb_get(skb);
-			priv->tsdesc = desc;
-			priv->tx_hwtstamp_start = jiffies;
-			schedule_work(&priv->tx_hwtstamp_work);
-		}else {
-			priv->tx_hwtstamp_skipped++;
-		}
-	}
-
-	// for software timestamp
-	skb_tx_timestamp(skb);
-#endif
 	/* Set owner on first desc last to avoid race condition */
 	desc_set_tx_owner(first, desc_flags | TXDESC_FIRST_SEG);
 	wmb();
@@ -2013,13 +2020,14 @@ static netdev_tx_t sgmac_xmit(struct sk_buff *skb, struct net_device *ndev)
 		netif_stop_queue(ndev);
 		/* Ensure netif_stop_queue is visible to tx completion */
 		smp_mb();
-		if (tx_dma_ring_space(priv) > MAX_SKB_FRAGS)
+		if (tx_dma_ring_space(priv) > MAX_SKB_FRAGS){
 			netif_start_queue(ndev);
+	}
 		else
-			g_tx_stop_queue_cnt++;
+		  g_tx_stop_queue_cnt++;
 	}
 
-	if(go_direct_xmit){
+	if(go_direct_xmit ){
 		spin_unlock_bh(&sf_gmac_tx_lock);
 	}
 	return NETDEV_TX_OK;
@@ -2035,14 +2043,12 @@ dma_err:
 		desc_clear_tx_owner(desc);
 	}
 	desc = first;
-
-	if(go_direct_xmit )
+	if(go_direct_xmit ){
 		spin_unlock_bh(&sf_gmac_tx_lock);
-
+	}
 	dma_unmap_single(priv->dev, desc_get_buf_addr(desc),
 			desc_get_buf_len(desc), DMA_TO_DEVICE);
 	dev_kfree_skb_any(skb);
-
 	return NETDEV_TX_OK;
 }
 
@@ -2051,11 +2057,13 @@ static int sgmac_rx(struct sgmac_priv *priv, int limit)
 	unsigned int entry;
 	unsigned int count = 0;
 	struct sgmac_dma_desc *p;
-	int ret = -1;
 	struct sk_buff *pos, *next;
 	LIST_HEAD(list);
+	int ret = -1;
 #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
 	u16 vlanid = 0;
+	int hnat_to_wifi = 0;
+	struct vlan_ethhdr *veth = NULL;
 #endif
 	while (count < limit) {
 		int ip_checksum;
@@ -2074,11 +2082,6 @@ static int sgmac_rx(struct sgmac_priv *priv, int limit)
 		count++;
 		priv->rx_tail = dma_ring_incr(priv->rx_tail, DMA_RX_RING_SZ);
 
-		/* read the status of the incoming frame */
-		ip_checksum = desc_get_rx_status(priv, p);
-		if (ip_checksum < 0)
-			continue;
-
 		skb = priv->rx_skbuff[entry];
 		if (unlikely(!skb)) {
 			netdev_err(priv->ndev,
@@ -2089,11 +2092,18 @@ static int sgmac_rx(struct sgmac_priv *priv, int limit)
 		dma_unmap_single(priv->dev, desc_get_buf_addr(p),
 				priv->dma_buf_sz - NET_IP_ALIGN,
 				DMA_FROM_DEVICE);
+
 		ret = sgmac_rx_refill(priv, skb);
-		if (ret < 0)
+		if (ret == SF_DROP)
 			continue;
 
 		frame_len = desc_get_rx_frame_len(p);
+		/* read the status of the incoming frame */
+		ip_checksum = desc_get_rx_status(priv, p);
+		if (ip_checksum < 0) {
+			dev_kfree_skb_any(skb);
+			continue;
+		}
 		netdev_dbg(priv->ndev, "RX frame size %d, COE status: %d\n",
 				frame_len, ip_checksum);
 
@@ -2103,9 +2113,13 @@ static int sgmac_rx(struct sgmac_priv *priv, int limit)
 #endif
 
 #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
-		__vlan_get_tag(skb, &vlanid);
-		vlanid = vlanid & VLAN_VID_MASK;
-		if(vlanid >= priv->phnat_priv->wifi_base) {
+		veth = (struct vlan_ethhdr *)skb->data;
+		if (eth_type_vlan(veth->h_vlan_proto))
+			vlanid = (ntohs(veth->h_vlan_TCI) & VLAN_VID_MASK);
+		else
+			hnat_to_wifi = priv->phnat_priv->is_hnat_to_wifi_pkt(priv->phnat_priv, skb);
+
+		if(vlanid >= priv->phnat_priv->wifi_base || hnat_to_wifi) {
 			// RM#9076 wan->wifi pppoe has 8 byte trailer, remove here
 			ret = priv->phnat_priv->wifi_xmit_prepare(priv->hnat_pdev, skb, vlanid, frame_len);
 			if (ret < 0) {
@@ -2130,18 +2144,18 @@ static int sgmac_rx(struct sgmac_priv *priv, int limit)
 		list_add_tail(&skb->list, &list);
 	}
 	/**
-	 * Increase I-Cache hit rate by batch processing
-	 * Ref: https://lwn.net/Articles/763056
-	 */
-	list_for_each_entry_safe(pos, next, &list, list){
-		__list_del_entry(&pos->list);
-		pos->next = NULL;
-		netif_receive_skb(pos);
-	}
+	 * 	 * Increase I-Cache hit rate by batch processing
+	 * 	 	 * Ref: https://lwn.net/Articles/763056
+	 * 	 	 	 */
+		list_for_each_entry_safe(pos, next, &list, list){
+			__list_del_entry(&pos->list);
+			pos->next = NULL;
+			 netif_receive_skb(pos);
+		}
+
 
 	return count;
 }
-
 #if defined(CONFIG_SFAX8_HNAT_TEST_TOOL) || defined(CONFIG_SFAX8_GMAC_DELAY_AUTOCALI)
 char sfax8_gmac_test_xmit(void* driver_priv, dma_addr_t dma_tx_data_phy,
 			unsigned short pkt_len, unsigned short rest_space,
@@ -2243,20 +2257,15 @@ int sfax8_gmac_test_rx(struct sgmac_priv *priv, int limit) {
 			break;
 		}
 
+	  // printk("here call rx %d \n", __LINE__);
 		entry = priv->rx_tail;
 		p = priv->dma_rx + entry;
 		if (desc_get_owner(p))
 			break;
 
+	  // printk("here call rx %d \n", __LINE__);
 		count++;
 		priv->rx_tail = dma_ring_incr(priv->rx_tail, DMA_RX_RING_SZ);
-
-		/* read the status of the incoming frame */
-		ip_checksum = desc_get_rx_status(priv, p);
-#ifndef CONFIG_SFAX8_GMAC_DELAY_AUTOCALI
-		if (ip_checksum < 0)
-			continue;
-#endif
 
 	  // printk("here call rx %d \n", __LINE__);
 		skb = priv->rx_skbuff[entry];
@@ -2267,10 +2276,18 @@ int sfax8_gmac_test_rx(struct sgmac_priv *priv, int limit) {
 		}
 
 		ret = sgmac_rx_refill(priv, skb);
-		if (ret < 0)
+		if (ret == SF_DROP)
 			continue;
 
 		frame_len = desc_get_rx_frame_len(p);
+		/* read the status of the incoming frame */
+		ip_checksum = desc_get_rx_status(priv, p);
+#ifndef CONFIG_SFAX8_GMAC_DELAY_AUTOCALI
+		if (ip_checksum < 0) {
+			dev_kfree_skb_any(skb);
+			continue;
+		}
+#endif
 	  // printk("here call rx %d \n", __LINE__);
 #ifdef CONFIG_SFAX8_GMAC_DELAY_AUTOCALI
 		if (frame_len == sizeof(udp_lan_wan_pkt))
@@ -2305,7 +2322,7 @@ static int sgmac_poll(struct napi_struct *napi, int budget)
 	int work_done = 0;
 
 #ifdef CONFIG_SFAX8_HNAT_TEST_TOOL
-	if(priv->phnat_priv->ptest_priv->g_start_test_tx || priv->phnat_priv->ptest_priv->g_start_test){
+	if(priv->phnat_priv->ptest_priv->g_start_test_tx  || priv->phnat_priv->ptest_priv->g_start_test){
 		sfax8_gmac_test_tx_complete((void*) priv, priv->phnat_priv->ptest_priv->rest_space, &priv->phnat_priv->ptest_priv->is_tx_pause);
 	}
 	else
@@ -2317,7 +2334,7 @@ static int sgmac_poll(struct napi_struct *napi, int budget)
 	sgmac_tx_complete(priv);
 
 #ifdef CONFIG_SFAX8_HNAT_TEST_TOOL
-	if(priv->phnat_priv->ptest_priv->g_start_test_rx || priv->phnat_priv->ptest_priv->g_start_test){
+	if(priv->phnat_priv->ptest_priv->g_start_test_rx  || priv->phnat_priv->ptest_priv->g_start_test){
 		work_done = sfax8_gmac_test_rx(priv,budget);
 	}
 	else
@@ -2430,7 +2447,6 @@ static void sgmac_set_rx_mode(struct net_device *ndev)
 	} else {
 		use_hash = false;
 	}
-
 	netdev_for_each_mc_addr(ha, ndev)
 	{
 		if (use_hash) {
@@ -2745,6 +2761,37 @@ static void sgmac_get_stats64(struct net_device *dev,
 	storage->rx_bytes = netstats->rx_bytes;
 }
 
+static int sgmac_ioctl_without_phydev(struct sgmac_priv *priv, struct ifreq *ifr, int cmd)
+{
+
+#if IS_ENABLED(CONFIG_SFAX8_ESWITCH_DRIVER)
+
+	struct switch_ioctl_data *sw = (struct switch_ioctl_data *)&ifr->ifr_data;
+
+	switch (cmd) {
+		case SIOCGMIIREG:
+			priv->pesw_priv->pesw_api->getAsicPHYReg(sw->port, sw->addr, (unsigned int *)&sw->val);
+			break;
+		case SIOCSMIIREG:
+			priv->pesw_priv->pesw_api->setAsicPHYReg(sw->port, sw->addr, sw->val);
+			break;
+		case SIOCGSWITCH:
+			priv->pesw_priv->pesw_api->getAsicReg(sw->addr, (unsigned int *)&sw->val);
+			break;
+		case SIOCSSWITCH:
+			priv->pesw_priv->pesw_api->setAsicReg(sw->addr, sw->val);
+			break;
+		default:
+			return  -EINVAL;
+	}
+	return 0;
+#endif
+
+	printk("the command is not supported, check whether you have a switch\n");
+	return -EINVAL;
+
+}
+
 static int sgmac_do_ioctl(struct net_device *ndev, struct ifreq *ifr, int cmd)
 {
 	struct sgmac_priv *priv = netdev_priv(ndev);
@@ -2757,8 +2804,12 @@ static int sgmac_do_ioctl(struct net_device *ndev, struct ifreq *ifr, int cmd)
 	case SIOCGMIIPHY:
 	case SIOCGMIIREG:
 	case SIOCSMIIREG:
-		if (!priv->phydev)
-			return -EINVAL;
+	case SIOCGSWITCH:
+	case SIOCSSWITCH:
+		if (!priv->phydev) {
+			ret = sgmac_ioctl_without_phydev(priv, ifr, cmd);
+			break;
+		}
 		ret = phy_mii_ioctl(priv->phydev, ifr, cmd);
 		break;
 #ifdef CONFIG_SFAX8_PTP
@@ -2787,7 +2838,7 @@ int sgmac_ndo_flow_offload_check(struct flow_offload_hw_path *path)
 
 	// eth_dest mac 00:00:00:00:00:00 is invalid
 	if (!priv->phnat_priv || (*(int *)path->eth_dest == 0) || !priv->phnat_priv->driver_ndev) {
-//		printk("gmac flow offload check fail\n");
+		//printk("gmac flow offload check fail\n");
 		return -1;
 	}
 	return 0;
@@ -3020,10 +3071,9 @@ void sf_test_tool_send_pkt(struct sgmac_priv *priv, dma_addr_t dma_data_addr, un
 	unsigned int i = 0, rest_space = 1;
 	u32 delay_us_adjust = 0;
 
-	// napi weight is 64 now so send 100 pkts
-	 while (i < 100) {
+	while (i < 100) {
 		while(atomic_read(&g_is_tx_pause) == 1){
-			// use usleep_range replace udelay because udelay may cause rcu
+			// RM14916
 			usleep_range(20, 25);
 			delay_us_adjust++;
 			//TODO: still got tx stopped because not do tx complete
@@ -3153,13 +3203,12 @@ int gmac_delay_auto_calibration(struct sgmac_priv *priv)
 	udp_lan_wan_pkt[15] = pvid;
 	// cause we do calibration in sgmac_open, so we should do sgmac_set_rx_mode here
 	writel(GMAC_FRAME_FILTER_PR|GMAC_FRAME_FILTER_PM, priv->base + GMAC_FRAME_FILTER);
-
 	for (cur_delay = GMAC_DELAY_STEP; cur_delay < 0xff; cur_delay+=GMAC_DELAY_STEP) {
 		// clear gmac rx count first
 		g_rx_pkt_cnt = 0;
 		writel(cur_delay, (void *)0xb9e04448);
 		sf_test_tool_send_pkt(priv, dma_tx_data_phy, test_pkt_len);
-		// use msleep replace mdelay because mdelay may occupy CPU and cause rx delay calibration failed
+		// RM14916 solve the rx delay calibration probabilistic failure
 		msleep(20);
 		// read back gmac rx count
 		recv_pkt_cnt = g_rx_pkt_cnt;
@@ -3249,13 +3298,12 @@ int sfax8_gmac_debug_open(struct inode *inode, struct file *file) {
 
 ssize_t sfax8_gmac_debug_read(struct file *file, char __user *user_buf,
 		size_t count, loff_t *ppos) {
-	char buf[128] = {0};
-	int ret = -1;
-	size_t read;
-
-	ret = sprintf(buf, "nothing to be done for debug read\n");
-	read = simple_read_from_buffer(user_buf, count, ppos, buf, ret);
-	return read;
+#ifdef CONFIG_SFAX8_GMAC_RX_BUFFER_POOL
+	sgmac_print_mem_info();
+#endif
+	printk("rx alloc pool fail:%u out pool:%u dma cached:%u force drop:%u\n",
+			g_rx_alloc_pool_fail, g_rx_alloc_out_pool, g_rx_skb_cached_cnt, g_rx_force_drop_cnt);
+	return 0;
 }
 
 static void print_help(void)
@@ -3264,26 +3312,6 @@ static void print_help(void)
 	printk(" example: echo phyad        [portid], specify ethtool get/set portid\n");
 	printk(" example: echo txDelay        [value], with value for read, no value for write\n");
 	printk(" example: echo rxDelay        [value], with value for read, no value for write\n");
-}
-
-void sgmac_debug_stat_dump(struct sgmac_priv *priv)
-{
-	struct sgmac_extra_stats *x = &priv->xstats;
-
-	printk("gmac dma tx head:%u tail:%u rx head:%u tail:%u\n",
-			priv->tx_head, priv->tx_tail, priv->rx_head, priv->rx_tail);
-	printk("gmac dma status:0x%x debug reg:0x%x\n",
-			readl(priv->base + GMAC_DMA_STATUS), readl(priv->base + GMAC_DEBUG));
-	printk("gmac tx pkt:%llu rx pkt:%llu\n",
-			priv->netstats.tx_packets, priv->netstats.rx_packets);
-#ifdef CONFIG_SFAX8_PTP
-	printk("gmac tx tx_hwtstamp_skipped:%lu tx_hwtstamp_timeouts:%lu\n",
-			priv->tx_hwtstamp_skipped, priv->tx_hwtstamp_timeouts);
-#endif
-	printk("gmac tx frame_flushed:%lu ip_header_error:%lu payload_error:%lu\n",
-			x->tx_frame_flushed, x->tx_ip_header_error, x->tx_payload_error);
-	printk("gmac rx da_filter_fail:%lu ip_header_error:%lu payload_error:%lu\n",
-			x->rx_da_filter_fail, x->rx_ip_header_error, x->rx_payload_error);
 }
 
 ssize_t sfax8_gmac_debug_write(struct file *file, const char __user *user_buf,
@@ -3320,15 +3348,27 @@ ssize_t sfax8_gmac_debug_write(struct file *file, const char __user *user_buf,
 		ret = kstrtou32(str[1], 0, &debug_log);
 		return count;
 	}
-#ifdef CONFIG_SFAX8_PTP
-	else if (strncmp(str[0], "timeout", 7) == 0){
-		ret = kstrtou8(str[1], 0, &priv->tx_hwtstamp_timeout);
-		printk("set gmac tx timestamp timeout:%u\n", priv->tx_hwtstamp_timeout);
+	else if (strncmp(str[0], "enable", 6) == 0){
+		ret = kstrtou32(str[1], 0, &g_rx_smart_drop_en);
+		printk("set g_rx_smart_drop_en to:%u\n", g_rx_smart_drop_en);
 		return count;
 	}
-#endif
-	else if (strncmp(str[0], "dbg", 3) == 0){
-		sgmac_debug_stat_dump(priv);
+	else if (strncmp(str[0], "limit", 5) == 0){
+		ret = kstrtou32(str[1], 0, &sf_dev_ct_limit);
+		printk("set sf_dev_ct_limit to:%u\n", sf_dev_ct_limit);
+		return count;
+	}
+	else if (strncmp(str[0], "dropDiv", 7) == 0){
+		ret = kstrtou32(str[1], 0, &g_drop_div);
+		if (str[2][0] != '\0') {
+			ret = kstrtoul(str[2], 0, &sf_oom_drop_level);
+			printk("set sf_oom_drop_level to:%u\n", sf_oom_drop_level);
+		}
+		return count;
+	}
+	else if (strncmp(str[0], "free", 4) == 0){
+		long available = si_mem_available();
+		printk("[Mem info] available:%lu KB\n", available << (PAGE_SHIFT -10));
 		return count;
 	}
 	else if (strncmp(str[0], "oomSize", 7) == 0){
@@ -3336,19 +3376,23 @@ ssize_t sfax8_gmac_debug_write(struct file *file, const char __user *user_buf,
 		printk("set gmac rx oom threshold:%u\n", priv->rx_oom_threshold);
 		return count;
 	}
+#ifdef CONFIG_SFAX8_GMAC_DELAY_AUTOCALI
 	else if (strncmp(str[0], "dump", 4) == 0){
-			printk("get tx head:%u tail:%u rx head:%u tail:%u debug reg:0x%x g_rx_alloc_skb_fail:%u\n",
-					priv->tx_head, priv->tx_tail, priv->rx_head, priv->rx_tail, readl(priv->base + GMAC_DEBUG), g_rx_alloc_skb_fail);
+			printk("get tx head:%u tail:%u rx head:%u tail:%u debug reg:0x%x g_drop_div:%u sf_oom_drop_level:%lu\n",
+					priv->tx_head, priv->tx_tail, priv->rx_head, priv->rx_tail, readl(priv->base + GMAC_DEBUG), g_drop_div, sf_oom_drop_level);
 		return count;
 	}
+#endif
 	else if (strncmp(str[0], "txDelay", 7) == 0)
 	{
 		ret = kstrtou32(str[1], 0, &value);
-		if (value) {
+		if (value)
+		{
 			writel(value, (void *)0xb9e04444);
 			printk("set gmac tx delay:0x%x\n", value);
 		}
-		else {
+		else
+		{
 			printk("get gmac tx delay:0x%x\n", readl((void *)0xb9e04444));
 		}
 		return count;
@@ -3356,19 +3400,19 @@ ssize_t sfax8_gmac_debug_write(struct file *file, const char __user *user_buf,
 	else if (strncmp(str[0], "rxDelay", 7) == 0)
 	{
 		ret = kstrtou32(str[1], 0, &value);
-
-		if (value) {
+		if (value)
+		{
 			writel(value, (void *)0xb9e04448);
 			printk("set gmac rx delay:0x%x\n", value);
 		}
-		else {
+		else
+		{
 			printk("get gmac rx delay:0x%x\n", readl((void *)0xb9e04448));
-		}
-
+	}
 		return count;
 	}
 #ifdef CONFIG_SFAX8_GMAC_DELAY_AUTOCALI
-	else if (strncmp(str[0], "autoDelay", 9) == 0) {
+	else if(strncmp(str[0], "autoDelay", 9) == 0){
 		g_start_delay_test = 1;
 		atomic_set(&g_is_tx_pause, 0);
 		gmac_delay_auto_calibration(priv);
@@ -3376,18 +3420,19 @@ ssize_t sfax8_gmac_debug_write(struct file *file, const char __user *user_buf,
 		g_start_delay_test = 0;
 	}
 #endif
+#if IS_ENABLED(CONFIG_SFAX8_ESWITCH_DRIVER)
 	else if(strncmp(str[0], "recovery", 8) == 0){
 		napi_disable(&priv->napi);
 		writel(0, priv->base + GMAC_DMA_INTR_ENA);
 		sgmac_recovery(priv->ndev);
 		netdev_err(priv->ndev, "gmac recovery done\n");
 	}
+#endif
 	else
 		printk("command not support!!!\n");
 
 	return count;
 }
-
 static struct file_operations gmac_debug_ops = {
 	.owner = THIS_MODULE,
 	.open  = sfax8_gmac_debug_open,
@@ -3402,17 +3447,19 @@ static void sf_trigger_eswitch_hwReset(struct sgmac_priv *priv)
 {
 	u32 reset_gpio = 0;
 
-	if (of_property_read_u32(priv->dev->of_node, "esw-rst-gpio", &reset_gpio) == 0 ||
-			reset_gpio != 0xff) {
-		devm_gpio_request(priv->dev, reset_gpio, "gswHWRst");
-		gpio_direction_output(reset_gpio, 1);
-		gpio_set_value(reset_gpio, 0);
-		// should more than 1ms
-		mdelay(250);
-		gpio_set_value(reset_gpio, 1);
-		devm_gpio_free(priv->dev, reset_gpio);
-		mdelay(1000);
-		printk("end %s\n", __func__);
+	if (of_property_read_u32(priv->dev->of_node, "esw-rst-gpio", &reset_gpio) == 0)
+	{
+		if (reset_gpio != 0xff) {
+			devm_gpio_request(priv->dev, reset_gpio, "gswHWRst");
+			gpio_direction_output(reset_gpio, 1);
+			gpio_set_value(reset_gpio, 0);
+			// should more than 1ms
+			mdelay(250);
+			gpio_set_value(reset_gpio, 1);
+			devm_gpio_free(priv->dev, reset_gpio);
+			mdelay(1000);
+			printk("end %s\n", __func__);
+		}
 	}
 }
 #endif
@@ -3432,19 +3479,19 @@ static void inline gtx_clk_pad_init(struct sgmac_priv *priv)
 #endif
 
 #ifdef CONFIG_SF_SKB_POOL
-bool sgmac_skb_pool_alloc_fail(struct net_device *ndev,unsigned int size)
-{
+bool sgmac_skb_pool_alloc_fail(struct net_device *ndev, unsigned int size) {
+	return 0;
+#if 0
 	struct sgmac_priv *priv = netdev_priv(ndev);
 	unsigned long long free_mem;
-
 	free_mem = global_zone_page_state(NR_FREE_PAGES) << (PAGE_SHIFT -10);
 	if (free_mem > priv->rx_oom_threshold) {
 		return 1;
 	}
 	return 0;
+#endif
 }
 #endif
-
 /**
  * sgmac_probe
  * @pdev: platform device pointer
@@ -3475,6 +3522,15 @@ static int sgmac_probe(struct platform_device *pdev) {
 	struct platform_device *hnat_pdev = NULL;
 #endif
 
+#ifdef CONFIG_SFAX8_GMAC_RX_BUFFER_POOL
+#ifdef CONFIG_MEMORY_OPTIMIZE
+    int gmac_pool_size = 2 * 1024;
+#else
+    int gmac_pool_size = 6 * 1024;
+#endif
+	sgmac_mem_init();
+#endif
+
 #ifdef CONFIG_SFAX8_RGMII_GMAC
 	if(release_reset_with_value(SF_EMAC_SOFT_RESET, 1))
 #else
@@ -3484,11 +3540,14 @@ static int sgmac_probe(struct platform_device *pdev) {
 
 #ifdef CONFIG_SF19A28_FULLMASK
 	writel(0x34, (void *)0xb9e3fc68);
+#ifdef CONFIG_SFAX8_RMII_GMAC
+	writel(0x3b, (void *)0xb9e01404);
+#else
 	// set BUS1_XN_CLK_DIV to 9 ==> set bus1/GMAC-CSR clk to 150MHz
 	writel(0x9, (void *)0xb9e01404);
-#endif
+#endif /*CONFIG_SFAX8_RMII_GMAC*/
+#endif /*CONFIG_SF19A28_FULLMASK*/
 
-#ifndef CONFIG_SFAX8_PTP
 	// smooth speed test
 	writel(0x18, (void *)0xb9e0109c);
 	writel(0x40, (void *)0xb9e01088);
@@ -3496,7 +3555,6 @@ static int sgmac_probe(struct platform_device *pdev) {
 	writel(0x17, (void *)0xb9e01090);
 	writel(0xa, (void *)0xb9e01080);
 	writel(0x38, (void *)0xb9e0109c);
-#endif
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!res)
@@ -3515,13 +3573,13 @@ static int sgmac_probe(struct platform_device *pdev) {
 	//get mac addres from disk
 #ifdef CONFIG_SFAX8_FACTORY_READ
 #ifdef CONFIG_TARGET_siflower_sf16a18_fullmask
-	if (sf_get_value_from_factory(READ_WAN_MAC_ADDRESS, ndev->dev_addr, 6))
+	if(sf_get_value_from_factory(READ_WAN_MAC_ADDRESS, ndev->dev_addr, 6))
 #else
-	if (sf_get_value_from_factory(READ_MAC_ADDRESS, ndev->dev_addr, 6))
+	if(sf_get_value_from_factory(READ_MAC_ADDRESS, ndev->dev_addr, 6))
 #endif
 #endif
 	{
-		if(eth_platform_get_mac_address(p_dev, ndev->dev_addr) < 0) {
+		if(eth_platform_get_mac_address(p_dev, ndev->dev_addr) < 0){
 			eth_hw_addr_random(ndev);
 			set_sf_address(ndev->dev_addr);
 		}
@@ -3534,16 +3592,12 @@ static int sgmac_probe(struct platform_device *pdev) {
 	ndev->netdev_ops = &sgmac_netdev_ops;
 	spin_lock_init(&priv->stats_lock);
 	INIT_WORK(&priv->tx_timeout_work, sgmac_tx_timeout_work);
-#ifdef CONFIG_SFAX8_PTP
-	INIT_WORK(&priv->tx_hwtstamp_work, sgmac_tx_hwtstamp_work);
-	priv->tx_hwtstamp_timeout = 1;
-#endif
 
 	priv->dev = &pdev->dev;
 	priv->ndev = ndev;
 	priv->rx_pause = 1;
 	priv->tx_pause = 1;
-	priv->rx_oom_threshold = 5000; // default 5Mb
+	priv->rx_oom_threshold = 4500;
 
 	priv->base = ioremap(res->start, resource_size(res));
 	if (!priv->base) {
@@ -3558,7 +3612,8 @@ static int sgmac_probe(struct platform_device *pdev) {
 	{
 		if (buf[0] != 0xff) {
 			ret = kstrtos32(buf, 16, &gmac_delay);
-			if (ret == 0) {
+			if (ret == 0)
+			{
 				writel((gmac_delay >> 8) & 0xFF, (void *)0xb9e04444);
 				writel(gmac_delay & 0xFF, (void *)0xb9e04448);
 				writel(0x1, (void *)0xb9e0444c);
@@ -3569,8 +3624,8 @@ static int sgmac_probe(struct platform_device *pdev) {
 	if (ret != 0)
 #endif
 	{
-		if (of_property_read_u32_array(priv->dev->of_node, "delay",
-				data_line_delay, 2) == 0) {
+		if (of_property_read_u32_array(priv->dev->of_node, "delay", data_line_delay, 2) == 0)
+		{
 			writel(data_line_delay[0], (void *)0xb9e04444);
 			writel(data_line_delay[1], (void *)0xb9e04448);
 			writel(0x1, (void *)0xb9e0444c);
@@ -3579,15 +3634,12 @@ static int sgmac_probe(struct platform_device *pdev) {
 
 #ifdef CONFIG_SFAX8_GMAC_TCLKCHOOSE
 	priv->eth_tclk = of_clk_get(priv->dev->of_node, 3);
-
 	if (IS_ERR(priv->eth_tclk)) {
 		netdev_err(ndev, "unable to get eth_tclk\n");
 		ret = -EINVAL;
 		goto err_tclk;
 	}
-
 	ret = clk_prepare_enable(priv->eth_tclk);
-
 	if (ret) {
 		netdev_err(ndev, "unable to enable eth_tclk\n");
 		goto err_tclk;
@@ -3667,8 +3719,7 @@ static int sgmac_probe(struct platform_device *pdev) {
 
 	ret = request_irq(ndev->irq, sgmac_interrupt, 0, dev_name(&pdev->dev),
 			ndev);
-    	printk("sf_gmac: request irq=%d ret=%d\n",ndev->irq, ret);
-
+    printk("sf_gmac: request irq=%d ret=%d\n",ndev->irq, ret);
 	if (ret < 0) {
 		netdev_err(ndev, "Could not request irq %d - ret %d)\n",
 				ndev->irq, ret);
@@ -3678,8 +3729,7 @@ static int sgmac_probe(struct platform_device *pdev) {
 	priv->pmt_irq = platform_get_irq(pdev, 1);
 	ret = request_irq(priv->pmt_irq, sgmac_pmt_interrupt, 0,
 			dev_name(&pdev->dev), ndev);
-    	printk("sf_gmac: request pmt irq=%d ret=%d\n", priv->pmt_irq, ret);
-
+    printk("sf_gmac: request pmt irq=%d ret=%d\n", priv->pmt_irq, ret);
 	if (ret < 0) {
 		netdev_err(ndev, "Could not request irq %d - ret %d)\n",
 				ndev->irq + 2, ret);
@@ -3705,7 +3755,8 @@ static int sgmac_probe(struct platform_device *pdev) {
 
 	// austin: we can change ndev->hw_features, ndev->features and
 	// ndev->priv_flags to control sth.
-	ndev->hw_features = NETIF_F_SG | NETIF_F_HIGHDMA;
+	ndev->hw_features =
+			NETIF_F_SG | NETIF_F_HIGHDMA;
 	// austin: we have these features in A18.
 	// if we have different configs of GMAC, maybe we need it here.
 	// if (readl(priv->base + GMAC_DMA_HW_FEATURE) & DMA_HW_FEAT_TXCOESEL)
@@ -3729,41 +3780,44 @@ static int sgmac_probe(struct platform_device *pdev) {
 #endif
 
 #if IS_ENABLED(CONFIG_SFAX8_HNAT_DRIVER)
-	hnat_pdev = platform_device_register_simple("sf_hnat",
-				PLATFORM_DEVID_AUTO,NULL,0 );
+	hnat_pdev = platform_device_register_simple("sf_hnat",PLATFORM_DEVID_AUTO,NULL,0 );
 
-	if (hnat_pdev == NULL) {
+	if(hnat_pdev == NULL){
 			ret = -1;
 			goto err_hnat_pdev;
 	}
-
 	printk("hnat dev name %s\n",dev_name(&hnat_pdev->dev));
 	priv->phnat_priv = platform_get_drvdata(hnat_pdev);
-	if (priv->phnat_priv == NULL) {
+	if(priv->phnat_priv == NULL){
 		printk("probe hnat fail\n");
 		ret = -1;
 		goto err_hnat_priv;
 	}
-	else {
+	else{
 		priv->hnat_pdev = hnat_pdev;
 		INIT_DELAYED_WORK(&priv->hnat_work, sf_hnat_work);
+
 #ifdef CONFIG_SFAX8_HNAT_TEST_TOOL
 		priv->phnat_priv->ptest_priv->driver_xmit = sfax8_gmac_test_xmit;
 		priv->phnat_priv->ptest_priv->driver_tx_complete = sfax8_gmac_test_tx_complete;
 #endif
 	}
-
 #endif
+
+#ifdef CONFIG_SFAX8_RMII_GMAC
+	/* init gmac to rmii mode */
+	writel(0x24, (void *)0xb9e04440);
+	gtx_clk_pad_init(priv);
+#endif
+
 	/* Get PHY from device tree */
 	priv->phy_node = of_parse_phandle(priv->dev->of_node, "phy", 0);
 	if (!priv->phy_node) {
 #if IS_ENABLED(CONFIG_SFAX8_ESWITCH_DRIVER)
 		printk("sf gmac not phy config use switch\n");
 		sf_trigger_eswitch_hwReset(priv);
-		eswitch_pdev = platform_device_register_simple(
-					"sf_eswitch",PLATFORM_DEVID_AUTO,NULL,0 );
-
-		if (eswitch_pdev == NULL) {
+		eswitch_pdev = platform_device_register_simple("sf_eswitch",PLATFORM_DEVID_AUTO,NULL,0 );
+		if(eswitch_pdev == NULL){
 			ret = -1;
 			goto err_eswitch_pdev;
 		}
@@ -3774,7 +3828,6 @@ static int sgmac_probe(struct platform_device *pdev) {
 			ret = -1;
 			goto err_phy;
 		}
-
 		priv->pesw_priv->model = priv->pesw_priv->init_swdev(eswitch_pdev, priv->bus);
 		if(priv->pesw_priv->model) {
 			printk("sf gmac get switch model %d\n", priv->pesw_priv->model);
@@ -3794,14 +3847,7 @@ static int sgmac_probe(struct platform_device *pdev) {
 			goto err_phy;
 		}
 	}
-	else {
-		ndev->ethtool_ops = &sgmac_ethtool_ops;
-#ifdef CONFIG_SFAX8_RMII_GMAC
-		/* init gmac to rmii mode */
-		writel(0x24, (void *)0xb9e04440);
-		gtx_clk_pad_init(priv);
-#endif
-	}
+	ndev->ethtool_ops = &sgmac_ethtool_ops;
 
 #ifdef CONFIG_SFAX8_PTP
 	ret = sgmac_ptp_register(priv);
@@ -3812,25 +3858,29 @@ static int sgmac_probe(struct platform_device *pdev) {
 #endif
 	netif_napi_add(ndev, &priv->napi, sgmac_poll, NAPI_POLL_WEIGHT);
 
+
+#ifdef CONFIG_SFAX8_GMAC_RX_BUFFER_POOL
+	sgmac_init_private_rxskbs(ndev, (DMA_RX_RING_SZ * 2 + 6 * 1024) , \
+				ndev->mtu + ETH_HLEN + ETH_FCS_LEN + EXTER_HEADROOM + VLAN_HLEN);
+#endif
+
 	ret = register_netdev(ndev);
 	if (ret)
 		goto err_reg;
 #ifdef CONFIG_SF_SKB_POOL
 	// this skb_size equal bufsz add  increate size in __netdev_alloc_skb
 	//  len += NET_SKB_PAD; len = SKB_DATA_ALIGN(len);  len += SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
-	priv->skb_pool_dev_param = skb_pool_init(SKB_POOL_ETHERNET_ID,1536, MAX_ETH_POOL_SKB_RAW_SIZE);
-	if (priv->skb_pool_dev_param) {
+	priv->skb_pool_dev_param = skb_pool_init(SKB_POOL_ETHERNET_ID, 1536 , MAX_ETH_POOL_SKB_RAW_SIZE);
+	if(priv->skb_pool_dev_param){
 		priv->skb_pool_dev_param->enable_skb_pool = 0;
 		// return ture means keep alloc ,false means abort alloc
-		priv->skb_pool_dev_param->device_skb_pool_alloc_fail =
-				sgmac_skb_pool_alloc_fail;
+		priv->skb_pool_dev_param->device_skb_pool_alloc_fail = sgmac_skb_pool_alloc_fail;
 		priv->skb_pool_dev_param->use_skb_pool = 1;
 	}
 #endif
 
 #ifdef CONFIG_DEBUG_FS
-	priv->gmac_debug = debugfs_create_file("gmac_debug",
-				0777, NULL, (void*)priv, &gmac_debug_ops);
+	priv->gmac_debug = debugfs_create_file("gmac_debug", 0777, NULL, (void*)priv, &gmac_debug_ops);
 #endif
 	spin_lock_init(&sf_gmac_tx_lock);
 	return 0;
@@ -3900,6 +3950,8 @@ static int sgmac_remove(struct platform_device *pdev) {
 	struct sgmac_priv *priv = netdev_priv(ndev);
 	struct resource *res;
 
+
+
 	sgmac_mac_disable(priv);
 #ifdef CONFIG_SFAX8_PTP
 	sgmac_ptp_unregister(priv);
@@ -3907,21 +3959,23 @@ static int sgmac_remove(struct platform_device *pdev) {
 
 	/* Free the IRQ lines */
 #ifdef CONFIG_SMP
-    	irq_set_affinity_hint(ndev->irq, NULL);
-    	irq_set_affinity_hint(ndev->irq + 2, NULL);
+    irq_set_affinity_hint(ndev->irq, NULL);
+    irq_set_affinity_hint(ndev->irq + 2, NULL);
 #endif
 	free_irq(ndev->irq, ndev);
 	free_irq(priv->pmt_irq, ndev);
 
 	unregister_netdev(ndev);
 
-	//make sure remove mdio after sgmac_stop case we should not access phydev->drv
-	//after mdiobus_unregister case it will NULL phydev->drv after that
+#ifdef CONFIG_SFAX8_GMAC_RX_BUFFER_POOL
+	sgmac_deinit_private_rxskbs();
+#endif
+	//make sure remove mdio after sgmac_stop case we should not access phydev->drv after mdiobus_unregister case it will NULL phydev->drv after that
 	if(priv->phy_node)
 	  of_node_put(priv->phy_node);
 #if IS_ENABLED(CONFIG_SFAX8_ESWITCH_DRIVER)
 	else{
-		if (priv->eswitch_pdev) {
+		if(priv->eswitch_pdev){
 
 			if(priv->pesw_priv->model)
 				priv->pesw_priv->deinit_swdev(priv->eswitch_pdev);
@@ -3952,6 +4006,7 @@ static int sgmac_remove(struct platform_device *pdev) {
 	clk_disable_unprepare(priv->eth_bus_clk);
 
 	iounmap(priv->base);
+
 
 	free_netdev(ndev);
 
@@ -4038,6 +4093,7 @@ static int sgmac_resume(struct device *dev) {
 	netif_device_attach(ndev);
 	napi_enable(&priv->napi);
 
+
 	return ret;
 }
 #endif /* CONFIG_PM_SLEEP */
@@ -4077,6 +4133,7 @@ static int __init init_sgmac(void)
 module_init(init_sgmac);
 module_exit(exit_sgmac);
 
+MODULE_AUTHOR("austin, <austin.xu@siflower.com.cn>");
 #ifdef CONFIG_SFAX8_RGMII_GMAC
 MODULE_DESCRIPTION("Siflower 1000M RGMII GMAC driver");
 #else

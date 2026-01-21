@@ -5,7 +5,7 @@
 
 
 const tbl_reg_info_t tbl_reg_list[] = {
-        {/* mem: global_ctrl0 */
+        {
         /* Asic Base Address */ 0x80000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -13,7 +13,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ global_ctrl0m_field,
         },
-        {/* mem: global_ctrl1 */
+        {
         /* Asic Base Address */ 0x80004,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -21,7 +21,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 5,
         /* fields_id */ global_ctrl1m_field,
         },
-        {/* mem: ext_cpu_port_ctrl */
+        {
         /* Asic Base Address */ 0x8000c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -29,7 +29,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ ext_cpu_port_ctrlm_field,
         },
-        {/* mem: cpu_tag_tpid */
+        {
         /* Asic Base Address */ 0x80010,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -37,7 +37,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ cpu_tag_tpidm_field,
         },
-        {/* mem: look_up_vlan_sel */
+        {
         /* Asic Base Address */ 0x80014,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -45,7 +45,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ look_up_vlan_selm_field,
         },
-        {/* mem: intr_mask */
+        {
         /* Asic Base Address */ 0x80040,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -53,7 +53,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 29,
         /* fields_id */ intr_maskm_field,
         },
-        {/* mem: intr_status */
+        {
         /* Asic Base Address */ 0x80044,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -61,7 +61,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 29,
         /* fields_id */ intr_statusm_field,
         },
-        {/* mem: global_mac_addr0 */
+        {
         /* Asic Base Address */ 0x80080,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -69,7 +69,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ global_mac_addr0m_field,
         },
-        {/* mem: global_mac_addr1 */
+        {
         /* Asic Base Address */ 0x80084,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -77,7 +77,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ global_mac_addr1m_field,
         },
-        {/* mem: eee_ctrl */
+        {
         /* Asic Base Address */ 0x80088,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -85,7 +85,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ eee_ctrlm_field,
         },
-        {/* mem: sg_phy */
+        {
         /* Asic Base Address */ 0x8008c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -93,7 +93,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 5,
         /* fields_id */ sg_phym_field,
         },
-        {/* mem: port_ctrl */
+        {
         /* Asic Base Address */ 0x80100,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -101,7 +101,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 9,
         /* fields_id */ port_ctrlm_field,
         },
-        {/* mem: port_status */
+        {
         /* Asic Base Address */ 0x80200,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -109,7 +109,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 7,
         /* fields_id */ port_statusm_field,
         },
-        {/* mem: loop_detect_top_ctrl */
+        {
         /* Asic Base Address */ 0x80230,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -117,7 +117,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 9,
         /* fields_id */ loop_detect_top_ctrlm_field,
         },
-        {/* mem: pon_strap_en */
+        {
         /* Asic Base Address */ 0x80320,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -125,7 +125,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ pon_strap_enm_field,
         },
-        {/* mem: pon_strap_val */
+        {
         /* Asic Base Address */ 0x80324,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -133,7 +133,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ pon_strap_valm_field,
         },
-        {/* mem: pon_strap */
+        {
         /* Asic Base Address */ 0x80328,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -141,7 +141,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ pon_strapm_field,
         },
-        {/* mem: mdio_polling */
+        {
         /* Asic Base Address */ 0x80364,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -149,7 +149,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ mdio_pollingm_field,
         },
-        {/* mem: oam_dying_gasp */
+        {
         /* Asic Base Address */ 0x80380,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -157,7 +157,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 5,
         /* fields_id */ oam_dying_gaspm_field,
         },
-        {/* mem: acl2gpio */
+        {
         /* Asic Base Address */ 0x80384,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -165,7 +165,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ acl2gpiom_field,
         },
-        {/* mem: extif0_mode */
+        {
         /* Asic Base Address */ 0x80400,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -173,7 +173,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 18,
         /* fields_id */ extif0_modem_field,
         },
-        {/* mem: extif0_mode2 */
+        {
         /* Asic Base Address */ 0x80404,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -181,7 +181,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ extif0_mode2m_field,
         },
-        {/* mem: extif1_mode */
+        {
         /* Asic Base Address */ 0x80408,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -189,7 +189,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 18,
         /* fields_id */ extif1_modem_field,
         },
-        {/* mem: extif1_mode2 */
+        {
         /* Asic Base Address */ 0x8040c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -197,7 +197,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ extif1_mode2m_field,
         },
-        {/* mem: tpid_profile0 */
+        {
         /* Asic Base Address */ 0x210000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -205,7 +205,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ tpid_profile0m_field,
         },
-        {/* mem: tpid_profile1 */
+        {
         /* Asic Base Address */ 0x210008,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -213,7 +213,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ tpid_profile1m_field,
         },
-        {/* mem: parser_port_ctrln */
+        {
         /* Asic Base Address */ 0x210010,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -221,7 +221,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ parser_port_ctrlnm_field,
         },
-        {/* mem: link_agg_hash_ctrl */
+        {
         /* Asic Base Address */ 0x210090,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -229,7 +229,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ link_agg_hash_ctrlm_field,
         },
-        {/* mem: udf_ctrln */
+        {
         /* Asic Base Address */ 0x210094,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -237,7 +237,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ udf_ctrlnm_field,
         },
-        {/* mem: parser_erp_oui */
+        {
         /* Asic Base Address */ 0x2100d4,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -245,7 +245,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ parser_erp_ouim_field,
         },
-        {/* mem: parser_erp_ethtype */
+        {
         /* Asic Base Address */ 0x2100d8,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -253,7 +253,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ parser_erp_ethtypem_field,
         },
-        {/* mem: parser_erp_udf_ctrl */
+        {
         /* Asic Base Address */ 0x2100dc,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -261,7 +261,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ parser_erp_udf_ctrlm_field,
         },
-        {/* mem: parser_erp_udfn */
+        {
         /* Asic Base Address */ 0x2100e0,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -269,55 +269,55 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ parser_erp_udfnm_field,
         },
-        {/* mem: dos_tcp_flags0 */
+        {
         /* Asic Base Address */ 0x2100f0,
         /* offset */ 0x4,
         /* bytes */ 0x4,
         /* Entry Number */ 1,
-        /* Fields_num */ 7,
+        /* Fields_num */ 8,
         /* fields_id */ dos_tcp_flags0m_field,
         },
-        {/* mem: dos_tcp_flags1 */
+        {
         /* Asic Base Address */ 0x2100f4,
         /* offset */ 0x4,
         /* bytes */ 0x4,
         /* Entry Number */ 1,
-        /* Fields_num */ 7,
+        /* Fields_num */ 8,
         /* fields_id */ dos_tcp_flags1m_field,
         },
-        {/* mem: dos_tcp_flags2 */
+        {
         /* Asic Base Address */ 0x2100f8,
         /* offset */ 0x4,
         /* bytes */ 0x4,
         /* Entry Number */ 1,
-        /* Fields_num */ 7,
+        /* Fields_num */ 8,
         /* fields_id */ dos_tcp_flags2m_field,
         },
-        {/* mem: dos_tcp_flags3 */
+        {
         /* Asic Base Address */ 0x2100fc,
         /* offset */ 0x4,
         /* bytes */ 0x4,
         /* Entry Number */ 1,
-        /* Fields_num */ 7,
+        /* Fields_num */ 8,
         /* fields_id */ dos_tcp_flags3m_field,
         },
-        {/* mem: dos_tcp_flags4 */
+        {
         /* Asic Base Address */ 0x210100,
         /* offset */ 0x4,
         /* bytes */ 0x4,
         /* Entry Number */ 1,
-        /* Fields_num */ 7,
+        /* Fields_num */ 8,
         /* fields_id */ dos_tcp_flags4m_field,
         },
-        {/* mem: dos_tcp_flags5 */
+        {
         /* Asic Base Address */ 0x210104,
         /* offset */ 0x4,
         /* bytes */ 0x4,
         /* Entry Number */ 1,
-        /* Fields_num */ 7,
+        /* Fields_num */ 8,
         /* fields_id */ dos_tcp_flags5m_field,
         },
-        {/* mem: dos_ctrl */
+        {
         /* Asic Base Address */ 0x210108,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -325,7 +325,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 20,
         /* fields_id */ dos_ctrlm_field,
         },
-        {/* mem: dos_large_icmp_ctrl */
+        {
         /* Asic Base Address */ 0x21010c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -333,7 +333,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ dos_large_icmp_ctrlm_field,
         },
-        {/* mem: oam_en_ctrl */
+        {
         /* Asic Base Address */ 0x210110,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -341,7 +341,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ oam_en_ctrlm_field,
         },
-        {/* mem: wol_ctrl */
+        {
         /* Asic Base Address */ 0x21011c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -349,7 +349,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ wol_ctrlm_field,
         },
-        {/* mem: dos_ctrl1 */
+        {
         /* Asic Base Address */ 0x210120,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -357,7 +357,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ dos_ctrl1m_field,
         },
-        {/* mem: protocol_based_vlann */
+        {
         /* Asic Base Address */ 0x230000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -365,7 +365,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ protocol_based_vlannm_field,
         },
-        {/* mem: port_vlan_ctrln */
+        {
         /* Asic Base Address */ 0x230010,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -373,7 +373,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 6,
         /* fields_id */ port_vlan_ctrlnm_field,
         },
-        {/* mem: port_vlan_ctrl1n */
+        {
         /* Asic Base Address */ 0x230080,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -381,7 +381,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ port_vlan_ctrl1nm_field,
         },
-        {/* mem: vlan_trans_untag_vid_mode_ctrl */
+        {
         /* Asic Base Address */ 0x230108,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -389,7 +389,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ vlan_trans_untag_vid_mode_ctrlm_field,
         },
-        {/* mem: vlan_range_profilen */
+        {
         /* Asic Base Address */ 0x230200,
         /* offset */ 0x10,
         /* bytes */ 0xc,
@@ -397,7 +397,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 10,
         /* fields_id */ vlan_range_profilenm_field,
         },
-        {/* mem: protocol_based_vlan_data_tbl */
+        {
         /* Asic Base Address */ 0x230300,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -405,7 +405,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ protocol_based_vlan_data_tblm_field,
         },
-        {/* mem: vlan_xlate_action_tbl */
+        {
         /* Asic Base Address */ 0x230400,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -413,7 +413,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 11,
         /* fields_id */ vlan_xlate_action_tblm_field,
         },
-        {/* mem: vlan_xlate_tbl */
+        {
         /* Asic Base Address */ 0x230600,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -421,7 +421,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 11,
         /* fields_id */ vlan_xlate_tblm_field,
         },
-        {/* mem: acl_blk_keep_ctrl */
+        {
         /* Asic Base Address */ 0x201000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -429,7 +429,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 16,
         /* fields_id */ acl_blk_keep_ctrlm_field,
         },
-        {/* mem: acl_port_ctrl */
+        {
         /* Asic Base Address */ 0x202000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -437,7 +437,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ acl_port_ctrlm_field,
         },
-        {/* mem: acl_blk_cmd */
+        {
         /* Asic Base Address */ 0x202004,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -445,7 +445,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ acl_blk_cmdm_field,
         },
-        {/* mem: rule_ext_ctrl */
+        {
         /* Asic Base Address */ 0x203000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -453,7 +453,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 16,
         /* fields_id */ rule_ext_ctrlm_field,
         },
-        {/* mem: acl_rule_bin0 */
+        {
         /* Asic Base Address */ 0x204000,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -461,7 +461,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_bin0m_field,
         },
-        {/* mem: acl_rule_bin1 */
+        {
         /* Asic Base Address */ 0x204200,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -469,7 +469,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_bin1m_field,
         },
-        {/* mem: acl_rule_bin2 */
+        {
         /* Asic Base Address */ 0x204400,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -477,7 +477,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_bin2m_field,
         },
-        {/* mem: acl_rule_bin3 */
+        {
         /* Asic Base Address */ 0x204600,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -485,7 +485,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_bin3m_field,
         },
-        {/* mem: acl_rule_bin4 */
+        {
         /* Asic Base Address */ 0x204800,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -493,7 +493,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_bin4m_field,
         },
-        {/* mem: acl_rule_bin5 */
+        {
         /* Asic Base Address */ 0x204a00,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -501,7 +501,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_bin5m_field,
         },
-        {/* mem: acl_rule_bin6 */
+        {
         /* Asic Base Address */ 0x204c00,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -509,7 +509,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_bin6m_field,
         },
-        {/* mem: acl_rule_bin7 */
+        {
         /* Asic Base Address */ 0x204e00,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -517,7 +517,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_bin7m_field,
         },
-        {/* mem: acl_rule_mask_bin0 */
+        {
         /* Asic Base Address */ 0x205000,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -525,7 +525,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_mask_bin0m_field,
         },
-        {/* mem: acl_rule_mask_bin1 */
+        {
         /* Asic Base Address */ 0x205200,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -533,7 +533,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_mask_bin1m_field,
         },
-        {/* mem: acl_rule_mask_bin2 */
+        {
         /* Asic Base Address */ 0x205400,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -541,7 +541,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_mask_bin2m_field,
         },
-        {/* mem: acl_rule_mask_bin3 */
+        {
         /* Asic Base Address */ 0x205600,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -549,7 +549,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_mask_bin3m_field,
         },
-        {/* mem: acl_rule_mask_bin4 */
+        {
         /* Asic Base Address */ 0x205800,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -557,7 +557,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_mask_bin4m_field,
         },
-        {/* mem: acl_rule_mask_bin5 */
+        {
         /* Asic Base Address */ 0x205a00,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -565,7 +565,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_mask_bin5m_field,
         },
-        {/* mem: acl_rule_mask_bin6 */
+        {
         /* Asic Base Address */ 0x205c00,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -573,7 +573,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_mask_bin6m_field,
         },
-        {/* mem: acl_rule_mask_bin7 */
+        {
         /* Asic Base Address */ 0x205e00,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -581,7 +581,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 0,
         /* fields_id */ acl_rule_mask_bin7m_field,
         },
-        {/* mem: mac_da0_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -589,7 +589,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 6,
         /* fields_id */ mac_da0_rulem_field,
         },
-        {/* mem: mac_da0_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -597,7 +597,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ mac_da0_rule_maskm_field,
         },
-        {/* mem: mac_da1_sa1_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -605,7 +605,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ mac_da1_sa1_rulem_field,
         },
-        {/* mem: mac_da1_sa1_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -613,7 +613,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ mac_da1_sa1_rule_maskm_field,
         },
-        {/* mem: mac_sa0_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -621,7 +621,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 6,
         /* fields_id */ mac_sa0_rulem_field,
         },
-        {/* mem: mac_sa0_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -629,7 +629,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ mac_sa0_rule_maskm_field,
         },
-        {/* mem: ipv4_da_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -637,7 +637,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ ipv4_da_rulem_field,
         },
-        {/* mem: ipv4_da_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -645,7 +645,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ ipv4_da_rule_maskm_field,
         },
-        {/* mem: ipv4_sa_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -653,7 +653,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ ipv4_sa_rulem_field,
         },
-        {/* mem: ipv4_sa_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -661,7 +661,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ ipv4_sa_rule_maskm_field,
         },
-        {/* mem: l4_port_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -669,7 +669,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 10,
         /* fields_id */ l4_port_rulem_field,
         },
-        {/* mem: l4_port_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -677,7 +677,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ l4_port_rule_maskm_field,
         },
-        {/* mem: vlan_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -685,7 +685,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 14,
         /* fields_id */ vlan_rulem_field,
         },
-        {/* mem: vlan_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -693,7 +693,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ vlan_rule_maskm_field,
         },
-        {/* mem: misc_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -701,7 +701,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 14,
         /* fields_id */ misc_rulem_field,
         },
-        {/* mem: misc_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -709,7 +709,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 10,
         /* fields_id */ misc_rule_maskm_field,
         },
-        {/* mem: udf_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -717,7 +717,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ udf_rulem_field,
         },
-        {/* mem: udf_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -725,7 +725,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ udf_rule_maskm_field,
         },
-        {/* mem: ipv6_da0_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -733,7 +733,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 7,
         /* fields_id */ ipv6_da0_rulem_field,
         },
-        {/* mem: ipv6_da0_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -741,7 +741,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ ipv6_da0_rule_maskm_field,
         },
-        {/* mem: ipv6_da1_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -749,7 +749,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 7,
         /* fields_id */ ipv6_da1_rulem_field,
         },
-        {/* mem: ipv6_da1_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -757,7 +757,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ ipv6_da1_rule_maskm_field,
         },
-        {/* mem: ipv6_da2_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -765,7 +765,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 7,
         /* fields_id */ ipv6_da2_rulem_field,
         },
-        {/* mem: ipv6_da2_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -773,7 +773,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ ipv6_da2_rule_maskm_field,
         },
-        {/* mem: ipv6_da3_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -781,7 +781,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ ipv6_da3_rulem_field,
         },
-        {/* mem: ipv6_da3_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -789,7 +789,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ ipv6_da3_rule_maskm_field,
         },
-        {/* mem: ipv6_sa0_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -797,7 +797,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 7,
         /* fields_id */ ipv6_sa0_rulem_field,
         },
-        {/* mem: ipv6_sa0_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -805,7 +805,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ ipv6_sa0_rule_maskm_field,
         },
-        {/* mem: ipv6_sa1_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -813,7 +813,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 7,
         /* fields_id */ ipv6_sa1_rulem_field,
         },
-        {/* mem: ipv6_sa1_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -821,7 +821,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ ipv6_sa1_rule_maskm_field,
         },
-        {/* mem: ipv6_sa2_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -829,7 +829,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 7,
         /* fields_id */ ipv6_sa2_rulem_field,
         },
-        {/* mem: ipv6_sa2_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -837,7 +837,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ ipv6_sa2_rule_maskm_field,
         },
-        {/* mem: ipv6_sa3_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -845,7 +845,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ ipv6_sa3_rulem_field,
         },
-        {/* mem: ipv6_sa3_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -853,7 +853,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ ipv6_sa3_rule_maskm_field,
         },
-        {/* mem: vid_pri_dei_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -861,7 +861,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 13,
         /* fields_id */ vid_pri_dei_rulem_field,
         },
-        {/* mem: vid_pri_dei_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x4,
@@ -869,7 +869,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 6,
         /* fields_id */ vid_pri_dei_rule_maskm_field,
         },
-        {/* mem: ether_type_value_rule */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -877,7 +877,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 9,
         /* fields_id */ ether_type_value_rulem_field,
         },
-        {/* mem: ether_type_value_rule_mask */
+        {
         /* Asic Base Address */ 0x0,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -885,7 +885,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ ether_type_value_rule_maskm_field,
         },
-        {/* mem: dscp_to_int_prio_map */
+        {
         /* Asic Base Address */ 0x180000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -893,7 +893,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ dscp_to_int_prio_mapm_field,
         },
-        {/* mem: pri_to_int_prio_map */
+        {
         /* Asic Base Address */ 0x180100,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -901,7 +901,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ pri_to_int_prio_mapm_field,
         },
-        {/* mem: qos_port_ctrln */
+        {
         /* Asic Base Address */ 0x180180,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -909,7 +909,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ qos_port_ctrlnm_field,
         },
-        {/* mem: qos_merge_precedence_ctrln */
+        {
         /* Asic Base Address */ 0x180200,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -917,7 +917,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ qos_merge_precedence_ctrlnm_field,
         },
-        {/* mem: hdr_err_action */
+        {
         /* Asic Base Address */ 0x180270,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -925,7 +925,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ hdr_err_actionm_field,
         },
-        {/* mem: l2_vlan_ingress_filter_en */
+        {
         /* Asic Base Address */ 0x180280,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -933,7 +933,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_vlan_ingress_filter_enm_field,
         },
-        {/* mem: l2_arp_bcast_per_port_ctrl */
+        {
         /* Asic Base Address */ 0x180284,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -941,7 +941,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_arp_bcast_per_port_ctrlm_field,
         },
-        {/* mem: l2_nd_per_port_ctrl */
+        {
         /* Asic Base Address */ 0x180288,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -949,7 +949,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_nd_per_port_ctrlm_field,
         },
-        {/* mem: l2_lldp_eee_per_port_ctrl */
+        {
         /* Asic Base Address */ 0x18028c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -957,7 +957,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_lldp_eee_per_port_ctrlm_field,
         },
-        {/* mem: l2_lldp_per_port_ctrl */
+        {
         /* Asic Base Address */ 0x180290,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -965,7 +965,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_lldp_per_port_ctrlm_field,
         },
-        {/* mem: l2_port_isolation_ctrln */
+        {
         /* Asic Base Address */ 0x180294,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -973,7 +973,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_port_isolation_ctrlnm_field,
         },
-        {/* mem: l2_erp_per_port_ctrl */
+        {
         /* Asic Base Address */ 0x18030c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -981,7 +981,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 5,
         /* fields_id */ l2_erp_per_port_ctrlm_field,
         },
-        {/* mem: l2_stp_staten */
+        {
         /* Asic Base Address */ 0x18038c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -989,7 +989,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_stp_statenm_field,
         },
-        {/* mem: l2_src_match_ctrl */
+        {
         /* Asic Base Address */ 0x1803cc,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -997,7 +997,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_src_match_ctrlm_field,
         },
-        {/* mem: l2_learn_per_port_ctrln */
+        {
         /* Asic Base Address */ 0x1803d0,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1005,7 +1005,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 10,
         /* fields_id */ l2_learn_per_port_ctrlnm_field,
         },
-        {/* mem: l2_station_move_ctrl0 */
+        {
         /* Asic Base Address */ 0x1803fc,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1013,7 +1013,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_station_move_ctrl0m_field,
         },
-        {/* mem: l2_station_move_ctrl1 */
+        {
         /* Asic Base Address */ 0x180400,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1021,7 +1021,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_station_move_ctrl1m_field,
         },
-        {/* mem: l2_port_learn_mac_cntn */
+        {
         /* Asic Base Address */ 0x180404,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1029,7 +1029,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_port_learn_mac_cntnm_field,
         },
-        {/* mem: l2_learn_global_ctrl */
+        {
         /* Asic Base Address */ 0x180438,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1037,7 +1037,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 6,
         /* fields_id */ l2_learn_global_ctrlm_field,
         },
-        {/* mem: l2_learn_mac_cnt */
+        {
         /* Asic Base Address */ 0x18043c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1045,7 +1045,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_learn_mac_cntm_field,
         },
-        {/* mem: l2_aging_ctrl */
+        {
         /* Asic Base Address */ 0x180440,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1053,7 +1053,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_aging_ctrlm_field,
         },
-        {/* mem: l2_aging_per_port_ctrl */
+        {
         /* Asic Base Address */ 0x180448,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1061,7 +1061,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_aging_per_port_ctrlm_field,
         },
-        {/* mem: l2_fdb_tbl_op_data_0 */
+        {
         /* Asic Base Address */ 0x180454,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1069,7 +1069,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_fdb_tbl_op_data_0m_field,
         },
-        {/* mem: l2_fdb_tbl_op_data_1 */
+        {
         /* Asic Base Address */ 0x180458,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1077,7 +1077,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ l2_fdb_tbl_op_data_1m_field,
         },
-        {/* mem: l2_fdb_tbl_op_data_2 */
+        {
         /* Asic Base Address */ 0x18045c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1085,7 +1085,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ l2_fdb_tbl_op_data_2m_field,
         },
-        {/* mem: l2_fdb_tbl_op */
+        {
         /* Asic Base Address */ 0x180460,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1093,7 +1093,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 7,
         /* fields_id */ l2_fdb_tbl_opm_field,
         },
-        {/* mem: l2_fdb_tbl_op_result */
+        {
         /* Asic Base Address */ 0x180464,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1101,7 +1101,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 5,
         /* fields_id */ l2_fdb_tbl_op_resultm_field,
         },
-        {/* mem: l2_igmp_static_router_port_mask */
+        {
         /* Asic Base Address */ 0x180468,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1109,7 +1109,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_igmp_static_router_port_maskm_field,
         },
-        {/* mem: l2_igmp_dynamic_router_port_ctrl */
+        {
         /* Asic Base Address */ 0x18046c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1117,7 +1117,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_igmp_dynamic_router_port_ctrlm_field,
         },
-        {/* mem: l2_igmp_dynamic_router_port */
+        {
         /* Asic Base Address */ 0x180470,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1125,7 +1125,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_igmp_dynamic_router_portm_field,
         },
-        {/* mem: l2_igmp_dynamic_router_port0_timer */
+        {
         /* Asic Base Address */ 0x180474,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1133,7 +1133,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_igmp_dynamic_router_port0_timerm_field,
         },
-        {/* mem: l2_igmp_dynamic_router_port1_timer */
+        {
         /* Asic Base Address */ 0x180478,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1141,7 +1141,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_igmp_dynamic_router_port1_timerm_field,
         },
-        {/* mem: l2_igmp_global_ctrl */
+        {
         /* Asic Base Address */ 0x18047c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1149,7 +1149,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 10,
         /* fields_id */ l2_igmp_global_ctrlm_field,
         },
-        {/* mem: l2_igmp_per_port_ctrl */
+        {
         /* Asic Base Address */ 0x180480,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1157,7 +1157,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ l2_igmp_per_port_ctrlm_field,
         },
-        {/* mem: l2_fdb_tbl_op_data_0_dummy */
+        {
         /* Asic Base Address */ 0x1804b0,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1165,7 +1165,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_fdb_tbl_op_data_0_dummym_field,
         },
-        {/* mem: l2_fdb_tbl_op_data_1_dummy */
+        {
         /* Asic Base Address */ 0x1804b4,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1173,7 +1173,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ l2_fdb_tbl_op_data_1_dummym_field,
         },
-        {/* mem: l2_fdb_tbl_op_data_2_dummy */
+        {
         /* Asic Base Address */ 0x1804b8,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1181,7 +1181,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ l2_fdb_tbl_op_data_2_dummym_field,
         },
-        {/* mem: l2_igmp_dynamic_router_port_dummy */
+        {
         /* Asic Base Address */ 0x1804bc,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1189,7 +1189,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_igmp_dynamic_router_port_dummym_field,
         },
-        {/* mem: l2_igmp_dynamic_router_port0_timer_dummy */
+        {
         /* Asic Base Address */ 0x1804c0,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1197,7 +1197,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_igmp_dynamic_router_port0_timer_dummym_field,
         },
-        {/* mem: l2_igmp_dynamic_router_port1_timer_dummy */
+        {
         /* Asic Base Address */ 0x1804c4,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1205,7 +1205,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_igmp_dynamic_router_port1_timer_dummym_field,
         },
-        {/* mem: l2_igmp_learn_ctrl */
+        {
         /* Asic Base Address */ 0x180500,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1213,7 +1213,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_igmp_learn_ctrlm_field,
         },
-        {/* mem: l2_igmp_learn_group_cnt */
+        {
         /* Asic Base Address */ 0x180504,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1221,7 +1221,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_igmp_learn_group_cntm_field,
         },
-        {/* mem: l2_unknown_ucast_filter_mask */
+        {
         /* Asic Base Address */ 0x180508,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1229,7 +1229,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_unknown_ucast_filter_maskm_field,
         },
-        {/* mem: l2_unknown_mcast_filter_mask */
+        {
         /* Asic Base Address */ 0x18050c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1237,7 +1237,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_unknown_mcast_filter_maskm_field,
         },
-        {/* mem: l2_mcast_filter_mask */
+        {
         /* Asic Base Address */ 0x180510,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1245,7 +1245,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_mcast_filter_maskm_field,
         },
-        {/* mem: l2_bcast_filter_mask */
+        {
         /* Asic Base Address */ 0x180514,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1253,7 +1253,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_bcast_filter_maskm_field,
         },
-        {/* mem: l2_port_vlan_transparent_ctrl */
+        {
         /* Asic Base Address */ 0x180518,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1261,7 +1261,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_port_vlan_transparent_ctrlm_field,
         },
-        {/* mem: l2_egr_vlan_filter_en */
+        {
         /* Asic Base Address */ 0x180598,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1269,7 +1269,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_egr_vlan_filter_enm_field,
         },
-        {/* mem: l2_dot1x_ctrl1 */
+        {
         /* Asic Base Address */ 0x18059c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1277,7 +1277,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_dot1x_ctrl1m_field,
         },
-        {/* mem: l2_dot1x_ctrl2 */
+        {
         /* Asic Base Address */ 0x1805a0,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1285,7 +1285,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 6,
         /* fields_id */ l2_dot1x_ctrl2m_field,
         },
-        {/* mem: ipmc_leaky_ctrl */
+        {
         /* Asic Base Address */ 0x1805a4,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1293,7 +1293,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ ipmc_leaky_ctrlm_field,
         },
-        {/* mem: link_agg_groupn */
+        {
         /* Asic Base Address */ 0x1805a8,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1301,7 +1301,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ link_agg_groupnm_field,
         },
-        {/* mem: link_agg_membern */
+        {
         /* Asic Base Address */ 0x1805b0,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1309,7 +1309,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ link_agg_membernm_field,
         },
-        {/* mem: rma_ctrln */
+        {
         /* Asic Base Address */ 0x1805d0,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1317,7 +1317,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ rma_ctrlnm_field,
         },
-        {/* mem: cpu_copy_dst_ctrl */
+        {
         /* Asic Base Address */ 0x180690,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1325,7 +1325,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ cpu_copy_dst_ctrlm_field,
         },
-        {/* mem: acl_unmatch_permit_enable_ctrl */
+        {
         /* Asic Base Address */ 0x1806a0,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1333,7 +1333,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ acl_unmatch_permit_enable_ctrlm_field,
         },
-        {/* mem: oam_mux_act */
+        {
         /* Asic Base Address */ 0x1806ac,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1341,7 +1341,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ oam_mux_actm_field,
         },
-        {/* mem: oam_par_act */
+        {
         /* Asic Base Address */ 0x1806b0,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1349,7 +1349,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ oam_par_actm_field,
         },
-        {/* mem: cascade_ctrl */
+        {
         /* Asic Base Address */ 0x1806b4,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1357,7 +1357,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ cascade_ctrlm_field,
         },
-        {/* mem: loop_detect_act_ctrl */
+        {
         /* Asic Base Address */ 0x1806b8,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1365,7 +1365,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ loop_detect_act_ctrlm_field,
         },
-        {/* mem: igmp_router_port_aging_ctrl */
+        {
         /* Asic Base Address */ 0x1806bc,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1373,7 +1373,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ igmp_router_port_aging_ctrlm_field,
         },
-        {/* mem: multi_vlan_tbl */
+        {
         /* Asic Base Address */ 0x180700,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1381,7 +1381,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ multi_vlan_tblm_field,
         },
-        {/* mem: l2_learn_clear_op */
+        {
         /* Asic Base Address */ 0x180730,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1389,7 +1389,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 5,
         /* fields_id */ l2_learn_clear_opm_field,
         },
-        {/* mem: l2_uc_unknown_act_ctrl */
+        {
         /* Asic Base Address */ 0x180734,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1397,7 +1397,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_uc_unknown_act_ctrlm_field,
         },
-        {/* mem: l2_mc_unknown_act_ctrl */
+        {
         /* Asic Base Address */ 0x180738,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1405,7 +1405,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ l2_mc_unknown_act_ctrlm_field,
         },
-        {/* mem: l2_lag_learn_limit_ctrln */
+        {
         /* Asic Base Address */ 0x180808,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1413,7 +1413,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ l2_lag_learn_limit_ctrlnm_field,
         },
-        {/* mem: l2_loop_detect_flag */
+        {
         /* Asic Base Address */ 0x180810,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1421,7 +1421,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_loop_detect_flagm_field,
         },
-        {/* mem: l2_loop_detect_flag_dummy */
+        {
         /* Asic Base Address */ 0x180814,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1429,7 +1429,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_loop_detect_flag_dummym_field,
         },
-        {/* mem: l2_loop_detect_timer */
+        {
         /* Asic Base Address */ 0x180818,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1437,7 +1437,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 10,
         /* fields_id */ l2_loop_detect_timerm_field,
         },
-        {/* mem: l2_arp_bcast_per_port_ctrl1 */
+        {
         /* Asic Base Address */ 0x180940,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1445,7 +1445,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_arp_bcast_per_port_ctrl1m_field,
         },
-        {/* mem: l2_nd_per_port_ctrl1 */
+        {
         /* Asic Base Address */ 0x180944,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1453,7 +1453,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_nd_per_port_ctrl1m_field,
         },
-        {/* mem: l2_lldp_eee_per_port_ctrl1 */
+        {
         /* Asic Base Address */ 0x180948,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1461,7 +1461,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_lldp_eee_per_port_ctrl1m_field,
         },
-        {/* mem: l2_lldp_per_port_ctrl1 */
+        {
         /* Asic Base Address */ 0x18094c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1469,7 +1469,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_lldp_per_port_ctrl1m_field,
         },
-        {/* mem: l2_arp_bcast_nd_per_port_ctrl2 */
+        {
         /* Asic Base Address */ 0x180950,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1477,7 +1477,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_arp_bcast_nd_per_port_ctrl2m_field,
         },
-        {/* mem: l2_lldp_eee_per_port_ctrl2 */
+        {
         /* Asic Base Address */ 0x180954,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1485,15 +1485,15 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ l2_lldp_eee_per_port_ctrl2m_field,
         },
-        {/* mem: l2_fdb_hw_flush_ctrl */
+        {
         /* Asic Base Address */ 0x180958,
         /* offset */ 0x4,
         /* bytes */ 0x4,
         /* Entry Number */ 1,
-        /* Fields_num */ 1,
+        /* Fields_num */ 2,
         /* fields_id */ l2_fdb_hw_flush_ctrlm_field,
         },
-        {/* mem: l2_uni_que_ctrl */
+        {
         /* Asic Base Address */ 0x18095c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1501,7 +1501,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ l2_uni_que_ctrlm_field,
         },
-        {/* mem: l2_vlan_tbl */
+        {
         /* Asic Base Address */ 0x188000,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -1509,7 +1509,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 12,
         /* fields_id */ l2_vlan_tblm_field,
         },
-        {/* mem: l2_fdb_tbl_bin0 */
+        {
         /* Asic Base Address */ 0x198000,
         /* offset */ 0x10,
         /* bytes */ 0xc,
@@ -1517,7 +1517,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 13,
         /* fields_id */ l2_fdb_tbl_bin0m_field,
         },
-        {/* mem: l2_fdb_tbl_bin1 */
+        {
         /* Asic Base Address */ 0x19a000,
         /* offset */ 0x10,
         /* bytes */ 0xc,
@@ -1525,7 +1525,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 13,
         /* fields_id */ l2_fdb_tbl_bin1m_field,
         },
-        {/* mem: l2_fdb_tbl_bin2 */
+        {
         /* Asic Base Address */ 0x19c000,
         /* offset */ 0x10,
         /* bytes */ 0xc,
@@ -1533,7 +1533,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 13,
         /* fields_id */ l2_fdb_tbl_bin2m_field,
         },
-        {/* mem: l2_fdb_tbl_bin3 */
+        {
         /* Asic Base Address */ 0x19e000,
         /* offset */ 0x10,
         /* bytes */ 0xc,
@@ -1541,7 +1541,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 13,
         /* fields_id */ l2_fdb_tbl_bin3m_field,
         },
-        {/* mem: l2_fdb_tbl_bin4 */
+        {
         /* Asic Base Address */ 0x1a0000,
         /* offset */ 0x10,
         /* bytes */ 0xc,
@@ -1549,7 +1549,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 13,
         /* fields_id */ l2_fdb_tbl_bin4m_field,
         },
-        {/* mem: l2_fdb_tbl_bin5 */
+        {
         /* Asic Base Address */ 0x1a2000,
         /* offset */ 0x10,
         /* bytes */ 0xc,
@@ -1557,7 +1557,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 13,
         /* fields_id */ l2_fdb_tbl_bin5m_field,
         },
-        {/* mem: l2_fdb_tbl_bin6 */
+        {
         /* Asic Base Address */ 0x1a4000,
         /* offset */ 0x10,
         /* bytes */ 0xc,
@@ -1565,7 +1565,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 13,
         /* fields_id */ l2_fdb_tbl_bin6m_field,
         },
-        {/* mem: l2_fdb_tbl_bin7 */
+        {
         /* Asic Base Address */ 0x1a6000,
         /* offset */ 0x10,
         /* bytes */ 0xc,
@@ -1573,7 +1573,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 13,
         /* fields_id */ l2_fdb_tbl_bin7m_field,
         },
-        {/* mem: acl_action_tbl */
+        {
         /* Asic Base Address */ 0x1c0000,
         /* offset */ 0x10,
         /* bytes */ 0xc,
@@ -1581,7 +1581,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 33,
         /* fields_id */ acl_action_tblm_field,
         },
-        {/* mem: port_rate_ctrln */
+        {
         /* Asic Base Address */ 0x220000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1589,7 +1589,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ port_rate_ctrlnm_field,
         },
-        {/* mem: storm_ctrl_timeslot */
+        {
         /* Asic Base Address */ 0x220100,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1597,7 +1597,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ storm_ctrl_timeslotm_field,
         },
-        {/* mem: meter_timeslot */
+        {
         /* Asic Base Address */ 0x220104,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1605,7 +1605,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ meter_timeslotm_field,
         },
-        {/* mem: port_meter_ctrln */
+        {
         /* Asic Base Address */ 0x220108,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1613,7 +1613,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ port_meter_ctrlnm_field,
         },
-        {/* mem: storm_ctrl_mc_type_ctrl */
+        {
         /* Asic Base Address */ 0x220140,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1621,7 +1621,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ storm_ctrl_mc_type_ctrlm_field,
         },
-        {/* mem: drop_event_log */
+        {
         /* Asic Base Address */ 0x220158,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1629,7 +1629,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ drop_event_logm_field,
         },
-        {/* mem: stats_offset */
+        {
         /* Asic Base Address */ 0x22015c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1637,7 +1637,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ stats_offsetm_field,
         },
-        {/* mem: storm_ctrl_config_tbl */
+        {
         /* Asic Base Address */ 0x220200,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1645,7 +1645,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 5,
         /* fields_id */ storm_ctrl_config_tblm_field,
         },
-        {/* mem: storm_ctrl_cnt_tbl */
+        {
         /* Asic Base Address */ 0x220400,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1653,7 +1653,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ storm_ctrl_cnt_tblm_field,
         },
-        {/* mem: meter_config_tbl */
+        {
         /* Asic Base Address */ 0x220800,
         /* offset */ 0x10,
         /* bytes */ 0xc,
@@ -1661,7 +1661,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 14,
         /* fields_id */ meter_config_tblm_field,
         },
-        {/* mem: meter_token_tbl */
+        {
         /* Asic Base Address */ 0x221000,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -1669,7 +1669,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ meter_token_tblm_field,
         },
-        {/* mem: flow_stats_tbl */
+        {
         /* Asic Base Address */ 0x221400,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -1677,7 +1677,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ flow_stats_tblm_field,
         },
-        {/* mem: flow_stats_cfg_tbl */
+        {
         /* Asic Base Address */ 0x221c00,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1685,7 +1685,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ flow_stats_cfg_tblm_field,
         },
-        {/* mem: cpu_code_to_cpu_prio_mapn */
+        {
         /* Asic Base Address */ 0x300000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1693,7 +1693,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ cpu_code_to_cpu_prio_mapnm_field,
         },
-        {/* mem: int_prio_to_ucast_qid_mapn */
+        {
         /* Asic Base Address */ 0x300200,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1701,7 +1701,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ int_prio_to_ucast_qid_mapnm_field,
         },
-        {/* mem: int_prio_to_mcast_qid_mapn */
+        {
         /* Asic Base Address */ 0x300280,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1709,7 +1709,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ int_prio_to_mcast_qid_mapnm_field,
         },
-        {/* mem: mirror_ctrl */
+        {
         /* Asic Base Address */ 0x300300,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1717,7 +1717,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ mirror_ctrlm_field,
         },
-        {/* mem: mirror_qos_ctrl */
+        {
         /* Asic Base Address */ 0x300304,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1725,7 +1725,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ mirror_qos_ctrlm_field,
         },
-        {/* mem: flush_cfg */
+        {
         /* Asic Base Address */ 0x300400,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1733,7 +1733,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ flush_cfgm_field,
         },
-        {/* mem: oq_enq_dis_tbl */
+        {
         /* Asic Base Address */ 0x308000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1741,7 +1741,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ oq_enq_dis_tblm_field,
         },
-        {/* mem: egr_port_ctrln */
+        {
         /* Asic Base Address */ 0x100000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1749,7 +1749,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 9,
         /* fields_id */ egr_port_ctrlnm_field,
         },
-        {/* mem: egr_port_vlan_ctrln */
+        {
         /* Asic Base Address */ 0x100080,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1757,7 +1757,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 6,
         /* fields_id */ egr_port_vlan_ctrlnm_field,
         },
-        {/* mem: egr_dscp_remarkn */
+        {
         /* Asic Base Address */ 0x100100,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1765,7 +1765,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ egr_dscp_remarknm_field,
         },
-        {/* mem: egr_prio_remarkn */
+        {
         /* Asic Base Address */ 0x100200,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1773,7 +1773,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ egr_prio_remarknm_field,
         },
-        {/* mem: egr_tpid_profile */
+        {
         /* Asic Base Address */ 0x100300,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1781,7 +1781,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ egr_tpid_profilem_field,
         },
-        {/* mem: egr_vlan_trans_rule_ctrln */
+        {
         /* Asic Base Address */ 0x100320,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1789,7 +1789,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 8,
         /* fields_id */ egr_vlan_trans_rule_ctrlnm_field,
         },
-        {/* mem: egr_vlan_trans_rule_ctrl1n */
+        {
         /* Asic Base Address */ 0x1003a0,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1797,7 +1797,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 3,
         /* fields_id */ egr_vlan_trans_rule_ctrl1nm_field,
         },
-        {/* mem: egr_vlan_trans_data_ctrln */
+        {
         /* Asic Base Address */ 0x100420,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1805,7 +1805,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ egr_vlan_trans_data_ctrlnm_field,
         },
-        {/* mem: egr_vlan_tag_transparent_ctrl */
+        {
         /* Asic Base Address */ 0x1004a8,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1813,7 +1813,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ egr_vlan_tag_transparent_ctrlm_field,
         },
-        {/* mem: cpu_pkt_bypassedit_ctrl */
+        {
         /* Asic Base Address */ 0x1004d4,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1821,7 +1821,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 2,
         /* fields_id */ cpu_pkt_bypassedit_ctrlm_field,
         },
-        {/* mem: ipg_pre_len_cfg */
+        {
         /* Asic Base Address */ 0x340004,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1829,7 +1829,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ ipg_pre_len_cfgm_field,
         },
-        {/* mem: qsch_shp_slot_time_cfg */
+        {
         /* Asic Base Address */ 0x340008,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1837,7 +1837,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ qsch_shp_slot_time_cfgm_field,
         },
-        {/* mem: psch_shp_slot_time_cfg */
+        {
         /* Asic Base Address */ 0x34000c,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1845,7 +1845,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ psch_shp_slot_time_cfgm_field,
         },
-        {/* mem: qsch_flow_map_tbl */
+        {
         /* Asic Base Address */ 0x341000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1853,7 +1853,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 4,
         /* fields_id */ qsch_flow_map_tblm_field,
         },
-        {/* mem: qsch_c_dwrr_cfg_tbl */
+        {
         /* Asic Base Address */ 0x342000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1861,7 +1861,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ qsch_c_dwrr_cfg_tblm_field,
         },
-        {/* mem: qsch_e_dwrr_cfg_tbl */
+        {
         /* Asic Base Address */ 0x343000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1869,7 +1869,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ qsch_e_dwrr_cfg_tblm_field,
         },
-        {/* mem: qsch_shp_cfg_tbl */
+        {
         /* Asic Base Address */ 0x34c000,
         /* offset */ 0x10,
         /* bytes */ 0xc,
@@ -1877,7 +1877,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 9,
         /* fields_id */ qsch_shp_cfg_tblm_field,
         },
-        {/* mem: qsch_meter_cfg_tbl */
+        {
         /* Asic Base Address */ 0x34f000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1885,7 +1885,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 1,
         /* fields_id */ qsch_meter_cfg_tblm_field,
         },
-        {/* mem: psch_shp_cfg_tbl */
+        {
         /* Asic Base Address */ 0x354000,
         /* offset */ 0x8,
         /* bytes */ 0x8,
@@ -1893,7 +1893,7 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* Fields_num */ 5,
         /* fields_id */ psch_shp_cfg_tblm_field,
         },
-        {/* mem: psch_meter_cfg_tbl */
+        {
         /* Asic Base Address */ 0x357000,
         /* offset */ 0x4,
         /* bytes */ 0x4,
@@ -1902,3 +1902,5 @@ const tbl_reg_info_t tbl_reg_list[] = {
         /* fields_id */ psch_meter_cfg_tblm_field,
         },
 };
+
+

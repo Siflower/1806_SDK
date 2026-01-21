@@ -317,15 +317,30 @@ case $prj in
 		add_sfbl_flag odt=1
 		[ -z $ddr2 ] && ddr2=ddr2_512mcommon
 		;;
+	sfa28_ac28s_cyns)
+		DEFCONFIG="sfa28_"$ver"_ac28s_cyns"
+		add_sfbl_flag sf19a28_fullmask=1
+		add_sfbl_flag crystal_40m=1
+		add_sfbl_flag odt=1
+		[ -z $ddr2 ] && ddr2=ddr2_512mcommon
+		;;
 	sfa28_bpi)
 		DEFCONFIG="sfa28_"$ver"_bpi"
 		add_sfbl_flag sf19a28_fullmask=1
+		add_sfbl_flag sfa28_bpi=1
 		add_sfbl_flag crystal_40m=1
 		add_sfbl_flag odt=1
 		[ -z $ddr2 ] && ddr2=ddr2_512mcommon
 		;;
 	sfa28_ac80)
 		DEFCONFIG="sfa28_"$ver"_ac80"
+		add_sfbl_flag sf19a28_fullmask=1
+		add_sfbl_flag crystal_40m=1
+		add_sfbl_flag odt=1
+		[ -z $ddr2 ] && ddr2=ddr2_1gcommon
+		;;
+	sfa28_ac80_easymesh)
+		DEFCONFIG="sfa28_"$ver"_ac80_easymesh"
 		add_sfbl_flag sf19a28_fullmask=1
 		add_sfbl_flag crystal_40m=1
 		add_sfbl_flag odt=1

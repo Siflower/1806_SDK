@@ -21,7 +21,7 @@ static struct spi_nand_chip *env_flash;
 
 extern void spi_read(struct spi_nand_chip *flash, loff_t from, size_t len, u_char *buf);
 extern void spi_write(struct spi_nand_chip *flash, loff_t to, size_t len, const u_char *buf);
-extern void spi_erase(struct spi_nand_chip *flash, loff_t off,size_t len);
+extern void spi_erase(struct spi_nand_chip *flash, loff_t off, size_t len);
 #elif defined(CONFIG_DOUBLE_IMAGE_BACKUP)
 static struct udevice *udev;
 #endif
@@ -34,14 +34,10 @@ static void sf_spinand_probe(void)
 	struct spi_nand_chip *chip;
 
 	ret = uclass_get_device(UCLASS_SPI_NAND, 0, &udev);
-	if (ret != 0){
-		return;
-	} else{
+	if (ret == 0) {
 		chip = dev_get_uclass_priv(udev);
-		if(chip){
+		if (chip) {
 			env_flash = chip;
-		} else{
-			return;
 		}
 	}
 }
@@ -50,23 +46,20 @@ static struct udevice *get_sf_udev(void)
 {
 	int ret;
 	ret = uclass_get_device(UCLASS_SPI_FLASH, 0, &udev);
-	if (ret != 0)
-		return NULL;
-	else
-		return udev;
+	return (ret != 0) ? NULL : udev;
 }
 
-void spi_read(loff_t from, size_t len, u_char *buf)
+static void spi_read(loff_t from, size_t len, u_char *buf)
 {
 	spi_flash_read_dm(udev, from, len, buf);
 }
 
-void spi_write(loff_t to, size_t len, const u_char *buf)
+static void spi_write(loff_t to, size_t len, const u_char *buf)
 {
 	spi_flash_write_dm(udev, to, len, buf);
 }
 
-void spi_erase(loff_t off,size_t len)
+static void spi_erase(loff_t off, size_t len)
 {
 	spi_flash_erase_dm(udev, off, len);
 }
@@ -127,23 +120,23 @@ int need_boot_backup_img(void)
 	flash_flag = get_flag_on_flash();
 	ram_flag = get_flag_on_ram();
 
-	if(ram_flag == LAST_BOOTUP_FAILED){
-		if(flash_flag == MASTER_IMAGE){
+	if (ram_flag == LAST_BOOTUP_FAILED) {
+		if (flash_flag == MASTER_IMAGE) {
 			set_flag_on_flash(BACKUP_IMAGE);
 			return BOOT_BACKUP;
-		} else if(flash_flag == BACKUP_IMAGE) {
+		} else if (flash_flag == BACKUP_IMAGE) {
 			set_flag_on_flash(MASTER_IMAGE);
 			return BOOT_MASTER;
 		} else {
 			printf("boot backup image fail\n");
 			return MASTER_IMAGE;
 		}
-	}else if(ram_flag == LINUX_REBOOT){
-		if(flash_flag == MASTER_IMAGE)
+	} else if (ram_flag == LINUX_REBOOT) {
+		if (flash_flag == MASTER_IMAGE)
 			return BOOT_MASTER;
 		else
 			return BOOT_BACKUP;
-	} else{
+	} else {
 		//if first boot ,we set master img as default
 		return BOOT_MASTER;
 	}

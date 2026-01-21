@@ -22,7 +22,8 @@ typedef enum _yt_sem_e
     YT_PORT_LOCK_ID,
     YT_STAT_LOCK_ID,
     YT_ACCESS_LOCK_ID,
-    YT_SAMPLE_LOCK_ID,
+    YT_INT_SMI_LOCK_ID,
+    YT_EXT_SMI_LOCK_ID,
     YT_LOCK_ID_MAX
 } yt_sem_t;
 
@@ -36,6 +37,11 @@ typedef enum _yt_sem_e
 #define DOT1X_LOCK_INIT()           YT_LOCK_INIT(YT_DOT1X_LOCK_ID)
 #define DOT1X_LOCK()                osal_mux_lock(&YT_LOCK_ID(YT_DOT1X_LOCK_ID))
 #define DOT1X_UNLOCK()              osal_mux_unlock(&YT_LOCK_ID(YT_DOT1X_LOCK_ID))
+
+/* for l2 */
+#define L2_LOCK_INIT()           YT_LOCK_INIT(YT_L2_LOCK_ID)
+#define L2_LOCK()                osal_mux_lock(&YT_LOCK_ID(YT_L2_LOCK_ID))
+#define L2_UNLOCK()              osal_mux_unlock(&YT_LOCK_ID(YT_L2_LOCK_ID))
 
 /* for port */
 #define PORT_LOCK_INIT()           YT_LOCK_INIT(YT_PORT_LOCK_ID)
@@ -57,10 +63,13 @@ typedef enum _yt_sem_e
 #define ACCESS_LOCK()               osal_mux_lock(&YT_LOCK_ID(YT_ACCESS_LOCK_ID))
 #define ACCESS_UNLOCK()             osal_mux_unlock(&YT_LOCK_ID(YT_ACCESS_LOCK_ID))
 
-/* for sample */
-#define SAMPLE_LOCK_INIT()           YT_LOCK_INIT(YT_SAMPLE_LOCK_ID)
-#define SAMPLE_LOCK()                osal_mux_lock(&YT_LOCK_ID(YT_SAMPLE_LOCK_ID))
-#define SAMPLE_UNLOCK()              osal_mux_unlock(&YT_LOCK_ID(YT_SAMPLE_LOCK_ID))
+/* for smi(mdio) access */
+#define INT_SMI_LOCK_INIT()          YT_LOCK_INIT(YT_INT_SMI_LOCK_ID)
+#define INT_SMI_LOCK()               osal_mux_lock(&YT_LOCK_ID(YT_INT_SMI_LOCK_ID))
+#define INT_SMI_UNLOCK()             osal_mux_unlock(&YT_LOCK_ID(YT_INT_SMI_LOCK_ID))
+#define EXT_SMI_LOCK_INIT()          YT_LOCK_INIT(YT_EXT_SMI_LOCK_ID)
+#define EXT_SMI_LOCK()               osal_mux_lock(&YT_LOCK_ID(YT_EXT_SMI_LOCK_ID))
+#define EXT_SMI_UNLOCK()             osal_mux_unlock(&YT_LOCK_ID(YT_EXT_SMI_LOCK_ID))
 
 extern osal_mux  yt_lock[YT_LOCK_ID_MAX];
 

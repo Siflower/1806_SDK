@@ -161,3 +161,22 @@ yt_ret_t fal_tiger_oam_mux_act_get(yt_unit_t unit, yt_port_t port, yt_oam_mux_ac
 
     return CMM_ERR_OK;
 }
+
+yt_ret_t fal_tiger_oam_mac_swap_en_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(enable);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t fal_tiger_oam_mac_swap_en_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(pEnable);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+

@@ -14,10 +14,25 @@
 #include "fal_tiger_init.h"
 #endif
 
-yt_fal_init_info_t gFal_init_info[] =
+#ifdef SWITCH_SERIES_SHARK
+#include "fal_shark_init.h"
+#endif
+
+#ifdef SWITCH_SERIES_WHALE
+#include "fal_whale_init.h"
+#endif
+
+const yt_fal_init_info_t gFal_init_info[] =
 {
 #ifdef SWITCH_SERIES_TIGER
     {YT_SW_ID_9215, fal_tiger_init},
+    {YT_SW_ID_9218, fal_tiger_9218_init},
+#endif
+#ifdef SWITCH_SERIES_SHARK
+    {YT_SW_ID_923X, fal_shark_init},
+#endif
+#ifdef SWITCH_SERIES_WHALE
+    {YT_SW_ID_922X, fal_whale_init},
 #endif
 };
 

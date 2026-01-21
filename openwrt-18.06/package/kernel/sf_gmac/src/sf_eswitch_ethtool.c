@@ -1,5 +1,11 @@
+/*
+* Description
+*
+*
+* Siflower software
+*/
+
 #include <linux/mii.h>
-#include <linux/ptp_clock_kernel.h>
 #include "sf_gmac.h"
 #include "sf_eswitch_ethtool.h"
 
@@ -266,42 +272,6 @@ static void gsw_get_ringparam(struct net_device *dev,
     ring->tx_pending = DMA_TX_RING_SZ;
 }
 
-#ifdef CONFIG_SFAX8_PTP
-static int sgmac_get_ts_info(struct net_device *dev,
-		struct ethtool_ts_info *info)
-{
-	struct sgmac_priv *priv = netdev_priv(dev);
-
-	ethtool_op_get_ts_info(dev, info);
-
-	info->so_timestamping |= (SOF_TIMESTAMPING_TX_HARDWARE |
-			SOF_TIMESTAMPING_RX_HARDWARE |
-			SOF_TIMESTAMPING_RAW_HARDWARE);
-
-	info->tx_types = BIT(HWTSTAMP_TX_OFF) | BIT(HWTSTAMP_TX_ON);
-
-	info->rx_filters = (BIT(HWTSTAMP_FILTER_NONE) |
-			BIT(HWTSTAMP_FILTER_PTP_V1_L4_EVENT) |
-			BIT(HWTSTAMP_FILTER_PTP_V1_L4_SYNC) |
-			BIT(HWTSTAMP_FILTER_PTP_V1_L4_DELAY_REQ) |
-			BIT(HWTSTAMP_FILTER_PTP_V2_L4_EVENT) |
-			BIT(HWTSTAMP_FILTER_PTP_V2_L4_SYNC) |
-			BIT(HWTSTAMP_FILTER_PTP_V2_L4_DELAY_REQ) |
-			BIT(HWTSTAMP_FILTER_PTP_V2_L2_EVENT) |
-			BIT(HWTSTAMP_FILTER_PTP_V2_L2_SYNC) |
-			BIT(HWTSTAMP_FILTER_PTP_V2_L2_DELAY_REQ) |
-			BIT(HWTSTAMP_FILTER_PTP_V2_EVENT) |
-			BIT(HWTSTAMP_FILTER_PTP_V2_SYNC) |
-			BIT(HWTSTAMP_FILTER_PTP_V2_DELAY_REQ) |
-			BIT(HWTSTAMP_FILTER_ALL));
-
-	if (priv->ptp_clock)
-		info->phc_index = ptp_clock_index(priv->ptp_clock);
-
-	return 0;
-}
-#endif
-
 struct ethtool_ops eswitch_ethtool_ops = {
 	.get_settings		= gsw_get_settings,
 	.set_settings		= gsw_set_settings,
@@ -312,7 +282,4 @@ struct ethtool_ops eswitch_ethtool_ops = {
 	.get_link		= ethtool_op_get_link,
 	.nway_reset		= gsw_nway_reset,
 	.get_ringparam		= gsw_get_ringparam,
-#ifdef CONFIG_SFAX8_PTP
-	.get_ts_info		= sgmac_get_ts_info
-#endif
 };

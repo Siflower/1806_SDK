@@ -1,3 +1,19 @@
+/*
+* =====================================================================================
+*
+*       Filename:  kernel/sf_gmac/src/yt8521.c
+*
+*    Description:
+*
+*        Version:  1.0
+*        Created:  09/15/2021 10:04:28 AM
+*       Compiler:  gcc
+*
+*        Company:  Siflower Communication Tenology Co.,Ltd
+*
+* =====================================================================================
+*/
+
 #include "sf_gmac.h"
 #include "yt8521.h"
 

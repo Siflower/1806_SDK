@@ -13,155 +13,215 @@
  */
 #include "yt_cmm.h"
 
+#define YT_RMA_BYPASS_PORT_ISO_BIT                       (1U)
+#define YT_RMA_BYPASS_VLAN_FILTER_BIT                (2U)
+#define YT_RMA_BYPASS_UNKNOWN_MC_BIT             (4U)
+#define YT_RMA_BYPASS_STP_BIT                                   (8U)
+#define YT_RMA_BYPASS_STORM_BIT                            (16U)
+#define YT_RMA_BYPASS_FLOW_METER_BIT               (32U)
+#define YT_RMA_BYPASS_PORT_METER_BIT                (64U)
+#define YT_RMA_BYPASS_ALL                                            (127U)
+
 typedef enum yt_rma_da_e
 {
-    RMA_DA_BRG_GROUP = 0,
-    RMA_DA_FD_PAUSE_01,
-    RMA_DA_SLOW_PROT_02,
-    RMA_DA_1X_PAE_03,
-    RMA_DA_UNDEF_04,
-    RMA_DA_UNDEF_05,
-    RMA_DA_UNDEF_06,
-    RMA_DA_UNDEF_07,
-    RMA_DA_PROV_BRG_GROUP_08,
-    RMA_DA_UNDEF_09,
-    RMA_DA_UNDEF_0A,
-    RMA_DA_UNDEF_0B,
-    RMA_DA_UNDEF_0C,
-    RMA_DA_PROV_BRG_GVRP_0D,
-    RMA_DA_LLDP_0E,
-    RMA_DA_UNDEF_0F,
-    RMA_DA_MANAGEMENT_10,
-    RMA_DA_LSG_11,
-    RMA_DA_LDG_12,
-    RMA_DA_UNDEF_13,
-    RMA_DA_UNDEF_14,
-    RMA_DA_UNDEF_15,
-    RMA_DA_UNDEF_16,
-    RMA_DA_UNDEF_17,
-    RMA_DA_UNDEF_18,
-    RMA_DA_UNDEF_19,
-    RMA_DA_UNDEF_1A,
-    RMA_DA_UNDEF_1B,
-    RMA_DA_UNDEF_1C,
-    RMA_DA_UNDEF_1D,
-    RMA_DA_UNDEF_1E,
-    RMA_DA_UNDEF_1F,
-    RMA_DA_MRP_20,
-    RMA_DA_MRP_21,
-    RMA_DA_MRP_22,
-    RMA_DA_MRP_23,
-    RMA_DA_MRP_24,
-    RMA_DA_MRP_25,
-    RMA_DA_MRP_26,
-    RMA_DA_MRP_27,
-    RMA_DA_MRP_28,
-    RMA_DA_MRP_29,
-    RMA_DA_MRP_2A,
-    RMA_DA_MRP_2B,
-    RMA_DA_MRP_2C,
-    RMA_DA_MRP_2D,
-    RMA_DA_MRP_2E,
-    RMA_DA_MRP_2F,
-    RMA_DA_END
+    YT_RMA_DA_BRG_GROUP = 0,
+    YT_RMA_DA_FD_PAUSE_01,
+    YT_RMA_DA_SLOW_PROT_02,
+    YT_RMA_DA_1X_PAE_03,
+    YT_RMA_DA_UNDEF_04,
+    YT_RMA_DA_UNDEF_05,
+    YT_RMA_DA_UNDEF_06,
+    YT_RMA_DA_UNDEF_07,
+    YT_RMA_DA_PROV_BRG_GROUP_08,
+    YT_RMA_DA_UNDEF_09,
+    YT_RMA_DA_UNDEF_0A,
+    YT_RMA_DA_UNDEF_0B,
+    YT_RMA_DA_UNDEF_0C,
+    YT_RMA_DA_PROV_BRG_GVRP_0D,
+    YT_RMA_DA_LLDP_0E,
+    YT_RMA_DA_UNDEF_0F,
+    YT_RMA_DA_MANAGEMENT_10,
+    YT_RMA_DA_LSG_11,
+    YT_RMA_DA_LDG_12,
+    YT_RMA_DA_UNDEF_13,
+    YT_RMA_DA_UNDEF_14,
+    YT_RMA_DA_UNDEF_15,
+    YT_RMA_DA_UNDEF_16,
+    YT_RMA_DA_UNDEF_17,
+    YT_RMA_DA_UNDEF_18,
+    YT_RMA_DA_UNDEF_19,
+    YT_RMA_DA_UNDEF_1A,
+    YT_RMA_DA_UNDEF_1B,
+    YT_RMA_DA_UNDEF_1C,
+    YT_RMA_DA_UNDEF_1D,
+    YT_RMA_DA_UNDEF_1E,
+    YT_RMA_DA_UNDEF_1F,
+    YT_RMA_DA_MRP_20,
+    YT_RMA_DA_MRP_21,
+    YT_RMA_DA_MRP_22,
+    YT_RMA_DA_MRP_23,
+    YT_RMA_DA_MRP_24,
+    YT_RMA_DA_MRP_25,
+    YT_RMA_DA_MRP_26,
+    YT_RMA_DA_MRP_27,
+    YT_RMA_DA_MRP_28,
+    YT_RMA_DA_MRP_29,
+    YT_RMA_DA_MRP_2A,
+    YT_RMA_DA_MRP_2B,
+    YT_RMA_DA_MRP_2C,
+    YT_RMA_DA_MRP_2D,
+    YT_RMA_DA_MRP_2E,
+    YT_RMA_DA_MRP_2F,
+    YT_RMA_DA_END
 }yt_rma_da_t;
 
-typedef enum yt_rma_action_s {
-    RMA_ACTION_FWD,
-    RMA_ACTION_TRAP,
-    RMA_ACTION_COPY,
-    RMA_ACTION_DROP,
-    RMA_ACTION_END
-} yt_rma_action_t;
+typedef enum yt_rma_cpu_code_e
+{
+    YT_RMA_CPU_CODE_RESV0 = 25,
+    YT_RMA_CPU_CODE_RESV1,
+    YT_RMA_CPU_CODE_RESV2,
+    YT_RMA_CPU_CODE_RESV3,
+    YT_RMA_CPU_CODE_RESV4,
+    YT_RMA_CPU_CODE_RESV5,
+    YT_RMA_CPU_CODE_RESV6,
+    YT_RMA_CPU_CODE_RESV7,
+    YT_RMA_CPU_CODE_RESV8,
+    YT_RMA_CPU_CODE_RESV9
+}yt_rma_cpu_code_t;
+
+typedef struct yt_rma_bypass_s
+{
+    yt_enable_t bypass_port_isolation;
+    yt_enable_t bypass_vlan_filter;
+    yt_enable_t bypass_unknown_mc;
+    yt_enable_t bypass_stp;
+    yt_enable_t bypass_storm;
+    yt_enable_t bypass_flow_meter;
+    yt_enable_t bypass_port_meter;
+    uint8_t setBitMask;
+}yt_rma_bypass_t;
 
 /**
  * @internal      yt_rma_action_set
  * @endinternal
  *
  * @brief         set action of specific reserved multicast address
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger,Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     da               -the last byte of rma mac address,refer to yt_rma_action_t
- * @param[in]     action              -rma packet action,refer to yt_rma_action_t
+ * @param[in]     da               -the last byte of rma mac address,refer to yt_rma_da_t
+ * @param[in]     action              -rma packet action,refer to yt_act_type_t
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  * @retval        CMM_ERR_INPUT        -input parameter error
- */
-extern yt_ret_t  yt_rma_action_set(yt_unit_t unit, yt_rma_da_t  da, yt_rma_action_t action);
+*/
+
+extern yt_ret_t  yt_rma_action_set(yt_unit_t unit, yt_rma_da_t  da, yt_act_type_t action);
 
 
 /**
  * @internal      yt_rma_action_get
  * @endinternal
  *
- * @brief         get action of specific reserved multicast address
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         get action of specific reserved multicast address type
+ * @note          APPLICABLE DEVICES  -Tiger,Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     da               -the last byte of rma mac address,refer to yt_rma_action_t
- * @param[out]    paction             -rma packet action,refer to yt_rma_action_
+ * @param[in]     da               -the last byte of rma mac address,refer to yt_rma_da_t
+ * @param[out]    paction             -rma packet cpu code,refer to yt_rma_cpu_code_t
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_rma_action_get(yt_unit_t unit, yt_rma_da_t  da, yt_rma_action_t *paction);
+extern yt_ret_t  yt_rma_action_get(yt_unit_t unit, yt_rma_da_t  da, yt_act_type_t *pAction);
 
 
 /**
- * @internal      yt_rma_bypass_port_isolation_set
+ * @internal      yt_rma_cpu_code_set
  * @endinternal
  *
- * @brief         set rma passthrough port isolation or not
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         set cpu code of specific reserved multicast address
+ * @note          APPLICABLE DEVICES  -Tiger,Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     da               -the last byte of rma mac address,refer to yt_rma_action_t
+ * @param[in]     da               -the last byte of rma mac address,refer to yt_rma_da_t
+ * @param[in]     cpuCode              -rma packet action,refer to yt_act_type_t
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input parameter error
+*/
+
+extern yt_ret_t  yt_rma_cpu_code_set(yt_unit_t unit, yt_rma_da_t  da, yt_rma_cpu_code_t cpuCode);
+
+
+/**
+ * @internal      yt_rma_cpu_code_get
+ * @endinternal
+ *
+ * @brief         get cpu code of specific reserved multicast address type
+ * @note          APPLICABLE DEVICES             -Tiger,Shark, Whale
+ * @param[in]     unit                                              -unit id
+ * @param[in]     da                                                 -the last byte of rma mac address,refer to yt_rma_da_t
+ * @param[out]    pCpuCode                                       -rma packet action,refer to yt_fwd_type_t
+ * @retval        CMM_ERR_OK                            -on success
+ * @retval        CMM_ERR_FAIL                         -on fail
+ */
+extern yt_ret_t  yt_rma_cpu_code_get(yt_unit_t unit, yt_rma_da_t  da, yt_rma_cpu_code_t *pCpuCode);
+
+/**
+ * @internal      yt_rma_bypass_set
+ * @endinternal
+ *
+ * @brief         set specific bypass state of specific reserved multicast address
+ * @note          APPLICABLE DEVICES         -Tiger,Shark, Whale
+ * @param[in]     unit                                          -unit id
+ * @param[in]     da                                             -the last byte of rma mac address,refer to yt_rma_da_t
+ * @param[in]     rmaBypass                              -enable or disable
+ * @retval        CMM_ERR_OK                       -on success
+ * @retval        CMM_ERR_FAIL                    -on fail
+ */
+extern yt_ret_t yt_rma_bypass_set(yt_unit_t unit, yt_rma_da_t  da, yt_rma_bypass_t rmaBypass);
+
+
+/**
+ * @internal      yt_rma_bypass_get
+ * @endinternal
+ *
+ * @brief         get specific bypass state of specific reserved multicast address
+ * @note          APPLICABLE DEVICES         -Tiger,Shark, Whale
+ * @param[in]     unit                                          -unit id
+ * @param[in]     da                                             -the last byte of rma mac address,refer to yt_rma_da_t
+ * @param[in]     pRmaBypass                          -enable or disable
+ * @retval        CMM_ERR_OK                       -on success
+ * @retval        CMM_ERR_FAIL                    -on fail
+ */
+extern yt_ret_t yt_rma_bypass_get(yt_unit_t unit, yt_rma_da_t  da,yt_rma_bypass_t *pRmaBypass);
+
+
+/**
+ * @internal      yt_rma_sa_learn_dis_set
+ * @endinternal
+ *
+ * @brief         set sa learning for specific RMA da type
+ * @note          APPLICABLE DEVICES  -Shark, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     da               -the last byte of rma mac address,refer to yt_rma_da_t
  * @param[in]     enable                  -enable or disable
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t yt_rma_bypass_port_isolation_set(yt_unit_t unit, yt_rma_da_t  da, yt_enable_t enable);
+extern yt_ret_t  yt_rma_sa_learn_dis_set(yt_unit_t unit, yt_rma_da_t da, yt_enable_t enable);
 
 
 /**
- * @internal      yt_rma_bypass_port_isolation_get
+ * @internal      yt_rma_sa_learn_dis_get
  * @endinternal
  *
- * @brief         get the setting of rma passthrough port isolation
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         get the setting of rma sa learn
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     da               -the last byte of rma mac address,refer to yt_rma_action_t
+ * @param[in]     da               -the last byte of rma mac address,refer to yt_rma_da_t
  * @param[out]    pEnable                 -enable or disable
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t yt_rma_bypass_port_isolation_get(yt_unit_t unit, yt_rma_da_t  da, yt_enable_t *pEnable);
-
-
-/**
- * @internal      yt_rma_bypass_vlan_filter_set
- * @endinternal
- *
- * @brief         set rma passthrough vlan igress filter or not
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     da               -the last byte of rma mac address,refer to yt_rma_action_t
- * @param[in]     enable                  -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t  yt_rma_bypass_vlan_filter_set(yt_unit_t unit, yt_rma_da_t da, yt_enable_t enable);
-
-
-/**
- * @internal      yt_rma_bypass_vlan_filter_get
- * @endinternal
- *
- * @brief         get the setting of rma passthrough vlan igress filter
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     da               -the last byte of rma mac address,refer to yt_rma_action_t
- * @param[out]    pEnable                 -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t  yt_rma_bypass_vlan_filter_get(yt_unit_t unit, yt_rma_da_t da, yt_enable_t *pEnable);
+extern yt_ret_t  yt_rma_sa_learn_dis_get(yt_unit_t unit, yt_rma_da_t da, yt_enable_t *pEnable);
 
 #endif
+

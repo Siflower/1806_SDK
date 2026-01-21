@@ -1887,8 +1887,8 @@ int SPI_NAND_read(u32 offset, u8 *data, u8 chnum, u32 len) {
 	spi_nand_init(&sfax8_spi_nand);
 
 	offset = bad_block_management(&sfax8_spi_nand, offset, sign);
-	if(offset<0)
-		return err;
+	if(offset < 0)
+		return offset;
 	sign++;
 
 	err = spi_nand_cmd_read_ops(&sfax8_spi_nand, offset, len, data);

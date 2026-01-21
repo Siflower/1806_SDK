@@ -16,8 +16,7 @@
 #define PCAP_OFFSET    0x28 //40
 #define FIVE_VW_OFFSET 0x3c //
 
-int sf_parse_cap_file(char * file_name, u8 is_jumbo, struct sf_cap_file_data * pcap_data)
-{
+int sf_parse_cap_file(char * file_name, u8 is_jumbo, struct sf_cap_file_data * pcap_data){
 	// structpcap_file_hdr*file_hdr;
 	// structpcap_pkt_hdr*ptk_hdr;
 	struct ethhdr * peth_hdr;
@@ -36,14 +35,14 @@ int sf_parse_cap_file(char * file_name, u8 is_jumbo, struct sf_cap_file_data * p
 	char *pkt_buf = NULL;
 	char *seek_buf = NULL;
 
-	if (is_jumbo) {
+	if(is_jumbo){
 		buf_size = BUFSIZE;
-	} else {
+	}else{
 		buf_size = JUMBO_BUFSIZE;
 	}
 
 	sprintf(pkt_path,"%s%s", PATH_PREFIX, file_name);
-	fp_read = filp_open(pkt_path, O_RDONLY, 0);
+	fp_read = filp_open(pkt_path, O_RDONLY , 0);
 	if (IS_ERR(fp_read)) {
 		ret = -1;
 		printk("%s open failed,err = %ld\n",pkt_path, PTR_ERR(fp_read));
@@ -51,8 +50,8 @@ int sf_parse_cap_file(char * file_name, u8 is_jumbo, struct sf_cap_file_data * p
 	}
 
 	pkt_buf = vmalloc(buf_size);
-	memset(pkt_buf, 0, sizeof(buf_size));
-	if (!pkt_buf) {
+	memset(pkt_buf,0,sizeof(buf_size));
+	if(!pkt_buf){
 		ret = -2;
 		printk("malloc buf fail\n");
 		goto error_malloc;
@@ -72,7 +71,7 @@ int sf_parse_cap_file(char * file_name, u8 is_jumbo, struct sf_cap_file_data * p
 	// ptk_hdr	=&pcap_data->pcap_phdr;
 	peth_hdr	= &(pcap_data->teth_hdr);
 	pvlan_hdr	= &(pcap_data->tvlan_hdr);
-	p_pppoe_hdr 	= &(pcap_data->tpppoe_hdr);
+	p_pppoe_hdr = &(pcap_data->tpppoe_hdr);
 	pip_hdr		= &(pcap_data->tip_hdr);
 	ptcp_hdr	= &(pcap_data->ttcp_hdr);
 	pudp_hdr	= &(pcap_data->tudp_hdr);
@@ -84,10 +83,11 @@ int sf_parse_cap_file(char * file_name, u8 is_jumbo, struct sf_cap_file_data * p
 	// seek_buf += PCAP_PKT_HDR_SIZE;
 	//
 	seek_buf = pkt_buf;
-	if (strstr(file_name, "5vw") == NULL) {
+	if( strstr(file_name,"5vw") == NULL ){
 		seek_buf += PCAP_OFFSET;
 		pcap_data->cap_offset = PCAP_OFFSET;
-	} else {
+	}
+	else{
 		seek_buf += FIVE_VW_OFFSET;
 		pcap_data->cap_offset = FIVE_VW_OFFSET;
 	}
@@ -100,7 +100,7 @@ int sf_parse_cap_file(char * file_name, u8 is_jumbo, struct sf_cap_file_data * p
 	printk("mac %pM", peth_hdr->h_dest);
 	printk("mac %pM", peth_hdr->h_source);
 	// printk("proto 0x%x", proto);
-	if (proto == htons(ETH_P_8021Q)) {
+	if(proto == htons(ETH_P_8021Q)){
 		printk("proto vlan  0x%x", proto);
 		memcpy(pvlan_hdr, seek_buf, VLAN_HLEN);
 		seek_buf += VLAN_HLEN;
@@ -109,13 +109,14 @@ int sf_parse_cap_file(char * file_name, u8 is_jumbo, struct sf_cap_file_data * p
 	}
 
 
-	if (proto == htons(ETH_P_PPP_SES)) {
+	if(proto == htons(ETH_P_PPP_SES)){
 		printk("proto ppp 0x%x", proto);
 		memcpy(p_pppoe_hdr, seek_buf,PPPOE_SES_HLEN);
-		if (p_pppoe_hdr->proto == htons(PPP_IP)) {
+		if(p_pppoe_hdr->proto == htons(PPP_IP)){
 			proto = htons(ETH_P_IP);
 			pcap_data->is_pppoe = 1;
-		} else {
+		}
+		else {
 			ret = -4;
 			printk("not pppoe session data ip packet error\n");
 			goto error_read;
@@ -123,26 +124,26 @@ int sf_parse_cap_file(char * file_name, u8 is_jumbo, struct sf_cap_file_data * p
 		seek_buf += PPPOE_SES_HLEN;
 	}
 
-	if (proto == htons(ETH_P_IP)) {
+	if(proto == htons(ETH_P_IP)){
 		printk("proto ip 0x%x", proto);
-		memcpy(pip_hdr, seek_buf, sizeof(struct iphdr));
+		memcpy(pip_hdr, seek_buf,sizeof(struct iphdr));
 		seek_buf += sizeof(struct iphdr);
 		l4_proto = pip_hdr->protocol;
-	} else {
+	}else{
 		printk("not ip packet\n");
 		goto error_read;
 	}
 
 
 	printk("proto l3 0x%x %x\n", l4_proto, IPPROTO_TCP);
-	if (l4_proto == IPPROTO_UDP) {
-		memcpy(pudp_hdr, seek_buf, sizeof(struct udphdr));
+	if(l4_proto == IPPROTO_UDP){
+		memcpy(pudp_hdr, seek_buf,sizeof(struct udphdr));
 		seek_buf += sizeof(struct tcphdr);
 		pcap_data->is_udp = 1;
-	} else if (l4_proto == IPPROTO_TCP) {
-		memcpy(ptcp_hdr, seek_buf, sizeof(struct tcphdr));
+	}else if (l4_proto == IPPROTO_TCP){
+		memcpy(ptcp_hdr, seek_buf,sizeof(struct tcphdr));
 		seek_buf += sizeof(struct udphdr);
-	} else {
+	}else{
 		ret = -5;
 		printk("not tcp or udp packet\n");
 		goto error_read;

@@ -27,6 +27,32 @@ extern "C" {
 #define LAG_MEM_NUM_PERGRP      4
 
 /**
+ * @internal      fal_tiger_lag_init
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_lag_init(yt_unit_t unit);
+
+
+/**
+ * @internal      fal_tiger_lag_en_get
+ * @endinternal
+ *
+ * @brief         get lag en state and lag id  based on port
+ * @param[in]     unit                -unit id
+ * @param[out]    yt_enable_t         -lag en
+ * @param[out]    uint8_t         -lag id
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_lag_en_get(yt_unit_t unit, yt_port_t port, yt_enable_t *lagState, uint8_t *lagId);
+
+
+/**
  * @internal      fal_tiger_lag_hash_sel_set
  * @endinternal
  *
@@ -67,20 +93,19 @@ extern yt_ret_t fal_tiger_lag_group_port_set(yt_unit_t unit, uint8_t groupId, yt
 
 
 /**
- * @internal      fal_tiger_lag_group_info_get
+ * @internal      fal_tiger_lag_group_port_get
  * @endinternal
  *
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     groupId             -x
- * @param[out]    p_laginfo           -link aggregation group config
+ * @param[out]    p_member_portmask   -link aggregation group member portmask
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_lag_group_info_get(yt_unit_t unit, uint8_t groupId, yt_link_agg_group_t *p_laginfo);
+extern yt_ret_t fal_tiger_lag_group_port_get(yt_unit_t unit, uint8_t groupId, yt_port_mask_t *p_member_portmask);
 
-
-
+extern yt_ret_t fal_tiger_lag_phyPort_belong_lagPort_get(yt_unit_t unit, yt_port_t port, uint8_t *pGroupId);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-1 7000 ## 1 for enable irom patch, 0 for disable; patch_addr in hex
+1 ## 1 for enable irom patch, 0 for disable; patch_addr in hex
 
 1 1 0 bc000050 0 0 0
 

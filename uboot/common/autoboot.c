@@ -348,12 +348,12 @@ const char *bootdelay_process(void)
 	} else
 #endif /* CONFIG_BOOTCOUNT_LIMIT */
 #ifdef CONFIG_DOUBLE_IMAGE_BACKUP_NAND
-	if(need_boot_backup_img() == 1){
+	if (BOOT_BACKUP == need_boot_backup_img()) {
 		s = getenv("backupnandbootcmd");
 	} else
 #endif
 #ifdef CONFIG_DOUBLE_IMAGE_BACKUP
-	if(need_boot_backup_img() == 1){
+	if (BOOT_BACKUP == need_boot_backup_img()) {
 		s = getenv("backupbootcmd");
 	} else
 #endif
@@ -375,6 +375,9 @@ void autoboot_command(const char *s)
 	if (stored_bootdelay != -1 && s && !abortboot(stored_bootdelay)) {
 #if defined(CONFIG_AUTOBOOT_KEYED) && !defined(CONFIG_AUTOBOOT_KEYED_CTRLC)
 		int prev = disable_ctrlc(1);	/* disable Control C checking */
+#endif
+#if defined(CONFIG_CMD_MULUP)
+		net_loop(MULUP);
 #endif
 
 		run_command_list(s, -1, 0);

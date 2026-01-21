@@ -60,7 +60,6 @@ enum acl_rule_type_e
 #define ACL_ENTRY_WIDTH_PER32BITS   2
 #define ACL_MASK_WIDTH_PER32BITS    ACL_ENTRY_WIDTH_PER32BITS
 #define ACL_IDX_INVALID             0xFFFF
-#define ACL_IDX_MAX     512
 
 #define ACL_KEY_MAX_NUM     8
 
@@ -123,7 +122,10 @@ typedef struct igrAcl_data_s
 
 typedef struct acl_action_s {
     uint32    INTR_EN;
-    uint32    GPIO_PIN;
+    uint32    CPU_CTRL_BYPASS;
+    uint32    FWD_CVID_EN;
+    uint32    FWD_SVID_EN;
+    uint32    RESERVED0;
     uint32    GPIO_EN;
     uint32    FLOW_STATS_PTR;
     uint32    FLOW_STATS_EN;
@@ -255,10 +257,10 @@ typedef struct yt_igrAcl_data_tlv_s
         }ip_tos;
 
         struct {
-            uint8_t     udf_data[ACL_UDF_DATA_LEN_MAX];
-            uint8_t     offsets[ACL_MASK_OFFSET-ACL_UDF_DATA_LEN_MAX];
-            uint8_t     udf_mask[ACL_UDF_DATA_LEN_MAX];
-            uint8_t     reserved[ACL_ONE_DATA_LEN_MAX-ACL_UDF_DATA_LEN_MAX];
+            uint8_t     udf_data[YT_ACL_UDF_DATA_LEN_MAX];
+            uint8_t     offsets[ACL_MASK_OFFSET-YT_ACL_UDF_DATA_LEN_MAX];
+            uint8_t     udf_mask[YT_ACL_UDF_DATA_LEN_MAX];
+            uint8_t     reserved[ACL_ONE_DATA_LEN_MAX-YT_ACL_UDF_DATA_LEN_MAX];
         }udf;
 
         struct {
@@ -394,11 +396,11 @@ extern yt_ret_t fal_tiger_acl_rule_reset(yt_unit_t unit);
  * @note          APPLICABLE DEVICES  -Tiger
  * @param[in]     unit                -unit id
  * @param[in]     type                -x
- * @param[in]     pKey_data           -x
+ * @param[in]     pKeyData            -x
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_acl_rule_key_add(yt_unit_t unit, yt_igrAcl_key_type_t type, yt_comm_key_t *pKey_data);
+extern yt_ret_t fal_tiger_acl_rule_key_add(yt_unit_t unit, yt_igrAcl_key_type_t type, yt_acl_comm_key_t *pKeyData);
 
 
 /**
@@ -413,7 +415,7 @@ extern yt_ret_t fal_tiger_acl_rule_key_add(yt_unit_t unit, yt_igrAcl_key_type_t 
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t fal_tiger_acl_rule_action_add(yt_unit_t unit, yt_acl_action_type_t type, yt_comm_act_t *pAction);
+extern yt_ret_t fal_tiger_acl_rule_action_add(yt_unit_t unit, yt_acl_action_type_t type, yt_acl_comm_act_t *pAction);
 
 
 /**

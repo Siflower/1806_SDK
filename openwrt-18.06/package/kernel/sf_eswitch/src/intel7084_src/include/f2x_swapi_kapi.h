@@ -123,3 +123,4 @@ GSW_return_t gsw_api_kclose(GSW_API_HANDLE handle);
 /*@}*/ /* GSWIP_ROUTE_IOCTL */
 
 #endif /* _LTQ_GSW_KERNEL_API_H_ */
+

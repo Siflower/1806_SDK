@@ -19,12 +19,10 @@
 #include "uart.h"
 #elif defined ACC_MEM
 #include "mem.h"
+#elif defined (SW_CTRL_IOCTL)
+#include "sw_ctrl_ioctl.h"
 #else
 #include "ctrlif.h"
-#endif
-
-#ifdef MEM_MODE_CMODEL
-#include "hal_mem_cmodel.h"
 #endif
 
 /*
@@ -35,12 +33,6 @@ osal_mux g_cfgmux;
 uint8_t ghal_mem32_init      = FALSE;
 uint8_t ghal_reg_table_init  = FALSE;
 uint32 DEBUG_MODE_K = 0;
-
-#ifdef MEM_MODE_CMODEL
-hal_reg_tbl_mode_t greg_tbl_mode = HAL_REG_TBL_MODE_CMODEL;
-#else
-hal_reg_tbl_mode_t greg_tbl_mode = HAL_REG_TBL_MODE_NORMAL;
-#endif
 
 /*
  * Symbol Definition
@@ -73,7 +65,6 @@ static uint32_t hal_table_reg_op(uint8_t unit, uint8_t is_write, uint32 mem_id, 
 static uint32_t hal_table_reg_normal_write(uint8_t unit, uint32 mem_id, uint32_t idx, uint16_t len, void *pvalue);
 static uint32_t hal_table_reg_normal_read(uint8_t unit, uint32 mem_id, uint32_t idx, uint16_t len, void *pvalue);
 
-
 uint32_t hal_mem32_init(void)
 {
     ghal_mem32_init = TRUE;
@@ -84,11 +75,6 @@ uint32_t hal_mem32_init(void)
 uint32_t hal_table_reg_init(void)
 {
     osal_mux_init(&g_cfgmux, NULL);
-    
-#ifdef MEM_MODE_CMODEL
-    hal_table_reg_cmodel_init();
-#endif
-
     ghal_reg_table_init = TRUE;
 
     return CMM_ERR_OK;
@@ -101,6 +87,8 @@ uint32_t hal_mem32_write(yt_unit_t unit, uint32_t addr, uint32_t Val)
     return uart_switch_write( addr,  Val);
 #elif defined ACC_MEM
     return mem_switch_write( addr,  Val);
+#elif defined(SW_CTRL_IOCTL)
+    return sw_ctrl_ioctl_write(unit, addr, Val);
 #else
     return ctrlif_reg_write(unit, addr, Val);
 #endif
@@ -115,6 +103,8 @@ uint32_t hal_mem32_read(yt_unit_t unit, uint32_t addr, uint32_t *pVal)
         return uart_switch_read(addr,  pVal);
 #elif defined ACC_MEM
         return mem_switch_read( addr,  pVal);
+#elif defined(SW_CTRL_IOCTL)
+        return sw_ctrl_ioctl_read(unit, addr, pVal);
 #else
         return ctrlif_reg_read(unit, addr, pVal);
 #endif
@@ -270,14 +260,6 @@ static uint32_t hal_table_reg_normal_read(uint8_t unit, uint32 mem_id, uint32_t 
     CMM_PARAM_CHK((NULL == pvalue), CMM_ERR_NULL_POINT);
     CMM_PARAM_CHK((FALSE == ghal_mem32_init), CMM_ERR_NOT_INIT);
     CMM_PARAM_CHK((FALSE == ghal_reg_table_init), CMM_ERR_NOT_INIT);
-
-#ifdef INTERNAL_MSG_DEBUG
-    if (MEM_FLAG_MSG == tbl_reg_list[mem_id].flag)
-    {
-        CMM_ERR_CHK(hal_dbg_msg_read(unit, mem_id, pvalue), ret);
-    }
-    else
-#endif
     {
         CMM_ERR_CHK(hal_table_reg_op(unit, FALSE, mem_id, idx, len, pvalue), ret);
     }
@@ -290,17 +272,8 @@ uint32 hal_table_reg_write(uint8_t unit, uint32 mem_id, uint32_t idx, uint16_t l
 {
     cmm_err_t ret;
 
-#ifdef MEM_MODE_CMODEL 
-    if ((HAL_REG_TBL_MODE_CMODEL == greg_tbl_mode) || (HAL_REG_TBL_MODE_BOTH == greg_tbl_mode))
-    { 
-        CMM_ERR_CHK(hal_table_reg_cmodel_write(unit, mem_id, idx, len, pvalue), ret);
-    }
-#endif
+    CMM_ERR_CHK(hal_table_reg_normal_write(unit, mem_id, idx, len, pvalue), ret);
 
-    if ((HAL_REG_TBL_MODE_NORMAL == greg_tbl_mode) || (HAL_REG_TBL_MODE_BOTH == greg_tbl_mode))
-    {
-        CMM_ERR_CHK(hal_table_reg_normal_write(unit, mem_id, idx, len, pvalue), ret);
-    }
     return CMM_ERR_OK;
 }
 
@@ -309,60 +282,10 @@ uint32 hal_table_reg_read(uint8_t unit, uint32 mem_id, uint32_t idx,uint16_t len
 {
     cmm_err_t ret;
 
-#ifdef MEM_MODE_CMODEL 
-    if ((HAL_REG_TBL_MODE_CMODEL == greg_tbl_mode) || (HAL_REG_TBL_MODE_BOTH == greg_tbl_mode))
-    {
-        CMM_ERR_CHK(hal_table_reg_cmodel_read(unit, mem_id, idx, len, pvalue), ret);
-    }
-#endif
-
-    if ((HAL_REG_TBL_MODE_NORMAL == greg_tbl_mode) || (HAL_REG_TBL_MODE_BOTH == greg_tbl_mode))
-    {
-        CMM_ERR_CHK(hal_table_reg_normal_read(unit, mem_id, idx, len, pvalue), ret);
-    }
+    CMM_ERR_CHK(hal_table_reg_normal_read(unit, mem_id, idx, len, pvalue), ret);
 
     return CMM_ERR_OK;
 }
-
-
-uint32 hal_table_reg_mode_set(uint8_t unit, hal_reg_tbl_mode_t mode)
-{
-    CMM_UNUSED_PARAM(unit);
-    
-    greg_tbl_mode = mode;
-    
-    return CMM_ERR_OK;
-}
-
-
-uint32 hal_table_reg_mode_get(uint8_t unit, hal_reg_tbl_mode_t *pmode)
-{
-    CMM_UNUSED_PARAM(unit);
-    CMM_PARAM_CHK((NULL == pmode), CMM_ERR_NULL_POINT);
-    
-    *pmode = greg_tbl_mode;
-    
-    return CMM_ERR_OK;
-}
-
-
-uint32 hal_table_reg_reset(uint8_t unit, hal_reg_tbl_mode_t mode)
-{
-    cmm_err_t ret = CMM_ERR_OK;
-    
-    if(HAL_REG_TBL_MODE_CMODEL == mode || HAL_REG_TBL_MODE_BOTH == mode)
-    {
-#ifdef MEM_MODE_CMODEL 
-        CMM_ERR_CHK(hal_table_reg_cmodel_reset(unit), ret);
-#else
-        CMM_UNUSED_PARAM(unit);
-        CMM_UNUSED_PARAM(ret);
-#endif
-    }
-
-    return CMM_ERR_OK;
-}
-
 
 uint32_t hal_table_reg_exit(void)
 {
@@ -370,10 +293,6 @@ uint32_t hal_table_reg_exit(void)
     {
         return CMM_ERR_OK;
     }
-    
-#ifdef MEM_MODE_CMODEL
-    hal_table_reg_cmodel_exit();
-#endif
 
 #ifndef __KERNEL__
     osal_mux_destroy(&g_cfgmux);
@@ -382,3 +301,4 @@ uint32_t hal_table_reg_exit(void)
     
     return CMM_ERR_OK;
 }
+

@@ -42,11 +42,24 @@ uint8_t gcal_inited = FALSE;
  */
 uint32_t cal_mgm_init(void)
 {
-    CMM_PARAM_CHK((TRUE == gcal_inited), CMM_ERR_OK);
+    cmm_err_t ret = CMM_ERR_OK;
 
-    cal_board_profile_init();
+    if(TRUE == gcal_inited)
+    {
+        return CMM_ERR_OK;
+    }
+
+    CMM_ERR_CHK(cal_board_profile_init(), ret);
 
     gcal_inited = TRUE;
    
     return CMM_ERR_OK;
+}
+
+void cal_mgm_exit(void)
+{
+    // cal_board_profile_clear();
+    gcal_inited = (yt_bool_t)FALSE;
+
+    return;
 }

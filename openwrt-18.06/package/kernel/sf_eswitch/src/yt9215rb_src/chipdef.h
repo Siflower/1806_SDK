@@ -13,21 +13,15 @@
 #if defined(SWITCH_SERIES_TIGER)
 #include "chipdef_tiger.h"
 #endif
+#if defined(SWITCH_SERIES_SHARK)
+#include "chipdef_shark.h"
+#endif
+#if defined(SWITCH_SERIES_WHALE)
+#include "chipdef_whale.h"
+#endif
 
 #define INVALID_ID  (0xFF)
-
-typedef enum yt_switch_chip_model_e
-{
-	YT_SW_MODEL_9215 = 0,
-	YT_SW_MODEL_9218,
-	YT_SW_MODEL_END
-}yt_switch_chip_model_t;
-
-typedef enum yt_switch_chip_id_e
-{
-    YT_SW_ID_9215	= 0x9002,
-    YT_SW_ID_9218	= 0x9001,
-}yt_switch_chip_id_t;
+#define MAX_EXTIF_NUM  6
 
 typedef enum yt_switch_chip_rev_e
 {
@@ -36,12 +30,6 @@ typedef enum yt_switch_chip_rev_e
     YT_SW_REV_C,
     YT_SW_REV_D
 }yt_switch_chip_rev_t;
-
-typedef enum yt_switch_device_id_e
-{
-    YT_TIGER_DEVICE_FPGA	= 0x9001,
-    YT_TIGER_DEVICE_ASIC	= 0x9002,
-}yt_switch_device_id_t;
 
 /* capability of switch unit */
 typedef struct yt_sw_chip_cap_s
@@ -58,18 +46,26 @@ typedef struct yt_sw_chip_cap_s
     uint8_t max_value_of_msti;
     uint8_t max_vlan_range_profile_num;
     uint8_t max_vlan_meter_entry_num;
+    uint16_t max_l2_fdb_num;
 }yt_swchip_cap_t;
 
 /* chip interface define */
+typedef struct yt_sw_chip_extif_s
+{
+    /*mac id range map to ext interface id*/
+    uint8_t mac_start_id;
+    uint8_t mac_end_id;
+    uint8_t extif_id;
+}yt_swchip_extif_t;
+
 typedef struct yt_sw_chip_if_info_s
 {
-	uint8_t allif_num;
-	uint8_t intif_num;
-	uint8_t intif_start_mac_id;
-	uint8_t extif_num;
-	uint8_t extif_start_mac_id;
-	uint8_t extif_start_id;
-	uint8_t intcpu_mac_id;
+    uint8_t allif_num;
+    uint8_t intif_start_mac_id;/*internal start macid*/
+    uint8_t intif_end_mac_id;/*internal end macid*/
+    uint8_t intcpu_mac_id;
+    uint8_t extif_num;
+    yt_swchip_extif_t extIf[MAX_EXTIF_NUM];
 }yt_swchip_if_info_t;
 
 /* data define */
@@ -77,11 +73,29 @@ typedef struct yt_sw_chip_if_info_s
 extern const yt_swchip_cap_t yt9218_capacity;
 extern const yt_swchip_cap_t yt9215_capacity;
 extern const yt_swchip_if_info_t yt9218_intf_info;
+extern const yt_swchip_if_info_t yt9218n_intf_info;
 extern const yt_swchip_if_info_t yt9215_intf_info;
+extern const yt_swchip_if_info_t yt9213_intf_info;
+extern const yt_swchip_if_info_t yt9214_intf_info;
 #endif
 
-extern const yt_swchip_cap_t *gpChipCapList[];
-extern const yt_swchip_if_info_t *gpChipIntfInfoList[];
+#if defined(SWITCH_SERIES_SHARK)
+extern const yt_swchip_cap_t yt9232_capacity;
+extern const yt_swchip_if_info_t yt9232_intf_info;
+extern const yt_swchip_if_info_t yt9232_26_intf_info;
+extern const yt_swchip_if_info_t yt9230_intf_info;
+extern const yt_swchip_if_info_t yt9231_intf_info;
+extern const yt_swchip_if_info_t yt9231_6_intf_info;
+#endif
+
+#if defined(SWITCH_SERIES_WHALE)
+extern const yt_swchip_cap_t yt922x_capacity;
+extern const yt_swchip_if_info_t yt9228_intf_info;
+extern const yt_swchip_if_info_t yt9224_intf_info;
+#endif
+
+extern const yt_swchip_cap_t * const gpChipCapList[];
+extern const yt_swchip_if_info_t * const gpChipIntfInfoList[];
 
 /* function define */
 extern uint8_t chipdef_get_extif_by_macid(yt_macid_t mac_id, const yt_swchip_if_info_t *pChipIfInfo);

@@ -24,6 +24,14 @@ extern "C" {
 
 #include "fal_cmm.h"
 
+#define VLAN_PROTOCOl_MAX_NUM                   4
+
+typedef enum  yt_l2_type_bitmap_e
+{
+    L2_TYPE_BITMAP_ETHV2 = 1,
+    L2_TYPE_BITMAP_ETHSAP = 2,
+    L2_TYPE_BITMAP_ETHSNAP = 4
+}yt_l2_type_bitmap_t;
 
 /**
  * @internal      fal_tiger_vlan_init
@@ -105,7 +113,7 @@ extern yt_ret_t  fal_tiger_vlan_ingrTpid_get(yt_unit_t unit,  yt_tpid_profiles_t
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[in]     tpidIdxMask         -x
  * @retval        CMM_ERR_OK          -on success
@@ -120,7 +128,7 @@ extern yt_ret_t  fal_tiger_vlan_port_ingrTpidMask_set(yt_unit_t unit, yt_vlan_ty
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[out]    pTpidIdxMask        -x
  * @retval        CMM_ERR_OK          -on success
@@ -136,7 +144,7 @@ extern yt_ret_t  fal_tiger_vlan_port_ingrTpidMask_get(yt_unit_t unit, yt_vlan_ty
  * @brief         Description
  * @note          APPLICABLE DEVICES  -Tiger
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[in]     vid                 -vlan id
  * @retval        CMM_ERR_OK          -on success
@@ -152,13 +160,43 @@ extern yt_ret_t  fal_tiger_vlan_port_ingrDefaultVlan_set(yt_unit_t unit, yt_vlan
  * @brief         Description
  * @note          APPLICABLE DEVICES  -Tiger
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[out]    pVid                -vlan id
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
 extern yt_ret_t  fal_tiger_vlan_port_ingrDefaultVlan_get(yt_unit_t unit, yt_vlan_type_t  type, yt_port_t  port, yt_vlan_t *pVid);
+
+/**
+ * @internal      fal_tiger_vlan_port_igrDefPri_set
+ * @endinternal
+ *
+ * @brief         Set port ingress default priority for untag packets depend on vlan type (CVLAN or SVLAN)
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     port                -port num
+ * @param[in]     pri                 -priority
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t  fal_tiger_vlan_port_igrDefPri_set(yt_unit_t unit, yt_vlan_type_t  type, yt_port_t  port, uint8_t pri);
+
+/**
+ * @internal      fal_tiger_vlan_port_igrDefPri_get
+ * @endinternal
+ *
+ * @brief         Get port ingress default priority for untag packets depend on vlan type (CVLAN or SVLAN)
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     port                -port num
+ * @param[out]    pPri                -priority
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t  fal_tiger_vlan_port_igrDefPri_get(yt_unit_t unit, yt_vlan_type_t  type, yt_port_t  port, uint8_t *pPri);
 
 /**
  * @internal      fal_tiger_vlan_port_ingrFilter_enable_set
@@ -223,7 +261,7 @@ extern yt_ret_t  fal_tiger_vlan_ingrTransparent_get(yt_unit_t unit, yt_port_t  p
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[in]     tagAFT              -yt_vlan.h
  * @retval        CMM_ERR_OK          -on success
@@ -238,7 +276,7 @@ extern yt_ret_t  fal_tiger_vlan_port_aft_set(yt_unit_t unit, yt_vlan_type_t  typ
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[out]    pTagAFT             -yt_vlan.h
  * @retval        CMM_ERR_OK          -on success
@@ -253,7 +291,7 @@ extern yt_ret_t  fal_tiger_vlan_port_aft_get(yt_unit_t unit, yt_vlan_type_t type
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[in]     tagMode             -x
  * @retval        CMM_ERR_OK          -on success
@@ -268,7 +306,7 @@ extern yt_ret_t fal_tiger_vlan_port_egrTagMode_set(yt_unit_t unit, yt_vlan_type_
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[out]    pTagMode            -x
  * @retval        CMM_ERR_OK          -on success
@@ -283,7 +321,7 @@ extern yt_ret_t fal_tiger_vlan_port_egrTagMode_get(yt_unit_t unit, yt_vlan_type_
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[in]     default_vid         -vlan id
  * @retval        CMM_ERR_OK          -on success
@@ -298,7 +336,7 @@ extern yt_ret_t fal_tiger_vlan_port_egrDefaultVid_set(yt_unit_t unit, yt_vlan_ty
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[out]    pDefault_vid        -vlan id
  * @retval        CMM_ERR_OK          -on success
@@ -339,7 +377,7 @@ extern yt_ret_t fal_tiger_vlan_egrTpid_get(yt_unit_t unit,  yt_tpid_profiles_t *
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[in]     tpidIdx             -x
  * @retval        CMM_ERR_OK          -on success
@@ -354,7 +392,7 @@ extern yt_ret_t fal_tiger_vlan_port_egrTpidIdx_set(yt_unit_t unit, yt_vlan_type_
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[out]    pTpidIdx            -x
  * @retval        CMM_ERR_OK          -on success
@@ -369,7 +407,7 @@ extern yt_ret_t fal_tiger_vlan_port_egrTpidIdx_get(yt_unit_t unit, yt_vlan_type_
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[in]     enable              -enable or disable
  * @param[in]     port_mask           -port bit mask
@@ -385,7 +423,7 @@ extern yt_ret_t fal_tiger_vlan_port_egrTransparent_set(yt_unit_t unit, yt_vlan_t
  *
  * @brief         Description
  * @param[in]     unit                -unit id
- * @param[in]     type                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     type                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @param[in]     port                -port num
  * @param[out]    pEnable             -enable or disable
  * @param[out]    pPort_mask          -port bit mask
@@ -430,7 +468,7 @@ extern yt_ret_t  fal_tiger_vlan_port_egrFilter_en_get(yt_unit_t unit, yt_port_t 
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[in]     mode                -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[in]     mode                -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
@@ -444,12 +482,417 @@ extern yt_ret_t  fal_tiger_port_vidTypeSel_set(yt_unit_t unit, yt_port_t port, y
  * @brief         Description
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
- * @param[out]    pMode               -VLAN_TYPE_CVLAN or VLAN_TYPE_SVLAN
+ * @param[out]    pMode               -YT_VLAN_TYPE_CVLAN or YT_VLAN_TYPE_SVLAN
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
 extern yt_ret_t  fal_tiger_port_vidTypeSel_get(yt_unit_t unit, yt_port_t port, yt_vlan_type_t *pMode);
 
+/**
+ * @internal      fal_tiger_vlan_protocolBasedVlan_group_set
+ * @endinternal
+ *
+ * @brief         Set protocol based vlan group
+ * @note          APPLICABLE DEVICES  -Tiger&Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     groupId           -group id
+ * @param[in]    pKey                -protocol key
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_protocolBasedVlan_group_set(yt_unit_t unit, uint8_t groupId, const yt_vlan_protocol_key_t *pKey);
+
+/**
+ * @internal      fal_tiger_vlan_protocolBasedVlan_group_get
+ * @endinternal
+ *
+ * @brief         Get protocol based vlan group
+ * @note          APPLICABLE DEVICES  -Tiger&Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     groupId           -group id
+ * @param[out]    pKey                -protocol key
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_NULL_POINT   -point is NULL
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_protocolBasedVlan_group_get(yt_unit_t unit, uint8_t groupId, yt_vlan_protocol_key_t *pKey);
+
+/**
+ * @internal      fal_tiger_vlan_protocolBasedVlan_table_add
+ * @endinternal
+ *
+ * @brief         Set protocol vlan table action
+ * @note          APPLICABLE DEVICES  -Tiger&Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     groupId           -group id
+ * @param[in]     pAction              -action
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_PORT         -port err
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_protocolBasedVlan_table_add(yt_unit_t unit, yt_port_t port, uint8_t groupId, const yt_vlan_protocol_action_t *pAction);
+
+/**
+ * @internal      fal_tiger_vlan_protocolBasedVlan_table_get
+ * @endinternal
+ *
+ * @brief         Get protocol vlan table action
+ * @note          APPLICABLE DEVICES  -Tiger&Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     groupId           -group id
+ * @param[out]    pAction             -action
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_PORT         -port err
+ * @retval        CMM_ERR_NULL_POINT   -point is NULL
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_protocolBasedVlan_table_get(yt_unit_t unit, yt_port_t port, uint8_t  groupId, yt_vlan_protocol_action_t *pAction);
+
+/**
+ * @internal      fal_tiger_vlan_protocolBasedVlan_table_del
+ * @endinternal
+ *
+ * @brief         Del protocol vlan table action
+ * @note          APPLICABLE DEVICES  -Tiger&Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     groupId           -group id
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_PORT         -port err
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_protocolBasedVlan_table_del(yt_unit_t unit, yt_port_t port, uint8_t  groupId);
+
+/**
+ * @internal      fal_tiger_vlan_mac_ipSub_tbl_arrange_set
+ * @endinternal
+ *
+ * @brief          allocate resource for both of mac vlan and ip subnet vlan
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                   -unit id
+ * @param[in]     macNum             -mac vlan entry number
+ * @param[in]     ipSubNum          -ip subnet vlan entry number
+ * @param[in]     pri                       -mac vlan priority first or ip subnet vlan priority first
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_mac_ipSub_tbl_arrange_set(yt_unit_t unit, uint8_t macNum, uint8_t ipSubNum, yt_vlan_mac_ip_subnet_pri_t  pri);
+
+/**
+ * @internal      fal_tiger_vlan_mac_ipSub_tbl_arrange_get
+ * @endinternal
+ *
+ * @brief          Get allocated resource for both of mac vlan and ip subnet vlan
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                   -unit id
+ * @param[out]     pMacNum             -mac vlan entry number
+ * @param[out]     pIpSubNum         -ip subnet vlan entry number
+ * @param[out]     pPri                       -mac vlan priority first or ip subnet vlan priority first
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_NULL_POINT   -point is NULL
+ */
+extern yt_ret_t  fal_tiger_vlan_mac_ipSub_tbl_arrange_get(yt_unit_t unit, uint8_t *pMacNum, uint8_t *pIpSubNum, yt_vlan_mac_ip_subnet_pri_t  *pPri);
+
+/**
+ * @internal      fal_tiger_vlan_macBasedVlan_table_add
+ * @endinternal
+ *
+ * @brief         Add mac based vlan table and return the table index
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     pMacVlanRule    -mac vlan entry rule
+ * @param[in]     pMacVlanAction  -mac vlan entry action
+ * @param[out]     pTableIdx       -table index
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_PORT         -port err
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_macBasedVlan_table_add(yt_unit_t unit, const yt_mac_vlan_rule_t *pMacVlanRule, const yt_mac_vlan_action_t *pMacVlanAction, yt_mac_vlan_table_idx_t *pTableIdx);
+
+/**
+ * @internal      fal_tiger_vlan_macBasedVlan_table_add_by_index
+ * @endinternal
+ *
+ * @brief         Set mac based vlan table by the table index
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     tableIdx          - table index
+ * @param[in]     pMacVlanRule    -mac vlan entry rule
+ * @param[in]     pMacVlanAction  -mac vlan entry action
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_PORT         -port err
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_macBasedVlan_table_add_by_index(yt_unit_t unit, yt_mac_vlan_table_idx_t tableIdx, const yt_mac_vlan_rule_t *pMacVlanRule, const yt_mac_vlan_action_t *pMacVlanAction);
+
+/**
+ * @internal      fal_tiger_vlan_macBasedVlan_table_get
+ * @endinternal
+ *
+ * @brief         Get mac based vlan table by the table index
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     tableIdx          - table index
+ * @param[in]     pMacVlanRule    -mac vlan entry rule
+ * @param[in]     pMacVlanAction  -mac vlan entry action
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ */
+extern yt_ret_t  fal_tiger_vlan_macBasedVlan_table_get(yt_unit_t unit, yt_mac_vlan_table_idx_t tableIdx, yt_mac_vlan_rule_t *pMacVlanRule, yt_mac_vlan_action_t *pMacVlanAction);
+
+/**
+ * @internal      fal_tiger_vlan_macBasedVlan_table_del
+ * @endinternal
+ *
+ * @brief         Delete mac based vlan table by the table index
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     tableIdx          - table index
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ */
+extern yt_ret_t  fal_tiger_vlan_macBasedVlan_table_del(yt_unit_t unit, yt_mac_vlan_table_idx_t tableIdx);
+
+/**
+ * @internal      fal_tiger_vlan_ipSubnetBasedVlan_table_add
+ * @endinternal
+ *
+ * @brief         Set ip subnet based vlan table and return the table index
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     pIpSubnetVlanRule    -ip subnet vlan entry rule
+ * @param[in]     pIpSubnetVlanAction  -ip subnet vlan entry action
+ * @param[out]    pTableIdx       -table index
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_PORT         -port err
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_ipSubnetBasedVlan_table_add(yt_unit_t unit, const yt_ip_subnet_vlan_rule_t *pIpSubnetVlanRule, const yt_ip_subnet_vlan_action_t *pIpSubnetVlanAction, yt_ip_subnet_vlan_table_idx_t *pTableIdx);
+
+/**
+ * @internal      fal_tiger_vlan_ipSubnetBasedVlan_table_add_by_index
+ * @endinternal
+ *
+ * @brief         Set ip subnet based vlan table by the table index
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     tableIdx          - table index
+ * @param[in]     pIpSubnetVlanRule    -ip subnet vlan entry rule
+ * @param[in]     pIpSubnetVlanAction  -ip subnet vlan entry action
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_PORT         -port err
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_ipSubnetBasedVlan_table_add_by_index(yt_unit_t unit, yt_ip_subnet_vlan_table_idx_t tableIdx, const yt_ip_subnet_vlan_rule_t *pIpSubnetVlanRule, const yt_ip_subnet_vlan_action_t *pIpSubnetVlanAction);
+
+/**
+ * @internal      fal_tiger_vlan_ipSubnetBasedVlan_table_get
+ * @endinternal
+ *
+ * @brief         Get ip subnet based vlan table by the table index
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     tableIdx          - table index
+ * @param[in]     pIpSubnetVlanRule    -ip subnet vlan entry rule
+ * @param[in]     pIpSubnetVlanAction  -ip subnet vlan entry action
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ */
+extern yt_ret_t  fal_tiger_vlan_ipSubnetBasedVlan_table_get(yt_unit_t unit, yt_ip_subnet_vlan_table_idx_t tableIdx, yt_ip_subnet_vlan_rule_t *pIpSubnetVlanRule, yt_ip_subnet_vlan_action_t *pIpSubnetVlanAction);
+
+
+/**
+ * @internal      fal_tiger_vlan_ipSubnetBasedVlan_table_del
+ * @endinternal
+ *
+ * @brief         Delete ip subnet based vlan table by the table index
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     tableIdx          - table index
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ */
+extern yt_ret_t  fal_tiger_vlan_ipSubnetBasedVlan_table_del(yt_unit_t unit, yt_ip_subnet_vlan_table_idx_t tableIdx);
+
+/**
+ * @internal      fal_tiger_vlan_ipSubnetBasedVlan_bypass_arp_set
+ * @endinternal
+ *
+ * @brief         Set arp type check for ip subnet based vlan table
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     enable              -enable or disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ */
+extern yt_ret_t  fal_tiger_vlan_ipSubnetBasedVlan_bypass_arp_set(yt_unit_t unit, yt_enable_t enable);
+
+/**
+ * @internal      fal_tiger_vlan_ipSubnetBasedVlan_bypass_arp_get
+ * @endinternal
+ *
+ * @brief         Get arp type check of ip subnet based vlan table
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[out]    pEnable             -enable or disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+  * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ */
+extern yt_ret_t  fal_tiger_vlan_ipSubnetBasedVlan_bypass_arp_get(yt_unit_t unit, yt_enable_t *pEnable);
+
+/**
+ * @internal      fal_tiger_vlan_policy_idx_mapping_set
+ * @endinternal
+ *
+ * @brief         set the mapping vlan policy of each vlan
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     vid                 -vlan id
+ * @param[in]     vlanPolicyIdx     -vlan policy index
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_policy_idx_mapping_set(yt_unit_t unit, yt_vlan_t vid,  uint8_t vlanPolicyIdx);
+
+/**
+ * @internal      fal_tiger_vlan_policy_idx_mapping_get
+ * @endinternal
+ *
+ * @brief         get the mapping vlan policy of each vlan
+ * @note          APPLICABLE DEVICES - Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     vid                 -vlan id
+ * @param[pot]   pVlanPolicyIdx     -vlan policy index
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_NULL_POINT   -point is NULL
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_policy_idx_mapping_get(yt_unit_t unit, yt_vlan_t vid,  uint8_t *pVlanPolicyIdx);
+
+/**
+ * @internal      fal_tiger_vlan_policy_table_add
+ * @endinternal
+ *
+ * @brief         add vlan policy table
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     pVlanPolicyInfo    -vlan policy info
+ * @param[out]     pVlanPolicyIdx     -vlan policy index
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_PORTLIST     -portlist err
+ * @retval        CMM_ERR_NULL_POINT   -point is NULL
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_policy_table_add(yt_unit_t unit, const yt_vlan_policy_info_t *pVlanPolicyInfo,  uint8_t *pVlanPolicyIdx);
+
+/**
+ * @internal      fal_tiger_vlan_policy_table_add_by_index
+ * @endinternal
+ *
+ * @brief         add vlan policy table by index
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     vlanPolicyIdx     -vlan policy index
+ * @param[in]     pVlanPolicyInfo    -vlan policy info
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_PORTLIST     -portlist err
+ * @retval        CMM_ERR_NULL_POINT   -point is NULL
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_policy_table_add_by_index(yt_unit_t unit, uint8_t vlanPolicyIdx, const yt_vlan_policy_info_t *pVlanPolicyInfo);
+
+/**
+ * @internal      fal_tiger_vlan_policy_table_get
+ * @endinternal
+ *
+ * @brief         get vlan policy table
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     vlanPolicyIdx     -vlan policy index
+ * @param[out]     pVlanPolicyInfo    -vlan policy info
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_NULL_POINT   -point is NULL
+ * @retval        CMM_ERR_EXCEED_RANGE -input value out of range
+ */
+extern yt_ret_t  fal_tiger_vlan_policy_table_get(yt_unit_t unit, uint8_t vlanPolicyIdx, yt_vlan_policy_info_t *pVlanPolicyInfo);
+
+/**
+ * @internal      fal_tiger_vlan_policy_table_del
+ * @endinternal
+ *
+ * @brief         delete vlan policy table
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     vlanPolicyIdx     -vlan policy index
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_INPUT        -input value err
+ * @retval        CMM_ERR_NOT_INIT     -not init
+ * @retval        CMM_ERR_NULL_POINT   -point is NULL
+ */
+extern yt_ret_t  fal_tiger_vlan_policy_table_del(yt_unit_t unit, uint8_t vlanPolicyIdx);
 
 
 #ifdef __cplusplus

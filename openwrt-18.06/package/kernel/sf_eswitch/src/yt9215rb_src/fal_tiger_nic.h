@@ -175,10 +175,41 @@ extern yt_ret_t  fal_tiger_nic_ext_cputag_en_set(yt_unit_t unit,  yt_enable_t en
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  fal_tiger_nic_ext_cputag_en_get(yt_unit_t unit,  yt_enable_t *pEnable);
+extern yt_ret_t fal_tiger_nic_ext_cputag_en_get(yt_unit_t unit,  yt_enable_t *pEnable);
+
+/**
+ * @internal      fal_tiger_nic_int_cputag_en_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[in]     enable              -enable or disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_nic_int_cputag_en_set(yt_unit_t unit,  yt_enable_t enable);
+
+/**
+ * @internal      fal_tiger_nic_int_cputag_en_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @note          APPLICABLE DEVICES  -Tiger
+ * @param[in]     unit                -unit id
+ * @param[out]    pEnable             -enable or disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t  fal_tiger_nic_int_cputag_en_get(yt_unit_t unit,  yt_enable_t *pEnable);
 
 
+extern yt_ret_t  fal_tiger_nic_cpu_pkt_keepAll_en_set(yt_unit_t unit, yt_enable_t extEn, yt_enable_t intEn);
+extern yt_ret_t  fal_tiger_nic_cpu_pkt_keepAll_en_get(yt_unit_t unit, yt_enable_t *pExtEN, yt_enable_t *pIntEN);
 
+
+extern yt_ret_t  fal_tiger_nic_cputag_mode_set(yt_unit_t unit, yt_cputag_mode_t mode);
+extern yt_ret_t  fal_tiger_nic_cputag_mode_get(yt_unit_t unit, yt_cputag_mode_t *pMode);
 
 #ifdef __cplusplus
 }

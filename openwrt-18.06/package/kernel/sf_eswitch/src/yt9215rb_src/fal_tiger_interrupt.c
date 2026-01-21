@@ -1,6 +1,4 @@
 
-#ifndef _FAL_TIGER_INTERRUPT_C
-#define _FAL_TIGER_INTERRUPT_C
 #include "fal_tiger_interrupt.h"
 #include "fal_tiger_struct.h"
 #include "fal_tiger_entry.h"
@@ -39,10 +37,12 @@ yt_ret_t fal_tiger_int_control_set(yt_unit_t unit, yt_int_type_t type, yt_enable
     cmm_err_t ret = CMM_ERR_OK;
     intr_mask_t intr_mask;
     uint32_t mask;
+    uint32_t fieldId;
 
     CMM_ERR_CHK(HAL_TBL_REG_READ(unit, INTR_MASKm, 0, sizeof(intr_mask_t), &intr_mask), ret);
     mask = (YT_ENABLE == enable)?1:0;
-    HAL_FIELD_SET(INTR_MASKm, INTR_MASK_HW_EXCEPTIONf-type, &intr_mask, mask);
+    fieldId = INTR_MASK_HW_EXCEPTIONf-type;
+    HAL_FIELD_SET(INTR_MASKm, fieldId, &intr_mask, mask);
     CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, INTR_MASKm, 0, sizeof(intr_mask_t), &intr_mask), ret);
 
     return CMM_ERR_OK;
@@ -53,9 +53,11 @@ yt_ret_t fal_tiger_int_control_get(yt_unit_t unit, yt_int_type_t type, yt_enable
     cmm_err_t ret = CMM_ERR_OK;
     uint32_t intr_mask;
     uint32_t mask;
+    uint32_t fieldId;
 
     CMM_ERR_CHK(HAL_TBL_REG_READ(unit, INTR_MASKm, 0, sizeof(intr_mask_t), &intr_mask), ret);
-    HAL_FIELD_GET(INTR_MASKm, INTR_MASK_HW_EXCEPTIONf-type, &intr_mask, &mask);
+    fieldId = INTR_MASK_HW_EXCEPTIONf-type;
+    HAL_FIELD_GET(INTR_MASKm, fieldId, &intr_mask, &mask);
     *pEnable = mask ? YT_ENABLE : YT_DISABLE;
 
     return CMM_ERR_OK;
@@ -64,26 +66,139 @@ yt_ret_t fal_tiger_int_control_get(yt_unit_t unit, yt_int_type_t type, yt_enable
 yt_ret_t fal_tiger_int_status_get(yt_unit_t unit, yt_intr_status_t *pIntStatus)
 {
     cmm_err_t ret = CMM_ERR_OK;
-    yt_intr_status_t intr_status;
+    intr_status_t intr_status;
+
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, INTR_STATUSm, 0, sizeof(yt_intr_status_t), &intr_status), ret);
+    *pIntStatus = (intr_status.entry_data[0] & 0x1FFFFFFF);
+
+    return CMM_ERR_OK;
+}
+
+yt_ret_t fal_tiger_int_typeStatus_get(yt_unit_t unit, yt_int_type_t type, yt_intr_status_t intStatus, yt_bool_t *pActive)
+{
+    intr_status_t intr_status;
+    uint32_t mask;
+    uint32_t fieldId;
+
+    CMM_UNUSED_PARAM(unit);
+    intr_status.entry_data[0] = intStatus;
+    fieldId = INTR_MASK_HW_EXCEPTIONf-type;
+    HAL_FIELD_GET(INTR_MASKm, fieldId, &intr_status, &mask);
+    *pActive = (mask==1) ? TRUE : FALSE;
+
+    return CMM_ERR_OK;
+}
+
+yt_ret_t fal_tiger_int_port_int_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable)
+{
+    cmm_err_t ret = CMM_ERR_OK;
+    intr_mask_t intr_mask;
+    uint32_t mask;
+    yt_macid_t macId;
+    uint32_t fieldId;
+
+    macId = CAL_YTP_TO_MAC(unit,port);
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, INTR_MASKm, 0, sizeof(intr_mask_t), &intr_mask), ret);
+    mask = (YT_ENABLE == enable)?1:0;
+    fieldId = INTR_MASK_PHY_INT0f - macId;
+    HAL_FIELD_SET(INTR_MASKm, fieldId, &intr_mask, mask);
+    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, INTR_MASKm, 0, sizeof(intr_mask_t), &intr_mask), ret);
+
+    return CMM_ERR_OK;
+}
+
+yt_ret_t fal_tiger_int_port_int_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable)
+{
+    cmm_err_t ret = CMM_ERR_OK;
+    intr_mask_t intr_mask;
+    uint32_t mask;
+    yt_macid_t macId;
+    uint32_t fieldId;
+
+    macId = CAL_YTP_TO_MAC(unit,port);
+
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, INTR_MASKm, 0, sizeof(intr_mask_t), &intr_mask), ret);
+    fieldId = INTR_MASK_PHY_INT0f - macId;
+    HAL_FIELD_GET(INTR_MASKm, fieldId, &intr_mask, &mask);
+    *pEnable = mask ? YT_ENABLE : YT_DISABLE;
+
+    return CMM_ERR_OK;
+}
+
+yt_ret_t fal_tiger_int_allPortIntStatus_get(yt_unit_t unit, yt_intr_status_t *pIntStatus)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pIntStatus);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t fal_tiger_int_portIntStatus_get(yt_unit_t unit, yt_port_t port, yt_intr_status_t intStatus, yt_bool_t *pActive)
+{
+    intr_status_t intr_status;
+    yt_macid_t macId;
+    uint32_t mask;
+    uint32_t fieldId;
 #ifdef PORT_INCLUDED
-    yt_port_t port;
     uint16_t tmpData;
 #endif
 
-    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, INTR_STATUSm, 0, sizeof(yt_intr_status_t), &intr_status), ret);
-    *pIntStatus = intr_status;
+    macId = CAL_YTP_TO_MAC(unit,port);
+
+    intr_status.entry_data[0] = intStatus;
+    fieldId = INTR_MASK_PHY_INT0f - macId;
+    HAL_FIELD_GET(INTR_MASKm, fieldId, &intr_status, &mask);
+    *pActive = mask ? YT_ENABLE : YT_DISABLE;
 
 #ifdef PORT_INCLUDED
-    for(port = 0; port < CAL_PORT_NUM_ON_UNIT(unit); port++)
-    {
-        /* TODO: clean phy status asynchronously */
-        /* read and clean phy interrupt status */
-        fal_tiger_port_phy_interruptStatus_get(unit, port, &tmpData);
-    }
+    /* TODO: clean phy status asynchronously */
+    /* read and clean phy interrupt status */
+    fal_tiger_port_phy_interruptStatus_get(unit, port, &tmpData);
 #endif
 
     return CMM_ERR_OK;
 }
 
+yt_ret_t fal_tiger_int_wol_signalOutputType_set(yt_unit_t unit, yt_int_wol_outputType_t outputType)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(outputType);
 
-#endif //FAL_TIGER_INTERRUPT_C
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t fal_tiger_int_wol_signalOutputType_get(yt_unit_t unit, yt_int_wol_outputType_t *pOutputType)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pOutputType);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t fal_tiger_int_wol_port_enable_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(enable);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+
+yt_ret_t fal_tiger_int_wol_port_enable_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(pEnable);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t fal_tiger_int_wol_allPortIntStatus_get(yt_unit_t unit, yt_intr_status_t *pIntStatus)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pIntStatus);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+

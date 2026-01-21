@@ -18,8 +18,16 @@ typedef enum yt_switch_chip_e
     SWCHIP_YT9215SC = 92151,
     SWCHIP_YT9215S,
     SWCHIP_YT9215RB,
+    SWCHIP_YT9215SL,
     SWCHIP_YT9218N = 92180,
-    SWCHIP_YT9218M
+    SWCHIP_YT9218M,
+    SWCHIP_YT9213NB = 9213,
+    SWCHIP_YT9214NB = 9214,
+    SWCHIP_YT9230S = 9230,
+    SWCHIP_YT9231S = 9231,
+    SWCHIP_YT9232S = 9232,
+    SWCHIP_YT9224 = 9224,
+    SWCHIP_YT9228 = 9228
 }yt_switch_chip_t;
 
 /**
@@ -27,7 +35,7 @@ typedef enum yt_switch_chip_e
  * @endinternal
  *
  * @brief         get mac address of system
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark
  * @param[in]     unit                -unit id
  * @param[out]     pSys_mac            -mac address
  * @retval        CMM_ERR_INPUT        -input parameter error
@@ -41,7 +49,7 @@ extern yt_ret_t yt_sys_mac_get(yt_unit_t unit, yt_mac_addr_t *pSys_mac);
  * @endinternal
  *
  * @brief         reset chip reg value to default
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark
  * @param[in]     unit                -unit id
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
@@ -54,7 +62,7 @@ extern yt_ret_t yt_sys_chip_reset(yt_unit_t unit);
  * @endinternal
  *
  * @brief         reset software database
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark
  * @param[in]     unit                -unit id
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
@@ -67,7 +75,7 @@ extern yt_ret_t yt_sys_database_reset(yt_unit_t unit);
  * @endinternal
  *
  * @brief         get sdk version info
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark
  * @param[in]     unit                -unit id
  * @param[out]   pVerStr                -version info in string format
  * @retval        CMM_ERR_OK          -on success
@@ -81,7 +89,7 @@ extern yt_ret_t yt_sys_version_get(yt_unit_t unit, char *pVerStr);
  * @endinternal
  *
  * @brief         get specific register value
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark
  * @param[in]     unit                -unit id
  * @param[in]     regAddr          -register address
  * @param[out]   pVal                -register value
@@ -96,7 +104,7 @@ extern yt_ret_t yt_sys_register_value_get(yt_unit_t unit, uint32_t regAddr, uint
  * @endinternal
  *
  * @brief         set specific register value
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark
  * @param[in]     unit                -unit id
  * @param[in]     regAddr          -register address
  * @param[in]     value              -register value
@@ -111,7 +119,7 @@ extern yt_ret_t yt_sys_register_value_set(yt_unit_t unit, uint32_t regAddr, uint
  * @endinternal
  *
  * @brief          get switch chip information
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark
  * @param[in]     unit                -unit id
  * @param[out]    pChip               -switch chip mode,refer to yt_switch_chip_t
  * @retval        CMM_ERR_OK          -on success
@@ -121,3 +129,4 @@ extern yt_ret_t yt_sys_chipInfo_get(yt_unit_t unit, yt_switch_chip_t *pChip);
 
 
 #endif
+

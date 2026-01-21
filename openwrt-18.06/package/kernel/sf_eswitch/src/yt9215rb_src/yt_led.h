@@ -31,29 +31,89 @@ typedef enum yt_led_id_e
     LED_ID_NUM
 }yt_led_id_t;
 
+typedef enum yt_led_mode_e
+{
+    LED_MODE_PARALLEL = 0,
+    LED_MODE_SCAN,          /* not supported yet */
+    LED_MODE_SERIAL,
+    LED_MODE_NUM
+}yt_led_mode_t;
+
+/* bit num on LED_DATA */
+typedef enum yt_sled_dataNum_e
+{
+#if defined(SWITCH_SERIES_TIGER)
+    SLED_DATANUM_YT9215_P5L1 = 0,
+    SLED_DATANUM_YT9215_P7L1,
+    SLED_DATANUM_YT9215_P5L2,
+    SLED_DATANUM_YT9215_P7L2,
+    SLED_DATANUM_YT9215_P5L3,
+    SLED_DATANUM_YT9215_P7L3,
+    SLED_DATANUM_YT9218_P10L1,
+    SLED_DATANUM_YT9218_P10L2,
+    SLED_DATANUM_YT9218_P10L3,
+#endif
+#if defined(SWITCH_SERIES_WHALE)
+    SLED_DATANUM_YT9224_P6L1,
+    SLED_DATANUM_YT9224_P6L2,
+    SLED_DATANUM_YT9224_P6L3,
+    SLED_DATANUM_YT9228_P9L1,
+    SLED_DATANUM_YT9228_P9L2,
+    SLED_DATANUM_YT9228_P9L3,
+#endif
+    SLED_DATANUM_MAX
+}yt_sled_dataNum_t;
+
+typedef enum yt_sled_activeMode_e {
+    LED_SERIAL_ACTIVE_MODE_HIGH = 0,
+    LED_SERIAL_ACTIVE_MODE_LOW
+}yt_sled_activeMode_t;
+
 typedef struct yt_led_act_cfg_s {
     uint8_t    spd10m_blink_en;
     uint8_t    spd100m_blink_en;
     uint8_t    spd1000m_blink_en;
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_WHALE)        
+    uint8_t    spd2500m_blink_en;
+#endif
+#if defined(SWITCH_SERIES_WHALE)
+    uint8_t    spd5000m_blink_en;
+    uint8_t    spd10000m_blink_en;
+#endif
     uint8_t    collision_blink_en;
     uint8_t    spd10m_on_en;
     uint8_t    spd100m_on_en;
     uint8_t    spd1000m_on_en;
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_WHALE)          
+    uint8_t    spd2500m_on_en;
+#endif
+#if defined(SWITCH_SERIES_WHALE)
+    uint8_t    spd5000m_on_en;
+    uint8_t    spd10000m_on_en;
+#endif
     uint8_t    rxact_on_en;
     uint8_t    txact_on_en;
     uint8_t    rxact_blink_en;
     uint8_t    txact_blink_en;
     uint8_t    half_duplex_en;
     uint8_t    full_duplex_en;
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_TIGER)
     uint8_t    active_blink_indicate_en;
+#endif
     uint8_t    loopdetect_indicate_en;
     uint8_t    eee_indicate_en;
+#if defined(SWITCH_SERIES_TIGER)
     uint8_t    collision_blink_indicate_en;      /* only for LED0 */
-    uint8_t    disable_link_try_en;     /* only for LED0 */
+#endif
 } yt_led_act_cfg_t;
 
 typedef enum yt_led_blink_event_e {
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_TIGER)
     LED_BLINK_EVENT_EEE = 0,
+#endif
+#if defined(SWITCH_SERIES_WHALE)
+    LED_BLINK_EVENT_EEE_CPU_FORCE = 0,
+#endif
     LED_BLINK_EVENT_OTHERS,
     LED_BLINK_EVENT_NUM
 }yt_led_blink_event_t;
@@ -105,12 +165,33 @@ typedef struct yt_led_remapping_s {
     yt_led_id_t ledId;
 }yt_led_remapping_t;
 
+typedef enum yt_led_seled_num_e
+{
+    YT_LED_SELED_NUM_ONE = 0,
+    YT_LED_SELED_NUM_TWO,
+    YT_LED_SELED_NUM_THREE,
+    YT_LED_SELED_NUM_MAX
+} yt_led_seled_num_t;    
+
+typedef struct yt_led_seled_info_s
+{
+    yt_port_mask_t ledportmask;
+    yt_port_mask_t comboportmask;
+    yt_led_seled_num_t led_mode;
+} yt_led_seled_info_t;
+
+typedef enum yt_led_phy_type_e
+{
+    YT_LED_PHY_TYPE_COPPER,
+    YT_LED_PHY_TYPE_FIBER,
+} yt_led_phy_type_t;
+
 /**
  * @internal      yt_led_enable
  * @endinternal
  *
  * @brief         enabel LED
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
@@ -122,7 +203,7 @@ extern yt_ret_t yt_led_enable(yt_unit_t unit);
  * @endinternal
  *
  * @brief         select the mode of led
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Whale
  * @param[in]     unit                -unit id
  * @param[in]     mode                -serial or parallel mode
  * @retval        CMM_ERR_OK          -on success
@@ -135,7 +216,7 @@ extern yt_ret_t yt_led_mode_set(yt_unit_t unit, yt_led_mode_t mode);
  * @endinternal
  *
  * @brief         get the mode of led
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Whale
  * @param[in]     unit                -unit id
  * @param[out]    pmode               -serial or parallel mode
  * @retval        CMM_ERR_OK          -on success
@@ -148,7 +229,7 @@ extern yt_ret_t yt_led_mode_get(yt_unit_t unit, yt_led_mode_t *pMode);
  * @endinternal
  *
  * @brief         select the action of LED0~2 per port
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     ledId               -led id
@@ -163,7 +244,7 @@ extern yt_ret_t yt_led_action_set(yt_unit_t unit, yt_port_t port, yt_led_id_t le
  * @endinternal
  *
  * @brief         get the action of LED0~2 per port
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     ledId               -led id
@@ -178,7 +259,7 @@ extern yt_ret_t yt_led_action_get(yt_unit_t unit, yt_port_t port, yt_led_id_t le
  * @endinternal
  *
  * @brief         select the frequency of blink
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     event               -event associated with blink
@@ -193,7 +274,7 @@ extern yt_ret_t yt_led_blink_freq_set(yt_unit_t unit, yt_port_t port, yt_led_bli
  * @endinternal
  *
  * @brief         get the frequency of blink
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     event               -event associated with blink
@@ -208,7 +289,7 @@ extern yt_ret_t yt_led_blink_freq_get(yt_unit_t unit, yt_port_t port, yt_led_bli
  * @endinternal
  *
  * @brief         select the duty of blink
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     duty                -duty of blink
@@ -222,7 +303,7 @@ extern yt_ret_t yt_led_blink_duty_set(yt_unit_t unit, yt_port_t port, yt_led_bli
  * @endinternal
  *
  * @brief         get the duty of blink
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[out]    pDuty               -duty of blink
@@ -236,7 +317,7 @@ extern yt_ret_t yt_led_blink_duty_get(yt_unit_t unit, yt_port_t port, yt_led_bli
  * @endinternal
  *
  * @brief         select blinking rate of loopdetect
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     rate                -blinking rate
  * @retval        CMM_ERR_OK          -on success
@@ -249,7 +330,7 @@ extern yt_ret_t yt_led_loopdetect_blink_rate_set(yt_unit_t unit, yt_led_loopdete
  * @endinternal
  *
  * @brief         get blinking rate of loopdetect
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[out]    pRate               -blinking rate
  * @retval        CMM_ERR_OK          -on success
@@ -262,7 +343,7 @@ extern yt_ret_t yt_led_loopdetect_blink_rate_get(yt_unit_t unit, yt_led_loopdete
  * @endinternal
  *
  * @brief         select the cpu force mode
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     ledId               -led id
@@ -277,7 +358,7 @@ extern yt_ret_t yt_led_force_mode_set(yt_unit_t unit, yt_port_t port, yt_led_id_
  * @endinternal
  *
  * @brief         get cpu force mode of LED
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     ledId               -led id
@@ -292,7 +373,7 @@ extern yt_ret_t yt_led_force_mode_get(yt_unit_t unit, yt_port_t port, yt_led_id_
  * @endinternal
  *
  * @brief         select the rate of force mode
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     ledId               -led id
@@ -307,7 +388,7 @@ extern yt_ret_t yt_led_force_rate_set(yt_unit_t unit, yt_port_t port, yt_led_id_
  * @endinternal
  *
  * @brief         get the rate of force mode
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     ledId               -led id
@@ -317,13 +398,38 @@ extern yt_ret_t yt_led_force_rate_set(yt_unit_t unit, yt_port_t port, yt_led_id_
  */
 extern yt_ret_t yt_led_force_rate_get(yt_unit_t unit, yt_port_t port, yt_led_id_t ledId, yt_led_force_rate_t *pRate);
 
+/**
+ * @internal      yt_led_serial_outputMode_set
+ * @endinternal
+ *
+ * @brief         select the output mode of serial LED
+ * @note          APPLICABLE DEVICES  -Tiger, Whale
+ * @param[in]     unit                -unit id
+ * @param[in]     mode                -ouput mode
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t yt_led_serial_outputMode_set(yt_unit_t unit, yt_sled_dataNum_t mode);
+
+/**
+ * @internal      yt_led_serial_outputMode_get
+ * @endinternal
+ *
+ * @brief         get the output mode of serial LED
+ * @note          APPLICABLE DEVICES  -Tiger, Whale
+ * @param[in]     unit                -unit id
+ * @param[out]    pMode               -ouput mode
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t yt_led_serial_outputMode_get(yt_unit_t unit, yt_sled_dataNum_t *pMode);
 
 /**
  * @internal      yt_led_serial_activeMode_set
  * @endinternal
  *
  * @brief         select the active mode of serial LED
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     mode                -active mode
  * @retval        CMM_ERR_OK          -on success
@@ -337,7 +443,7 @@ extern yt_ret_t yt_led_serial_activeMode_set(yt_unit_t unit, yt_sled_activeMode_
  * @endinternal
  *
  * @brief         get the active mode of serial LED
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[out]    pMode               -active mode
  * @retval        CMM_ERR_OK          -on success
@@ -349,8 +455,8 @@ extern yt_ret_t yt_led_serial_activeMode_get(yt_unit_t unit, yt_sled_activeMode_
  * @internal      yt_led_serial_remapping_set
  * @endinternal
  *
- * @brief         select the remapping state of serial LED(dst-->src)
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         select the remapping state of serial LED, index is output number of the serial led
+ * @note          APPLICABLE DEVICES  -Tiger, Whale
  * @param[in]     unit                -unit id
  * @param[in]     index               -index of led_data
  * @param[in]     dstInfo             -the destination information of remapping
@@ -363,7 +469,7 @@ extern yt_ret_t yt_led_serial_remapping_set(yt_unit_t unit, uint8_t index, yt_le
  * @endinternal
  *
  * @brief         get the remapping state of serial LED
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Whale
  * @param[in]     unit                -unit id
  * @param[in]     index               -index of led_data
  * @param[out]    pDstInfo            -the destination information of remapping
@@ -371,32 +477,6 @@ extern yt_ret_t yt_led_serial_remapping_set(yt_unit_t unit, uint8_t index, yt_le
  * @retval        CMM_ERR_FAIL        -on fail
  */
 extern yt_ret_t yt_led_serial_remapping_get(yt_unit_t unit, uint8_t index, yt_led_remapping_t *pDstInfo);
-
-/**
- * @internal      yt_led_serial_enable_set
- * @endinternal
- *
- * @brief         enabel/disable serial LED
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     enable              -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t yt_led_serial_enable_set(yt_unit_t unit, yt_enable_t enable);
-
-/**
- * @internal      yt_led_serial_enable_get
- * @endinternal
- *
- * @brief         get enable state of serial LED
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[out]    pEnable             -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t yt_led_serial_enable_get(yt_unit_t unit, yt_enable_t *pEnable);
 
 /**
  * @internal      yt_led_parallel_output_set
@@ -429,7 +509,7 @@ extern yt_ret_t yt_led_parallel_output_get(yt_unit_t unit, yt_port_mask_t *pport
  * @endinternal
  *
  * @brief         select the remapping state of parallel LED(dst-->src)
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Whale
  * @param[in]     unit                -unit id
  * @param[in]     srcInfo             -the source information of remapping
  * @param[in]     dstInfo             -the destination information of remapping
@@ -443,7 +523,7 @@ extern yt_ret_t yt_led_parallel_remapping_set(yt_unit_t unit, yt_led_remapping_t
  * @endinternal
  *
  * @brief         get the remapping state of parallel LED
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Whale
  * @param[in]     unit                -unit id
  * @param[in]     srcInfo             -the source information of remapping
  * @param[out]    pDstInfo            -the destination information of remapping
@@ -457,7 +537,7 @@ extern yt_ret_t yt_led_parallel_remapping_get(yt_unit_t unit, yt_led_remapping_t
  * @endinternal
  *
  * @brief         invert led_pos signal for parallel mode
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Whale
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     ledId               -led id
@@ -472,7 +552,7 @@ extern yt_ret_t yt_led_parallel_pos_invert_set(yt_unit_t unit, yt_port_t port, y
  * @endinternal
  *
  * @brief         get inverted status of led_pos signal
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Whale
  * @param[in]     unit                -unit id
  * @param[in]     port                -port num
  * @param[in]     ledId               -led id
@@ -482,9 +562,62 @@ extern yt_ret_t yt_led_parallel_pos_invert_set(yt_unit_t unit, yt_port_t port, y
  */
 extern yt_ret_t yt_led_parallel_pos_invert_get(yt_unit_t unit, yt_port_t port, yt_led_id_t ledId, yt_enable_t *pEnable);
 
+/**
+ * @internal      yt_led_serial_port_info_set
+ * @endinternal
+ *
+ * @brief         set per_port_en,is_combo_en,ledmode
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     portledInfo         -per_port_en,is_combo_en,ledmode Info
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t yt_led_serial_port_info_set(yt_unit_t unit, yt_led_seled_info_t portledInfo);
+
+/**
+ * @internal      yt_led_serial_port_info_get
+ * @endinternal
+ *
+ * @brief         get per_port_en,is_combo_en,ledmode
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     pPortledInfo        -pointer to per_port_en,is_combo_en,ledmode
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t yt_led_serial_port_info_get(yt_unit_t unit, yt_led_seled_info_t *pPortledInfo);
+
+/**
+ * @internal      yt_led_serial_total_ledNum_set
+ * @endinternal
+ *
+ * @brief         set total led number
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     lednum              -total led number
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t yt_led_serial_total_ledNum_set(yt_unit_t unit, yt_unit_t lednum);
+
+/**
+ * @internal      yt_led_serial_total_ledNum_get
+ * @endinternal
+ *
+ * @brief         get total led number
+ * @note          APPLICABLE DEVICES  -Shark
+ * @param[in]     unit                -unit id
+ * @param[in]     pLednum             -pointer to total led number
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t yt_led_serial_total_ledNum_get(yt_unit_t unit, yt_unit_t *pLednum);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
 
 #endif
+

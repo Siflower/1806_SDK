@@ -20,9 +20,9 @@
  * 1.2.3
  * 1-sdk arch
  * 2-update when add more chip series
- * 3-update in same series
+ * 3-update in some series
  */
-#define YT_SDK_VERSION "1.1.005"
+#define YT_SDK_VERSION  "1.2.008"
 /*
  * version + release dat
  * this info will be updated when release,do not edit

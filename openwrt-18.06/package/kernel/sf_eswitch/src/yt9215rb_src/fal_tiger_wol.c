@@ -51,3 +51,40 @@ yt_ret_t  fal_tiger_wol_ethertype_get(yt_unit_t unit, yt_tpid_t *pEth_type)
 
     return CMM_ERR_OK;
 }
+
+yt_ret_t  fal_tiger_wol_port_enable_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(enable);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t  fal_tiger_wol_port_enable_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(pEnable);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t  fal_tiger_wol_port_macAddr_set(yt_unit_t unit, yt_port_t port, yt_mac_addr_t macAddr)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(macAddr);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t  fal_tiger_wol_port_macAddr_get(yt_unit_t unit, yt_port_t port, yt_mac_addr_t *pMacAddr)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(port);
+    CMM_UNUSED_PARAM(pMacAddr);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+

@@ -29,7 +29,7 @@ yt_ret_t  fal_tiger_nic_cpuport_mode_set(yt_unit_t unit, yt_cpuport_mode_t mode)
     cpu_copy_dst_ctrl_t tmp_entry;
     cmm_err_t ret = CMM_ERR_OK;
 
-    osal_memset(&tmp_entry, 0, sizeof(cpu_copy_dst_ctrl_t));
+    osal_memset(&tmp_entry, sizeof(cpu_copy_dst_ctrl_t), 0, sizeof(cpu_copy_dst_ctrl_t));
 
     CMM_ERR_CHK(HAL_TBL_REG_READ(unit, CPU_COPY_DST_CTRLm, 0, sizeof(cpu_copy_dst_ctrl_t), &tmp_entry), ret);
     if (mode == CPUPORT_MODE_INTERNAL)
@@ -58,7 +58,7 @@ yt_ret_t  fal_tiger_nic_cpuport_mode_get(yt_unit_t unit, yt_cpuport_mode_t *pmod
     cmm_err_t ret = CMM_ERR_OK;
     uint32_t to_ext_cpu;
 
-    osal_memset(&tmp_entry, 0, sizeof(cpu_copy_dst_ctrl_t));
+    osal_memset(&tmp_entry, sizeof(cpu_copy_dst_ctrl_t), 0, sizeof(cpu_copy_dst_ctrl_t));
 
     CMM_ERR_CHK(HAL_TBL_REG_READ(unit, CPU_COPY_DST_CTRLm, 0, sizeof(cpu_copy_dst_ctrl_t), &tmp_entry), ret);
     HAL_FIELD_GET(CPU_COPY_DST_CTRLm, CPU_COPY_DST_CTRL_TO_EXT_CPUf, &tmp_entry, &to_ext_cpu);
@@ -195,3 +195,73 @@ yt_ret_t  fal_tiger_nic_ext_cputag_en_get(yt_unit_t unit,  yt_enable_t *pEnable)
 
     return CMM_ERR_OK;
 }
+
+yt_ret_t fal_tiger_nic_int_cputag_en_set(yt_unit_t unit,  yt_enable_t enable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(enable);
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t fal_tiger_nic_int_cputag_en_get(yt_unit_t unit,  yt_enable_t *pEnable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pEnable);
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t  fal_tiger_nic_cpu_pkt_keepAll_en_set(yt_unit_t unit, yt_enable_t extEn, yt_enable_t intEn)
+{
+    uint32_t cpuBypass;
+    cmm_err_t ret = CMM_ERR_OK;
+
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, CPU_PKT_BYPASSEDIT_CTRLm, 0,sizeof(cpu_pkt_bypassedit_ctrl_t), &cpuBypass), ret);
+    if (intEn == YT_ENABLE)
+    {
+        cpuBypass |= 0x2;
+    }
+    else
+    {
+        cpuBypass &= ~(0x2);
+    }
+    if (extEn == YT_ENABLE)
+    {
+        cpuBypass |= 0x1;
+    }
+    else
+    {
+        cpuBypass &= ~(0x1);
+    }
+    CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, CPU_PKT_BYPASSEDIT_CTRLm, 0, sizeof(cpu_pkt_bypassedit_ctrl_t), &cpuBypass), ret);
+
+    return ret;
+}
+
+yt_ret_t  fal_tiger_nic_cpu_pkt_keepAll_en_get(yt_unit_t unit, yt_enable_t *pExtEN, yt_enable_t *pIntEN)
+{
+    uint32_t cpuBypass;
+    cmm_err_t ret = CMM_ERR_OK;
+
+    CMM_ERR_CHK(HAL_TBL_REG_READ(unit, CPU_PKT_BYPASSEDIT_CTRLm, 0,sizeof(cpu_pkt_bypassedit_ctrl_t), &cpuBypass), ret);
+    *pIntEN = ((cpuBypass & 0x2) == 0U) ? YT_DISABLE : YT_ENABLE;
+    *pExtEN = ((cpuBypass & 0x1) == 0U) ? YT_DISABLE : YT_ENABLE;
+
+    return ret;
+}
+
+yt_ret_t  fal_tiger_nic_cputag_mode_set(yt_unit_t unit, yt_cputag_mode_t mode)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(mode);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t  fal_tiger_nic_cputag_mode_get(yt_unit_t unit, yt_cputag_mode_t *pMode)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pMode);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+

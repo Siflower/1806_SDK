@@ -1,3 +1,10 @@
+/*
+* Description
+*
+* Copyright (C) 2016-2020 Qin.Xia <qin.xia@siflower.com.cn>
+*
+* Siflower software
+*/
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/types.h>
@@ -13,6 +20,7 @@
 #include "intel7084_src/src/gsw_sw_init.h"
 #include "yt9215rb_src/sf_yt9215rb_ops.h"
 #include "yt9215rb_src/chipdef_tiger.h"
+#include "an8855_src/sf_an8855_ops.h"
 #ifdef CONFIG_DEBUG_FS
 #include "sf_eswitch_debug.h"
 #endif
@@ -25,11 +33,15 @@ struct mutex op_switch_lock;
 // spinlock_t	mdio_lock;
 struct mii_bus *gp_mii_bus = NULL;
 struct vlan_entry vlan_entries;
+extern struct sf_eswitch_api_t nf2507_api;
 extern struct sf_eswitch_api_t an8855_api;
+extern struct sf_eswitch_api_t jl5106_api;
+extern int sf_l2sw_getAsicReg(unsigned int reg, unsigned int *pValue);
 extern ethsw_api_dev_t *pedev0[GSW_DEV_MAX];
 int rtk_phy_id;
 int rtk_rgmii_port;
 int air_an8855_phy_id_get(void);
+extern int jl_get_chip_id(void);
 #ifdef CONFIG_SFAX8_GENL
 sf_nlfamily dps_family;
 struct sfax8_netlink *genl_priv = NULL;
@@ -41,19 +53,19 @@ static struct of_device_id mdio_gpio_of_match[] = {
 };
 
 #ifdef CONFIG_SFAX8_GENL
-int notify_link_event(struct sf_eswitch_priv *pesw_priv, int port, int updown, char *ifname)
+int notify_link_event(struct sf_eswitch_priv *pesw_priv, int port, int updown, char *ifname, uint8_t *mac, uint16_t vlan_id, bool flag)
 {
 	struct sk_buff *skb;
 	int ret = 0;
 	void *msg_head;
-	struct genl_family *family = &(dps_family.family);
+    struct genl_family *family = &(dps_family.family);
 	char macaddr[20] = {0};
 
 	skb = genlmsg_new(MAX_MSG_SIZE, GFP_KERNEL);
 	if (!skb)
 		return -ENOMEM;
 	msg_head = genlmsg_put(skb, 0, 0, family, 0, SF_CMD_GENERIC);
-	if (!msg_head) {
+	if (!msg_head){
 		printk("%s : add genlmsg header error!\n", __func__);
 		ret = -ENOMEM;
 		goto err;
@@ -66,14 +78,28 @@ int notify_link_event(struct sf_eswitch_priv *pesw_priv, int port, int updown, c
 	if (ret < 0)
 		goto err;
 
-	if (updown > 0) {
-		pesw_priv->pesw_api->dump_mac(macaddr, port);
+	if (mac != NULL) {
+		snprintf(macaddr, sizeof(macaddr), "%02x:%02x:%02x:%02x:%02x:%02x",
+				 mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+		ret = nla_put_string(skb, SF_ETH_CMD_ATTR_DPS_MAC, macaddr);
+		if (ret < 0)
+			goto err;
+	} else if (updown > 0) {
+		pesw_priv->pesw_api->dumpmac(macaddr, port);
 		ret = nla_put_string(skb, SF_ETH_CMD_ATTR_DPS_MAC, macaddr);
 		if (ret < 0)
 			goto err;
 	}
 
+	ret = nla_put_u32(skb, SF_ETH_CMD_ATTR_DPS_VLAN, vlan_id);
+	if (ret < 0)
+		goto err;
+
 	ret = nla_put_string(skb, SF_ETH_CMD_ATTR_DPS_IFNAME, ifname);
+	if (ret < 0)
+		goto err;
+
+	ret = nla_put_u8(skb, SF_ETH_CMD_ATTR_DPS_FLAG, flag);
 	if (ret < 0)
 		goto err;
 
@@ -105,12 +131,50 @@ int check_port_in_portlist(struct sf_eswitch_priv *pesw_priv, int port)
 	return (1 << port) & pesw_priv->port_list ? 1 : 0;
 }
 
-static int old_phy_status[PHY_SWITCH_PORT_NUM] = {0};
-static int phy_monitor_thread(void *data)
+static void check_port_link_status(int *status)
 {
+	GSW_RMON_Port_cnt_t count;
+	GSW_MDIO_data_t parm;
+	GSW_RMON_clear_t mp;
+	u32 error_count, rx_count;
+	int i;
+	parm.nAddressReg = 0;
+
+	for (i = 0; i < INTEL_PHY_PORT_NUM; i++) {
+		if (!(*status & BIT(i)))
+			continue;
+
+		SF_MDIO_LOCK();
+		count.nPortId = i;
+		intel7084_count_rd(&count);
+		SF_MDIO_UNLOCK();
+		error_count = count.nRxFCSErrorPkts;
+		rx_count = count.nRxGoodPkts;
+
+		if (rx_count == 0 && error_count == 0)
+			continue;
+
+		*status ^= BIT(i);
+		if (error_count != 0) {
+			mp.nRmonId = i;
+			mp.eRmonType = GSW_RMON_ALL_TYPE;
+			SF_MDIO_LOCK();
+			intel7084_count_clear(&mp);
+			parm.nAddressDev = i;
+			intel7084_phy_rd(&parm);
+			parm.nData |= PHY_RESTART_AUTO_NEGOTIATION;
+			intel7084_phy_wr(&parm);
+			SF_MDIO_UNLOCK();
+			printk("%s %d %d %d\n", __func__, __LINE__, i, error_count);
+		}
+	}
+}
+
+static int old_phy_status[5] = {0};
+static int phy_monitor_thread(void *data) {
 	struct sf_eswitch_priv *pesw_priv = data;
 	struct sf_eswitch_api_t *pesw_api = pesw_priv->pesw_api;
-	int i, updown, max_port = 0;
+	int i, updown, max_port = 0, status = 0;
 
 	if (pesw_priv->model == RTK8367C)
 		max_port = RTK_SWITCH_PORT_NUM;
@@ -118,6 +182,8 @@ static int phy_monitor_thread(void *data)
 		max_port = INTEL_SWITCH_PORT_NUM;
 	else if (pesw_priv->model == YT9215RB || pesw_priv->model == YT9215S || pesw_priv->model == YT9215SC)
 		max_port = YT9215RB_PHY_PORT_NUM;
+	else if (pesw_priv->model == AN8855)
+		max_port = AN8855_PHY_PORT_NUM;
 
 	for (i = 0; i < max_port; i++) {
 		if (!check_port_in_portlist(pesw_priv, i))
@@ -130,9 +196,9 @@ static int phy_monitor_thread(void *data)
 
 #ifdef CONFIG_SFAX8_GENL
 		if (updown && old_phy_status[i] != pesw_priv->phy_status[i])
-			notify_link_event(pesw_priv, i, updown, "eth0");
+			notify_link_event(pesw_priv, i, updown, "eth0", NULL, 0, true);
 #endif
-	old_phy_status[i] = pesw_priv->phy_status[i] = updown;
+        old_phy_status[i] = pesw_priv->phy_status[i] = updown;
 	}
 
 	while (!kthread_should_stop()) {
@@ -143,23 +209,27 @@ static int phy_monitor_thread(void *data)
 
 			pesw_priv->phy_status[i] = pesw_api->check_phy_linkup(i);
 #ifdef CONFIG_SFAX8_GENL
-			if (old_phy_status[i] != pesw_priv->phy_status[i])
+			if (old_phy_status[i] != pesw_priv->phy_status[i]) {
 				notify_link_event(pesw_priv, i,
-						pesw_priv->phy_status[i], "eth0");
+					pesw_priv->phy_status[i], "eth0", NULL, 0, true);
+				if (pesw_priv->phy_status[i] && pesw_priv->model == INTEL7084)
+					status |= BIT(i);
+			}
 #endif
 			old_phy_status[i] = pesw_priv->phy_status[i];
+			if(pesw_priv->model == INTEL7084)
+				check_port_link_status(&status);
 		}
 	}
 	return 0;
 }
 
-void sf_eswitch_deinit_swdev(struct platform_device *pdev)
-{
+void sf_eswitch_deinit_swdev(struct platform_device *pdev) {
 	struct sf_eswitch_priv *pesw_priv = platform_get_drvdata(pdev);
 
 #ifdef CONFIG_SFAX8_GENL
 	if (genl_priv)
-		genl_priv->genl_family_exit(&(dps_family.family));
+	  genl_priv->genl_family_exit(&(dps_family.family));
 #endif
 	pesw_priv->pesw_api->vender_deinit(pesw_priv);
 #ifdef CONFIG_SWCONFIG
@@ -168,15 +238,14 @@ void sf_eswitch_deinit_swdev(struct platform_device *pdev)
 	return;
 }
 
-unsigned char sf_eswitch_init_swdev(struct platform_device *pdev, struct mii_bus* pmii_bus)
-{
+unsigned char sf_eswitch_init_swdev(struct platform_device *pdev, struct mii_bus* pmii_bus) {
 	struct sf_eswitch_priv *pesw_priv = platform_get_drvdata(pdev);
 	struct device_node *mdio_node = NULL;
 #ifdef CONFIG_SWCONFIG
 	struct switch_dev *pswdev;
 	int ret = 0;
 #endif
-	unsigned int chip_id = 0, retry_times = 0, chip_mode = 0;
+	unsigned int chip_id = 0, retry_times = 0, chip_mode = 0 ;
 	gp_mii_bus = pmii_bus;
 
 #ifdef CONFIG_MDIO_GPIO
@@ -186,7 +255,7 @@ unsigned char sf_eswitch_init_swdev(struct platform_device *pdev, struct mii_bus
 	}
 #endif
 
-	if (gp_mii_bus == NULL) {
+	if(gp_mii_bus == NULL){
 		return UNKNOWN;
 	}
 
@@ -194,7 +263,22 @@ unsigned char sf_eswitch_init_swdev(struct platform_device *pdev, struct mii_bus
 	pswdev = &pesw_priv->swdev;
 #endif
 
-	do {
+	do{
+		//0x1300 is the value of reading Naifei register
+		sf_l2sw_getAsicReg(0x1300, &chip_id);
+
+		if (chip_id == NF2507_ID) {
+
+			pesw_priv->model = NF2507;
+			pesw_priv->pesw_api = &nf2507_api;
+			pesw_priv->port_list = SWITCH_PORT_LIST;
+#ifdef CONFIG_SWCONFIG
+			pswdev->ports = 32;
+			pswdev->cpu_port = 17;
+#endif
+			break;
+		}
+
 		// chip id to read realtek 8367c
 		rtk_phy_id = 0;
 		rtl8367c_setAsicReg(0x13C2, 0x0249);
@@ -245,7 +329,7 @@ unsigned char sf_eswitch_init_swdev(struct platform_device *pdev, struct mii_bus
 		//chip id to read intel
 		ethsw_init_pedev0();
 		intel7084_mdio_rd(0xFA11, 0, 16, &chip_id);
-		if (chip_id == INTEL7084_ID) {
+		if(chip_id == INTEL7084_ID){
 			pesw_priv->model = INTEL7084;
 			pesw_priv->pesw_api = &intel7084_api;
 			pesw_priv->port_list = SWITCH_PORT_LIST;
@@ -255,11 +339,12 @@ unsigned char sf_eswitch_init_swdev(struct platform_device *pdev, struct mii_bus
 #endif
 			break;
 		}
+
 		//chip id to read intel7082 mdio_addr 0x1f
 		pedev0[0]->mdio_id = 0x1;
 		pedev0[0]->mdio_addr = 0x1F;
 		intel7084_mdio_rd(0xFA11, 0, 16, &chip_id);
-		if (chip_id == INTEL7082_ID) {
+		if(chip_id == INTEL7082_ID){
 			pesw_priv->model = INTEL7082;
 			pesw_priv->pesw_api = &intel7084_api;
 			pesw_priv->port_list = SWITCH_PORT_LIST;
@@ -325,12 +410,26 @@ unsigned char sf_eswitch_init_swdev(struct platform_device *pdev, struct mii_bus
 			pswdev->cpu_port = YT9215SC_NUM_CPU_PORTS;
 #endif
 			break;
-        }
+		}
+
+		// chip id to read jl5106
+		chip_id = jl_get_chip_id();
+		printk("%s chip_id is %d\n", __func__, chip_id);
+		if (chip_id == JL5106_CHIP_ID) {
+			pesw_priv->model = JL5106;
+			pesw_priv->pesw_api = &jl5106_api;
+			pesw_priv->port_list = SWITCH_PORT_LIST;
+#ifdef CONFIG_SWCONFIG
+			pswdev->ports = JL5106_NUM_PORTS;
+			pswdev->cpu_port = JL5106_CPU_PORT;
+#endif
+			break;
+		}
 
 		retry_times++;
 		printk("unknown switch type! retry times:%d\n", retry_times);
 
-	} while (retry_times < 3);
+	}while(retry_times < 3);
 
 #ifdef CONFIG_SWCONFIG
 	pswdev->ops = pesw_priv->pesw_api->ops;
@@ -428,8 +527,7 @@ void sf_eswitch_set_vlan_entries(struct sf_eswitch_priv * pesw_priv,struct vlan_
 	mutex_unlock(&swdev->sw_mutex);
 }
 
-unsigned int sf_eswitch_read_phy_reg(struct sf_eswitch_priv* priv , int phyNo, int phyReg)
-{
+unsigned int sf_eswitch_read_phy_reg(struct sf_eswitch_priv* priv , int phyNo, int phyReg) {
 	GSW_MDIO_data_t parm;
 	unsigned int phyData = 0;
 
@@ -437,22 +535,27 @@ unsigned int sf_eswitch_read_phy_reg(struct sf_eswitch_priv* priv , int phyNo, i
 	if (priv->model == RTK8367C) {
 		rtl8367c_getAsicPHYReg(phyNo, phyReg, &phyData);
 	}
-	else if (priv->model == INTEL7084 || priv->model == INTEL7082) {
+	else if (priv->model == INTEL7084 || priv->model == INTEL7082)
+	{
 		parm.nAddressDev = phyNo;
 		parm.nAddressReg = phyReg;
 		intel7084_phy_rd(&parm);
 		phyData = parm.nData;
-	} else if (priv->model == YT9215RB || priv->model == YT9215S || priv->model == YT9215SC) {
+	}
+	else if (priv->model == YT9215RB || priv->model == YT9215S || priv->model == YT9215SC)
+	{
 		yt9215rb_getAsicPHYReg(phyNo, phyReg, &phyData);
 	}
-
+	else if (priv->model == AN8855)
+	{
+		an8855_phy_read(phyNo, phyReg, &phyData);
+	}
 	SF_MDIO_UNLOCK();
 
 	return phyData;
 }
 
-void sf_eswitch_write_phy_reg(struct sf_eswitch_priv* priv, int phyNo, int phyReg, int phyData)
-{
+void sf_eswitch_write_phy_reg(struct sf_eswitch_priv* priv, int phyNo, int phyReg, int phyData) {
 	GSW_MDIO_data_t parm;
 
 	SF_MDIO_LOCK();
@@ -464,21 +567,25 @@ void sf_eswitch_write_phy_reg(struct sf_eswitch_priv* priv, int phyNo, int phyRe
 		parm.nAddressReg = phyReg;
 		parm.nData = phyData;
 		intel7084_phy_wr(&parm);
-	} else if (priv->model == YT9215RB || priv->model == YT9215S || priv->model == YT9215SC) {
+	}
+	else if (priv->model == YT9215RB || priv->model == YT9215S || priv->model == YT9215SC)
+	{
 		yt9215rb_setAsicPHYReg(phyNo, phyReg, phyData);
 	}
-
+	else if (priv->model == AN8855)
+	{
+		an8855_phy_write(phyNo, phyReg, phyData);
+	}
 	SF_MDIO_UNLOCK();
 
 	return;
 }
 
-int mdio_read_ext(int phyaddr, int phyreg, int *phydata)
-{
+int mdio_read_ext(int phyaddr, int phyreg, int *phydata) {
 	struct mii_bus *pmii_bus ;
 	int phy_value= 0;
 	pmii_bus = gp_mii_bus;
-	if (!pmii_bus) {
+	if(!pmii_bus){
 		printk("mdio bus not found\n");
 		return -1;
 	}
@@ -488,11 +595,10 @@ int mdio_read_ext(int phyaddr, int phyreg, int *phydata)
 	return 0;
 }
 
-int mdio_write_ext(int phyaddr, int phyreg, int phydata)
-{
+int mdio_write_ext(int phyaddr, int phyreg, int phydata) {
 	struct mii_bus *pmii_bus;
 	pmii_bus = gp_mii_bus;
-	if (!pmii_bus) {
+	if(!pmii_bus){
 		printk("mdio bus not found\n");
 		return -1;
 	}
@@ -547,7 +653,7 @@ static int sf_eswitch_deinit(struct platform_device *pdev)
 {
 	struct sf_eswitch_priv *pesw_priv = platform_get_drvdata(pdev);
 	//	struct sf_eswitch_api_t *pesw_api = pesw_priv->pesw_api;
-	if (!pesw_priv) {
+	if(!pesw_priv){
 		printk("eswitch is null deinit fail\n");
 		return -1;
 	}
@@ -562,8 +668,7 @@ static int sf_eswitch_deinit(struct platform_device *pdev)
 	return 0;
 }
 
-static int sf_eswitch_probe(struct platform_device *pdev)
-{
+static int sf_eswitch_probe(struct platform_device *pdev) {
 	struct sf_eswitch_priv *pesw_priv;
 #ifdef CONFIG_SFAX8_GENL
 	struct platform_device *genl_pdev = NULL;
@@ -576,7 +681,7 @@ static int sf_eswitch_probe(struct platform_device *pdev)
 	}
 
 	// spin_lock_init(&mdio_lock);
-	mutex_init(&op_switch_lock);
+    mutex_init(&op_switch_lock);
 	platform_set_drvdata(pdev, pesw_priv);
 #ifdef CONFIG_SWCONFIG
 	pesw_priv->swdev.alias = "sfax8_eswitch";
@@ -593,13 +698,13 @@ static int sf_eswitch_probe(struct platform_device *pdev)
 	pesw_priv->set_vlan= sf_eswitch_set_vlan_entries;
 
 #ifdef CONFIG_SFAX8_GENL
-	genl_pdev = platform_device_register_simple("sf_genl",PLATFORM_DEVID_AUTO,NULL,0);
+	genl_pdev = platform_device_register_simple("sf_genl",PLATFORM_DEVID_AUTO,NULL,0 );
 	if (genl_pdev == NULL)
 		goto err_out_pdev;
 
 	printk("genl dev name %s\n", dev_name(&genl_pdev->dev));
 	genl_priv = platform_get_drvdata(genl_pdev);
-	if (genl_priv == NULL) {
+	if(genl_priv == NULL){
 		printk("probe genl fail\n");
 		goto err_genl_priv;
 	}
@@ -608,7 +713,7 @@ static int sf_eswitch_probe(struct platform_device *pdev)
 #ifdef CONFIG_DEBUG_FS
 	pesw_priv->esw_debug = debugfs_create_file("esw_debug", 0777, NULL,
 			(void *)pesw_priv, &esw_debug_ops);
-	if (pesw_priv->esw_debug == NULL) {
+	if(pesw_priv->esw_debug == NULL){
 		goto err_out_debugfs;
 	}
 #endif
@@ -631,11 +736,10 @@ err_out_pdev:
 }
 
 
-static int sf_eswitch_remove(struct platform_device *pdev)
-{
+static int sf_eswitch_remove(struct platform_device *pdev) {
 	struct sf_eswitch_priv *pesw_priv = platform_get_drvdata(pdev);
 
-	if (!pesw_priv) {
+	if(!pesw_priv){
 		printk("eswitch is null, remove fail\n");
 		return -1;
 	}
@@ -649,7 +753,7 @@ static int sf_eswitch_remove(struct platform_device *pdev)
 	platform_set_drvdata(pdev, NULL);
 	kfree(pesw_priv);
 
-	mutex_destroy(&op_switch_lock);
+    mutex_destroy(&op_switch_lock);
 	printk("eswitch remove success\n");
 	return 0;
 }
@@ -663,8 +767,7 @@ static struct platform_driver sf_eswitch_driver = {
 	.remove = sf_eswitch_remove,
 };
 
-static int __init sf_eswitch_module_init(void)
-{
+static int __init sf_eswitch_module_init(void) {
 	return platform_driver_register(&sf_eswitch_driver);
 }
 module_init(sf_eswitch_module_init);
@@ -676,5 +779,6 @@ static void __exit sf_eswitch_module_exit(void)
 module_exit(sf_eswitch_module_exit);
 
 MODULE_LICENSE("GPL v2");
+MODULE_AUTHOR("Qin.Xia <qin.xia@siflower.com.cn>");
 MODULE_DESCRIPTION("Gigabit switch driver for sfax8");
 MODULE_VERSION(SF_VERSION);

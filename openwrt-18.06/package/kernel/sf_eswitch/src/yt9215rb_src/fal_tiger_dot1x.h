@@ -127,6 +127,33 @@ extern yt_ret_t fal_tiger_dot1x_portBasedDirection_set(yt_unit_t unit, yt_port_t
 extern yt_ret_t fal_tiger_dot1x_portBasedDirection_get(yt_unit_t unit, yt_port_t port, yt_dot1x_direction_t *pPort_direction);
 
 
+/**
+ * @internal      fal_tiger_dot1x_macBasedEnable_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     enable              -enable or disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_dot1x_macBasedEnable_set(yt_unit_t unit, yt_port_t port, yt_enable_t enable);
+
+
+/**
+ * @internal      fal_tiger_dot1x_macBasedEnable_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[out]    pEnable             -enable or disable
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_dot1x_macBasedEnable_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnable);
+
 
 /**
  * @internal      fal_tiger_dot1x_guest_vlan_set
@@ -260,7 +287,31 @@ extern yt_ret_t fal_tiger_dot1x_rx_bypass_mc_set(yt_unit_t unit, yt_enable_t ena
 extern yt_ret_t fal_tiger_dot1x_rx_bypass_mc_get(yt_unit_t unit, yt_enable_t *pEnable);
 
 
+/**
+ * @internal      fal_tiger_dot1x_eapol_act_set
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[in]     act_type            -x
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_dot1x_eapol_act_set(yt_unit_t unit, yt_port_t port, yt_act_type_t act_type);
 
+/**
+ * @internal      fal_tiger_dot1x_eapol_act_get
+ * @endinternal
+ *
+ * @brief         Description
+ * @param[in]     unit                -unit id
+ * @param[in]     port                -port num
+ * @param[out]     pActType            -x
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+extern yt_ret_t fal_tiger_dot1x_eapol_act_get(yt_unit_t unit, yt_port_t port, yt_act_type_t* pActType);
 
 #ifdef __cplusplus
 }

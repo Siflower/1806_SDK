@@ -22,428 +22,381 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define YT_MAX_MULTICAST_ROUTER_PORT    2
-#define YT_MAX_MULTICAST_VLAN_NUM       16
+#if defined(SWITCH_SERIES_TIGER)
+#define YT_MAX_MULTICAST_VLAN_NUM       (16U)
+#endif
+#if defined(SWITCH_SERIES_SHARK) || defined(SWITCH_SERIES_WHALE)
+#define YT_MAX_MULTICAST_VLAN_NUM       (32U)
+#endif
 
-typedef enum yt_multi_op_mode_e
+typedef enum yt_multi_fdb_type_e
 {
-    YT_MULTI_OP_MODE_LEARN,
-    YT_MULTI_OP_MODE_FLOOD,
-    YT_MULTI_OP_MODE_TRAP,
-    YT_MULTI_OP_MODE_LEARN_AND_COPY_TO_CPU,
-} yt_multi_op_mode_t;
-
-typedef struct yt_multi_learn_bypass_range_s
-{
-    uint8_t    bypass_239_255_255_x_en;
-    uint8_t    bypass_224_0_1_x_en;
-    uint8_t    bypass_224_0_0_x_en;
-    uint8_t    bypass_ipv6_00xx_en;
-} yt_multi_learn_bypass_range_t;
-
-typedef struct yt_multi_router_port_s
-{
-    uint8_t    valid[YT_MAX_MULTICAST_ROUTER_PORT];
-    yt_port_t  port[YT_MAX_MULTICAST_ROUTER_PORT];
-} yt_multi_router_port_t;
+    YT_MULTI_TYPE_STATIC,
+    YT_MULTI_TYPE_DYNAMIC,
+}yt_multi_fdb_type_t;
 
 typedef struct yt_multi_vlan_s
 {
     uint16_t    vlanid[YT_MAX_MULTICAST_VLAN_NUM];
 } yt_multi_vlan_t;
 
-/**
- * @internal      yt_multicast_igmp_opmode_set
- * @endinternal
- *
- * @brief         set operaction mode for igmp packet
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     mode                -IGMP/MLD operation mode
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t  yt_multicast_igmp_opmode_set(yt_unit_t unit,  yt_multi_op_mode_t mode);
+typedef enum yt_mcast_mode_e
+{
+    YT_MCAST_MODE_GIP,
+    YT_MCAST_MODE_GIP_VID,
+    YT_MCAST_MODE_SIP_GIP,
+    YT_MCAST_MODE_SIP_GIP_VID,
+} yt_mcast_mode_t;
+
+typedef enum yt_mcast_hw_mode_e
+{
+    YT_MCAST_HW_MODE_MAC,
+    YT_MCAST_HW_MODE_IP,
+    YT_MCAST_HW_MODE_MAC_AND_IP,
+} yt_mcast_hw_mode_t;
+
+typedef struct yt_multicast_ipv4_info_s
+{
+    yt_vlan_t    vid;
+    yt_ip_addr_t sip;
+    yt_ip_addr_t gip;
+} yt_mcast_ipv4_info_t;
+
+typedef struct yt_mcast_ipv6_info_s {
+    yt_vlan_t      vid;
+    yt_ipv6_addr_t sip;
+    yt_ipv6_addr_t gip;
+} yt_mcast_ipv6_info_t;
+
+typedef struct yt_mcast_ipv4_data_s
+{
+    uint16_t        vid;
+    yt_ip_addr_t    sip;
+    yt_ip_addr_t    gip;
+    yt_mcast_mode_t mode;
+    yt_port_mask_t  portMask;
+    yt_multi_fdb_type_t type; /* static, dynamic */
+}yt_mcast_ipv4_data_t;
+
+typedef struct yt_mcast_ipv6_data_s
+{
+    uint16_t        vid;
+    yt_ipv6_addr_t  sip;
+    yt_ipv6_addr_t  gip;
+    yt_mcast_mode_t mode;
+    yt_port_mask_t  portMask; 
+}yt_mcast_ipv6_data_t;
+
+typedef struct yt_mcast_mac_data_s 
+{
+    yt_multi_fdb_type_t type; /* static, dynamic */
+    yt_port_mask_t portMask; 
+    yt_mac_addr_t  macAddr;
+    uint16_t       vid;
+}yt_mcast_mac_data_t;
 
 
 /**
- * @internal      yt_multicast_igmp_opmode_get
+ * @internal      yt_multicast_ipv4_add
  * @endinternal
  *
- * @brief         get operaction mode for igmp packet
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         add ipv4 multicast entry
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[out]    pmode               -IGMP/MLD operation mode
+ * @param[in]     mode                -entry mode
+ * @param[in]     pIpinfo             -ipv4 info
+ * @param[in]     portMask            -port mask
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_igmp_opmode_get(yt_unit_t unit,  yt_multi_op_mode_t *pmode);
-
+extern yt_ret_t  yt_multicast_ipv4_add(yt_unit_t unit, yt_mcast_mode_t mode, const yt_mcast_ipv4_info_t *pIpinfo, yt_port_mask_t portMask);
 
 /**
- * @internal      yt_multicast_mld_opmode_set
+ * @internal      yt_multicast_ipv6_add
  * @endinternal
  *
- * @brief         set operaction mode for mld packet
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         add ipv6 multicast entry
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     mode                -IGMP/MLD operation mode
+ * @param[in]     mode                -entry mode
+ * @param[in]     pIpinfo             -ipv6 info
+ * @param[in]     portMask            -port mask
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_mld_opmode_set(yt_unit_t unit,  yt_multi_op_mode_t mode);
-
+extern yt_ret_t  yt_multicast_ipv6_add(yt_unit_t unit, yt_mcast_mode_t mode, const yt_mcast_ipv6_info_t *pIpinfo, yt_port_mask_t portMask);
 
 /**
- * @internal      yt_multicast_mld_opmode_get
+ * @internal      yt_multicast_macaddr_add
  * @endinternal
  *
- * @brief         get operaction mode for mld packet
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         add macaddr multicast entry
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[out]    pmode               -IGMP/MLD operation mode
+ * @param[in]     vid                 -vlan id
+ * @param[in]     macAddr             -mac address
+ * @param[in]     portMask            -port mask
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_mld_opmode_get(yt_unit_t unit,  yt_multi_op_mode_t *pmode);
-
+extern yt_ret_t  yt_multicast_macaddr_add(yt_unit_t unit, yt_vlan_t vid, yt_mac_addr_t macAddr, yt_port_mask_t portMask);
 
 /**
- * @internal      yt_multicast_port_report_allow_set
+ * @internal      yt_multicast_ipv4_del
  * @endinternal
  *
- * @brief         enable igmp/mld report on port
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         del ipv4 multicast entry
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     en                  -enable or disable
+ * @param[in]     mode                -entry mode
+ * @param[in]     pIpinfo             -ipv4 info
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_port_report_allow_set(yt_unit_t unit, yt_port_t port, yt_enable_t en);
-
+extern yt_ret_t  yt_multicast_ipv4_del(yt_unit_t unit, yt_mcast_mode_t mode, const yt_mcast_ipv4_info_t *pIpinfo);
 
 /**
- * @internal      yt_multicast_port_report_allow_get
+ * @internal      yt_multicast_ipv6_del
  * @endinternal
  *
- * @brief         get enable state of igmp/mld report on port
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         del ipv6 multicast entry
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[out]    pen                 -enable or disable
+ * @param[in]     mode                -entry mode
+ * @param[in]     pIpinfo             -ipv4 info
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_port_report_allow_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pen);
-
+extern yt_ret_t  yt_multicast_ipv6_del(yt_unit_t unit, yt_mcast_mode_t mode, const yt_mcast_ipv6_info_t *pIpinfo);
 
 /**
- * @internal      yt_multicast_port_leave_allow_set
+ * @internal      yt_multicast_macaddr_del
  * @endinternal
  *
- * @brief         enable igmp/mld leave on port
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         del macaddr multicast entry
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     en                  -enable or disable
+ * @param[in]     vid                 -vlan id
+ * @param[in]     macAddr             -mac address
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_port_leave_allow_set(yt_unit_t unit, yt_port_t port, yt_enable_t en);
-
+extern yt_ret_t  yt_multicast_macaddr_del(yt_unit_t unit, yt_vlan_t vid, yt_mac_addr_t macAddr);
 
 /**
- * @internal      yt_multicast_port_leave_allow_get
+ * @internal      yt_multicast_ipv4_withIpAndVid_get
  * @endinternal
  *
- * @brief         get enable state of igmp/mld leave on port
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         get ipv4 multicast entry by ip and vid
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[out]    pen                 -enable or not
+ * @param[in]     mode                -entry mode
+ * @param[in]     pIpinfo             -ipv4 info
+ * @param[out]    pData               -data info
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_port_leave_allow_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pen);
-
+extern yt_ret_t  yt_multicast_ipv4_withIpAndVid_get(yt_unit_t unit, yt_mcast_mode_t mode, const yt_mcast_ipv4_info_t *pIpinfo,  yt_mcast_ipv4_data_t *pData);
 
 /**
- * @internal      yt_multicast_port_query_allow_set
+ * @internal      yt_multicast_ipv4_withindex_get
  * @endinternal
  *
- * @brief         enable igmp/mld query on port
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         get ipv4 multicast entry by index
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     en                  -enable or disable
+ * @param[in]     index               -index
+ * @param[out]    pData               -data info
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_port_query_allow_set(yt_unit_t unit, yt_port_t port, yt_enable_t en);
-
+extern yt_ret_t  yt_multicast_ipv4_withindex_get(yt_unit_t unit, uint16_t index, yt_mcast_ipv4_data_t *pData);
 
 /**
- * @internal      yt_multicast_port_query_allow_get
+ * @internal      yt_multicast_ipv4_withindex_getnext
  * @endinternal
  *
- * @brief         get enable state of igmp/mld query on port
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         get ipv4 next multicast entry by index
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[out]    pen                 -enable or not
+ * @param[in]     index               -index
+ * @param[out]    pNextIdx            -next index
+ * @param[out]    pData               -data info
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_port_query_allow_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pen);
-
+extern yt_ret_t  yt_multicast_ipv4_withindex_getnext(yt_unit_t unit, uint16_t index, uint16_t *pNextIdx, yt_mcast_ipv4_data_t *pData);
 
 /**
- * @internal      yt_multicast_fastleave_set
+ * @internal      yt_multicast_ipv6_withIpAndVid_get
  * @endinternal
  *
- * @brief         enable fastleave
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         get ipv6 multicast entry by ip and vid
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     en                  -enable or not
+ * @param[in]     mode                -entry mode
+ * @param[in]     pIpinfo             -ipv6 info
+ * @param[out]    pData               -data info
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_fastleave_set(yt_unit_t unit, yt_enable_t en);
-
+extern yt_ret_t  yt_multicast_ipv6_withIpAndVid_get(yt_unit_t unit, yt_mcast_mode_t mode, const yt_mcast_ipv6_info_t *pIpinfo,  yt_mcast_ipv6_data_t *pData);
 
 /**
- * @internal      yt_multicast_fastleave_get
+ * @internal      yt_multicast_ipv6_withindex_get
  * @endinternal
  *
- * @brief         get enable state of fastleave
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         get ipv6 multicast entry by index
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[out]    pen                 -enable or not
+ * @param[in]     index               -index
+ * @param[out]    pData               -data info
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_fastleave_get(yt_unit_t unit, yt_enable_t *pen);
-
+extern yt_ret_t  yt_multicast_ipv6_withindex_get(yt_unit_t unit, uint16_t index, yt_mcast_ipv6_data_t *pData);
 
 /**
- * @internal      yt_multicast_learnlimit_en_set
+ * @internal      yt_multicast_ipv6_withindex_getnext
  * @endinternal
  *
- * @brief         enable multicast group limit
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         get ipv6 next multicast entry by index
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     en                  -enable or not
+ * @param[in]     index               -index
+ * @param[out]    pNextIdx            -next index
+ * @param[out]    pData               -data info
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_learnlimit_en_set(yt_unit_t unit, yt_enable_t en);
-
+extern yt_ret_t  yt_multicast_ipv6_withindex_getnext(yt_unit_t unit, uint16_t index, uint16_t *pNextIdx, yt_mcast_ipv6_data_t *pData);
 
 /**
- * @internal      yt_multicast_learnlimit_en_get
+ * @internal      yt_multicast_ipv6_withIpAndVid_get
  * @endinternal
  *
- * @brief         get enable state of multicast group limit
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         get macaddr multicast entry by mac and vid
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[out]    pen                 -enable or not
+ * @param[in]     vid                 -vlan id
+ * @param[in]     macAddr             -mac address
+ * @param[out]    pData               -data info
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_learnlimit_en_get(yt_unit_t unit, yt_enable_t *pen);
-
+extern yt_ret_t  yt_multicast_macaddr_withMacAndVid_get(yt_unit_t unit, yt_vlan_t vid, yt_mac_addr_t macAddr, yt_mcast_mac_data_t *pData);
 
 /**
- * @internal      yt_multicast_learnlimit_maxgroup_set
+ * @internal      yt_multicast_macaddr_withindex_get
  * @endinternal
  *
- * @brief         set max multicast group number
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         get macaddr multicast entry by index
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     maxgroup            -max group number
+ * @param[in]     index               -index
+ * @param[out]    pData               -data info
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_learnlimit_maxgroup_set(yt_unit_t unit, uint32_t  maxgroup);
-
+extern yt_ret_t  yt_multicast_macaddr_withindex_get(yt_unit_t unit, uint16_t index, yt_mcast_mac_data_t *pData);
 
 /**
- * @internal      yt_multicast_learnlimit_maxgroup_get
+ * @internal      yt_multicast_macaddr_withindex_getnext
  * @endinternal
  *
- * @brief         get max multicast group number
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         get macaddr next multicast entry by index
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[out]    pmaxgroup           -x
+ * @param[in]     index               -index
+ * @param[out]    pNextIdx            -next index
+ * @param[out]    pData               -data info
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_learnlimit_maxgroup_get(yt_unit_t unit, uint32_t  *pmaxgroup);
-
+extern yt_ret_t  yt_multicast_macaddr_withindex_getnext(yt_unit_t unit, uint16_t index,  uint16_t *pNextIdx, yt_mcast_mac_data_t *pData);
 
 /**
- * @internal      yt_multicast_fwd_routerport_only_set
+ * @internal      yt_multicast_all_ipmc_flush
  * @endinternal
  *
- * @brief         enable forward igmp/mld packet to router port only
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         flush all ip multicast entry
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     en                  -enable or not
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_fwd_routerport_only_set(yt_unit_t unit, yt_enable_t en);
-
+extern yt_ret_t  yt_multicast_all_ipmc_flush(yt_unit_t unit);
 
 /**
- * @internal      yt_multicast_fwd_routerport_only_get
+ * @internal      yt_multicast_vid_ipmc_flush
  * @endinternal
  *
- * @brief         get enable state of forward igmp/mld packet to router port only
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         flush all ip multicast entry by vid
+ * @note          APPLICABLE DEVICES  -Shark, Whale
  * @param[in]     unit                -unit id
- * @param[out]    pen                 -enable or not
+ * @param[in]     vid                 -vlan id
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_fwd_routerport_only_get(yt_unit_t unit, yt_enable_t *pen);
-
+extern yt_ret_t  yt_multicast_vid_ipmc_flush(yt_unit_t unit, yt_vlan_t vid);
 
 /**
- * @internal      yt_multicast_fwd_routerport_primary_set
+ * @internal      yt_multicast_all_macaddr_flush
  * @endinternal
  *
- * @brief         enable forward igmp/mld packet to router port only if router port exist,otherwire flood
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         flush all macaddr multicast entry
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[in]     en                  -enable or not
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_fwd_routerport_primary_set(yt_unit_t unit, yt_enable_t en);
-
+extern yt_ret_t  yt_multicast_all_macaddr_flush(yt_unit_t unit);
 
 /**
- * @internal      yt_multicast_fwd_routerport_primary_get
+ * @internal      yt_multicast_vid_macaddr_flush
  * @endinternal
  *
- * @brief         get enable state of forward igmp/mld packet to router port only if router port exist
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         flush all macaddr multicast entry by vid
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
- * @param[out]    pen                 -enable or not
+ * @param[in]     vid                 -vlan id
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t  yt_multicast_fwd_routerport_primary_get(yt_unit_t unit, yt_enable_t *pen);
-
+extern yt_ret_t  yt_multicast_vid_macaddr_flush(yt_unit_t unit, yt_vlan_t vid);
 
 /**
- * @internal      yt_multicast_bypass_grouprange_set
+ * @internal      yt_multicast_port_macaddr_flush
  * @endinternal
  *
- * @brief         set ip range that won't be learnt to multicast group
+ * @brief         flush all multicast macaddr entry by port
  * @note          APPLICABLE DEVICES  -Tiger
  * @param[in]     unit                -unit id
- * @param[in]     bypass              -Multicast IP range that bypass learn
+ * @param[in]     port                -port id
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t yt_multicast_bypass_grouprange_set(yt_unit_t unit, yt_multi_learn_bypass_range_t bypass);
-
+extern yt_ret_t yt_multicast_port_macaddr_flush(yt_unit_t unit, yt_port_t port);
 
 /**
- * @internal      yt_multicast_bypass_grouprange_get
+ * @internal      yt_multicast_macaddr_cnt_get
  * @endinternal
  *
- * @brief         get ip range that won't be learnt to multicast group
+ * @brief         get dynamic multicast macaddr entry
  * @note          APPLICABLE DEVICES  -Tiger
  * @param[in]     unit                -unit id
- * @param[out]    pbypass             -Multicast IP range that bypass learn
+ * @param[in]     pcnt                -mac cnt
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
  */
-extern yt_ret_t yt_multicast_bypass_grouprange_get(yt_unit_t unit, yt_multi_learn_bypass_range_t *pbypass);
-
-
-/**
- * @internal      yt_multicast_dynamic_routerport_get
- * @endinternal
- *
- * @brief         get dynamic multicast router ports
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[out]    prouter_port        -Multicast router port info
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t  yt_multicast_dynamic_routerport_get(yt_unit_t unit, yt_multi_router_port_t *prouter_port);
-
-
-/**
- * @internal      yt_multicast_dynamic_routerport_allow_set
- * @endinternal
- *
- * @brief         enable dynamic router port learning on ports
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     en                  -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t yt_multicast_dynamic_routerport_allow_set(yt_unit_t unit, yt_port_t port, yt_enable_t en);
-
-
-/**
- * @internal      yt_multicast_dynamic_routerport_allow_get
- * @endinternal
- *
- * @brief         get the enable state of dynamic router port
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[out]    pen                 -enable or not
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t yt_multicast_dynamic_routerport_allow_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pen);
-
-
-/**
- * @internal      yt_multicast_dynamic_routerport_agingtime_set
- * @endinternal
- *
- * @brief         set dynamic router port aging time
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     sec                 -second
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t yt_multicast_dynamic_routerport_agingtime_set(yt_unit_t unit, uint32_t sec);
-
-
-/**
- * @internal      yt_multicast_dynamic_routerport_agingtime_get
- * @endinternal
- *
- * @brief         get dynamic router port aging time
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[out]    psec                -second
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t yt_multicast_dynamic_routerport_agingtime_get(yt_unit_t unit, uint32_t *psec);
-
+extern yt_ret_t  yt_multicast_macaddr_cnt_get(yt_unit_t unit,  uint32 *pcnt);
 
 /**
  * @internal      yt_multicast_vlan_add
  * @endinternal
  *
  * @brief         add multicast vlan
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     vid                 -vlan id
  * @retval        CMM_ERR_OK          -on success
@@ -459,7 +412,7 @@ extern yt_ret_t yt_multicast_vlan_add(yt_unit_t unit, yt_vlan_t vid);
  * @endinternal
  *
  * @brief         get multicast vlan table info
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[out]    pvlanarray          -multicast vlan info
  * @retval        CMM_ERR_OK          -on success
@@ -474,7 +427,7 @@ extern yt_ret_t yt_multicast_vlan_get(yt_unit_t unit, yt_multi_vlan_t *pvlanarra
  * @endinternal
  *
  * @brief         delete 
- * @note          APPLICABLE DEVICES  -Tiger
+ * @note          APPLICABLE DEVICES  -Tiger, Shark, Whale
  * @param[in]     unit                -unit id
  * @param[in]     vid                 -vlan id
  * @retval        CMM_ERR_OK          -on success
@@ -485,119 +438,84 @@ extern yt_ret_t yt_multicast_vlan_del(yt_unit_t unit, yt_vlan_t vid);
 
 
 /**
- * @internal      yt_multicast_static_routerport_set
+ * @internal      yt_multicast_hwmc_flush_all
  * @endinternal
  *
- * @brief         add static multicast router ports
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         flush all hwmc
+ * @note          APPLICABLE DEVICES  -Whale
  * @param[in]     unit                -unit id
- * @param[in]     port_mask           -yt_types.h
+ * @param[in]     mode                -YT_MCAST_HW_MODE_MAC, YT_MCAST_HW_MODE_IP, YT_MCAST_HW_MODE_MAC_AND_IP
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_ENTRY_NOT_FOUND   -no entry
  */
-extern yt_ret_t  yt_multicast_static_routerport_set(yt_unit_t unit, yt_port_mask_t port_mask);
+extern yt_ret_t yt_multicast_hwmc_flush_all(yt_unit_t unit, yt_mcast_hw_mode_t mode);
 
 
 /**
- * @internal      yt_multicast_static_routerport_get
+ * @internal      yt_multicast_hwmc_flush_by_vid
  * @endinternal
  *
- * @brief         get static multicast router ports
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         flush all hwmc by vid
+ * @note          APPLICABLE DEVICES  -Whale
  * @param[in]     unit                -unit id
- * @param[out]    pport_mask          -yt_types.h
+ * @param[in]     mode                -YT_MCAST_HW_MODE_MAC, YT_MCAST_HW_MODE_IP, YT_MCAST_HW_MODE_MAC_AND_IP
+ * @param[in]     vid                 -vid
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_ENTRY_NOT_FOUND   -no entry
  */
-extern yt_ret_t  yt_multicast_static_routerport_get(yt_unit_t unit, yt_port_mask_t *pport_mask);
-
-/**
- * @internal      yt_multicast_igmp_bypass_port_isolation_set
- * @endinternal
- *
- * @brief         enable igmp passthrough port isolation
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     en                  -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t yt_multicast_igmp_bypass_port_isolation_set(yt_unit_t unit, yt_port_t port, yt_enable_t en);
+extern yt_ret_t yt_multicast_hwmc_flush_by_vid(yt_unit_t unit, yt_mcast_hw_mode_t mode, yt_vlan_t vid);
 
 
 /**
- * @internal      yt_multicast_igmp_bypass_port_isolation_get
+ * @internal      yt_multicast_hwmc_flush_by_portmask
  * @endinternal
  *
- * @brief         get enable state of igmp passthrough port isolation
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         flush all hwmc by port
+ * @note          APPLICABLE DEVICES  -Whale
  * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[out]    pen                 -enable or disable
+ * @param[in]     mode                -YT_MCAST_HW_MODE_MAC, YT_MCAST_HW_MODE_IP, YT_MCAST_HW_MODE_MAC_AND_IP
+ * @param[in]     portMask            -port mask
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_ENTRY_NOT_FOUND   -no entry
  */
-extern yt_ret_t yt_multicast_igmp_bypass_port_isolation_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pen);
+extern yt_ret_t yt_multicast_hwmc_flush_by_portmask(yt_unit_t unit, yt_mcast_hw_mode_t mode, yt_port_mask_t portMask);
 
 
 /**
- * @internal      yt_multicast_ipmc_bypass_port_isolation_set
+ * @internal      yt_multicast_hwmc_mac_del
  * @endinternal
  *
- * @brief         enable ip multicast passthrough port isolation
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         delete hwmc by MAC+VID
+ * @note          APPLICABLE DEVICES  -Whale
  * @param[in]     unit                -unit id
- * @param[in]     en                  -enable or disable
+ * @param[in]     vid                 -vlan id
+ * @param[in]     macAddr             -mac addr
+ * @param[in]     portMask            -port mask
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_ENTRY_NOT_FOUND   -no entry
  */
-extern yt_ret_t yt_multicast_ipmc_bypass_port_isolation_set(yt_unit_t unit, yt_enable_t en);
+extern yt_ret_t yt_multicast_hwmc_mac_del(yt_unit_t unit, yt_vlan_t vid, yt_mac_addr_t macAddr, yt_port_mask_t portMask);
 
 
 /**
- * @internal      yt_multicast_ipmc_bypass_port_isolation_get
+ * @internal      yt_multicast_hwmc_ipv4_del
  * @endinternal
  *
- * @brief         get the enable state of ip multicast passthrough port isolation
- * @note          APPLICABLE DEVICES  -Tiger
+ * @brief         delete hwmc by GIP+VID
+ * @note          APPLICABLE DEVICES  -Whale
  * @param[in]     unit                -unit id
- * @param[out]    pen                 -enable or disable
+ * @param[in]     vid                 -vlan id
+ * @param[in]     gip                 -ipv4 addr
+ * @param[in]     portMask            -port mask
  * @retval        CMM_ERR_OK          -on success
  * @retval        CMM_ERR_FAIL        -on fail
+ * @retval        CMM_ERR_ENTRY_NOT_FOUND   -no entry
  */
-extern yt_ret_t yt_multicast_ipmc_bypass_port_isolation_get(yt_unit_t unit, yt_enable_t *pen);
-
-/**
- * @internal      yt_multicast_port_igmp_bypass_ingrfilter_en_set
- * @endinternal
- *
- * @brief         Set port vlan igmp bypass ingress filter state
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[in]     enabled             -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t  yt_multicast_port_igmp_bypass_ingrfilter_en_set(yt_unit_t unit, yt_port_t port, yt_enable_t enabled);
-
-
-/**
- * @internal      yt_multicast_port_igmp_bypass_ingrfilter_en_get
- * @endinternal
- *
- * @brief         Get port vlan igmp bypass ingress filter state
- * @note          APPLICABLE DEVICES  -Tiger
- * @param[in]     unit                -unit id
- * @param[in]     port                -port num
- * @param[out]    pEnabled            -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-extern yt_ret_t  yt_multicast_port_igmp_bypass_ingrfilter_en_get(yt_unit_t unit, yt_port_t port, yt_enable_t *pEnabled);
-
-
+extern yt_ret_t yt_multicast_hwmc_ipv4_del(yt_unit_t unit, yt_vlan_t vid, yt_ip_addr_t gip, yt_port_mask_t portMask);
 
 #ifdef __cplusplus
 }

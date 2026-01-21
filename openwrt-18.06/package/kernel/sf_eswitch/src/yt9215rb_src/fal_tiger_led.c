@@ -5,92 +5,73 @@
 #include "osal_mem.h"
 #include "osal_print.h"
 #include "fal_tiger_led.h"
+#include "fal_tiger_sys.h"
 #include "hal_mem.h"
 
-/*
- * Symbol Definition
- */
-
-/*
- * Macro Declaration
- */
-
-/*
- * Data Declaration
- */
-typedef enum led_action_e {
-    LED_ACTION_10M_BLINK = 0x1,
-    LED_ACTION_100M_BLINK = 0x2,
-    LED_ACTION_1000M_BLINK = 0x4,
-    LED_ACTION_COLLISION_BLINK_ENABLE = 0x8,
-    LED_ACTION_10M_ON = 0x10,
-    LED_ACTION_100M_ON = 0x20,
-    LED_ACTION_1000M_ON = 0x40,
-    LED_ACTION_RXACT_ON = 0x80,
-    LED_ACTION_TXACT_ON = 0x100,
-    LED_ACTION_RXACT_BLINK = 0x200,
-    LED_ACTION_TXACT_BLINK = 0x400,
-    LED_ACTION_HALFDUPLEX_ON = 0x800,
-    LED_ACTION_FULLDUPLEX_ON = 0x1000,
-    LED_ACTION_ACTIVE_BLINK_INDICATE = 0x2000,
-    LED_ACTION_LOOPDETECT_INDICATE = 0x4000,
-    LED_ACTION_EEE_INDICATE = 0x8000,
-    LED_ACTION_COLLISION_BLINK = 0x10000,         /* only for LED0 */
-    LED_ACTION_DISABLE_LINK_TRY = 0x20000,        /* only for LED0 */
-    LED_ACTION_NUM
-}led_action_t;
-
-typedef struct yt_led_slot_s
-{
-    uint8_t serialId;
-    uint8_t ledId;
-}yt_led_slot_t;
 
 /* remapping array for LED_DATA */
-const yt_led_slot_t remapData[SLED_DATANUM_MAX][21] = 
+static const yt_led_slot_t remapData[SLED_DATANUM_MAX][30] = 
 {
-    /* SLED_DATANUM_5 */    
+    /* SLED_DATANUM_YT9215_P5L1 */    
     {
         {9, LED_ID_0}, {8, LED_ID_0}, {7, LED_ID_0}, {6, LED_ID_0}, {5, LED_ID_0}
     },
 
-    /* SLED_DATANUM_7 */    
+    /* SLED_DATANUM_YT9215_P7L1 */    
     {
         {9, LED_ID_0}, {8, LED_ID_0}, {4, LED_ID_0}, {3, LED_ID_0}, {2, LED_ID_0}, {1, LED_ID_0}, {0, LED_ID_0}
     },
 
-    /* SLED_DATANUM_10 */    
+    /* SLED_DATANUM_YT9215_P5L2 */    
     {
         {9, LED_ID_0}, {8, LED_ID_0}, {7, LED_ID_0}, {6, LED_ID_0}, {5, LED_ID_0}, 
         {4, LED_ID_0}, {3, LED_ID_0}, {2, LED_ID_0}, {1, LED_ID_0}, {0, LED_ID_0}
     },
 
-    /* SLED_DATANUM_14 */    
+    /* SLED_DATANUM_YT9215_P7L2 */    
     {
         {9, LED_ID_0}, {8, LED_ID_0}, {4, LED_ID_0}, {3, LED_ID_0}, {2, LED_ID_0}, {1, LED_ID_0}, {0, LED_ID_0},
         {9, LED_ID_1}, {8, LED_ID_1}, {4, LED_ID_1}, {3, LED_ID_1}, {2, LED_ID_1}, {1, LED_ID_1}, {0, LED_ID_1}
     },
     
-    /* SLED_DATANUM_15 */
+    /* SLED_DATANUM_YT9215_P5L3 */
     {
         {9, LED_ID_0}, {8, LED_ID_0}, {7, LED_ID_0}, {6, LED_ID_0}, {5, LED_ID_0},
         {4, LED_ID_0}, {3, LED_ID_0}, {2, LED_ID_0}, {1, LED_ID_0}, {0, LED_ID_0}, 
         {9, LED_ID_1}, {8, LED_ID_1}, {7, LED_ID_1}, {6, LED_ID_1}, {5, LED_ID_1}
     },
 
-    /* SLED_DATANUM_21 */
+    /* SLED_DATANUM_YT9215_P7L3 */
     {
         {9, LED_ID_0}, {8, LED_ID_0}, {4, LED_ID_0}, {3, LED_ID_0}, {2, LED_ID_0}, {1, LED_ID_0}, {0, LED_ID_0},
         {9, LED_ID_1}, {8, LED_ID_1}, {4, LED_ID_1}, {3, LED_ID_1}, {2, LED_ID_1}, {1, LED_ID_1}, {0, LED_ID_1},
         {9, LED_ID_2}, {8, LED_ID_2}, {4, LED_ID_2}, {3, LED_ID_2}, {2, LED_ID_2}, {1, LED_ID_2}, {0, LED_ID_2}
-    }
+    },
+
+    /* SLED_DATANUM_YT9218_P10L1 */    
+    {
+        {9, LED_ID_2}, {8, LED_ID_2}, {7, LED_ID_2}, {6, LED_ID_2}, {5, LED_ID_2},{4, LED_ID_2}, {3, LED_ID_2}, {2, LED_ID_2}, {1, LED_ID_2}, {0, LED_ID_2}
+    },
+
+    /* SLED_DATANUM_YT9218_P10L2 */
+    {
+        {9, LED_ID_2}, {8, LED_ID_2}, {7, LED_ID_2}, {6, LED_ID_2}, {5, LED_ID_2},{4, LED_ID_2}, {3, LED_ID_2}, {2, LED_ID_2}, {1, LED_ID_2}, {0, LED_ID_2},
+        {9, LED_ID_1}, {8, LED_ID_1}, {7, LED_ID_1}, {6, LED_ID_1}, {5, LED_ID_1},{4, LED_ID_1}, {3, LED_ID_1}, {2, LED_ID_1}, {1, LED_ID_1}, {0, LED_ID_1}
+    },
+
+    /* SLED_DATANUM_YT9218_P10L3 */
+    {
+        {9, LED_ID_0}, {8, LED_ID_0}, {7, LED_ID_0}, {6, LED_ID_0}, {5, LED_ID_0},{4, LED_ID_0}, {3, LED_ID_0}, {2, LED_ID_0}, {1, LED_ID_0}, {0, LED_ID_0},
+        {9, LED_ID_1}, {8, LED_ID_1}, {7, LED_ID_1}, {6, LED_ID_1}, {5, LED_ID_1},{4, LED_ID_1}, {3, LED_ID_1}, {2, LED_ID_1}, {1, LED_ID_1}, {0, LED_ID_1},
+        {9, LED_ID_2}, {8, LED_ID_2}, {7, LED_ID_2}, {6, LED_ID_2}, {5, LED_ID_2},{4, LED_ID_2}, {3, LED_ID_2}, {2, LED_ID_2}, {1, LED_ID_2}, {0, LED_ID_2}
+     }
 };
 
-const uint8_t ledMaxNum[SLED_DATANUM_MAX] = {5, 7, 10, 14, 15, 21};
+static const uint8_t ledMaxNum[SLED_DATANUM_MAX] = {5, 7, 10, 14, 15, 21, 10, 20, 30};
 
-/*
- * Function Declaration
- */
+static yt_sled_dataNum_t sledDataNum = SLED_DATANUM_YT9215_P7L3;
+
+static uint8_t sledRemapChgFlag = 0;
 
 /**
  * @internal      fal_tiger_led_enable
@@ -103,9 +84,166 @@ const uint8_t ledMaxNum[SLED_DATANUM_MAX] = {5, 7, 10, 14, 15, 21};
  */
 yt_ret_t fal_tiger_led_enable(yt_unit_t unit)
 {
-    uint32_t regVal;
     uint32_t ret;
-    
+    uint32_t regAddr;
+    uint32_t regVal;
+    uint32_t port;
+    uint8_t portNum;
+    uint8_t ledNum;
+    yt_led_mode_t mode;
+    uint8_t ledIndex;
+    yt_switch_chip_t chip = 0;
+
+    /* active mode */
+    CMM_ERR_CHK(fal_tiger_led_mode_get(unit, &mode), ret);
+
+    /* get chip info */
+    CMM_ERR_CHK(fal_tiger_sys_chipInfo_get(unit, &chip), ret);
+
+    /* serial mode */
+    if (LED_MODE_SERIAL == mode)
+    {
+        CMM_ERR_CHK(fal_tiger_led_serial_activeMode_set(unit, LED_SERIAL_ACTIVE_MODE_LOW), ret);
+        
+        switch(sledDataNum)
+        {
+            case SLED_DATANUM_YT9215_P5L1:
+                portNum = 5;
+                ledNum = 1;
+                break;
+
+            case SLED_DATANUM_YT9215_P7L1:
+                portNum = 7;
+                ledNum = 1;
+                break;
+
+           case SLED_DATANUM_YT9215_P5L2:
+                portNum = 5;
+                ledNum = 2;
+                break;
+
+            case SLED_DATANUM_YT9215_P7L2:
+                portNum = 7;
+                ledNum = 2;
+                break;
+                
+            case SLED_DATANUM_YT9215_P5L3:
+                portNum = 5;
+                ledNum = 3;
+                break;
+                
+            case SLED_DATANUM_YT9215_P7L3:
+                portNum = 7;
+                ledNum = 3;
+                break;
+
+            case SLED_DATANUM_YT9218_P10L1:
+                portNum = 10;
+                ledNum = 1;
+                break;
+
+            case SLED_DATANUM_YT9218_P10L2:
+                portNum = 10;
+                ledNum = 2;
+                break;
+
+            case SLED_DATANUM_YT9218_P10L3:
+                portNum = 10;
+                ledNum = 3;
+                break;
+
+            default:
+                return CMM_ERR_NOT_SUPPORT;
+        }
+
+        /* serial port num-- start */
+        ret = HAL_MEM_DIRECT_READ(unit, LED_GLB_CTRL, &regVal);
+        if (CMM_ERR_OK != ret)
+        {
+            return CMM_ERR_FAIL;
+        }
+        regVal &= 0xfffe1fff;
+        regVal |= ((portNum & 0xf) << 13);
+        HAL_MEM_DIRECT_WRITE(unit, LED_GLB_CTRL, regVal);
+        /* serial port num-- end */
+        
+        /* serial pin num-- start */
+        ret = HAL_MEM_DIRECT_READ(unit, LED_SERIAL_CTRL, &regVal);
+        if (CMM_ERR_OK != ret)
+        {
+            return CMM_ERR_FAIL;
+        }
+        regVal &= 0xfffffffc;
+        regVal |= ((ledNum - 1) & 0x3);
+        HAL_MEM_DIRECT_WRITE(unit, LED_SERIAL_CTRL, regVal);
+        /* serial pin num-- end */
+
+        /* set default remapping table */
+        yt_led_remapping_t yt9215DefaultRemapInfo[21] = 
+        {
+            {6, 1}, {4, 0}, {5, 1}, {3, 0}, {2, 0}, {1, 0}, {0, 0},
+            {6, 0}, {5, 0}, {4, 1}, {3, 1}, {2, 1}, {1, 1}, {0, 1},
+            {6, 2}, {5, 2}, {4, 2}, {3, 2}, {2, 2}, {1, 2}, {0, 2}
+        };
+        yt_led_remapping_t yt9215scRemapInfo[21] = 
+        {
+            {3, 0}, {2, 0}, {1, 0}, {0, 0},{6, 1}, {5, 1}, {4, 1}, 
+            {3, 1}, {2, 1}, {1, 1}, {0, 1},{6, 2}, {5, 2}, {4, 2}, 
+            {3, 2}, {2, 2}, {1, 2}, {0, 2}, {6, 0}, {5, 0}, {4, 0}
+        };
+        if ((SLED_DATANUM_YT9215_P7L3 == sledDataNum) && (sledRemapChgFlag == 0))
+        {
+            for (ledIndex=0; ledIndex<21; ledIndex++)
+            {
+                CMM_ERR_CHK(yt_led_serial_remapping_set(unit, ledIndex, (SWCHIP_YT9215SC == chip)?yt9215scRemapInfo[ledIndex]:yt9215DefaultRemapInfo[ledIndex]), ret);
+            }
+        }
+    }
+    else
+    {
+        yt_port_mask_t portmask;
+
+        CMM_CLEAR_MEMBER_PORT(portmask);
+
+        if (SWCHIP_YT9214NB == chip)
+        {
+            CMM_SET_MEMBER_PORT(portmask, 0);
+            CMM_SET_MEMBER_PORT(portmask, 1);
+            CMM_SET_MEMBER_PORT(portmask, 2);
+            CMM_SET_MEMBER_PORT(portmask, 3);
+            CMM_SET_MEMBER_PORT(portmask, 4);
+            CMM_SET_MEMBER_PORT(portmask, 8);
+            CMM_SET_MEMBER_PORT(portmask, 9);
+            fal_tiger_led_parallel_output_set(unit, portmask);
+        }
+        else if (SWCHIP_YT9213NB == chip)
+        {
+            /* remapping led port */
+            HAL_MEM_DIRECT_WRITE(unit, (LED_PARALLEL_REMAPPING_BASE + 2*4), 0xe34c);
+            HAL_MEM_DIRECT_WRITE(unit, (LED_PARALLEL_REMAPPING_BASE + 3*4), 0xa248);
+            HAL_MEM_DIRECT_WRITE(unit, (LED_PARALLEL_REMAPPING_BASE + 8*4), 0x2284e);
+            HAL_MEM_DIRECT_WRITE(unit, LED_PARALLEL_OUTPUT_CTRL, 0x3ff);
+        }
+        else
+        {
+        }
+    }
+
+    /* preset disable_link_try bit of LED0 action(exclude CPU_PORT) */
+    for (port = 0; port < FAL_MAX_PORT_NUM - 1; port++)
+    {
+        regAddr = LED_CTRL_0_BASE + port * 4;
+        ret = HAL_MEM_DIRECT_READ(unit, regAddr, &regVal);
+        if (CMM_ERR_OK != ret)
+        {
+            return CMM_ERR_FAIL;
+        }
+
+        regVal |= 0x20000;
+        HAL_MEM_DIRECT_WRITE(unit, regAddr, regVal);
+    }
+
+    /* set config done */
     ret = HAL_MEM_DIRECT_READ(unit, LED_GLB_CTRL, &regVal);
     if (CMM_ERR_OK != ret)
     {
@@ -113,7 +251,7 @@ yt_ret_t fal_tiger_led_enable(yt_unit_t unit)
     }
     regVal |= (0x1UL << 21);
     HAL_MEM_DIRECT_WRITE(unit, LED_GLB_CTRL, regVal);
-    
+
     return CMM_ERR_OK;
 }
 
@@ -131,10 +269,24 @@ yt_ret_t fal_tiger_led_mode_set(yt_unit_t unit, yt_led_mode_t mode)
 {
     uint32_t regVal;
     uint32_t ret;
-    
-    if ((mode != LED_MODE_PARALLEL) && (mode != LED_MODE_SERIAL))
+    yt_switch_chip_t chip = 0;
+
+    fal_tiger_sys_chipInfo_get(unit, &chip);
+    if (SWCHIP_YT9218N != chip)
     {
-        return CMM_ERR_INPUT;
+        if ((mode != LED_MODE_PARALLEL) && (mode != LED_MODE_SERIAL))
+        {
+            return CMM_ERR_INPUT;
+        }
+    }
+
+    if (mode == LED_MODE_SERIAL)
+    {
+        CMM_ERR_CHK(HAL_MEM_DIRECT_WRITE(unit, LED_PARALLEL_OUTPUT_CTRL, 0U), ret);
+    }
+    else
+    {
+        CMM_ERR_CHK(HAL_MEM_DIRECT_WRITE(unit, LED_PARALLEL_OUTPUT_CTRL, 0x3ffU), ret);
     }
 
     ret = HAL_MEM_DIRECT_READ(unit, LED_GLB_CTRL, &regVal);
@@ -345,7 +497,9 @@ yt_ret_t fal_tiger_led_action_get(yt_unit_t unit, yt_port_t port, yt_led_id_t le
     {
         return CMM_ERR_INPUT;
     }
-    
+
+    osal_memset(pLedActCfg, sizeof(yt_led_act_cfg_t), 0, sizeof(yt_led_act_cfg_t));
+
     macid = CAL_YTP_TO_MAC(unit,port);
     regAddr = ledCtrlAddr[ledId] + macid * 4;
     ret = HAL_MEM_DIRECT_READ(unit, regAddr, &regVal);
@@ -438,11 +592,6 @@ yt_ret_t fal_tiger_led_action_get(yt_unit_t unit, yt_port_t port, yt_led_id_t le
     if (actionSet & LED_ACTION_COLLISION_BLINK)
     {
         pLedActCfg->collision_blink_indicate_en = 1;
-    }
-    
-    if (actionSet & LED_ACTION_DISABLE_LINK_TRY)
-    {
-        pLedActCfg->disable_link_try_en = 1;
     }
     
     return CMM_ERR_OK;
@@ -806,6 +955,22 @@ yt_ret_t fal_tiger_led_force_rate_get(yt_unit_t unit, yt_port_t port, yt_led_id_
     return CMM_ERR_OK;    
 }
 
+yt_ret_t fal_tiger_led_serial_outputMode_set(yt_unit_t unit, yt_sled_dataNum_t mode)
+{
+    CMM_UNUSED_PARAM(unit);
+    sledDataNum = mode;
+
+    return CMM_ERR_OK;   
+}
+
+yt_ret_t fal_tiger_led_serial_outputMode_get(yt_unit_t unit, yt_sled_dataNum_t *pMode)
+{
+    CMM_UNUSED_PARAM(unit);
+    *pMode = sledDataNum;
+
+    return CMM_ERR_OK;   
+}
+
 /**
  * @internal      fal_tiger_led_serial_activeMode_set
  * @endinternal
@@ -883,19 +1048,16 @@ yt_ret_t fal_tiger_led_serial_remapping_set(yt_unit_t unit, uint8_t index, yt_le
     uint32_t regAddr;
     uint32_t regVal;
     uint32_t valMask;
-    yt_sled_dataNum_t dataNum;
+    yt_sled_dataNum_t dataNum = sledDataNum;
 
     if ((dstInfo.ledId < LED_ID_0) || (LED_ID_2 < dstInfo.ledId))
     {
         return CMM_ERR_INPUT;
     }
     
-    if ((NULL == LEDDSCP_ON_UNIT(unit))|| (NULL == SLED_PARAM(unit)))
-    {
-        return CMM_ERR_NULL_POINT;
-    }
-    dataNum = SLED_PARAM(unit)->dataNum;
-    
+    sledRemapChgFlag = 1;
+
+    /* remove led from boardprofile, led owner todo */ 
     if (ledMaxNum[dataNum] <= index)
     {
         return CMM_ERR_EXCEED_RANGE;
@@ -922,7 +1084,8 @@ yt_ret_t fal_tiger_led_serial_remapping_set(yt_unit_t unit, uint8_t index, yt_le
     regVal |= ((dstInfo.ledId & 0x3) << ((srcMacid % 5) * 6));
 
     HAL_MEM_DIRECT_WRITE(unit, regAddr, regVal);
-       return CMM_ERR_OK;
+    
+   return CMM_ERR_OK;
 }
 
 /**
@@ -943,19 +1106,14 @@ yt_ret_t fal_tiger_led_serial_remapping_get(yt_unit_t unit, uint8_t index, yt_le
     yt_macid_t dstMacid;
     uint32_t regAddr;
     uint32_t regVal;
-    yt_sled_dataNum_t dataNum;
+    yt_sled_dataNum_t dataNum = sledDataNum;
 
-    if ((NULL == LEDDSCP_ON_UNIT(unit))|| (NULL == SLED_PARAM(unit)))
-    {
-        return CMM_ERR_NULL_POINT;
-    }
-    dataNum = SLED_PARAM(unit)->dataNum;
-    
+    /* remove led from boardprofile, led owner todo */ 
     if (ledMaxNum[dataNum] <= index)
     {
         return CMM_ERR_EXCEED_RANGE;
     }
-    
+
     srcMacid = remapData[dataNum][index].serialId;
 
     regAddr = LED_SERIAL_REMAPPING_BASE + (LED_ID_2 - remapData[dataNum][index].ledId) * 8 + (srcMacid / 5) * 4;
@@ -972,73 +1130,6 @@ yt_ret_t fal_tiger_led_serial_remapping_get(yt_unit_t unit, uint8_t index, yt_le
     
     /* LED ID */
     pDstInfo->ledId = (regVal >> ((srcMacid % 5) * 6)) & 0x3;
-    
-    return CMM_ERR_OK;
-}
-
-/**
- * @internal      fal_tiger_led_serial_enable_set
- * @endinternal
- *
- * @brief         enabel/disable serial LED
- * @param[in]     unit                -unit id
- * @param[in]     enable              -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t fal_tiger_led_serial_enable_set(yt_unit_t unit, yt_enable_t enable)
-{
-    uint32_t ret;
-    uint32_t regVal;
-    uint32_t valMask = 0x3000000;
-
-    ret = HAL_MEM_DIRECT_READ(unit, LED_SERIAL_CTRL, &regVal);
-    if (CMM_ERR_OK != ret)
-    {
-        return CMM_ERR_FAIL;
-    }
-    
-    regVal &= (~valMask);
-    if (YT_ENABLE == enable)
-    {
-        regVal |= valMask;
-    }
-    HAL_MEM_DIRECT_WRITE(unit, LED_SERIAL_CTRL, regVal);
-    
-    return CMM_ERR_OK;
-}
-
-/**
- * @internal      fal_tiger_led_serial_enable_get
- * @endinternal
- *
- * @brief         get enable state of serial LED
- * @param[in]     unit                -unit id
- * @param[out]    pEnable             -enable or disable
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t fal_tiger_led_serial_enable_get(yt_unit_t unit, yt_enable_t *pEnable)
-{
-    uint32_t ret;
-    uint32_t regVal;
-    uint32_t valMask = 0x3000000;
-
-    ret = HAL_MEM_DIRECT_READ(unit, LED_SERIAL_CTRL, &regVal);
-    if (CMM_ERR_OK != ret)
-    {
-        return CMM_ERR_FAIL;
-    }
-    
-    regVal &= valMask;
-    if (valMask == regVal)
-    {
-        *pEnable = YT_ENABLE;
-    }
-    else
-    {
-        *pEnable = YT_DISABLE;
-    }
     
     return CMM_ERR_OK;
 }
@@ -1281,3 +1372,76 @@ yt_ret_t fal_tiger_led_parallel_pos_invert_get(yt_unit_t unit, yt_port_t port, y
 	
 	return CMM_ERR_OK;
 }
+
+/**
+ * @internal      fal_tiger_led_serial_port_info_set
+ * @endinternal
+ *
+ * @brief         get per_port_en,is_combo_en,ledmode
+ * @param[in]     unit                -unit id
+ * @param[out]    portledInfo         -set per_port_en,is_combo_en,ledmode info
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t fal_tiger_led_serial_port_info_set(yt_unit_t unit, yt_led_seled_info_t portledInfo)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(portledInfo);
+    
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+/**
+ * @internal      fal_tiger_led_serial_port_info_get
+ * @endinternal
+ *
+ * @brief         set per_port_en,is_combo_en,ledmode
+ * @param[in]     unit                -unit id
+ * @param[out]    pPortledInfo        -get per_port_en,is_combo_en,ledmode info
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t fal_tiger_led_serial_port_info_get(yt_unit_t unit, yt_led_seled_info_t *pPortledInfo)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pPortledInfo);
+    
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+/**
+ * @internal      fal_tiger_led_serial_total_ledNum_set
+ * @endinternal
+ *
+ * @brief        set total led number
+ * @param[in]     unit                -unit id
+ * @param[in]     lednum              -total led num
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t fal_tiger_led_serial_total_ledNum_set(yt_unit_t unit, yt_unit_t lednum)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(lednum);
+    
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+/**
+ * @internal      fal_shark_led_serial_total_ledNum_get
+ * @endinternal
+ *
+ * @brief        get total led number
+ * @param[in]     unit                -unit id
+ * @param[in]     lednum              -total led num
+ * @retval        CMM_ERR_OK          -on success
+ * @retval        CMM_ERR_FAIL        -on fail
+ */
+yt_ret_t fal_tiger_led_serial_total_ledNum_get(yt_unit_t unit, yt_unit_t *pLednum)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pLednum);
+    
+    return CMM_ERR_NOT_SUPPORT;
+}
+

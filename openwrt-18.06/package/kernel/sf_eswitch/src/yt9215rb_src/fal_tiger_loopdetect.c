@@ -56,6 +56,8 @@ yt_ret_t fal_tiger_loop_detect_tpid_set(yt_unit_t unit, yt_tpid_t tpid)
     loop_detect_top_ctrl_t entry;
     cmm_err_t ret = CMM_ERR_OK;
 
+    /*tipid must greater than 0x600,and not equal to 0x0800,0x0806,0x9100 etc*/
+    CMM_PARAM_CHK((tpid <= 0x600), CMM_ERR_INPUT);
     CMM_ERR_CHK(HAL_TBL_REG_READ(unit, LOOP_DETECT_TOP_CTRLm, 0, sizeof(loop_detect_top_ctrl_t), &entry), ret);
     HAL_FIELD_SET(LOOP_DETECT_TOP_CTRLm, LOOP_DETECT_TOP_CTRL_LOOP_DETECT_TPIDf, &entry, tpid);
     CMM_ERR_CHK(HAL_TBL_REG_WRITE(unit, LOOP_DETECT_TOP_CTRLm, 0, sizeof(loop_detect_top_ctrl_t), &entry), ret);
@@ -132,4 +134,56 @@ yt_ret_t fal_tiger_loop_detect_unitID_get(yt_unit_t unit, yt_local_id_t *pLocalI
     pRemoteID->remoteID[1] = remoteID1;
 
     return CMM_ERR_OK;
+}
+
+yt_ret_t fal_tiger_loop_detect_loopedPorts_get(yt_unit_t unit, yt_port_mask_t *pPortMask)
+{
+    cmm_err_t ret = CMM_ERR_OK;
+    yt_port_mask_t macmask;
+    uint32_t regData = 0;
+
+    CMM_PARAM_CHK((pPortMask == NULL), CMM_ERR_INPUT);
+    CMM_CLEAR_MEMBER_PORT(macmask);
+    
+    ret = HAL_MEM_DIRECT_READ(unit, L2_LOOP_DETECT_FLAG_DUMMY, &regData);
+    if (CMM_ERR_OK != ret)
+    {
+        return CMM_ERR_FAIL;
+    }
+    macmask.portbits[0] = regData & 0x3ff;
+    CAL_MLIST_TO_YTPLIST(unit, macmask, (*pPortMask));
+
+    return CMM_ERR_OK;
+}
+
+yt_ret_t fal_tiger_loop_detect_interval_set(yt_unit_t unit, uint32_t interval)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(interval);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t fal_tiger_loop_detect_interval_get(yt_unit_t unit, uint32_t *pInterval)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pInterval);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t fal_tiger_loop_detect_prevent_enable_set(yt_unit_t unit, yt_enable_t enable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(enable);
+
+    return CMM_ERR_NOT_SUPPORT;
+}
+
+yt_ret_t fal_tiger_loop_detect_prevent_enable_get(yt_unit_t unit, yt_enable_t *pEnable)
+{
+    CMM_UNUSED_PARAM(unit);
+    CMM_UNUSED_PARAM(pEnable);
+
+    return CMM_ERR_NOT_SUPPORT;
 }

@@ -1,7 +1,15 @@
+#
+# Copyright (C) 2008-2010 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
+
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=sf_eswitch
 PKG_RELEASE:=1
+PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/kernel.mk
 include $(INCLUDE_DIR)/package.mk
@@ -20,6 +28,9 @@ define KernelPackage/sf_eswitch/config
 		config SFAX8_ESWITCH_LIGHT
 			bool "use light eswitch"
 			default "n"
+
+		config SFAX8_ESWITCH_REDIRECT
+			bool "set switch to upload dns or dhcp packet to cpu"
 	endif
 endef
 
@@ -44,8 +55,15 @@ EXTRA_KCONFIG += CONFIG_SFAX8_ESWITCH_LIGHT=y
 NOSTDINC_FLAGS += -DCONFIG_SFAX8_ESWITCH_LIGHT
 endif
 
+ifdef CONFIG_SFAX8_ESWITCH_REDIRECT
+NOSTDINC_FLAGS += -DCONFIG_SFAX8_ESWITCH_REDIRECT
+endif
+
 NOSTDINC_FLAGS += -I$(PKG_BUILD_DIR)/an8855_src/api/inc \
 				  -I$(PKG_BUILD_DIR)/an8855_src/core
+
+NOSTDINC_FLAGS += -I$(PKG_BUILD_DIR)/jl51xx_src/inc \
+				  -I$(PKG_BUILD_DIR)/jl51xx_src/src
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)

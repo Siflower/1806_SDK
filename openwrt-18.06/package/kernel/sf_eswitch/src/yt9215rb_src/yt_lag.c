@@ -16,85 +16,58 @@
 #include "yt_lag.h"
 #include "fal_dispatch.h"
 
-
-/**
- * @internal      yt_lag_hash_sel_set
- * @endinternal
- *
- * @brief         Description
- * @param[in]     unit                -unit id
- * @param[in]     hash_mask           -x
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_lag_hash_sel_set(yt_unit_t unit, uint16_t hash_mask)
+yt_ret_t yt_lag_init(yt_unit_t unit)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((0 == hash_mask || 0x0FF < hash_mask), CMM_ERR_INPUT);
 
-    return YT_DISPATCH(unit)->lag_hash_sel_set(unit, (uint8_t)hash_mask);
+    return YT_DISPATCH(unit)->lag_init(unit);
 }
 
-/**
- * @internal      yt_lag_hash_sel_get
- * @endinternal
- *
- * @brief         Description
- * @param[in]     unit                -unit id
- * @param[out]    p_hash_mask         -x
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_lag_hash_sel_get(yt_unit_t unit, uint16_t *p_hash_mask)
+yt_ret_t yt_lag_en_get(yt_unit_t unit, yt_port_t port, yt_enable_t *lagState, uint8_t *lagId)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((NULL == p_hash_mask), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK((!(CMM_PORT_VALID(unit, port))), CMM_ERR_PORT);
+    CMM_PARAM_CHK((NULL == lagState), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK((NULL == lagId), CMM_ERR_NULL_POINT);
 
-    return YT_DISPATCH(unit)->lag_hash_sel_get(unit, (uint8_t *)p_hash_mask);
+    return YT_DISPATCH(unit)->lag_en_get(unit, port, lagState, lagId);
 }
 
-/**
- * @internal      yt_lag_group_port_set
- * @endinternal
- *
- * @brief         Description
- * @param[in]     unit                -unit id
- * @param[in]     groupId             -x
- * @param[in]     member_portmask     -port bit mask
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_lag_group_port_set(yt_unit_t unit, uint8_t groupId, yt_port_mask_t member_portmask)
+yt_ret_t yt_lag_hash_sel_set(yt_unit_t unit, uint16_t hashMask)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(CMM_PLIST_VALID(unit,member_portmask))), CMM_ERR_PORTLIST);
+    CMM_PARAM_CHK((0 == hashMask || 0x0FF < hashMask), CMM_ERR_INPUT);
 
-    return YT_DISPATCH(unit)->lag_group_port_set(unit, groupId, member_portmask);
+    return YT_DISPATCH(unit)->lag_hash_sel_set(unit, (uint8_t)hashMask);
 }
 
-/**
- * @internal      yt_lag_group_info_get
- * @endinternal
- *
- * @brief         Description
- * @param[in]     unit                -unit id
- * @param[in]     groupId             -x
- * @param[out]    p_laginfo           -link aggregation group config
- * @retval        CMM_ERR_OK          -on success
- * @retval        CMM_ERR_FAIL        -on fail
- */
-yt_ret_t yt_lag_group_info_get(yt_unit_t unit, uint8_t groupId, yt_link_agg_group_t *p_laginfo)
+yt_ret_t yt_lag_hash_sel_get(yt_unit_t unit, uint16_t *pHashMask)
 {
     CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
     CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((!(YT_DISPATCH(unit)->is_inited)), CMM_ERR_NOT_INIT);
-    CMM_PARAM_CHK((NULL == p_laginfo), CMM_ERR_NULL_POINT);
+    CMM_PARAM_CHK((NULL == pHashMask), CMM_ERR_NULL_POINT);
 
-    return YT_DISPATCH(unit)->lag_group_info_get(unit, groupId, p_laginfo);
+    return YT_DISPATCH(unit)->lag_hash_sel_get(unit, (uint8_t *)pHashMask);
 }
+
+yt_ret_t yt_lag_group_port_set(yt_unit_t unit, uint8_t groupId, yt_port_mask_t memberPortMask)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((!(CMM_PLIST_VALID(unit,memberPortMask))), CMM_ERR_PORTLIST);
+
+    return YT_DISPATCH(unit)->lag_group_port_set(unit, groupId, memberPortMask);
+}
+
+yt_ret_t yt_lag_group_port_get(yt_unit_t unit, uint8_t groupId, yt_port_mask_t *pMemberPortmask)
+{
+    CMM_PARAM_CHK((YT_UNIT_NUM <= unit), CMM_ERR_INPUT);
+    CMM_PARAM_CHK(NULL == YT_DISPATCH(unit), CMM_ERR_NOT_INIT);
+    CMM_PARAM_CHK((NULL == pMemberPortmask), CMM_ERR_NULL_POINT);
+
+    return YT_DISPATCH(unit)->lag_group_port_get(unit, groupId, pMemberPortmask);
+}
+

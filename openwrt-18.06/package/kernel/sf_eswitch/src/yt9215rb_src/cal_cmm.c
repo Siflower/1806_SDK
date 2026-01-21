@@ -44,40 +44,36 @@ uint32_t cal_ytportmask_update(yt_unit_t unit, yt_port_t port, yt_bool_t flag)
     return CMM_ERR_OK;
 }
 
-yt_phy_chip_model_t cal_phy_model_get(yt_unit_t unit, yt_port_t port)
+uint8_t cal_phy_addr_get(yt_unit_t unit, yt_port_t port)
 {
-    uint8_t phy_index;
+    uint8_t phyAddrInt = INVALID_ID;
+    uint8_t phyAddrExt = INVALID_ID;
+    uint8_t  phyType;
 
     if(!CMM_PORT_VALID(unit, port))
     {
         return INVALID_ID;
     }
 
-    phy_index = UNITINFO(unit)->pPortDescp[port]->phy_index;
-    if(phy_index != INVALID_ID)
-    {
-        return UNITINFO(unit)->pPhyDescp[phy_index]->chip_model;
-    }
-
-    return INVALID_ID;
-}
-
-yt_serdes_mode_t cal_serdes_mode_get(yt_unit_t unit, yt_port_t port)
-{
-    uint8_t sds_id;
-
-    if(!CMM_PORT_VALID(unit, port))
+    phyType = UNITINFO(unit)->pPortDescp[port]->phyType;
+    if (phyType == YT_PHY_NONE)
     {
         return INVALID_ID;
     }
-
-    sds_id = UNITINFO(unit)->pPortDescp[port]->serdes_index;
-    if(sds_id != INVALID_ID)
+    phyAddrInt = CAL_YTP_TO_INTPHYADDR(unit, port);
+    phyAddrExt = CAL_YTP_TO_EXTPHYADDR(unit, port);
+    if (phyType == YT_PHY_INT)
     {
-        return UNITINFO(unit)->pSerdesDescp[sds_id]->mode;
+        return phyAddrInt;
     }
-
-    return INVALID_ID;
+    else if ((phyType == YT_PHY_INTEXT) || (phyType == YT_PHY_EXT))
+    {
+        return phyAddrExt;
+    }
+    else
+    {
+        return (phyAddrInt != INVALID_ID) ? phyAddrInt : phyAddrExt;
+    }
 }
 
 yt_bool_t cal_is_combo_port(yt_unit_t unit, yt_port_t port)
@@ -99,3 +95,4 @@ yt_bool_t cal_is_combo_port(yt_unit_t unit, yt_port_t port)
 
     return FALSE;
 }
+

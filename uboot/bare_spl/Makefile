@@ -82,6 +82,10 @@ CFLAGS += -DFULLMASK
 endif
 endif
 
+ifdef sfa28_bpi
+CFLAGS += -DTARGET_SFA28_BPI
+endif
+
 ifdef fpga
 CFLAGS +=-DFPGA
 CFLAGS +=-DDDR -I $(BASE)/ddr_fpga
@@ -169,6 +173,7 @@ SF1688 : $(COBJECTS) $(AOBJECTS)
 	$(SZ) sf1688.elf
 	$(OD) -d -S -l sf1688.elf > sf1688_dasm
 	$(OC) sf1688.elf -O binary sf1688.bin
+	rm ./tools/checksum && gcc ./tools/checksum.c -o ./tools/checksum
 	./tools/checksum sf1688.bin ../$(irom_patch)
 .c.o:
 	$(CC) $(CFLAGS) $< -o $@

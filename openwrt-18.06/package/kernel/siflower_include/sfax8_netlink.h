@@ -44,7 +44,9 @@ enum {
 	SF_ETH_CMD_ATTR_DPS_PORT,            /* eth phy port*/
 	SF_ETH_CMD_ATTR_DPS_LINK,            /* 0---link down  1---link up */
 	SF_ETH_CMD_ATTR_DPS_MAC,
+	SF_ETH_CMD_ATTR_DPS_VLAN,
 	SF_ETH_CMD_ATTR_DPS_IFNAME,
+	SF_ETH_CMD_ATTR_DPS_FLAG,
 	__SF_ETH_CMD_ATTR_MAX,
 };
 

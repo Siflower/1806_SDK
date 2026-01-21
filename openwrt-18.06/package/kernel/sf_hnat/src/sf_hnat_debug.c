@@ -984,14 +984,6 @@ ssize_t sf_hnat_debug_write(struct file *file, const char __user *user_buf, size
 			sf_hnat_del_lan_subnet(phnat_priv, lan_index);
 		}
 	}
-	else if(strncmp(str[0], "padding",7) == 0){
-		if (phnat_priv->pppoe_padding_dis)
-			phnat_priv->pppoe_padding_dis = false;
-		else
-			phnat_priv->pppoe_padding_dis = true;
-
-		printk("[hnat info] hnat set pppoe padding disable:%d\n", phnat_priv->pppoe_padding_dis);
-	}
 	else if(strncmp(str[0], "vldclean",8) == 0){
 		printk("[hnat info] hnat rule flush\n");
 		sf_hnat_napt_vld_clean();

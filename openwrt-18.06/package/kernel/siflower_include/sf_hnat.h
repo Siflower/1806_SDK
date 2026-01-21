@@ -9,7 +9,7 @@
 #define SF_HNAT_DEV_OFFSET             0 // skb->dev pointer offset
 #define SF_HNAT_FLAG                   47 // skb hnat flag
 #define SF_CB_HNAT_FORWARD             22 // skb nedd hnat forward
-#define WIFI_PPPOE_OFFSET              16 // pppoe mode wifi ndev index offset
+#define WIFI_PPPOE_OFFSET              8 // pppoe mode wifi ndev index offset
 
 
 struct sf_hnat_if_subnet {
@@ -39,11 +39,10 @@ struct sf_hnat_priv {
 	unsigned short wifi_base;
 	unsigned long last_age_time;
 	unsigned long last_flush_time;
-	bool pppoe_padding_dis;
 
 	struct sf_hnat_if_subnet lan_subnet[8];
 	struct sf_hnat_if_subnet wan_subnet[8];
-	struct net_device * pwifi_ndev[16];
+	struct net_device * pwifi_ndev[8];
 	struct device *dev;
 #ifdef CONFIG_DEBUG_FS
 	struct dentry  *hnat_debug;
@@ -71,6 +70,7 @@ struct sf_hnat_priv {
 	int (*add_wifi_ndev)(struct platform_device *pdev, struct net_device *ndev);
 	int (*del_wifi_ndev)(struct platform_device *pdev, struct net_device *ndev);
 	int (*is_hnat_error)(struct sf_hnat_priv *phnat_priv);
+	int (*is_hnat_to_wifi_pkt)(struct sf_hnat_priv *phnat_priv, struct sk_buff *skb);
 
 #ifdef CONFIG_SFAX8_HNAT_TEST_TOOL
 	/*test tool function depends on gmac,

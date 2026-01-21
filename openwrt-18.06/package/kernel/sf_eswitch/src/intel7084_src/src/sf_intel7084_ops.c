@@ -1,10 +1,12 @@
 /*
 * Description
 *
+* Copyright (C) 2016-2020 Qin.Xia <qin.xia@siflower.com.cn>
 *
 * Siflower software
 */
 
+#include <linux/etherdevice.h>
 #include "../../sf_eswitch.h"
 #include "../../sf_mc_io.h"
 #include "sf_intel7084_ops.h"
@@ -14,6 +16,7 @@
 extern ethsw_api_dev_t *pedev0[GSW_DEV_MAX];
 extern struct vlan_entry vlan_entries;
 extern int check_port_in_portlist(struct sf_eswitch_priv *pesw_priv, int port);
+extern int notify_link_event(struct sf_eswitch_priv *pesw_priv, int port, int updown, char *ifname, uint8_t *mac, uint16_t vlan_id, bool flag);
 
 int intel7084_phy_rd(GSW_MDIO_data_t *parm){
 
@@ -333,7 +336,7 @@ intel7084_set_vlan_ports(struct switch_dev *dev, struct switch_val *val)
 	if (val->port_vlan < 0 || val->port_vlan > VLAN_MAP_TBL_SIZE)
 		return -EINVAL;
 
-	if ((val->port_vlan >= 4000) && (val->port_vlan < 4032))
+	if ((val->port_vlan >= 4000) && (val->port_vlan < 4016))
 		return -EINVAL; // reserve such vlan for hnat to wifi
 
 	memset((void *)&vlan, 0, sizeof(GSW_VLAN_IdCreate_t));
@@ -402,7 +405,7 @@ static int intel7084_set_port_pvid(struct switch_dev *dev, int port, int pvid)
 {
 	GSW_return_t s;
 
-	if ((pvid >= 4000) && (pvid < 4032))
+	if ((pvid >= 4000) && (pvid < 4016))
 		return -EINVAL; // reserve such vlan for hnat to wifi
 
 	printk("set port:%d pvid:%d\n", port, pvid);
@@ -546,6 +549,42 @@ static int intel7084_set_vlan_fid(struct switch_dev *dev,
 	return 0;
 }
 
+static int intel7084_get_port_fdb_entry(struct switch_dev *dev, const struct switch_attr *attr, struct switch_val *val)
+{
+	struct sf_eswitch_priv *priv = container_of(dev, struct sf_eswitch_priv, swdev);
+	GSW_MAC_tableRead_t mac_table;
+	u8 mac_addr[GSW_MAC_ADDR_LEN];
+	mac_table.bInitial = LTQ_TRUE;
+	memset(&mac_table, 0, sizeof(GSW_MAC_tableRead_t));
+	static char buf[64];
+	int len = 0;
+
+	SF_MDIO_LOCK();
+	while(1) {
+		mac_table.nPortId = val->port_vlan;
+		if (GSW_MAC_TableEntryRead((void *)pedev0[0], &mac_table) != GSW_statusOk)
+			break;
+
+		if (mac_table.bLast == LTQ_TRUE)
+			break;
+
+		if (val->port_vlan == (int)mac_table.nPortId && !ether_addr_equal(mac_addr, mac_table.nMAC)) {
+			printk("dump mac:%pM\n", mac_table.nMAC);
+			ether_addr_copy(mac_addr, mac_table.nMAC);
+			notify_link_event(priv, mac_table.nPortId, priv->phy_status[mac_table.nPortId], "eth0", mac_table.nMAC, 0, false);
+		}
+
+		mac_table.bInitial = LTQ_FALSE;
+	}
+	SF_MDIO_UNLOCK();
+
+	len += snprintf(buf + len, sizeof(buf) - len, "These are the port %d of intel7084's fdb entry.\n", val->port_vlan);
+
+	val->value.s = buf;
+	val->len = len;
+ 	return 0;
+}
+
 static struct switch_attr intel7084_globals[] = {
 	{
 		.type = SWITCH_TYPE_INT,
@@ -559,6 +598,12 @@ static struct switch_attr intel7084_globals[] = {
 };
 
 static struct switch_attr intel7084_port[] = {
+	{
+		.type = SWITCH_TYPE_STRING,
+		.name = "fdb_entry",
+		.description = "Get the switch's each port's fdb unicast entry",
+		.get = intel7084_get_port_fdb_entry,
+	},
 };
 
 static struct switch_attr intel7084_vlan[] = {
@@ -950,6 +995,10 @@ void intel7084_init(struct sf_eswitch_priv *pesw_priv)
 
 	ethsw_swapi_register();
 	sf_speedtest_speed_up();
+#ifdef CONFIG_SFAX8_ESWITCH_REDIRECT
+	intel7084_bridge_redirect_dhcp();
+	intel7084_bridge_redirect_dns();
+#endif
 
 	/* RM#9120 disable auto downspeed */
 	for (i = 0; i < INTEL_PHY_PORT_NUM; i++) {
@@ -989,34 +1038,56 @@ int sf_intel_setAsicReg(unsigned int Offset, unsigned int value)
 	return intel7084_mdio_wr(Offset, Shift, Size, value);
 }
 
-void intel7084_dumpmac(char *macaddr, int port)
+int sf_intel_getAsicPHYReg(unsigned int port, unsigned int addr, unsigned int *value)
 {
-     int max_nAgeTimer = 0;
-     GSW_MAC_tableRead_t mac_table;
-     mac_table.bInitial = LTQ_TRUE;
-     memset(&mac_table, 0, sizeof(GSW_MAC_tableRead_t));
-     while(1){
-         mac_table.bInitial = 0;
-         mac_table.nPortId = port;
-         SF_MDIO_LOCK();
-         if (GSW_MAC_TableEntryRead((void *)pedev0[0], &mac_table) != GSW_statusOk)
-             return;
-         SF_MDIO_UNLOCK();
-         if (mac_table.bLast == LTQ_TRUE)
-         {    
-             //This check looks if the last table entry was found.
-             //This is done when no more values are found.
-             break;
-         }        
- 
-         if (port == (int)mac_table.nPortId){
-             if (mac_table.nAgeTimer > max_nAgeTimer)
-             {
-                 max_nAgeTimer = mac_table.nAgeTimer;
-                 sprintf(macaddr,"%pM", mac_table.nMAC);
-             }
-         }
-     }
+	GSW_MDIO_data_t md;
+	md.nAddressDev = port;
+	md.nAddressReg = addr;
+
+	intel7084_phy_rd(&md);
+	*value = md.nData;
+	return 0;
+}
+
+int sf_intel_setAsicPHYReg(unsigned int port, unsigned int addr, unsigned int value)
+{
+	GSW_MDIO_data_t md;
+	md.nAddressDev = port;
+	md.nAddressReg = addr;
+	md.nData = value;
+
+	intel7084_phy_wr(&md);
+	return 0;
+}
+
+void intel7084_dumpmac(char macaddr[], int port)
+{
+	int max_nAgeTimer = 0;
+	GSW_MAC_tableRead_t mac_table;
+	mac_table.bInitial = LTQ_TRUE;
+	memset(&mac_table, 0, sizeof(GSW_MAC_tableRead_t));
+	while(1){
+		mac_table.bInitial = 0;
+		mac_table.nPortId = port;
+		SF_MDIO_LOCK();
+		if (GSW_MAC_TableEntryRead((void *)pedev0[0], &mac_table) != GSW_statusOk)
+			return;
+		SF_MDIO_UNLOCK();
+		if (mac_table.bLast == LTQ_TRUE)
+		{
+			//This check looks if the last table entry was found.
+			//This is done when no more values are found.
+			break;
+		}
+
+		if (port == (int)mac_table.nPortId){
+			if (mac_table.nAgeTimer > max_nAgeTimer)
+			{
+				max_nAgeTimer = mac_table.nAgeTimer;
+				sprintf(macaddr,"%pM", mac_table.nMAC);
+			}
+		}
+	}
 }
 
 struct sf_eswitch_api_t intel7084_api = {
@@ -1034,5 +1105,7 @@ struct sf_eswitch_api_t intel7084_api = {
 	.set_cpu_port_self_mirror = intel7084_set_cpu_port_self_mirror,
 	.getAsicReg = sf_intel_getAsicReg,
 	.setAsicReg = sf_intel_setAsicReg,
-	.dump_mac = intel7084_dumpmac,
+	.setAsicPHYReg = sf_intel_setAsicPHYReg,
+	.getAsicPHYReg = sf_intel_getAsicPHYReg,
+	.dumpmac = intel7084_dumpmac,
 };

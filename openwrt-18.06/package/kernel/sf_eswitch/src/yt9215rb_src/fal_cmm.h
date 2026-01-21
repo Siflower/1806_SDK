@@ -6,14 +6,17 @@
 ================================================================*/
 
 
-#ifndef _FAL_CMM_H
-#define _FAL_CMM_H
+#ifndef _FAL_CMM_H_
+#define _FAL_CMM_H_
 
 #include "yt_cmm.h"
 #include "fal_dispatch.h"
 
 #if defined(SWITCH_SERIES_TIGER)
 #include "fal_tiger_cmm.h"
+#endif
+#if defined(SWITCH_SERIES_SHARK)
+#include "fal_shark_cmm.h"
 #endif
 
 #include "hal_mem.h"

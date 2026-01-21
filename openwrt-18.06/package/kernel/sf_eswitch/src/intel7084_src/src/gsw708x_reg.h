@@ -2709,3 +2709,5 @@
 #define SGMII_PHY_RX0_CFG1_RX0_ALIGN_EN_SHIFT 0
 #define SGMII_PHY_RX0_CFG1_RX0_ALIGN_EN_SIZE  1
 /* ----------------------------------------------- */
+
+
