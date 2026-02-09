@@ -1458,7 +1458,8 @@ static void siwifi_rx_monitor_skb(struct siwifi_hw *siwifi_hw, struct sk_buff *s
     //Check if monitor interface exists and is open
     siwifi_vif = siwifi_rx_get_vif(siwifi_hw, siwifi_hw->monitor_vif);
     if (!siwifi_vif) {
-        dev_err(siwifi_hw->dev, "Received monitor frame but there is no monitor interface open\n");
+        //dev_err(siwifi_hw->dev, "Received monitor frame but there is no monitor interface open\n");
+        siwifi_hw->stats.rx_monitor_interface_close ++;
         return ;
     }
 
@@ -1549,7 +1550,6 @@ static void siwifi_rx_monitor_skb(struct siwifi_hw *siwifi_hw, struct sk_buff *s
         dev_kfree_skb(skb_monitor);
 
     if (status == RX_STAT_MONITOR) {
-        status |= RX_STAT_ALLOC;
         if (skb_monitor != skb) {
             dev_kfree_skb(skb);
         }
@@ -1664,6 +1664,7 @@ u8 siwifi_rxdataind(void *pthis, void *hostid)
     /* Check if we need to forward the buffer coming from a monitor interface */
     if (unlikely(status & RX_STAT_MONITOR)) {
         siwifi_rx_monitor_skb(siwifi_hw, skb, status, msdu_offset);
+        status |= RX_STAT_ALLOC;
     }
 
     /* Check if we need to update the length */

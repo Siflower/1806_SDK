@@ -11,8 +11,8 @@
 #if 1
 #define AMSDU_NB_L 1
 #define AMSDU_NB_M 2
-#define AMSDU_NB_H 4
-#define AMSDU_NB_V 4
+#define AMSDU_NB_H 5
+#define AMSDU_NB_V 5
 #else
 #define AMSDU_NB_L 2
 #define AMSDU_NB_M 2

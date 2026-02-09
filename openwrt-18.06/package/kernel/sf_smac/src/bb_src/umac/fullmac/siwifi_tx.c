@@ -1687,8 +1687,14 @@ netdev_tx_t siwifi_start_xmit(struct sk_buff *skb, struct net_device *dev)
     }
 #endif
     // set priority to 0xff for all multicast addr, lmac will think it noqos for tid 0xff
-    if (is_multicast_ether_addr(eth->h_dest))
+    if (is_multicast_ether_addr(eth->h_dest)) {
         skb->priority = 0xff;
+        if (siwifi_hw->debugfs.drop_multicast) {
+            spin_lock_bh(&siwifi_hw->cb_lock);
+            siwifi_hw->stats.tx_drop_multicast++;
+            goto free;
+        }
+    }
     //RM#13172 modify skb->priority again in wifi tx
     ///@siwifi_select_txq will not be called when litememory case num of ndeq is 1
     //skb from fast path may not set skb->priority

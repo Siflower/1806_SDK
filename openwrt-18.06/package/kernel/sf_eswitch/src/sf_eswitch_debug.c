@@ -680,8 +680,56 @@ ssize_t sf_eswitch_debug_write(struct file *file, const char __user *user_buf,
 		}
 		mutex_unlock(&swdev->sw_mutex);
 		printk("Final Port List: 0x%x\n", port_list);
-	}
-	else {
+	}else if (strncmp(str[0], "setGPIO", 7) == 0){
+		if (pesw_priv->model != AN8855){
+			return -EOPNOTSUPP;
+		}
+		if (str[1] && str[2]) {
+			int gpio_num = simple_strtol(str[1], NULL, 10);
+			int level = simple_strtol(str[2], NULL, 10);
+			UI32_T data = 0;
+
+			aml_readReg(0, 0x10000054, &data);
+			data |= (1 << gpio_num);
+			aml_writeReg(0, 0x10000054, data);
+
+			aml_readReg(0, 0x10000010, &data);
+			if (level) {
+				data |= (1 << gpio_num);
+			} else {
+				data &= ~(1 << gpio_num);
+			}
+			aml_writeReg(0, 0x10000010, data);
+
+			printk("Set GPIO%d to %s\n", gpio_num, level ? "HIGH" : "LOW");
+		} else {
+			printk("Usage: setGPIO <gpio_num> <level>\n");
+			printk("Example: setGPIO 3 1  (Set GPIO3 high)\n");
+		}
+	}else if (strncmp(str[0], "getGPIO", 7) == 0) {
+		if (pesw_priv->model != AN8855){
+			return -EOPNOTSUPP;
+		}
+		if (str[1]) {
+			int gpio_num = simple_strtol(str[1], NULL, 10);
+			UI32_T data = 0;
+			int level = 0;
+
+			aml_readReg(0, 0x10000000, &data);
+			level = (data & (1 << gpio_num)) ? 1 : 0;
+
+			aml_readReg(0, 0x10000010, &data);
+			if (data & (1 << gpio_num)) {
+				level = !level;
+				printk("Reverse\n");
+			}
+
+			printk("GPIO%d level: %s\n", gpio_num, level ? "HIGH" : "LOW");
+		} else {
+			printk("Usage: getGPIO <gpio_num>\n");
+			printk("Example: getGPIO 3  (Get GPIO3 level)\n");
+		}
+	}else {
 		printk("command not support!!!\n");
 	}
 

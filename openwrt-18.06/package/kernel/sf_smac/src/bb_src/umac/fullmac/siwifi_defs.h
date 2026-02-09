@@ -633,6 +633,7 @@ struct siwifi_stats {
     u32 tx_copy_expand;
     u32 tx_drop_full;
     u32 tx_drop_sta_null;
+    u32 tx_drop_multicast;
     u32 tx_drop_txq_inactive;
     u32 tx_drop_hdr_alloc_fail;
     u32 tx_drop_prep_tx;
@@ -643,6 +644,7 @@ struct siwifi_stats {
     u64 tx_pkt;
     u32 amsdus_rx[64];
 	unsigned int delete_rx;
+    unsigned int rx_monitor_interface_close;
 	unsigned int monitor_rx;
 	unsigned int len_update_rx;
 	unsigned int mgmt_rx;
