@@ -1,3 +1,4 @@
-# 1806_SDK
-
-## 需求无线/系统/芯片方向的高手加盟，欢迎联系 phoenix.shen@siflower.com.cn 必回复
+# siflower SF19A2890/SF19A2890S/SF19A2890S2 OpenWrt1806_SDK
+# 矽昌WiFi5方案开源SDK,基于openwrt18.06 + linux 4.14.90内核版本
+# 合作联系 cc.zhang@siflower.com.cn 
+# 合作联系 irving.luo@siflower.com.cn
