@@ -284,6 +284,7 @@ struct siwifi_debugfs {
 #endif
     uint8_t force_trigger_type;
     uint8_t recovery;
+    uint8_t drop_multicast;
     struct work_struct rc_stat_work;
     uint8_t rc_sta[NX_REMOTE_STA_MAX * 4];
     uint8_t rc_sta_action[NX_REMOTE_STA_MAX * 4];

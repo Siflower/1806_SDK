@@ -528,15 +528,56 @@ void air_an8855_disable_all_phy(void) {
 	SF_MDIO_UNLOCK();
 }
 
+/*
+   port  0    1    2    3
+   gpio  3    5    9    0
+   LED   D    F    I    A
+*/
+static void air_led_init(int led_mode)
+{
+	UI32_T data = 0;
+
+	//gpio inverse
+	aml_readReg(0, 0x10000010, &data);
+	data &= ~(0x229);
+
+	/*Key configuration, confirm if it is reversed polarity*/
+	// data |= (0x208);//0010 0000 1000  bit3=1, bit5=0, bit9=1, bit0=0
+	data |= (0x209);   //0010 0000 1001  bit3=1, bit5=0, bit9=1, bit0=1
+
+	aml_writeReg(0, 0x10000010, data);
+
+	//force gpio disable
+	aml_readReg(0, 0x1000007c, &data);
+	data &= ~(0x229);
+	aml_writeReg(0, 0x1000007c, data);
+
+	//gpio led enable
+	aml_readReg(0, 0x10000054, &data);
+	data |= (0x229);
+	aml_writeReg(0, 0x10000054, data);
+
+	//gpio select
+	aml_readReg(0, 0x10000058, &data);
+	data = (12) + (0 << 24);
+	aml_writeReg(0, 0x10000058, data);
+
+	aml_readReg(0, 0x1000005c, &data);
+	data = (4 << 8);
+	aml_writeReg(0, 0x1000005c, data);
+
+	aml_readReg(0, 0x10000060, &data);
+	data = (8);
+	aml_writeReg(0, 0x10000060, data);
+}
+
 void air_an8855_led_init(int led_mode)
 {
 	int i;
 	SF_MDIO_LOCK();
 	switch (led_mode) {
 		case LED_NORMAL:
-			for (i = 0; i < AN8855_PHY_PORT_NUM; i++) {
-				air_led_setMode(0, i, AIR_LED_MODE_2LED_MODE2);
-			}
+			air_led_init(led_mode);
 			break;
 
 		case LED_ALL_ON:

@@ -30,6 +30,8 @@ CONFIG_MULTI_NSS=y
 CONFIG_NSS_2=y
 ccflags-y += -DCFG_MDM_VER_V22
 ccflags-y += -DCONFIG_SF19A28
+#workaround for mult ac's problems that our TXOP_LIMIT none zero feature has bug.
+ccflags-y += -DCFG_WORK_ROUND_OF_FIXED_TXOP_LIMIT_TO_ZERO_FOR_MULT_AC_PROBLEM
 #for handle dma overlap problem when dma 32-byte patten which will overlap bytes after that
 # This has been fixed in A28 CS version
 #ccflags-y += -DWORKAROUND_6251

@@ -1651,6 +1651,44 @@ static ssize_t siwifi_dbgfs_recovery_enable_write(struct file *file,
 }
 DEBUGFS_READ_WRITE_FILE_OPS(recovery_enable);
 
+static ssize_t siwifi_dbgfs_drop_multicast_read(struct file *file,
+                                    char __user *user_buf,
+                                    size_t count, loff_t *ppos)
+{
+    struct siwifi_hw *priv = private_data_proc_debug(file->private_data);
+    char buf[32];
+    int ret;
+    ssize_t read;
+
+    ret = scnprintf(buf, min_t(size_t, sizeof(buf) - 1, count),
+                    "drop_multicast=%d\n", priv->debugfs.drop_multicast);
+
+    read = simple_read_from_buffer(user_buf, count, ppos, buf, ret);
+
+    return read;
+}
+
+static ssize_t siwifi_dbgfs_drop_multicast_write(struct file *file,
+                                      const char __user *user_buf,
+                                      size_t count, loff_t *ppos)
+{
+    struct siwifi_hw *priv = private_data_proc_debug(file->private_data);
+    char buf[32];
+    int val;
+    size_t len = min_t(size_t, count, sizeof(buf) - 1);
+    if (copy_from_user(buf, user_buf, len))
+        return -EFAULT;
+
+    buf[len] = '\0';
+
+    if (sscanf(buf, "%d", &val) > 0) {
+        printk("set drop_multicast %d\n", val);
+        priv->debugfs.drop_multicast = !!val;
+    }
+    return count;
+}
+DEBUGFS_READ_WRITE_FILE_OPS(drop_multicast);
+
 #ifdef CONFIG_HEART_BEAT
 static ssize_t siwifi_dbgfs_recovery_hb_read(struct file *file,
                 char __user *user_buf,
@@ -1942,7 +1980,6 @@ void siwifi_dump_lmac_debug_info(struct ipc_shared_env_tag *shared_env_ptr)
     printk("evt index %d\n", shared_env_ptr->debug_info.lmac_evt);
     printk("msg id %d dst %d src %d\n", shared_env_ptr->debug_info.lmac_msg_id, shared_env_ptr->debug_info.lmac_dest_id, shared_env_ptr->debug_info.lmac_src_id);
     printk("evt record index %d\n", shared_env_ptr->debug_info.lmac_evt_idx);
-    printk("RM_1004887_debug %d\n", shared_env_ptr->debug_info.RM_1004887_debug);
     for (i = 0; i < MAX_DBG_EVT_CNT/ 5; i++)
     {
         printk("%d %d %d %d %d\n",
@@ -2838,6 +2875,9 @@ static ssize_t siwifi_dbgfs_trx_stats_read(struct file *file,
 	ret += scnprintf(&buf[ret], bufsz - ret,
                      "monitor rx        %9d\n",
                      priv->stats.monitor_rx);
+    ret += scnprintf(&buf[ret], bufsz - ret,
+                     "mon_vif close rx  %9d\n",
+                     priv->stats.rx_monitor_interface_close);
 	ret += scnprintf(&buf[ret], bufsz - ret,
                      "len_update rx     %9d\n",
                      priv->stats.len_update_rx);
@@ -2890,6 +2930,9 @@ static ssize_t siwifi_dbgfs_trx_stats_read(struct file *file,
     ret += scnprintf(&buf[ret], bufsz - ret,
                      "tx drop sta null  %9d\n",
                      priv->stats.tx_drop_sta_null);
+    ret += scnprintf(&buf[ret], bufsz - ret,
+                     "tx drop multicast  %9d\n",
+                     priv->stats.tx_drop_multicast);
     ret += scnprintf(&buf[ret], bufsz - ret,
                      "tx drop inactive  %9d\n",
                      priv->stats.tx_drop_txq_inactive);
@@ -6501,6 +6544,7 @@ int siwifi_dbgfs_register(struct siwifi_hw *siwifi_hw, const char *name)
     DEBUGFS_ADD_FILE(txpower_cali_enable, dir_drv, S_IWUSR | S_IRUSR);
 #endif
     DEBUGFS_ADD_FILE(recovery_enable,  dir_drv, S_IWUSR | S_IRUSR);
+    DEBUGFS_ADD_FILE(drop_multicast,  dir_drv, S_IWUSR | S_IRUSR);
     DEBUGFS_ADD_FILE(run_state,  dir_drv, S_IRUSR);
     DEBUGFS_ADD_FILE(fixed_gain,  dir_drv, S_IWUSR | S_IRUSR);
     DEBUGFS_ADD_FILE(beacon_insert_info, dir_drv, S_IWUSR | S_IRUSR);
