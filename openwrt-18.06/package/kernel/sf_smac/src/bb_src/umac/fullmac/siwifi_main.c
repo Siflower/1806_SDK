@@ -4149,13 +4149,13 @@ static int siwifi_cfg80211_get_channel(struct wiphy *wiphy,
         spin_unlock_bh(&siwifi_hw->cb_lock);
         return -ENODATA;
     }
-
+    #if 0
     if (siwifi_vif->vif_index == siwifi_hw->monitor_vif)
     {
         //retrieve channel from firmware
         siwifi_cfg80211_set_monitor_channel(wiphy, NULL);
     }
-
+    #endif
     //Check if channel context is valid
     if(!siwifi_chanctx_valid(siwifi_hw, siwifi_vif->ch_index)){
         spin_unlock_bh(&siwifi_hw->cb_lock);
