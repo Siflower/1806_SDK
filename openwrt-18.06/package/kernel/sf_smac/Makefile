@@ -270,6 +270,8 @@ ifdef CONFIG_TARGET_siflower_sf19a28_fullmask
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_hb_txpower_table_expa_low_power.ini $(1)/lib/firmware
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/default_lb_txpower_table_expa.ini $(1)/lib/firmware
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_gain_table.ini $(1)/lib/firmware
+	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_hb_gain_table.ini $(1)/lib/firmware
+	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/rf_lb_gain_table.ini $(1)/lib/firmware
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/temperature_lb_control.ini $(1)/lib/firmware
 	cp  $(PKG_BUILD_DIR)/config/$(SF_ARCH)/temperature_hb_control.ini $(1)/lib/firmware
 	cp $(PKG_BUILD_DIR)/config/cali_table/default_txpower_calibrate_table.bin $(1)/lib/firmware

@@ -142,6 +142,7 @@ int rf_trx_set_rfappconfig(
 #define SF19A28_RF_DBB_GAIN_NUM 16
 extern  uint16_t rf_lb_dbb_gain_table[SF19A28_RF_DBB_GAIN_NUM];
 extern  uint16_t rf_lb_dbb_gain_table_def[SF19A28_RF_DBB_GAIN_NUM];
+extern  uint16_t rf_hb_gain_table[SF19A28_RF_GAIN_NUM];
 extern  uint16_t rf_lb_gain_table[SF19A28_RF_GAIN_NUM];
 extern  uint16_t rf_lb_gain_table_def[SF19A28_RF_GAIN_NUM];
 /**
