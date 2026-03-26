@@ -407,7 +407,8 @@ static int32_t siwifi_wiphy_addmask[5]  = {
     1,
     1,
     3,
-    3
+    3,
+    15
 };
 
 /* For calculating legacy rate */
@@ -2302,7 +2303,7 @@ static struct wireless_dev *siwifi_interface_add(struct siwifi_hw *siwifi_hw,
         memcpy(ndev->dev_addr, params->macaddr, ETH_ALEN);
     else {
         memcpy(ndev->dev_addr, siwifi_hw->wiphy->perm_addr, ETH_ALEN);
-        ndev->dev_addr[5] ^= vif_idx;
+        ndev->dev_addr[5] += vif_idx;
     }
 
     if (params) {
