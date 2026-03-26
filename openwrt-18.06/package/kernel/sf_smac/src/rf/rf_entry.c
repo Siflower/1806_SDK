@@ -39,6 +39,9 @@
 #define SF_RF_XDMA_REG_NAME      "rf_xdma_reg.bin"
 #define SF_RF_EXPA_CONFIG        "sf_rf_expa_config.ini"
 #define SF_RF_TRX_PATH_CONFIG    "rf_trx_path.ini"
+#define RF_HB_TABLE_CONFIG       "rf_hb_gain_table.ini"
+#define RF_LB_TABLE_CONFIG       "rf_lb_gain_table.ini"
+#define BASE_STRING_LENGTH 25
 
 #ifdef CONFIG_SFA28_FULLMASK
 #define IRQ_SOURCE      ML_CMD_P1_IRQ_SOURCE
@@ -1734,6 +1737,49 @@ int sf_wifi_set_thermal_state(void)
 
 #endif // COOLING_TEMP
 
+char* generate_gain_table_string(int i, const char* prefix_type) {
+    char* result = kmalloc(BASE_STRING_LENGTH, GFP_KERNEL);
+    if (!result) {
+        printk("Failed to allocate memory\n");
+        return NULL;
+    }
+    if (strcmp(prefix_type, "lb") == 0) {
+        snprintf(result, BASE_STRING_LENGTH, "rf_lb_gain_table_%d=", i);
+    } else {
+        snprintf(result, BASE_STRING_LENGTH, "rf_hb_gain_table_%d=", i);
+    }
+    return result;
+}
+
+static int sf_rf_parse_gain_table_configfile(struct platform_device *pdev, uint16_t *gain_table, const char *filename, char* tag) {
+    const struct firmware *config_fw;
+    int ret;
+    int i;
+
+    if ((ret = request_firmware(&config_fw, filename, &(pdev->dev)))) {
+        printk(KERN_CRIT "%s: Failed to get %s (%d)\n", __func__, filename, ret);
+        return ret;
+    }
+
+    for (i = 0; i < SF19A28_RF_GAIN_NUM; i++) {
+        const u8 *tag_ptr;
+        uint16_t value;
+        const char* str = generate_gain_table_string(i, tag);
+        tag_ptr = find_tag_from_file(config_fw->data, config_fw->size, str, strlen("0x0000"));
+
+        if (tag_ptr != NULL) {
+
+            if (sscanf(tag_ptr, "%16hx", &value) != 1)
+                value = 0xF0F0;
+        } else
+            value = 0xF0F0;
+        gain_table[i] =  (uint16_t)(value & 0xFFFF);
+
+    }
+    release_firmware(config_fw);
+    return 0;
+}
+
 /*
  * func:this RF module's probe function, it's do the following things:
  *      1,reset bus & module, clock and reset
@@ -1774,6 +1820,14 @@ int sf_wifi_rf_probe(struct platform_device *pdev)
     if ((ret = sf_wifi_rf_ex_pa_check(pdev, priv))) {
         printk("sf_wifi_rf_ex_pa_check failed, ret = %d!\n", ret);
         goto error_irqs_unregister;
+    }
+
+    if ((ret = sf_rf_parse_gain_table_configfile(pdev, rf_hb_gain_table, RF_HB_TABLE_CONFIG, "hb"))) {
+        printk("sf_rf_parse_gain_table_configfile failed, ret = %d!\n", ret);
+    }
+
+    if ((ret = sf_rf_parse_gain_table_configfile(pdev, rf_lb_gain_table, RF_LB_TABLE_CONFIG, "lb"))) {
+        printk("sf_rf_parse_gain_table_configfile failed, ret = %d!\n", ret);
     }
 
     /*Step5:load the firmware*/
