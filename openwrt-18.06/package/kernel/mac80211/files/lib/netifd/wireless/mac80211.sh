@@ -406,7 +406,7 @@ mac80211_generate_mac() {
 	[ "$mask" = "ff:ff:ff:ff:ff:ff" ] && {
 #		modified by robert
 #		for if mask is FF:FF:FF:FF:FF:FF, the previous logic will generate a wrong mac-address
-		printf "%s:%s:%s:%s:%s:%02x" $1 $2 $3 $4 $5 $(( 0x$6 ^ $id ))
+		printf "%s:%s:%s:%s:%s:%02x" $1 $2 $3 $4 $5 $(( (0x$6 + $id) % 256 ))
 		return
 	}
 
@@ -419,7 +419,7 @@ mac80211_generate_mac() {
 	}
 
 	[ "$((0x$mask6))" -lt 255 ] && {
-		printf "%s:%s:%s:%s:%s:%02x" $1 $2 $3 $4 $5 $(( 0x$6 ^ $id ))
+		printf "%s:%s:%s:%s:%s:%02x" $1 $2 $3 $4 $5 $(( (0x$6 + $id) % 256 ))
 		return
 	}
 
