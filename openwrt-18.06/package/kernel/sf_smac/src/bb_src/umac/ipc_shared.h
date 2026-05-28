@@ -676,6 +676,12 @@ struct siwifi_firmware_debug_info
     volatile uint32_t lmac_evt_idx;
 };
 
+struct dbg_vdr_last_mp_stats
+{
+    int8_t cca_threshold;
+    int8_t cca_dbgs;
+};
+
 // Indexes are defined in the MIB shared structure
 struct ipc_shared_env_tag
 {
@@ -727,6 +733,7 @@ struct ipc_shared_env_tag
     //for IPC user reply
     volatile uint32_t user_reply;
     volatile struct siwifi_firmware_debug_info debug_info;
+    volatile struct dbg_vdr_last_mp_stats last_mp_stats;
 };
 
 extern struct ipc_shared_env_tag ipc_shared_env;

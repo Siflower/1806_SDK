@@ -305,8 +305,53 @@ static ssize_t siwifi_dbgfs_mpinfo_read(struct file *file,
     return read;
 }
 
-DEBUGFS_READ_FILE_OPS(mpinfo);
+static ssize_t siwifi_dbgfs_mpinfo_write(struct file *file,
+                                          const char __user *user_buf,
+                                          size_t count, loff_t *ppos)
+{
+    struct siwifi_hw *siwifi_hw = file->private_data;
+    struct siwifi_vif *siwifi_vif, *__siwifi_vif;
+    char buf[64];
+    int param1, param2;
+    size_t len;
+    struct ipc_host_env_tag *env = NULL;
+    struct ipc_shared_env_tag *shared_env_ptr = NULL;
+    env = siwifi_hw->ipc_env;
+    if(!env)
+        return 0;
 
+    shared_env_ptr = env->shared;
+    if(!shared_env_ptr)
+        return 0;
+
+    if (!siwifi_hw)
+        return -EINVAL;
+
+    len = min(count, sizeof(buf) - 1);
+    if (copy_from_user(buf, user_buf, len))
+        return -EFAULT;
+
+    buf[len] = '\0';
+
+    if (sscanf(buf, "%d %d", &param1, &param2) != 2) {
+        printk("mpinfo: invalid input [%s]\n", buf);
+        return -EINVAL;
+    }
+
+    list_for_each_entry_safe(siwifi_vif, __siwifi_vif, &siwifi_hw->vifs, list) {
+        if (siwifi_vif == NULL || siwifi_hw == NULL) {
+            printk(" no vif or siwifi hw\n");
+            break;
+        }
+
+        shared_env_ptr->last_mp_stats.cca_dbgs = param1;
+        shared_env_ptr->last_mp_stats.cca_threshold = param2;
+    }
+
+    return count;
+}
+
+DEBUGFS_READ_WRITE_FILE_OPS(mpinfo);
 #ifdef CONFIG_SIWIFI_TRX_STAT
 static ssize_t siwifi_dbgfs_lmacrx_read(struct file *file,
                                      char __user *user_buf,

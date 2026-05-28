@@ -1,0 +1,25 @@
+Index: netifd-2018-12-16-2750ce2e/interface.c
+===================================================================
+--- netifd-2018-12-16-2750ce2e.orig/interface.c
++++ netifd-2018-12-16-2750ce2e/interface.c
+@@ -1094,6 +1094,8 @@ interface_handle_link(struct interface *
+ 	if (add) {
+ 		interface_set_device_config(iface, dev);
+ 		device_set_present(dev, true);
++        if (!link_ext)
++			device_set_present(dev, true);
+ 
+ 		ret = interface_add_link(iface, dev, link_ext);
+ 	} else {
+Index: netifd-2018-12-16-2750ce2e/system-linux.c
+===================================================================
+--- netifd-2018-12-16-2750ce2e.orig/system-linux.c
++++ netifd-2018-12-16-2750ce2e/system-linux.c
+@@ -973,6 +973,7 @@ system_bridge_set_wireless(struct device
+ 	if (!mcast_to_ucast || dev->wireless_isolate)
+ 		hairpin = false;
+ 
++    system_bridge_set_isolated(dev, dev->wireless_isolate ? "1" : "0");
+ 	system_bridge_set_multicast_to_unicast(dev, mcast_to_ucast ? "1" : "0");
+ 	system_bridge_set_hairpin_mode(dev, hairpin ? "1" : "0");
+ }
