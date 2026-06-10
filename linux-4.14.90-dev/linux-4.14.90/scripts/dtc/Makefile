@@ -30,3 +30,7 @@ $(obj)/dtc-lexer.lex.o: $(obj)/dtc-parser.tab.h
 
 # generated files need to be cleaned explicitly
 clean-files	:= dtc-lexer.lex.c dtc-parser.tab.c dtc-parser.tab.h
+# fix compile error when gcc version > 11
+HOSTCFLAGS_dtc-lexer.lex.o += -fcommon
+HOSTCFLAGS_dtc-parser.tab.o += -fcommon
+

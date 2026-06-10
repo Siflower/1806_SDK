@@ -178,7 +178,7 @@ static const struct mtd_ooblayout_ops w25m02gv_ooblayout = {
 static int w25m02gv_select_target(struct spinand_device *spinand,
                   unsigned int target)
 {
-    struct spi_mem_op op = SPI_MEM_OP(SPI_MEM_OP_CMD(0xc2, 1), 
+    struct spi_mem_op op = SPI_MEM_OP(SPI_MEM_OP_CMD(0xc2, 1),
                       SPI_MEM_OP_NO_ADDR,
                       SPI_MEM_OP_NO_DUMMY,
                       SPI_MEM_OP_DATA_OUT(1,
@@ -244,7 +244,7 @@ static const struct spinand_info winbond_spinand_table[] = {
 		     SPINAND_ECCINFO(&w25m02gv_ooblayout, NULL),
 		     SPINAND_SELECT_TARGET(w25m02gv_select_target)),
 	SPINAND_INFO("W25N02KV", 0xAA,
-			NAND_MEMORG(1, 2048, 64, 64, 1024, 1, 1, 2),
+			NAND_MEMORG(1, 2048, 128, 64, 2048, 1, 1, 1),
 			NAND_ECCREQ(1, 512),
 			SPINAND_INFO_OP_VARIANTS(&read_cache_variants,
 						&write_cache_variants,
