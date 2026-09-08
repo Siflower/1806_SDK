@@ -1268,6 +1268,15 @@ struct siwifi_hw {
     u32 tcp_pacing_shift;
     u32 task_max_process_time;
     u64 total_rx;
+    /* WMM EDCA traffic detect counters */
+    u32 hw_be_cnt;
+    u32 hw_all_cnt;
+    unsigned long hw_next_jiffies;
+    u32 hw_vi_cnt;
+    u32 hw_vo_cnt;
+    u64 hw_rx_cnt;
+    u32 hw_last_wmm_step;
+    u32 hw_wmm_counter;
     struct siwifi_ipc_elem_var debug_frame_buf;
 
     /* IPC */

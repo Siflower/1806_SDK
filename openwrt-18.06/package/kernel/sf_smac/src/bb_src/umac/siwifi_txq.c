@@ -1705,7 +1705,7 @@ static int siwifi_hwq_get_token_id(struct siwifi_hw *siwifi_hw, struct siwifi_hw
     if (txq->atf.record_rateinfo != 0 && txq->atf.enable && siwifi_hw->atf.enable) {
         txq->atf.addup_rateinfo += txq->atf.record_rateinfo;
         if (txq->atf.addup_rateinfo < siwifi_hw->atf.max_rateinfo){
-            *token == -1;
+            *token = -1;
             txq->atf.debug_skip_token_cnt++;
             return 1;
         } else {
@@ -1877,6 +1877,7 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
 #ifdef TOKEN_ENABLE
         int token_id = -1;
         int ret = -1;
+        bool token_acquired = false;
 #endif
 		bool txq_empty;
         struct siwifi_vif *vif;
@@ -1919,6 +1920,8 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
             }
             if (ret == 1)
                 continue;
+
+            token_acquired = true;
         }
 #endif /* TOKEN_ENABLE */
 
@@ -1970,17 +1973,16 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
             if (!siwifi_tx_push(siwifi_hw, txhdr, 0))
             {
 #ifdef TOKEN_ENABLE
-				txhdr->token_id = token_id;
-                if (!hwq->ave_speed.ave_speed_enable) {
-
+                if (token_acquired) {
+                    txhdr->token_id = token_id;
 #if DEBUG_ARRAY_CHECK
-                BUG_ON(txhdr->sw_hdr->txq->hwq->id >= NX_TXQ_CNT);
-                BUG_ON(token_id >= NUM_TX_DESCS_PER_AC);
+                    BUG_ON(txhdr->sw_hdr->txq->hwq->id >= NX_TXQ_CNT);
+                    BUG_ON(token_id >= NUM_TX_DESCS_PER_AC);
 #endif
+                    txq->token_pkt_num[txhdr->sw_hdr->txq->hwq->id][token_id]++;
+                } else {
+                    txhdr->token_id = NUM_TX_DESCS_PER_AC;
                 }
-
-				//must use txhdr->sw_hdr->txq->hwq->id,can not use hwq->id,txq->hwq may have been changed
-				txq->token_pkt_num[txhdr->sw_hdr->txq->hwq->id][token_id] ++;
 #endif /*TOKEN_ENABLE*/
 				txhdr->sw_hdr->txq->hwq->push_cnt ++;
 				push_success++;

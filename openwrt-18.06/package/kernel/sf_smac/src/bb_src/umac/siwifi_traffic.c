@@ -101,17 +101,9 @@ void update_vif_wmm_param(struct siwifi_hw *siwifi_hw, struct siwifi_vif *siwifi
     siwifi_vif->hw_rx_cnt = 0;
 }
 
-static u32 hw_be_cnt = 0;
-static u32 hw_all_cnt = 0;
-static unsigned long hw_next_jiffies = 0;
-static u32 hw_vi_cnt = 0;
-static u32 hw_vo_cnt = 0;
-static u64 hw_rx_cnt = 0;
-static u32 hw_last_wmm_step = 0;
-static u32 hw_wmm_counter = 0;
 void traffic_detect_be_edca(struct siwifi_hw *siwifi_hw, struct siwifi_vif *siwifi_vif, u8 ac, u8 pkt_num)
 {
-	u32 step = hw_last_wmm_step;
+	u32 step = siwifi_hw->hw_last_wmm_step;
 	u32 counter_max = 0;
 	u32 be_threshold = 0;
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
@@ -119,14 +111,14 @@ void traffic_detect_be_edca(struct siwifi_hw *siwifi_hw, struct siwifi_vif *siwi
 		return;
 #endif
 
-	hw_all_cnt += pkt_num;
-	if (ac == AC_BE) hw_be_cnt += pkt_num;
-	if (ac == AC_VI) hw_vi_cnt += pkt_num;
-	if (ac == AC_VO) hw_vo_cnt += pkt_num;
+	siwifi_hw->hw_all_cnt += pkt_num;
+	if (ac == AC_BE) siwifi_hw->hw_be_cnt += pkt_num;
+	if (ac == AC_VI) siwifi_hw->hw_vi_cnt += pkt_num;
+	if (ac == AC_VO) siwifi_hw->hw_vo_cnt += pkt_num;
 
-	if(hw_rx_cnt == 0) hw_rx_cnt = siwifi_hw->total_rx;
-	if (hw_next_jiffies == 0)
-		hw_next_jiffies = jiffies;
+	if(siwifi_hw->hw_rx_cnt == 0) siwifi_hw->hw_rx_cnt = siwifi_hw->total_rx;
+	if (siwifi_hw->hw_next_jiffies == 0)
+		siwifi_hw->hw_next_jiffies = jiffies;
 
     if(siwifi_vif)
     {
@@ -137,45 +129,45 @@ void traffic_detect_be_edca(struct siwifi_hw *siwifi_hw, struct siwifi_vif *siwi
 	    if (siwifi_vif->hw_rx_cnt == 0) siwifi_vif->hw_rx_cnt = siwifi_vif->total_rx;
     }
 
-	if (time_after(jiffies, hw_next_jiffies)) {
-		u32 hw_other_cnt = hw_all_cnt - hw_be_cnt;
+	if (time_after(jiffies, siwifi_hw->hw_next_jiffies)) {
+		u32 hw_other_cnt = siwifi_hw->hw_all_cnt - siwifi_hw->hw_be_cnt;
 #if defined (CONFIG_SIWIFI_DEBUGFS) || defined (CONFIG_SIWIFI_PROCFS)
-		hw_next_jiffies = jiffies + siwifi_hw->wmm_edca_interval;
+		siwifi_hw->hw_next_jiffies = jiffies + siwifi_hw->wmm_edca_interval;
 		counter_max = siwifi_hw->wmm_edca_counter_drop;
 		be_threshold = siwifi_hw->wmm_edca_pkt_threshold;
 #else
-		hw_next_jiffies = jiffies + EDCA_CHECK_INTERVAL;
+		siwifi_hw->hw_next_jiffies = jiffies + EDCA_CHECK_INTERVAL;
 		counter_max = EDCA_WMM_COUNTER;
 		be_threshold = EDCA_BE_THRESHOLD;
 #endif
-		if ((hw_be_cnt > EDCA_BE_THRESHOLD) && ((hw_other_cnt << EDCA_BE_RATIO_E) < hw_be_cnt) && (hw_be_cnt > ((siwifi_hw->total_rx - hw_rx_cnt) * 2))) {
+		if ((siwifi_hw->hw_be_cnt > EDCA_BE_THRESHOLD) && ((hw_other_cnt << EDCA_BE_RATIO_E) < siwifi_hw->hw_be_cnt) && (siwifi_hw->hw_be_cnt > ((siwifi_hw->total_rx - siwifi_hw->hw_rx_cnt) * 2))) {
             writel(EDCA_BE_AGGRESSIVE, (void*)EDCA_AC_1_ADDR(siwifi_hw->mod_params->is_hb));
-			hw_wmm_counter = 0;
+			siwifi_hw->hw_wmm_counter = 0;
 			step = 1;
-		} else if (hw_be_cnt > EDCA_VI_THRESHOLD && (hw_vi_cnt > EDCA_VI_THRESHOLD || hw_vo_cnt > EDCA_VI_THRESHOLD)) {
+		} else if (siwifi_hw->hw_be_cnt > EDCA_VI_THRESHOLD && (siwifi_hw->hw_vi_cnt > EDCA_VI_THRESHOLD || siwifi_hw->hw_vo_cnt > EDCA_VI_THRESHOLD)) {
             writel(EDCA_BK_DEFAULT, (void*)EDCA_AC_1_ADDR(siwifi_hw->mod_params->is_hb));
-			hw_wmm_counter = 0;
+			siwifi_hw->hw_wmm_counter = 0;
 			step = 2;
 		} else {
-			if(hw_wmm_counter < counter_max)
-				hw_wmm_counter ++;
-			if(hw_wmm_counter  == counter_max || hw_last_wmm_step == 0) {
+			if(siwifi_hw->hw_wmm_counter < counter_max)
+				siwifi_hw->hw_wmm_counter ++;
+			if(siwifi_hw->hw_wmm_counter  == counter_max || siwifi_hw->hw_last_wmm_step == 0) {
                 writel(EDCA_BE_DEFAULT, (void*)EDCA_AC_1_ADDR(siwifi_hw->mod_params->is_hb));
 				step = 3;
 			}
 		}
 
-		if(step != hw_last_wmm_step && siwifi_hw->wmm_debug_enable == 1) {
-			printk("change from step %d to %d (1 for tx 3 for rx) other-be-vi-vo=[%u %u %u %u] rx %llu\n", hw_last_wmm_step,
-					step, hw_other_cnt, hw_be_cnt, hw_vi_cnt, hw_vo_cnt, siwifi_hw->total_rx - hw_rx_cnt);
+		if(step != siwifi_hw->hw_last_wmm_step && siwifi_hw->wmm_debug_enable == 1) {
+			printk("change from step %d to %d (1 for tx 3 for rx) other-be-vi-vo=[%u %u %u %u] rx %llu\n", siwifi_hw->hw_last_wmm_step,
+					step, hw_other_cnt, siwifi_hw->hw_be_cnt, siwifi_hw->hw_vi_cnt, siwifi_hw->hw_vo_cnt, siwifi_hw->total_rx - siwifi_hw->hw_rx_cnt);
 		}
 
-		hw_last_wmm_step = step;
-		hw_be_cnt = 0;
-		hw_vi_cnt = 0;
-		hw_vo_cnt = 0;
-		hw_all_cnt = 0;
-		hw_rx_cnt = 0;
+		siwifi_hw->hw_last_wmm_step = step;
+		siwifi_hw->hw_be_cnt = 0;
+		siwifi_hw->hw_vi_cnt = 0;
+		siwifi_hw->hw_vo_cnt = 0;
+		siwifi_hw->hw_all_cnt = 0;
+		siwifi_hw->hw_rx_cnt = 0;
 
         if(siwifi_vif)
         {
