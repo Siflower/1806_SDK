@@ -2971,6 +2971,8 @@ struct dbg_tx_stat
 	u32_l record_cnt[32];
     //stastics beacon tx failed cnt
     u32_l bcn_failed_cnt;
+    //stastics agg mis cnt
+    u32_l agg_miss_cnt;
 };
 
 /// Structure containing the parameters used for the tx status

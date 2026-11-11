@@ -571,6 +571,8 @@ static ssize_t siwifi_dbgfs_lmactx_read(struct file *file,
                      "\n beacon tx failed cnt %d\n", dbg_trx_stat->bcn_failed_cnt);
     ret += scnprintf(&buf[ret], min_t(size_t, bufsz - ret - 1, count - ret),
                      "\n tx pkt cnt %d\n", dbg_trx_stat->pkt_cnt);
+    ret += scnprintf(&buf[ret], min_t(size_t, bufsz - ret - 1, count - ret),
+                     "\n agg miss cnt %d\n", dbg_trx_stat->agg_miss_cnt);
 	ret += scnprintf(&buf[ret], min_t(size_t, bufsz - ret - 1, count - ret),
                      "\n LMAC          tran cnt        cfm-cnt      trans-cnt     cfm-cnt      discard-cnt     t-trans-cnt   t-cfm-cnt         t-discard-cnt       t-flush-cnt\n");
     for (i = 0; i < AC_MAX; i++)
