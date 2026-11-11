@@ -270,7 +270,7 @@ static AIR_ERROR_NO_T doAclClear(UI32_T argc, C8_T *argv[]);
 static AIR_ERROR_NO_T doAcl(UI32_T argc, C8_T *argv[]);
 
 static AIR_ERROR_NO_T subcmd(const AIR_CMD_T tab[], UI32_T argc, C8_T *argv[]);
-extern void air_wdog_kick(void);
+//extern void air_wdog_kick(void);
 
 
 /* STATIC VARIABLE DECLARATIONS
@@ -1714,8 +1714,8 @@ doVlanDestroy(UI32_T argc, C8_T *argv[])
 
     for (; vid <= vid_limit; vid++)
     {
-        if (0 == vid % 256)
-            air_wdog_kick();
+        //if (0 == vid % 256)
+        //    air_wdog_kick();
         rc = air_vlan_destroy(0, vid);
     }
     return rc;
@@ -1778,8 +1778,8 @@ doVlanDump(UI32_T argc, C8_T *argv[])
 
     for (valid_count = 0; vid <= vid_limit; vid++)
     {
-        if (0 == vid % 256)
-            air_wdog_kick();
+        //if (0 == vid % 256)
+        //    air_wdog_kick();
         _air_vlan_readEntry(0, vid, &vlan_entry);
         if (vlan_entry.valid)
         {
@@ -3372,7 +3372,7 @@ doSptagEncode(
         else if(_strcmp(str,"insert") == 0)
             mode = AIR_STAG_MODE_INSERT;
         else
-            printf("mode is wrong!!");
+            AIR_PRINT("mode is wrong!!");
 
 
         sscanf(argv[1],"opc=%s",str);
@@ -3383,7 +3383,7 @@ doSptagEncode(
         else if(_strcmp(str,"lookup") == 0)
             sptag_tx.opc = AIR_STAG_OPC_LOOKUP;
         else
-            printf("opc is wrong!!");
+            AIR_PRINT("opc is wrong!!");
 
         sscanf(argv[2],"dp=%x",&data);
         sptag_tx.pbm = data;
@@ -3397,7 +3397,7 @@ doSptagEncode(
         else if(_strcmp(str,"88a8") == 0)
             sptag_tx.vpm = AIR_STAG_VPM_TPID_88A8;
         else
-            printf("vpm is wrong!!");
+            AIR_PRINT("vpm is wrong!!");
 
         sscanf(argv[4],"pri=%d",&data);
         sptag_tx.pri = data;
@@ -3411,7 +3411,7 @@ doSptagEncode(
         sptag_tx.vid = data;
         AIR_PRINT("sptag_tx.vid %d\n",sptag_tx.vid);
 
-        ret = air_sptag_encodeTx(0,mode, &sptag_tx, &buf, &len);
+        ret = air_sptag_encodeTx(0,mode, &sptag_tx, buf, &len);
         if(AIR_E_OK == ret)
         {
             AIR_PRINT("SpTag encode sucess, returned len=%d\n", len);
@@ -3602,30 +3602,30 @@ _printMacEntry(
     }
     for(i = 0; i < count; i++)
     {
-        AIR_PRINT("%-6d", age_unit);
-        AIR_PRINT(MAC_STR, MAC2STR(mt[i].mac));
-        AIR_PRINT("...");
+        AIR_PRINT(KERN_INFO "%-6d", age_unit);
+        AIR_PRINT(KERN_CONT MAC_STR, MAC2STR(mt[i].mac));
+        AIR_PRINT(KERN_CONT "...");
         if(mt[i].flags & AIR_L2_MAC_ENTRY_FLAGS_IVL)
         {
-            AIR_PRINT("%-3s..", "ivl");
-            AIR_PRINT("%-5d", mt[i].cvid);
-            AIR_PRINT("%-5s", ".....");
+            AIR_PRINT(KERN_CONT "%-3s..", "ivl");
+            AIR_PRINT(KERN_CONT "%-5d", mt[i].cvid);
+            AIR_PRINT(KERN_CONT "%-5s", ".....");
         }
         else
         {
-            AIR_PRINT("%-3s..", "svl");
-            AIR_PRINT("%-5s", ".....");
-            AIR_PRINT("%-5d", mt[i].fid);
+            AIR_PRINT(KERN_CONT "%-3s..", "svl");
+            AIR_PRINT(KERN_CONT "%-5s", ".....");
+            AIR_PRINT(KERN_CONT "%-5d", mt[i].fid);
         }
         if(mt[i].flags & AIR_L2_MAC_ENTRY_FLAGS_STATIC)
         {
-            AIR_PRINT("%-10s.", "static");
+            AIR_PRINT(KERN_CONT "%-10s.", "static");
         }
         else
         {
-            AIR_PRINT("%d sec..", mt[i].timer);
+            AIR_PRINT(KERN_CONT "%d sec..", mt[i].timer);
         }
-        AIR_PRINT("%-10s", _air_mac_address_forward_control_string[mt[i].sa_fwd]);
+        AIR_PRINT(KERN_CONT "%-10s", _air_mac_address_forward_control_string[mt[i].sa_fwd]);
         first = 0;
         find = 0;
         for (j = (AIR_MAX_NUM_OF_PORTS - 1); j >= 0; j--)
@@ -3644,15 +3644,15 @@ _printMacEntry(
                 if((mt[i].port_bitmap[0]) & (1 << j))
                 {
                     if(j == first)
-                        AIR_PRINT("%-2d", j);
+                        AIR_PRINT(KERN_CONT "%-2d", j);
                     else
-                        AIR_PRINT("%-2d,", j);
+                        AIR_PRINT(KERN_CONT "%-2d,", j);
                 }
             }
         }
         else
-            AIR_PRINT("no dst port");
-        AIR_PRINT("\n");
+            AIR_PRINT(KERN_CONT "no dst port");
+        AIR_PRINT(KERN_CONT "\n");
     }
     return ret;
 }
@@ -3846,7 +3846,7 @@ doDumpMacAddr(
         _printMacEntry(ptr_mt, 0, count, FALSE);
         if (wdog_count >= L2_WDOG_KICK_NUM)
         {
-            air_wdog_kick();
+            //air_wdog_kick();
             wdog_count -= L2_WDOG_KICK_NUM;
         }
     }
@@ -3892,7 +3892,7 @@ doLagMember(
         {
             AIR_PRINT("Set port trunk index %d member_index:%d member_enable:%d, port_index:%d fail.\n", portrunk_index, member_index, member_enable,port_index);
         }
-        memset(member,0,sizeof(member));
+        memset(&member,0,sizeof(member));
         air_lag_getMember(0, portrunk_index, &member);
         if(! member.csr_gp_enable[0])
         {
@@ -4888,7 +4888,7 @@ doMibGetPort(
             AIR_PRINT("RX Octets good or bad packtes h32 : %u\n", (UI32_T)((rx_mib.ROC >> 32) & tmp32));
             AIR_PRINT("RX Octets bad packets l32         : %u\n", (UI32_T)(rx_mib.ROC2 & tmp32));
             AIR_PRINT("RX Octets bad packets h32         : %u\n", (UI32_T)((rx_mib.ROC2 >> 32) & tmp32));
-            air_wdog_kick();
+            //air_wdog_kick();
             AIR_PRINT("\n");
             AIR_PRINT("TX Drop Packet                    : %u\n", tx_mib.TDPC);
             AIR_PRINT("TX CRC Packet                     : %u\n", tx_mib.TCRC);
@@ -6219,7 +6219,7 @@ doSaLearning(UI32_T argc, C8_T *argv[])
     }
     else if(1 == argc)
     {
-        rc = air_sec_getPortSecPortCfg(0, port, &port_config.sa_lrn_en);
+        rc = air_sec_getPortSecPortCfg(0, port, &port_config);
         if(AIR_E_OK == rc)
         {
             AIR_PRINT("Port%02d sa learn: %s\n", port, port_config.sa_lrn_en?"Enable":"Disable");
@@ -8001,8 +8001,8 @@ print_out_cmds:
  */
 AIR_ERROR_NO_T
 air_parse_cmd(
-        const UI32_T argc,
-        const C8_T **argv)
+        UI32_T argc,
+        C8_T **argv)
 {
     return subcmd(Cmds, argc, argv);
 }

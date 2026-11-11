@@ -121,6 +121,9 @@ static void print_help(void)
 	printk(" example: echo setMulticastEntry	[port] [type] [mc_ip]\n");
 	printk(" dump multicast entries, only support intel switch now\n");
 	printk(" example: echo dumpMulticastEntry \n");
+	printk(" switch type list:\n\t 0--unknown\n\t 1--rtk8367c\n\t 2--intel7084\n\t "
+			"3--intel7082\n\t 4--nf2507\n\t 5--yt9215rb\n\t 6--yt9215s\n\t "
+			"7--an8855\n\t 8--yt9215sc\n\t 9--jl5106\n");
 }
 
 ssize_t sf_eswitch_debug_write(struct file *file, const char __user *user_buf,

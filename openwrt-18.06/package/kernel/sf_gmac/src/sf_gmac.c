@@ -3456,7 +3456,6 @@ static void sf_trigger_eswitch_hwReset(struct sgmac_priv *priv)
 			// should more than 1ms
 			mdelay(250);
 			gpio_set_value(reset_gpio, 1);
-			devm_gpio_free(priv->dev, reset_gpio);
 			mdelay(1000);
 			printk("end %s\n", __func__);
 		}
@@ -3540,12 +3539,8 @@ static int sgmac_probe(struct platform_device *pdev) {
 
 #ifdef CONFIG_SF19A28_FULLMASK
 	writel(0x34, (void *)0xb9e3fc68);
-#ifdef CONFIG_SFAX8_RMII_GMAC
-	writel(0x3b, (void *)0xb9e01404);
-#else
 	// set BUS1_XN_CLK_DIV to 9 ==> set bus1/GMAC-CSR clk to 150MHz
 	writel(0x9, (void *)0xb9e01404);
-#endif /*CONFIG_SFAX8_RMII_GMAC*/
 #endif /*CONFIG_SF19A28_FULLMASK*/
 
 	// smooth speed test

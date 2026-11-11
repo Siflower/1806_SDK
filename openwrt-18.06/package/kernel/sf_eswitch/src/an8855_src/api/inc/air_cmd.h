@@ -33,12 +33,12 @@
  *      NPS_E_OK     -- Successfully read the data.
  *      NPS_E_OTHERS -- Failed to read the data.
  * NOTES:
- * 
+ *
  */
-AIR_ERROR_NO_T 
+AIR_ERROR_NO_T
 air_parse_cmd(
-    const UI32_T argc, 
-    const C8_T **argv);
+    UI32_T argc, 
+    C8_T **argv);
 
 #endif  /* AIR_CMD_H */
 
