@@ -76,7 +76,9 @@ ifeq ($(CONFIG_SIWIFI_SPLIT_TX_BUF), y)
 ccflags-y += -DCONFIG_SIWIFI_AMSDUS_TX
 endif
 
+ifneq ($(CONFIG_SIWIFI_DISABLE_BRIDGE_ACCEL),y)
 ccflags-y += -DCONFIG_BRIDGE_ACCELERATE
+endif
 
 # user private skb buffer pool
 # When defined this, we will use our own private memory pool to manage rx skb pool

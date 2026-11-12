@@ -27,7 +27,7 @@
 #define RTL8211F_INER_LINK_STATUS 0x0010
 #define RTL8211F_INSR		0x1d
 #define RTL8211F_PAGE_SELECT	0x1f
-#define RTL8211F_TX_DELAY	0x100
+#define RTL8211F_TX_DELAY	BIT(8)
 
 MODULE_DESCRIPTION("Realtek PHY driver");
 MODULE_AUTHOR("Johnson Leung");
@@ -177,6 +177,19 @@ static struct phy_driver realtek_drvs[] = {
 		.config_intr	= &rtl8211f_config_intr,
 		.suspend	= genphy_suspend,
 		.resume		= genphy_resume,
+	}, {
+		.phy_id		= 0x001cc878,
+		.name		= "RTL8211F-VD Gigabit Ethernet",
+		.phy_id_mask	= 0x001fffff,
+		.features	= PHY_GBIT_FEATURES,
+		.flags		= PHY_HAS_INTERRUPT,
+		.config_aneg	= &genphy_config_aneg,
+		.config_init	= &rtl8211f_config_init,
+		.read_status	= &genphy_read_status,
+		.ack_interrupt	= &rtl8211f_ack_interrupt,
+		.config_intr	= &rtl8211f_config_intr,
+		.suspend	= genphy_suspend,
+		.resume		= genphy_resume,
 	},
 };
 
@@ -187,6 +200,7 @@ static struct mdio_device_id __maybe_unused realtek_tbl[] = {
 	{ 0x001cc914, 0x001fffff },
 	{ 0x001cc915, 0x001fffff },
 	{ 0x001cc916, 0x001fffff },
+	{ 0x001cc878, 0x001fffff },
 	{ }
 };
 

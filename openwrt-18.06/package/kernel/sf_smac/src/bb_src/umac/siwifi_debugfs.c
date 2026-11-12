@@ -4349,7 +4349,7 @@ static ssize_t siwifi_dbgfs_ave_txq_read(struct file *file,
                     //     "  --- -------- --------   -[-] ---- --- ---"
                     print_title = 1;
                 }
-
+#ifdef CONFIG_BRIDGE_ACCELERATE
                 printk("  %3d %8d %8d   %s[%d] %4d %3d %3d\n",
                         txq->idx,
                         txq->as_enable_pkt,
@@ -4360,6 +4360,17 @@ static ssize_t siwifi_dbgfs_ave_txq_read(struct file *file,
                         skb_queue_len(&txq->sk_list),
                         skb_queue_len(&txq->accel_sk_list)
                         );
+#else
+                printk("  %3d %8d %8d   %s[%d] %4d %3d\n",
+                        txq->idx,
+                        txq->as_enable_pkt,
+                        txq->as_disable_pkt,
+                        (txq->status & SIWIFI_TXQ_IN_HWQ_LIST) ? "Y" : " ",
+                        txq->hwq->id,
+                        txq->as_ave_pkt,
+                        skb_queue_len(&txq->sk_list)
+                        );
+#endif
             }
             printk("\n");
         }

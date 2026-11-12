@@ -287,6 +287,7 @@ void siwifi_txq_ps_drop_skb(struct siwifi_hw *siwifi_hw, struct siwifi_txq *txq)
     BUG_ON(txq->ndev == NULL);
     vif = netdev_priv(txq->ndev);
     // first drop accelerate frame, all this frame should data application frame
+#ifdef CONFIG_BRIDGE_ACCELERATE
     if (accel_skb_len > 0) {
         while ((skb = skb_dequeue(&txq->accel_sk_list)) != NULL)
         {
@@ -300,6 +301,7 @@ void siwifi_txq_ps_drop_skb(struct siwifi_hw *siwifi_hw, struct siwifi_txq *txq)
         }
         txq->ps_on_drop = drop_num;
     }
+#endif
     // drop the normal skb list, but skip the key skb
     drop_num = 0;
     while ((skb = skb_dequeue(&txq->sk_list)) != NULL)
@@ -1578,7 +1580,11 @@ bool siwifi_txq_get_skb_to_push(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *
      if (hwq->ave_speed.ave_speed_enable) {
         txq->as_ave_pkt -= credits;
         hwq->ave_speed.as_ave_pkt_total -= credits;
+#ifdef CONFIG_BRIDGE_ACCELERATE
         if (!(skb_queue_len(&txq->sk_list) + skb_queue_len(&txq->accel_sk_list))) {
+#else
+        if (!(skb_queue_len(&txq->sk_list))) {
+#endif
             hwq->ave_speed.as_ave_pkt_total -= txq->as_ave_pkt;
             txq->as_ave_pkt = 0;
         }
@@ -1842,7 +1848,11 @@ void siwifi_hwq_process(struct siwifi_hw *siwifi_hw, struct siwifi_hwq *hwq)
 
         list_for_each_entry_safe(txq, next, &hwq->list, sched_list) {
             hwq->ave_speed.as_rate_total += txq->atf.record_rateinfo;
+#ifdef CONFIG_BRIDGE_ACCELERATE
             hwq->ave_speed.as_pkt_total  += (skb_queue_len(&txq->sk_list) + skb_queue_len(&txq->accel_sk_list));
+#else
+            hwq->ave_speed.as_pkt_total  += (skb_queue_len(&txq->sk_list));
+#endif
         }
 
         list_for_each_entry_safe(txq, next, &hwq->list, sched_list) {

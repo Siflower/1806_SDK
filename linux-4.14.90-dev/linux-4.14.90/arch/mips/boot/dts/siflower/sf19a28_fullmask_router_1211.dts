@@ -12,9 +12,10 @@
 &gmac {
 	status = "okay";
 	delay = <0x2e 0x1f>;
-	gtx-clk-gpio = <13>;
+	phy-mode = "rgmii";
 	phy = <&phy0>;
 	phy0: ethernet-phy@0 {
+		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <0x1>;
 		max-speed = <1000>;
 	};

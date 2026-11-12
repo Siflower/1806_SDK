@@ -9,16 +9,19 @@
 	#address-cells = <1>;
 	#size-cells = <1>;
 	compatible = "siflower,sf19a28-soc";
-	model = "sf19a28-ac28";
+	model = "sf19a28-phy";
 
 };
 
 &gmac {
 	status = "okay";
 	delay = <0x40 0x90>;
+	phy-mode = "rgmii";
 	phy = <&phy0>;
-phy0: ethernet-phy@0 {
-		  max-speed = <1000>;
+	phy0: ethernet-phy@0 {
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0x1>;
+		max-speed = <1000>;
 	};
 };
 
