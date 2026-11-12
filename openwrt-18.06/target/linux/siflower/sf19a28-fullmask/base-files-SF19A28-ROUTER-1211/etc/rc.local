@@ -31,6 +31,11 @@ sed -i '/\/usr\/sbin\/ota auto_ota/d' "$crontab_file"
 
 echo "$random_minute $random_hour * * * $cron_job" >> "$crontab_file"
 
+crontab_file="/etc/crontabs/root"
+drop_cache_job="/usr/sbin/si_drop_cache"
+sed -i '/\/usr\/sbin\/si_drop_cache/d' "$crontab_file"
+echo "0 */4 * * * $drop_cache_job" >> "$crontab_file"
+
 /etc/init.d/cron restart
 
 proto=$(uci get network.lan.proto)

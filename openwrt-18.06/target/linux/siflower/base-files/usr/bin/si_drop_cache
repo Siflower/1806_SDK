@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Read current free memory (KB) from free output
+free_mem=$(free | awk '/^Mem:/{print $4}')
+
+# If free memory is below 4MB (4096KB), drop pagecache/dentries/inodes
+if [ -n "$free_mem" ] && [ "$free_mem" -lt 4096 ]; then
+	sync;echo 3 > /proc/sys/vm/drop_caches
+fi

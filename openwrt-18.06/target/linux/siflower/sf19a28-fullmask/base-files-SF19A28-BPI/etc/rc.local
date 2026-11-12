@@ -17,3 +17,11 @@ echo enable 4 > /proc/net/skb_pool
 echo inc 3 512 > proc/net/skb_pool
 echo inc 4 512 > proc/net/skb_pool
 echo 3 > /proc/sys/vm/drop_caches
+
+crontab_file="/etc/crontabs/root"
+
+drop_cache_job="/usr/sbin/si_drop_cache"
+sed -i '/\/usr\/sbin\/si_drop_cache/d' "$crontab_file"
+echo "0 */4 * * * $drop_cache_job" >> "$crontab_file"
+
+/etc/init.d/cron restart

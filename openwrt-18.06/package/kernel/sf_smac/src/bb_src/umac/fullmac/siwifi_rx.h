@@ -49,7 +49,7 @@ enum rx_status_bits
 #define RX_MACHDR_BACKUP_LEN    64
 #endif
 
-#define SIWIFI_RX_LOW_MEM_SIZE  6000 // System memory free is lower than 6Mb
+#define SIWIFI_RX_LOW_MEM_SIZE  3500 // System memory free is lower than 3.5Mb
 
 struct rx_vector_1_old {
     /** Receive Vector 1a */
