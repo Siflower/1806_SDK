@@ -6291,11 +6291,11 @@ int siwifi_cfg80211_init(struct siwifi_plat *siwifi_plat, void **platform_data)
     siwifi_hw->tx_queue_num = siwifi_hw->mod_params->tx_queue_num;
 #endif
 
-#ifdef CONFIG_BRIDGE_ACCELERATE
+#ifdef CONFIG_WIFI_LITE_MEMORY
     // define if lm ctrl limit is active or not
-    siwifi_hw->lm_ctrl_enable = true;
-#else
     siwifi_hw->lm_ctrl_enable = false;
+#else
+    siwifi_hw->lm_ctrl_enable = true;
 #endif
     // Init hwq
     siwifi_hwq_init(siwifi_hw);

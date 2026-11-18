@@ -41,7 +41,7 @@
 #ifndef CONFIG_SFAX8_HNAT_TEST_TOOL
 #ifdef CONFIG_MEMORY_OPTIMIZE
 /* On lite memory platform, limit tx/rx queue size to 256*/
-#define DMA_TX_RING_SZ  128
+#define DMA_TX_RING_SZ  512
 #define DMA_RX_RING_SZ  512
 #else //CONFIG_MEMORY_OPTIMIZE
 #define DMA_TX_RING_SZ  1024

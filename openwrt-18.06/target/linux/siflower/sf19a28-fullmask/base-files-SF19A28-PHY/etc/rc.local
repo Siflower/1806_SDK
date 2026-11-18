@@ -15,7 +15,7 @@ echo enable 2 > /proc/net/skb_pool
 echo enable 3 > /proc/net/skb_pool
 echo enable 4 > /proc/net/skb_pool
 echo inc 2 1024 > /proc/net/skb_pool
-echo inc 3 512 > /proc/net/skb_pool
+echo inc 3 128 > /proc/net/skb_pool
 echo inc 4 512 > /proc/net/skb_pool
 echo 3 > /proc/sys/vm/drop_caches
 
